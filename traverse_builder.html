@@ -181,7 +181,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       <div class="field"><label for="idleLimit">連續撿不到幾次停止</label><input id="idleLimit" type="number" min="10" value="1000"></div>
       <div class="field"><label for="computeTries">計算補排嘗試次數</label><input id="computeTries" type="number" min="0" value="20000"></div>
       <div class="field"><label for="chainAttempts">接段嘗試次數</label><input id="chainAttempts" type="number" min="1" value="20"></div>
-      <div class="field"><label for="maxLeftover">排不進超過幾張就重跑（0＝不重跑）</label><input id="maxLeftover" type="number" min="0" max="416" value="30"></div>
+      <div class="field"><label for="maxLeftover">排不進超過幾張就重跑（空白＝不重跑）</label><input id="maxLeftover" type="number" min="0" max="416" value="30"></div>
       <button id="btnRun" class="btn">開始排牌</button>
       <button id="btnStop" class="btn stop" disabled>停止</button>
       <span class="sep"></span>
@@ -430,7 +430,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       ['洗牌次數', s.shuffles],
       ['計算補排段數', s.phase2Segments],
       ['全部驗證', allOk ? '通過' : '有問題'],
-      ['耗時', `${(s.ms / 1000).toFixed(1)} 秒`],
+      ['總耗時（含重跑）', `${((result.totalMs ?? s.ms) / 1000).toFixed(1)} 秒`],
       ['重跑次數', result.reruns || 0],
     ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
 
@@ -547,7 +547,10 @@ th { color: var(--text-secondary); font-weight: 600; }
     setReady(false);
     $('progress').textContent = '開始排牌…';
     try {
-      const maxLeftover = Math.max(0, num('maxLeftover') || 0);
+      // 空白＝不重跑；0＝一張都不能剩
+      const rawLimit = $('maxLeftover').value.trim();
+      const maxLeftover = rawLimit === '' ? null : Math.max(0, parseInt(rawLimit, 10) || 0);
+      const t0 = Date.now();
       let reruns = 0;
       for (;;) {
         const tag = reruns ? `［重跑第 ${reruns} 次］` : '';
@@ -559,11 +562,12 @@ th { color: var(--text-secondary); font-weight: 600; }
           isCancelled: () => cancelled,
         });
         // 排不進的張數超過設定就整副重跑；按停止則保留目前這次
-        if (!maxLeftover || lastResult.leftoverCount <= maxLeftover || cancelled) break;
+        if (maxLeftover === null || lastResult.leftoverCount <= maxLeftover || cancelled) break;
         reruns++;
         $('progress').textContent = `剩 ${lastResult.leftoverCount} 張排不進去，超過 ${maxLeftover} 張，重跑第 ${reruns} 次…`;
       }
       lastResult.reruns = reruns;
+      lastResult.totalMs = Date.now() - t0;
       // 標記穿越段的牌，切牌後仍能辨認
       baseCards = lastResult.cards.map((c) => ({ ...c, traverse: false }));
       lastResult.chains.forEach((ch) => {
