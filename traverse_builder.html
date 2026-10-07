@@ -345,6 +345,13 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 
+/* 牌表與右欄不做內部垂直捲動，整頁往下捲（使用者要求） */
+.app { height:auto; min-height:100vh; min-height:100dvh; }
+.main { flex:none; align-items:start; }
+.pit, .felt, .side { min-height:auto; }
+.scroll, .side .scroll, .felt > .scroll { max-height:none; overflow:visible; }
+.side { overflow:visible; }
+.safe-chips { max-height:none; overflow:visible; }
 </style>
 </head>
 <body>
