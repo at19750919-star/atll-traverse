@@ -257,7 +257,7 @@ th { color: var(--text-secondary); font-weight: 600; }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=8"></script>
+<script src="traverse_builder.js?v=9"></script>
 <script src="traverse_export.js?v=4"></script>
 <script>
 (function () {
@@ -712,7 +712,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       let reruns = 0;
       for (;;) {
         const tag = reruns ? `［重跑第 ${reruns} 次］` : '';
-        lastResult = await TraverseBuilder.build({
+        const buildOpts = {
           idleLimit: num('idleLimit'),
           computeTries: num('computeTries'),
           chainAttempts: num('chainAttempts'),
@@ -721,7 +721,24 @@ th { color: var(--text-secondary); font-weight: 600; }
           strong: $('strongMode').checked,
           onProgress: (m) => { $('progress').textContent = tag + m; },
           isCancelled: () => cancelled,
-        });
+        };
+        // 張數超過上限的試排在排牌程式裡就提早放棄（不做接段、A、2、卡色）
+        if (maxLeftover !== null && !$('strongMode').checked) buildOpts.rejectAbove = maxLeftover;
+        const res = await TraverseBuilder.build(buildOpts);
+        if (res.rejected) {
+          reruns++;
+          if (cancelled) {
+            // 按了停止但這次是被提早放棄的：補跑一次完整的，讓畫面有結果
+            delete buildOpts.rejectAbove;
+            cancelled = false;
+            $('progress').textContent = '停止中，整理目前結果…';
+            lastResult = await TraverseBuilder.build({ ...buildOpts, idleLimit: 50 });
+            break;
+          }
+          $('progress').textContent = `剩 ${res.leftoverCount} 張排不進去，超過 ${maxLeftover} 張，重跑第 ${reruns} 次…`;
+          continue;
+        }
+        lastResult = res;
         // 排不進的張數超過設定、或訊號牌對調後穿越段不合格，就整副重跑；按停止則保留目前這次
         // 強條件合格段極少，重跑也排不滿，只跑一次讓人看結果
         if (cancelled || $('strongMode').checked) break;

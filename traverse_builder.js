@@ -529,6 +529,10 @@
 
         const p1 = await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
+        // 剩下的張數已超過上限：注定要重跑，跳過接段／A、2／卡色，省時間
+        if (options.rejectAbove != null && p2.rest.length > options.rejectAbove && !ctx.cancelled()) {
+            return { rejected: true, leftoverCount: p2.rest.length, stats: { ms: Date.now() - t0 } };
+        }
         const segs = p1.segs.concat(p2.segs);
         let chains = await phaseChain(segs, opts, ctx);
         let leftover = shuffleInPlace(p2.rest.slice(), opts.rng);
