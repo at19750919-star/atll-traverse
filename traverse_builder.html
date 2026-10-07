@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>穿越排牌</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-base: #f0e9d6;
+  --bg-paper: #faf6e8;
+  --bg-sunken: #e3dcc4;
+  --border-subtle: #d8cfb1;
+  --border-default: #b8a980;
+  --border-strong: #6b5a32;
+  --text-primary: #221c0e;
+  --text-secondary: #5a5036;
+  --text-tertiary: #8a7d5c;
+  --accent: #b8842a;
+  --accent-bg: #f7e6b8;
+  --accent-strong: #7a5418;
+  --banker: #d6362a;
+  --banker-bg: #fad7d2;
+  --player: #2660b3;
+  --player-bg: #cfdef2;
+  --tie: #2e8a4a;
+  --font-sans: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
+  --font-display: 'Noto Serif TC', serif;
+  --font-mono: 'Roboto Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-family: var(--font-display); font-size: 26px; margin: 0 0 4px; }
+.sub { color: var(--text-secondary); margin: 0 0 20px; line-height: 1.6; }
+.card {
+  background: var(--bg-paper);
+  border: 2px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card h2 { font-family: var(--font-display); font-size: 17px; margin: 0 0 12px; }
+.fields { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; }
+.field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.field input {
+  width: 110px; padding: 6px 8px;
+  border: 1.5px solid var(--border-default); border-radius: 6px;
+  background: #fff; font-family: var(--font-mono); font-size: 14px;
+}
+.btn {
+  padding: 8px 18px; border-radius: 6px; cursor: pointer;
+  border: 2px solid var(--border-strong); background: var(--accent-bg);
+  color: var(--accent-strong); font-weight: 700; font-size: 14px;
+}
+.btn:hover:not(:disabled) { background: var(--accent); color: #fff; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.stop { background: var(--banker-bg); color: var(--banker); border-color: var(--banker); }
+#progress { margin-top: 12px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--bg-sunken); border-radius: 8px; padding: 10px 12px; }
+.stat .k { font-size: 12px; color: var(--text-secondary); }
+.stat .v { font-family: var(--font-mono); font-size: 20px; font-weight: 700; margin-top: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid var(--border-subtle); padding: 6px 8px; text-align: center; }
+th { color: var(--text-secondary); font-weight: 600; }
+.ok { color: var(--tie); font-weight: 700; }
+.ng { color: var(--banker); font-weight: 700; }
+.table-scroll { overflow-x: auto; }
+.shoe { display: flex; flex-direction: column; gap: 10px; }
+.chain-row { border-left: 4px solid var(--accent); padding-left: 10px; }
+.chain-row.leftover { border-left-color: var(--text-tertiary); }
+.chain-title { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.rounds { display: flex; flex-wrap: wrap; gap: 6px; }
+.round {
+  display: flex; align-items: center; gap: 2px;
+  border: 1.5px solid var(--border-default); border-radius: 6px;
+  padding: 3px 5px; background: #fff;
+}
+.round.B { border-color: var(--banker); background: var(--banker-bg); }
+.round.P { border-color: var(--player); background: var(--player-bg); }
+.c { font-family: var(--font-mono); font-size: 12px; min-width: 26px; text-align: center; }
+.c.red { color: var(--banker); }
+.res { font-size: 11px; font-weight: 700; margin-left: 3px; }
+.empty { color: var(--text-tertiary); }
+@media (max-width: 600px) {
+  .field input { width: 90px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>穿越排牌</h1>
+  <p class="sub">
+    把 416 張牌反覆洗牌，撿出合格的穿越段（每局敏感、任一局對調後仍穿越），剩下的再用計算方式補排，最後把段接成長段。<br>
+    只看點數，不檢查卡色與訊號牌。撿不進去的牌放在整條牌最後面。
+  </p>
+
+  <div class="card">
+    <h2>設定</h2>
+    <div class="fields">
+      <div class="field"><label for="idleLimit">連續撿不到幾次停止</label><input id="idleLimit" type="number" min="10" value="1000"></div>
+      <div class="field"><label for="computeTries">計算補排嘗試次數</label><input id="computeTries" type="number" min="0" value="20000"></div>
+      <div class="field"><label for="chainAttempts">接段嘗試次數</label><input id="chainAttempts" type="number" min="1" value="20"></div>
+      <div class="field"><label for="minLen">每段最少張數</label><input id="minLen" type="number" min="8" max="20" value="8"></div>
+      <div class="field"><label for="maxLen">每段最多張數</label><input id="maxLen" type="number" min="8" max="20" value="12"></div>
+      <button id="btnRun" class="btn">開始排牌</button>
+      <button id="btnStop" class="btn stop" disabled>停止</button>
+      <button id="btnCsv" class="btn" disabled>下載牌序 CSV</button>
+    </div>
+    <div id="progress"></div>
+  </div>
+
+  <div class="card">
+    <h2>結果</h2>
+    <div id="stats" class="stats"><div class="empty">尚未排牌</div></div>
+  </div>
+
+  <div class="card">
+    <h2>長段驗證</h2>
+    <div class="table-scroll"><table id="chainTable"><thead><tr>
+      <th>#</th><th>起始張</th><th>張數</th><th>局數</th><th>穿越</th><th>每局敏感</th><th>對調後仍穿越</th>
+    </tr></thead><tbody><tr><td colspan="7" class="empty">尚未排牌</td></tr></tbody></table></div>
+  </div>
+
+  <div class="card">
+    <h2>牌序</h2>
+    <div id="shoe" class="shoe"><div class="empty">尚未排牌</div></div>
+  </div>
+</div>
+
+<script src="traverse_builder.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let cancelled = false;
+  let lastResult = null;
+
+  const num = (id) => parseInt($(id).value, 10);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function cardHtml(c) {
+    const red = c.suit === '♥' || c.suit === '♦';
+    return `<span class="c${red ? ' red' : ''}">${esc(c.suit + c.rank)}</span>`;
+  }
+
+  function renderRounds(cards) {
+    const points = cards.map((c) => c.point);
+    const rounds = TraverseBuilder.roundsFromStart(points);
+    if (!rounds) return cards.map(cardHtml).join('');
+    return rounds.map((r) => {
+      const cls = r.result === '莊' ? 'B' : (r.result === '閒' ? 'P' : '');
+      const cs = cards.slice(r.start, r.start + r.size).map(cardHtml).join('');
+      return `<span class="round ${cls}">${cs}<span class="res">${r.result}</span></span>`;
+    }).join('');
+  }
+
+  function render(result) {
+    const s = result.stats;
+    const longest = result.chains.length ? result.chains[0].length : 0;
+    const allOk = result.chains.every((c) => c.qualified);
+    $('stats').innerHTML = [
+      ['排進穿越段', `${416 - result.leftoverCount} 張`],
+      ['剩下排不進去', `${result.leftoverCount} 張`],
+      ['長段數', result.chains.length],
+      ['最長一段', `${longest} 張`],
+      ['洗牌次數', s.shuffles],
+      ['計算補排段數', s.phase2Segments],
+      ['全部驗證', allOk ? '通過' : '有問題'],
+      ['耗時', `${(s.ms / 1000).toFixed(1)} 秒`],
+    ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+    const mark = (b) => (b ? '<span class="ok">✓</span>' : '<span class="ng">✗</span>');
+    $('chainTable').querySelector('tbody').innerHTML = result.chains.map((c, i) => `
+      <tr><td>${i + 1}</td><td>${c.start}</td><td>${c.length}</td><td>${c.rounds}</td>
+      <td>${mark(c.traverse)}</td><td>${mark(c.allSensitive)}</td><td>${mark(c.qualified)}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="empty">沒有排出任何段</td></tr>';
+
+    const parts = [];
+    result.chains.forEach((c, i) => {
+      const cards = result.cards.slice(c.start - 1, c.start - 1 + c.length);
+      parts.push(`<div class="chain-row"><div class="chain-title">長段 ${i + 1}｜第 ${c.start}～${c.start + c.length - 1} 張｜${c.length} 張 ${c.rounds} 局</div><div class="rounds">${renderRounds(cards)}</div></div>`);
+    });
+    if (result.leftoverCount) {
+      const left = result.cards.slice(416 - result.leftoverCount);
+      parts.push(`<div class="chain-row leftover"><div class="chain-title">排不進去的牌｜第 ${417 - result.leftoverCount}～416 張｜${result.leftoverCount} 張</div><div class="rounds">${left.map(cardHtml).join('')}</div></div>`);
+    }
+    $('shoe').innerHTML = parts.join('');
+  }
+
+  function downloadCsv(result) {
+    const segOf = new Array(416).fill('剩餘');
+    result.chains.forEach((c, i) => { for (let k = 0; k < c.length; k++) segOf[c.start - 1 + k] = `長段${i + 1}`; });
+    const lines = ['序號,花色,點數牌,點數,所屬段'];
+    result.cards.forEach((c, i) => lines.push(`${i + 1},${c.suit},${c.rank},${c.point},${segOf[i]}`));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `穿越排牌_${new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+
+  $('btnRun').addEventListener('click', async () => {
+    const minLen = num('minLen');
+    const maxLen = num('maxLen');
+    if (!(minLen >= 8 && maxLen >= minLen)) {
+      $('progress').textContent = '每段張數設定不正確：最少要 ≥ 8，最多要 ≥ 最少';
+      return;
+    }
+    cancelled = false;
+    $('btnRun').disabled = true;
+    $('btnStop').disabled = false;
+    $('btnCsv').disabled = true;
+    $('progress').textContent = '開始排牌…';
+    try {
+      lastResult = await TraverseBuilder.build({
+        idleLimit: num('idleLimit'),
+        computeTries: num('computeTries'),
+        chainAttempts: num('chainAttempts'),
+        minLen, maxLen,
+        onProgress: (m) => { $('progress').textContent = m; },
+        isCancelled: () => cancelled,
+      });
+      render(lastResult);
+      $('progress').textContent = cancelled ? '已停止，顯示目前為止的結果' : '完成';
+      $('btnCsv').disabled = false;
+    } catch (e) {
+      console.error(e);
+      $('progress').textContent = `排牌失敗：${e.message || e}`;
+    } finally {
+      $('btnRun').disabled = false;
+      $('btnStop').disabled = true;
+    }
+  });
+  $('btnStop').addEventListener('click', () => { cancelled = true; });
+  $('btnCsv').addEventListener('click', () => { if (lastResult) downloadCsv(lastResult); });
+})();
+</script>
+</body>
+</html>
