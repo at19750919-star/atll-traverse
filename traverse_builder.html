@@ -76,9 +76,16 @@ body {
 }
 .btn:hover:not(:disabled) { background: var(--accent); color: #fff; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
+.sep { width: 1.5px; align-self: stretch; background: var(--border-subtle); margin: 0 4px; }
 .btn.stop { background: var(--banker-bg); color: var(--banker); border-color: var(--banker); }
 #progress { flex-basis: 100%; margin-top: -2px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.bpt { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin-bottom: 10px; }
+.bpt:empty { display: none; }
+.bpt-item { display: inline-flex; align-items: center; gap: 6px; }
+.bpt-num { font-family: var(--font-mono); font-size: 20px; font-weight: 700; }
+.bpt-pct { font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); }
+.bpt-total { color: var(--text-secondary); margin-left: auto; }
 .stat { background: var(--bg-sunken); border-radius: 8px; padding: 10px 12px; }
 .stat .k { font-size: 12px; color: var(--text-secondary); }
 .stat .v { font-family: var(--font-mono); font-size: 18px; font-weight: 700; margin-top: 2px; }
@@ -161,11 +168,12 @@ th { color: var(--text-secondary); font-weight: 600; }
       <div class="field"><label for="idleLimit">連續撿不到幾次停止</label><input id="idleLimit" type="number" min="10" value="1000"></div>
       <div class="field"><label for="computeTries">計算補排嘗試次數</label><input id="computeTries" type="number" min="0" value="20000"></div>
       <div class="field"><label for="chainAttempts">接段嘗試次數</label><input id="chainAttempts" type="number" min="1" value="20"></div>
-      <div class="field"><label for="minLen">每段最少張數</label><input id="minLen" type="number" min="8" max="20" value="8"></div>
-      <div class="field"><label for="maxLen">每段最多張數</label><input id="maxLen" type="number" min="8" max="20" value="12"></div>
       <button id="btnRun" class="btn">開始排牌</button>
       <button id="btnStop" class="btn stop" disabled>停止</button>
-      <button id="btnCsv" class="btn" disabled>下載牌序 CSV</button>
+      <span class="sep"></span>
+      <div class="field"><label for="cutPos">切牌張數（0＝原序）</label><input id="cutPos" type="number" min="0" max="415" value="0" disabled></div>
+      <button id="btnCut" class="btn" disabled>切牌</button>
+      <button id="btnExport" class="btn" disabled>導出</button>
     </div>
     <div id="progress"></div>
   </header>
@@ -184,6 +192,7 @@ th { color: var(--text-secondary); font-weight: 600; }
     <aside class="side">
       <section class="card">
         <h2>結果</h2>
+        <div id="bpt" class="bpt"></div>
         <div id="stats" class="stats"><div class="empty">尚未排牌</div></div>
       </section>
       <section class="card grow">
@@ -196,7 +205,9 @@ th { color: var(--text-secondary); font-weight: 600; }
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="traverse_builder.js"></script>
+<script src="traverse_export.js"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -210,78 +221,69 @@ th { color: var(--text-secondary); font-weight: 600; }
   const cardText = (c) => `${c.rank === '10' ? 'T' : c.rank}${c.suit}`;
   const label = (c) => `<span class="card-label">${esc(cardText(c))}</span>`;
 
-  // 一局的閒/莊分牌（與 TraverseBuilder.simulateHand 同一套補牌規則）
-  function dealDetail(points, start, limit) {
-    if (start + 4 > limit) return null;
-    const P = [start, start + 2];
-    const Bk = [start + 1, start + 3];
-    let pp = (points[start] + points[start + 2]) % 10;
-    let bb = (points[start + 1] + points[start + 3]) % 10;
-    if (pp < 8 && bb < 8) {
-      if (pp <= 5) {
-        if (start + 5 > limit) return null;
-        const p3 = points[start + 4];
-        P.push(start + 4);
-        pp = (pp + p3) % 10;
-        let bd;
-        if (bb <= 2) bd = true;
-        else if (bb === 3) bd = p3 !== 8;
-        else if (bb === 4) bd = p3 >= 2 && p3 <= 7;
-        else if (bb === 5) bd = p3 >= 4 && p3 <= 7;
-        else if (bb === 6) bd = p3 === 6 || p3 === 7;
-        else bd = false;
-        if (bd) {
-          if (start + 6 > limit) return null;
-          Bk.push(start + 5);
-          bb = (bb + points[start + 5]) % 10;
-        }
-      } else if (bb <= 5) {
-        if (start + 5 > limit) return null;
-        Bk.push(start + 4);
-        bb = (bb + points[start + 4]) % 10;
-      }
-    }
-    const result = pp > bb ? '閒' : (bb > pp ? '莊' : '和');
-    return { P, B: Bk, pp, bb, result, size: P.length + Bk.length };
-  }
-
   const outcomeClass = { '莊': 'banker', '閒': 'player', '和': 'tie' };
   const badge = (r) => `<span class="outcome outcome-${outcomeClass[r]}">${r}</span>`;
 
-  // 把 [from, to) 的牌一局一局轉成表格列，roundNo 為起始局號
-  function rowsFor(cards, from, to, roundNo, isTraverse) {
-    const points = cards.map((c) => c.point);
-    const rows = [];
-    let cur = from;
-    while (cur < to) {
-      const d = dealDetail(points, cur, to);
-      if (!d) {
-        // 殘牌：不足一局
-        const rest = cards.slice(cur, to);
-        rows.push(`<tr><td class="minor-column">${roundNo++}</td><td><span class="card-strip">${rest.map(label).join('')}</span></td><td class="result-cell"></td><td></td><td></td><td></td><td></td><td>--</td></tr>`);
-        break;
-      }
-      const swapped = points.slice();
-      [swapped[cur], swapped[cur + 1]] = [swapped[cur + 1], swapped[cur]];
-      const sw = dealDetail(swapped, cur, cur + d.size);
-      let swapCell;
-      if (!sw || sw.size !== d.size) swapCell = '<span class="row-tag tag-warn-red">無法對調</span>';
-      else if (d.result === '莊' && d.bb === 6 && d.pp <= 5) swapCell = '<span class="row-tag tag-warn-amber">莊6贏</span>';
-      else if (sw.result === '莊' && sw.bb === 6) swapCell = '<span class="row-tag tag-warn-purple">對調莊6</span>';
-      else swapCell = badge(sw.result);
-      const roundCards = cards.slice(cur, cur + d.size);
-      rows.push(`<tr${isTraverse ? ' class="traverse-round"' : ''}>
-        <td class="minor-column">${roundNo++}</td>
-        <td><span class="card-strip">${roundCards.map(label).join('')}</span></td>
-        <td class="result-cell">${badge(d.result)}</td>
-        <td><span class="hand-chip-strip">${d.P.map((i) => label(cards[i])).join('')}</span></td>
-        <td><span class="hand-chip-strip">${d.B.map((i) => label(cards[i])).join('')}</span></td>
-        <td class="hand-point-cell">${d.pp}</td>
-        <td class="hand-point-cell${d.bb === 6 ? ' banker-six-point' : ''}">${d.bb}</td>
-        <td>${swapCell}</td></tr>`);
-      cur += d.size;
+  let baseCards = null;   // 排牌結果（未切牌）
+  let cutPos = 0;
+  let shownRounds = [];   // 目前牌表上的局（切牌後重新發）
+
+  function roundRow(round, no) {
+    const cardsHtml = `<span class="card-strip">${round.cards.map(label).join('')}</span>`;
+    if (!round.hand) {
+      // 殘牌：不足一局
+      return `<tr><td class="minor-column">${no}</td><td>${cardsHtml}</td><td class="result-cell"></td><td></td><td></td><td></td><td></td><td>殘牌</td></tr>`;
     }
-    return { rows, roundNo };
+    const d = round.hand;
+    const sw = TraverseExport.swappedTotals(round);
+    let swapCell;
+    if (!sw || sw.size !== d.size) swapCell = '<span class="row-tag tag-warn-red">無法對調</span>';
+    else if (d.result === '莊' && d.bb === 6 && d.pp <= 5) swapCell = '<span class="row-tag tag-warn-amber">莊6贏</span>';
+    else if (sw.result === '莊' && sw.bb === 6) swapCell = '<span class="row-tag tag-warn-purple">對調莊6</span>';
+    else swapCell = badge(sw.result);
+    const at = (i) => round.cards[i - round.start];
+    return `<tr${round.segment === 'A' ? ' class="traverse-round"' : ''}>
+      <td class="minor-column">${no}</td>
+      <td>${cardsHtml}</td>
+      <td class="result-cell">${badge(d.result)}</td>
+      <td><span class="hand-chip-strip">${d.P.map((i) => label(at(i))).join('')}</span></td>
+      <td><span class="hand-chip-strip">${d.B.map((i) => label(at(i))).join('')}</span></td>
+      <td class="hand-point-cell">${d.pp}</td>
+      <td class="hand-point-cell${d.bb === 6 ? ' banker-six-point' : ''}">${d.bb}</td>
+      <td>${swapCell}</td></tr>`;
+  }
+
+  function renderTable(result) {
+    shownRounds = TraverseExport.dealRounds(TraverseExport.cutDeck(baseCards, cutPos));
+    const parts = [];
+    if (cutPos === 0) {
+      // 原序：依長段分組（長段邊界一定落在局的起點）
+      const groupAt = new Map();
+      result.chains.forEach((c, i) => groupAt.set(c.start - 1, `長段 ${i + 1}｜第 ${c.start}～${c.start + c.length - 1} 張｜${c.length} 張 ${c.rounds} 局`));
+      if (result.leftoverCount) groupAt.set(416 - result.leftoverCount, `排不進去的牌｜第 ${417 - result.leftoverCount}～416 張｜${result.leftoverCount} 張`);
+      shownRounds.forEach((r, i) => {
+        if (groupAt.has(r.start)) parts.push(`<tr class="group-row"><td colspan="8">${groupAt.get(r.start)}</td></tr>`);
+        parts.push(roundRow(r, i + 1));
+      });
+    } else {
+      const done = shownRounds.filter((r) => r.hand).length;
+      parts.push(`<tr class="group-row"><td colspan="8">切牌 ${cutPos} 張｜從原本第 ${cutPos + 1} 張開始發｜共 ${done} 局｜紫色列＝整局都是穿越段的牌</td></tr>`);
+      shownRounds.forEach((r, i) => parts.push(roundRow(r, i + 1)));
+    }
+    $('roundsBody').innerHTML = parts.join('');
+    renderBpt();
+  }
+
+  // 莊閒和統計：跟著目前牌表（切牌後會重算）
+  function renderBpt() {
+    const n = { '莊': 0, '閒': 0, '和': 0 };
+    shownRounds.forEach((r) => { if (r.hand) n[r.result]++; });
+    const total = n['莊'] + n['閒'] + n['和'];
+    const pct = (k) => (total ? ((k / total) * 100).toFixed(1) : '0.0');
+    $('bpt').innerHTML = [['莊', 'banker'], ['閒', 'player'], ['和', 'tie']].map(([k, cls]) => `
+      <div class="bpt-item"><span class="outcome outcome-${cls}">${k}</span>
+      <span class="bpt-num">${n[k]}</span><span class="bpt-pct">${pct(n[k])}%</span></div>`).join('')
+      + `<div class="bpt-item bpt-total">共 <span class="bpt-num">${total}</span> 局</div>`;
   }
 
   function render(result) {
@@ -305,60 +307,70 @@ th { color: var(--text-secondary); font-weight: 600; }
       <td>${mark(c.traverse)}</td><td>${mark(c.allSensitive)}</td><td>${mark(c.qualified)}</td></tr>`).join('')
       || '<tr><td colspan="7" class="empty">沒有排出任何段</td></tr>';
 
-    const parts = [];
-    let roundNo = 1;
-    result.chains.forEach((c, i) => {
-      parts.push(`<tr class="group-row"><td colspan="8">長段 ${i + 1}｜第 ${c.start}～${c.start + c.length - 1} 張｜${c.length} 張 ${c.rounds} 局</td></tr>`);
-      const out = rowsFor(result.cards, c.start - 1, c.start - 1 + c.length, roundNo, true);
-      parts.push(...out.rows);
-      roundNo = out.roundNo;
-    });
-    if (result.leftoverCount) {
-      parts.push(`<tr class="group-row"><td colspan="8">排不進去的牌｜第 ${417 - result.leftoverCount}～416 張｜${result.leftoverCount} 張</td></tr>`);
-      parts.push(...rowsFor(result.cards, 416 - result.leftoverCount, 416, roundNo, false).rows);
-    }
-    $('roundsBody').innerHTML = parts.join('');
+    renderTable(result);
   }
 
-  function downloadCsv(result) {
-    const segOf = new Array(416).fill('剩餘');
-    result.chains.forEach((c, i) => { for (let k = 0; k < c.length; k++) segOf[c.start - 1 + k] = `長段${i + 1}`; });
-    const lines = ['序號,花色,點數牌,點數,所屬段'];
-    result.cards.forEach((c, i) => lines.push(`${i + 1},${c.suit},${c.rank},${c.point},${segOf[i]}`));
-    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `穿越排牌_${new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '')}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(a.href);
+  // 導出檔名：獨立編號，與百家3.0 的 F 編號分開
+  const EXPORT_PREFIX = 'TR';
+  function nextExportFilename() {
+    const key = 'traverse-export-counter';
+    let n = 0;
+    try { n = parseInt(localStorage.getItem(key) || '0', 10) || 0; } catch (e) { /* 無痕視窗等讀不到時從 1 起 */ }
+    n += 1;
+    try { localStorage.setItem(key, String(n)); } catch (e) { /* 同上 */ }
+    return `${EXPORT_PREFIX}${String(n).padStart(3, '0')}.xlsx`;
+  }
+
+  async function exportExcel() {
+    if (!shownRounds.length) return;
+    $('btnExport').disabled = true;
+    try {
+      const blob = await TraverseExport.buildWorkbook(shownRounds);
+      const filename = nextExportFilename();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      $('progress').textContent = `已導出 ${filename}（${cutPos ? `切牌 ${cutPos} 張後` : '原序'}）`;
+    } catch (e) {
+      console.error(e);
+      $('progress').textContent = `導出失敗：${e.message || e}`;
+    } finally {
+      $('btnExport').disabled = false;
+    }
+  }
+
+  function setReady(ready) {
+    ['cutPos', 'btnCut', 'btnExport'].forEach((id) => { $(id).disabled = !ready; });
   }
 
   $('btnRun').addEventListener('click', async () => {
-    const minLen = num('minLen');
-    const maxLen = num('maxLen');
-    if (!(minLen >= 8 && maxLen >= minLen)) {
-      $('progress').textContent = '每段張數設定不正確：最少要 ≥ 8，最多要 ≥ 最少';
-      return;
-    }
     cancelled = false;
     $('btnRun').disabled = true;
     $('btnStop').disabled = false;
-    $('btnCsv').disabled = true;
+    setReady(false);
     $('progress').textContent = '開始排牌…';
     try {
       lastResult = await TraverseBuilder.build({
         idleLimit: num('idleLimit'),
         computeTries: num('computeTries'),
         chainAttempts: num('chainAttempts'),
-        minLen, maxLen,
         onProgress: (m) => { $('progress').textContent = m; },
         isCancelled: () => cancelled,
       });
+      // 標記穿越段的牌，切牌後仍能辨認
+      baseCards = lastResult.cards.map((c) => ({ ...c, traverse: false }));
+      lastResult.chains.forEach((ch) => {
+        for (let k = ch.start - 1; k < ch.start - 1 + ch.length; k++) baseCards[k].traverse = true;
+      });
+      cutPos = 0;
+      $('cutPos').value = 0;
       render(lastResult);
       $('progress').textContent = cancelled ? '已停止，顯示目前為止的結果' : '完成';
-      $('btnCsv').disabled = false;
+      setReady(true);
     } catch (e) {
       console.error(e);
       $('progress').textContent = `排牌失敗：${e.message || e}`;
@@ -368,7 +380,17 @@ th { color: var(--text-secondary); font-weight: 600; }
     }
   });
   $('btnStop').addEventListener('click', () => { cancelled = true; });
-  $('btnCsv').addEventListener('click', () => { if (lastResult) downloadCsv(lastResult); });
+  $('btnCut').addEventListener('click', () => {
+    const v = parseInt($('cutPos').value, 10);
+    if (!Number.isInteger(v) || v < 0 || v > 415) {
+      $('progress').textContent = '切牌張數要在 0～415 之間';
+      return;
+    }
+    cutPos = v;
+    renderTable(lastResult);
+    $('progress').textContent = v ? `已切牌 ${v} 張，從原本第 ${v + 1} 張開始發` : '已恢復原序';
+  });
+  $('btnExport').addEventListener('click', exportExcel);
 })();
 </script>
 </body>
