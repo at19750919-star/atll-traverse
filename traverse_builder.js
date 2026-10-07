@@ -335,9 +335,9 @@
                 chains.push(chain);
             }
             chains.sort((a, b) => b.length - a.length);
-            const score = chains[0].length * 1000 - chains.length;
+            const score = (chains.length ? chains[0].length : 0) * 1000 - chains.length;
             if (!best || score > best.score) best = { chains, score };
-            ctx.progress(`階段 3 接段：第 ${attempt + 1}/${opts.chainAttempts} 次，目前最長 ${best.chains[0].length} 張`);
+            ctx.progress(`階段 3 接段：第 ${attempt + 1}/${opts.chainAttempts} 次，目前最長 ${best.chains.length ? best.chains[0].length : 0} 張`);
             await tick();
         }
         // 中途停止且一次都沒接完：原段照放，確保牌數仍是 416
