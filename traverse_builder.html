@@ -87,7 +87,7 @@ body {
 .vio-total { font-family: var(--font-mono); font-size: 14px; color: var(--banker); }
 .vio-total.clean { color: var(--tie); }
 .btn-mini { padding: 1px 10px; font-size: 12px; margin-left: 8px; vertical-align: middle; }
-.cut-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+.cut-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 8px; }
 .cut-stats:empty { display: none; }
 .cut-stat { background: var(--bg-sunken); border-radius: 6px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
 .cut-stat .k { font-size: 12px; color: var(--text-secondary); }
@@ -415,9 +415,10 @@ th { color: var(--text-secondary); font-weight: 600; }
   let cutBuckets = null;
   function computeSafeCuts() {
     safeCuts = [];
-    cutBuckets = { none: 0, r12: 0, r34: 0, r5: 0 };
+    cutBuckets = { none: 0, r12: 0, r34: 0, r5: 0, sum: 0 };
     for (let c = 0; c < 416; c++) {
       const m = cutLastViolation(c);
+      cutBuckets.sum += m;
       if (m === 0) { safeCuts.push(c); cutBuckets.none++; }
       else if (m <= 2) cutBuckets.r12++;
       else if (m <= 4) cutBuckets.r34++;
@@ -428,7 +429,8 @@ th { color: var(--text-secondary); font-weight: 600; }
   function renderSafeCuts() {
     $('safeTotal').textContent = `${safeCuts.length} / 416`;
     if (cutBuckets) {
-      $('cutStats').innerHTML = [['違規 0 局', cutBuckets.none], ['第 1～2 局', cutBuckets.r12], ['第 3～4 局', cutBuckets.r34], ['第 5 局以上', cutBuckets.r5]]
+      // 平均：416 個切牌位置「最後違規落在第幾局」的平均（安全位置算 0 局）
+      $('cutStats').innerHTML = [['違規 0 局', cutBuckets.none], ['第 1～2 局', cutBuckets.r12], ['第 3～4 局', cutBuckets.r34], ['第 5 局以上', cutBuckets.r5], ['平均', `${(cutBuckets.sum / 416).toFixed(1)} 局`]]
         .map(([k, v]) => `<div class="cut-stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
     }
     // 連續位置合併成區段顯示，例如 12～15
