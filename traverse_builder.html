@@ -91,8 +91,6 @@ body {
 }
 .vio-link:hover { background: var(--banker); color: #fff; }
 .round-table tbody tr.violation-row { background: rgba(180,50,40,0.18) !important; }
-.round-table tbody tr[data-zone] td:first-child { box-shadow: inset 5px 0 0 var(--b6win); }
-.round-table tr.group-row.cut-zone-head td { background: var(--b6win); color: #fff; }
 .round-table tbody tr.flash { outline: 3px solid var(--accent); outline-offset: -3px; }
 .round-table.swap-mode .card-label { cursor: pointer; }
 .round-table.swap-mode .card-label:hover { border-color: var(--accent); }
@@ -286,19 +284,6 @@ th { color: var(--text-secondary); font-weight: 600; }
       <td>${swapCell}</td></tr>`;
   }
 
-  // 切牌影響區：切牌後要發到第幾局，局的起點才會對回原序的局起點。
-  // 之後的局跟原序完全相同；三條規則看上一局，所以對回後的第一局也算在影響區內。
-  function cutZoneEnd() {
-    const origStarts = new Set(TraverseExport.dealRounds(baseCards).map((r) => r.start));
-    let k = shownRounds.findIndex((r) => origStarts.has((r.start + cutPos) % 416));
-    if (k < 0) return shownRounds.length;
-    if (k === 0) return 0;
-    const prev = shownRounds[k - 1], cur = shownRounds[k];
-    if ($('tripleTie').checked && prev.hand && cur.hand
-        && TraverseBuilder.isTriple(prev.cards.map((c) => c.point)) !== (cur.result === '和')) k++;
-    return k;
-  }
-
   function renderTable(result) {
     shownRounds = TraverseExport.dealRounds(TraverseExport.cutDeck(baseCards, cutPos));
     const parts = [];
@@ -313,13 +298,8 @@ th { color: var(--text-secondary); font-weight: 600; }
       });
     } else {
       const done = shownRounds.filter((r) => r.hand).length;
-      const zone = cutZoneEnd();
       parts.push(`<tr class="group-row"><td colspan="8">切牌 ${cutPos} 張｜從原本第 ${cutPos + 1} 張開始發｜共 ${done} 局｜紫色列＝整局都是穿越段的牌</td></tr>`);
-      if (zone > 0) parts.push(`<tr class="group-row cut-zone-head"><td colspan="8">切牌影響區｜${zone === 1 ? "第 1 局" : `第 1～${zone} 局`}：從段中間開始發，局的分法跟原本不同，切牌造成的違規只會出現在這一區</td></tr>`);
-      shownRounds.forEach((r, i) => {
-        if (zone > 0 && i === zone) parts.push(`<tr class="group-row"><td colspan="8">第 ${zone + 1} 局起回到原本的局序（排牌時已檢查過）</td></tr>`);
-        parts.push(roundRow(r, i + 1).replace('<tr ', i < zone ? '<tr data-zone="1" ' : '<tr '));
-      });
+      shownRounds.forEach((r, i) => parts.push(roundRow(r, i + 1)));
     }
     $('roundsBody').innerHTML = parts.join('');
     renderBpt();
