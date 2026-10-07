@@ -77,6 +77,7 @@ body {
 .btn:hover:not(:disabled) { background: var(--accent); color: #fff; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .sep { width: 1.5px; align-self: stretch; background: var(--border-subtle); margin: 0 4px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); padding-bottom: 8px; }
 .btn.stop { background: var(--banker-bg); color: var(--banker); border-color: var(--banker); }
 #progress { flex-basis: 100%; margin-top: -2px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
@@ -182,6 +183,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       <div class="field"><label for="computeTries">計算補排嘗試次數</label><input id="computeTries" type="number" min="0" value="20000"></div>
       <div class="field"><label for="chainAttempts">接段嘗試次數</label><input id="chainAttempts" type="number" min="1" value="20"></div>
       <div class="field"><label for="maxLeftover">排不進超過幾張就重跑（空白＝不重跑）</label><input id="maxLeftover" type="number" min="0" max="416" value="30"></div>
+      <label class="check"><input id="tripleTie" type="checkbox" checked> 三條規則（三條下一局必和，其他局不和）</label>
       <button id="btnRun" class="btn">開始排牌</button>
       <button id="btnStop" class="btn stop" disabled>停止</button>
       <span class="sep"></span>
@@ -225,8 +227,8 @@ th { color: var(--text-secondary); font-weight: 600; }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js"></script>
-<script src="traverse_export.js"></script>
+<script src="traverse_builder.js?v=3"></script>
+<script src="traverse_export.js?v=3"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -305,10 +307,27 @@ th { color: var(--text-secondary); font-weight: 600; }
     updateSwapHighlights();
   }
 
+  // 三條規則違規：上一局是三條卻沒開和，或上一局不是三條卻開和（標在開和／該和的那一局）
+  function tripleViolations() {
+    const out = [];
+    if (!$('tripleTie').checked) return out;
+    for (let k = 0; k + 1 < shownRounds.length; k++) {
+      const a = shownRounds[k], b = shownRounds[k + 1];
+      if (!a.hand || !b.hand) continue;
+      const trip = TraverseBuilder.isTriple(a.cards.map((c) => c.point));
+      if (trip !== (b.result === '和')) out.push(k + 2);
+    }
+    return out;
+  }
+
   function renderViolations() {
-    const groups = { noSwap: [], same: [] };
+    const groups = { noSwap: [], same: [], triple: tripleViolations() };
     shownRounds.forEach((r, i) => { const v = violationOf(r); if (v) groups[v].push(i + 1); });
-    const total = groups.noSwap.length + groups.same.length;
+    const vioRounds = new Set([...groups.noSwap, ...groups.same, ...groups.triple]);
+    document.querySelectorAll('#roundsBody tr[id^="round-"]').forEach((tr) => {
+      tr.classList.toggle('violation-row', vioRounds.has(Number(tr.id.slice(6))));
+    });
+    const total = vioRounds.size;
     $('vioTotal').textContent = total ? `${total} 局` : '無';
     $('vioTotal').classList.toggle('clean', !total);
     if (!total) {
@@ -318,7 +337,8 @@ th { color: var(--text-secondary); font-weight: 600; }
     const line = (name, list) => list.length
       ? `<div class="vio-group"><span class="k">${name}（${list.length}）</span>${list.map((n) => `<a class="vio-link" data-goto="${n}">第${n}局</a>`).join('')}</div>`
       : '';
-    $('violations').innerHTML = line('無法對調', groups.noSwap) + line('對調後結果不變', groups.same);
+    $('violations').innerHTML = line('無法對調', groups.noSwap) + line('對調後結果不變', groups.same)
+      + line('三條規則', groups.triple);
   }
 
   // 點違規連結：捲到那一局並閃一下
@@ -558,6 +578,7 @@ th { color: var(--text-secondary); font-weight: 600; }
           idleLimit: num('idleLimit'),
           computeTries: num('computeTries'),
           chainAttempts: num('chainAttempts'),
+          tripleTie: $('tripleTie').checked,
           onProgress: (m) => { $('progress').textContent = tag + m; },
           isCancelled: () => cancelled,
         });

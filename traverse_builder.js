@@ -110,6 +110,25 @@
         return h.result !== '和' && h.result !== orig.result;
     }
 
+    // 三條：一局裡至少 3 張同點數（1~9，0 點不算），與百家3.0 hasFullHouse 相同
+    function isTriple(hand) {
+        const c = new Array(10).fill(0);
+        for (const p of hand) if (p > 0 && ++c[p] >= 3) return true;
+        return false;
+    }
+
+    // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
+    // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
+    const rules = { tripleTie: true };
+    function tripleRuleOk(arr, rounds) {
+        const trip = rounds.map(r => isTriple(arr.slice(r.start, r.start + r.size)));
+        if (rounds[0].result === '和' || trip[trip.length - 1]) return false;
+        for (let k = 0; k + 1 < rounds.length; k++) {
+            if (trip[k] !== (rounds[k + 1].result === '和')) return false;
+        }
+        return true;
+    }
+
     function qualifies(arr) {
         if (!isTraverse(arr)) return false;
         const rounds = roundsFromStart(arr);
@@ -117,6 +136,7 @@
         for (const r of rounds) {
             if (!handSensitive(arr.slice(r.start, r.start + r.size))) return false;
         }
+        if (rules.tripleTie && !tripleRuleOk(arr, rounds)) return false;
         for (const r of rounds) {
             const sw = arr.slice();
             [sw[r.start], sw[r.start + 1]] = [sw[r.start + 1], sw[r.start]];
@@ -346,9 +366,11 @@
             minLen: options.minLen ?? 8,
             maxLen: options.maxLen ?? 12,
             rng: options.rng || Math.random,
+            tripleTie: options.tripleTie !== false,
             zeroPolicy: options.zeroPolicy || 'quota',
             quotaFactor: options.quotaFactor ?? 1,
         };
+        rules.tripleTie = opts.tripleTie;
         opts.scanLengths = [];
         for (let L = opts.maxLen; L >= opts.minLen; L--) opts.scanLengths.push(L);
         const ctx = {
@@ -401,6 +423,6 @@
         };
     }
 
-    global.TraverseBuilder = { build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand };
+    global.TraverseBuilder = { build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);
