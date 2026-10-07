@@ -45,11 +45,9 @@ body {
 }
 .app { display: flex; flex-direction: column; height: 100vh; padding: 12px 16px; gap: 12px; }
 .topbar {
-  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 24px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
   background: var(--bg-paper); border: 2px solid var(--border-strong); border-radius: 10px; padding: 10px 16px;
 }
-.brand h1 { font-family: var(--font-display); font-size: 22px; margin: 0; white-space: nowrap; }
-.brand .sub { color: var(--text-tertiary); font-size: 12px; margin: 2px 0 0; white-space: nowrap; }
 .main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, max-content) minmax(400px, 1fr); gap: 12px; }
 .side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
 .card {
@@ -76,10 +74,13 @@ body {
 }
 .btn:hover:not(:disabled) { background: var(--accent); color: #fff; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
+.fields.actions { align-items: center; }
+.field-inline { display: inline-flex; align-items: center; gap: 6px; }
+.field-inline label { margin: 0; }
 .sep { width: 1.5px; align-self: stretch; background: var(--border-subtle); margin: 0 4px; }
 .check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); padding-bottom: 8px; }
 .btn.stop { background: var(--banker-bg); color: var(--banker); border-color: var(--banker); }
-#progress { flex-basis: 100%; margin-top: -2px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
+#progress { flex: 1; min-width: 200px; text-align: right; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .vio-total { font-family: var(--font-mono); font-size: 14px; color: var(--banker); }
 .vio-total.clean { color: var(--tie); }
@@ -176,27 +177,29 @@ th { color: var(--text-secondary); font-weight: 600; }
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">
-      <h1>穿越排牌</h1>
-      <p class="sub">每局敏感（和局對調後仍和也算）、任一局對調後仍穿越｜只看點數，不管卡色與訊號牌｜排不進去的牌放最後</p>
-    </div>
+    <!-- 第一排：排牌參數與規則 -->
     <div class="fields">
       <div class="field"><label for="idleLimit">連續撿不到幾次停止</label><input id="idleLimit" type="number" min="10" value="1000"></div>
       <div class="field"><label for="computeTries">計算補排嘗試次數</label><input id="computeTries" type="number" min="0" value="20000"></div>
       <div class="field"><label for="chainAttempts">接段嘗試次數</label><input id="chainAttempts" type="number" min="1" value="20"></div>
-      <div class="field"><label for="maxLeftover">排不進超過幾張就重跑（空白＝不重跑）</label><input id="maxLeftover" type="number" min="0" max="416" value="5"></div>
-      <label class="check"><input id="tripleTie" type="checkbox" checked> 三條規則（三條下一局必和，其他局不和）</label>
-      <label class="check"><input id="signalRule" type="checkbox" checked> 訊號牌規則（有 A、2 下一局莊，沒有則閒）</label>
-      <label class="check" title="實驗用：段內除了剩 1、2、3、7 張的豁免起點，從任何一張開始發，每一局都要是敏感局。合格段極少，只跑一次、不自動重跑。"><input id="strongMode" type="checkbox"> 強條件：每個起點都敏感（豁免除外，實驗）</label>
+      <div class="field"><label for="maxLeftover" title="空白＝不重跑">排不進超過幾張就重跑</label><input id="maxLeftover" type="number" min="0" max="416" value="5"></div>
+      <span class="sep"></span>
+      <label class="check" title="三條的下一局必開和，其他局的下一局不能開和"><input id="tripleTie" type="checkbox" checked> 三條規則</label>
+      <label class="check" title="上一局有 A、2 這局開莊，沒有則開閒（三條優先）"><input id="signalRule" type="checkbox" checked> 訊號牌規則（A、2）</label>
+      <label class="check" title="實驗用：段內除了剩 1、2、3、7 張的豁免起點，從任何一張開始發，每一局都要是敏感局。合格段極少，只跑一次、不自動重跑。"><input id="strongMode" type="checkbox"> 強條件（實驗）</label>
+    </div>
+    <!-- 第二排：操作與進度 -->
+    <div class="fields actions">
       <button id="btnRun" class="btn">開始排牌</button>
       <button id="btnStop" class="btn stop" disabled>停止</button>
       <span class="sep"></span>
-      <div class="field"><label for="cutPos">切牌張數（0＝原序）</label><input id="cutPos" type="number" min="0" max="415" value="0" disabled></div>
+      <div class="field field-inline"><label for="cutPos">切牌張數</label><input id="cutPos" type="number" min="0" max="415" value="0" disabled title="0＝原序"></div>
       <button id="btnCut" class="btn" disabled>切牌</button>
       <button id="btnSwap" class="btn" disabled>換牌</button>
+      <span class="sep"></span>
       <button id="btnExport" class="btn" disabled>導出</button>
+      <div id="progress"></div>
     </div>
-    <div id="progress"></div>
   </header>
 
   <div class="main">
