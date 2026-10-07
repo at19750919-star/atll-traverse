@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>百家樂點數統計</title>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Microsoft JhengHei', sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+    padding: 20px;
+}
+h1 { text-align: center; margin-bottom: 20px; color: #4fc3f7; }
+.upload-area {
+    border: 2px dashed #555;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+.upload-area:hover, .upload-area.drag-over {
+    border-color: #4fc3f7;
+    background: rgba(79, 195, 247, 0.1);
+}
+.upload-area input { display: none; }
+.results { display: flex; flex-wrap: wrap; gap: 16px; }
+.file-result {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 16px;
+    min-width: 320px;
+    flex: 1 1 320px;
+    max-width: 500px;
+}
+.file-result h3 {
+    color: #4fc3f7;
+    margin-bottom: 10px;
+    font-size: 14px;
+    word-break: break-all;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 6px 12px;
+    text-align: center;
+    border: 1px solid #333;
+}
+th { background: #0f3460; }
+tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+.total-row { background: #0f3460 !important; font-weight: bold; }
+.btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    margin: 5px;
+}
+.btn-upload { background: #4fc3f7; color: #000; }
+.btn-drive { background: #34a853; color: #fff; }
+.btn-drive:hover { background: #2d9249; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.toolbar { text-align: center; margin-bottom: 16px; }
+#status { text-align: center; margin: 10px 0; color: #aaa; }
+</style>
+</head>
+<body>
+<h1>百家樂點數統計</h1>
+
+<div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <div class="upload-area" id="dropZone" style="flex:1;min-width:250px;">
+        <p>點擊選擇本機 Excel 檔案（可多選）<br><small>或拖放檔案到此區域</small></p>
+        <input type="file" id="fileInput" accept=".xlsx" multiple>
+    </div>
+    <div class="upload-area" id="cloudZone" style="flex:1;min-width:250px;border-color:#34a853;" onclick="loadFromCloud()">
+        <p style="color:#34a853;">從 Google 雲端選擇檔案<br><small>支援多選（按住 Ctrl）</small></p>
+    </div>
+</div>
+
+<div class="toolbar">
+    <button class="btn btn-drive" id="btnDrive" disabled onclick="uploadAllToDrive()">上傳統計結果到雲端</button>
+</div>
+<div id="status"></div>
+<div class="results" id="results"></div>
+
+<script>
+console.log('[point_stats] version=2026-04-27-fix-celltext');
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypt3_PnEL5TgdDPaBwg1M5bWAjQMR9dD5Jslicn3eZCtuNSTtqO35RafhQpuX-l9_m/exec';
+// 「新牌」資料夾 ID — GAS 端的預設 ROOT 取得邏輯壞了（不帶 folderId 會吐「服務錯誤：雲端硬碟」），
+// 前端顯式帶 ID 繞過。如果 ROOT 變更，改這裡即可。
+const ROOT_FOLDER_ID = '1sw7ANyAL-yaosq9nKOlMeMtv_R4c29It';
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const resultsDiv = document.getElementById('results');
+const statusDiv = document.getElementById('status');
+const btnDrive = document.getElementById('btnDrive');
+
+let allStats = []; // 儲存所有檔案的統計結果
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+function cardPoint(label) {
+    if (label == null) return 0;
+    const s = String(label).trim();
+    if (!s) return 0;
+    // 10 點牌可能寫成 "10♥" 或 "T♥"；T/J/Q/K = 0 點
+    if (s.startsWith('10') || /^[TJQK]/i.test(s)) return 0;
+    const ch = s.charAt(0).toUpperCase();
+    if (ch === 'A') return 1;
+    const n = parseInt(ch, 10);
+    return isNaN(n) ? 0 : n;
+}
+
+// 莊家是否補牌（標準百家樂規則）
+function bankerDraws(b_init, p_draw) {
+    if (p_draw === null) return b_init <= 5;   // 閒沒補 → 莊以 0~5 補
+    if (b_init <= 2) return true;
+    if (b_init === 3) return p_draw !== 8;
+    if (b_init === 4) return p_draw >= 2 && p_draw <= 7;
+    if (b_init === 5) return p_draw >= 4 && p_draw <= 7;
+    if (b_init === 6) return p_draw === 6 || p_draw === 7;
+    return false;
+}
+
+function parseRound(row) {
+    // row: [局號, 段標, 色序, 卡片1, 卡片2, 卡片3, 卡片4, 卡片5, 卡片6, 結果, 訊號]
+    // 索引: 0      1     2     3       4       5       6       7       8     9     10
+    // 卡片1=閒1, 卡片2=莊1, 卡片3=閒2, 卡片4=莊2
+    // 卡片5/6 = 補牌（按補牌順序填）：閒先補（若需要），再莊補
+    const result = row[9];
+    if (!result) return null;
+
+    const v = [];
+    for (let i = 3; i <= 8; i++) {
+        const s = row[i];
+        v.push(s ? cardPoint(s) : null);
+    }
+    if (v[0] === null || v[1] === null || v[2] === null || v[3] === null) return null;
+
+    const p_init = (v[0] + v[2]) % 10;
+    const b_init = (v[1] + v[3]) % 10;
+
+    // 天牌：任一方 ≥ 8 → 雙方都不補
+    if (p_init >= 8 || b_init >= 8) {
+        return { result, playerPts: p_init, bankerPts: b_init };
+    }
+
+    // 閒不補（6~7）→ 看莊以「閒沒補」基準是否補；補牌會落在 v[4]
+    if (p_init >= 6) {
+        if (bankerDraws(b_init, null) && v[4] !== null) {
+            return { result, playerPts: p_init, bankerPts: (b_init + v[4]) % 10 };
+        }
+        return { result, playerPts: p_init, bankerPts: b_init };
+    }
+
+    // 閒補（0~5）→ v[4] 是閒補
+    if (v[4] === null) {
+        // 資料異常：閒應補但沒補牌資料 — 用 init 回傳
+        return { result, playerPts: p_init, bankerPts: b_init };
+    }
+    const p_final = (p_init + v[4]) % 10;
+
+    // 莊依「閒第三張(=v[4])」規則決定是否補；補牌在 v[5]
+    if (bankerDraws(b_init, v[4]) && v[5] !== null) {
+        return { result, playerPts: p_final, bankerPts: (b_init + v[5]) % 10 };
+    }
+    return { result, playerPts: p_final, bankerPts: b_init };
+}
+
+async function handleFiles(files) {
+    if (!files || files.length === 0) return;
+    resultsDiv.innerHTML = '';
+    allStats = [];
+    statusDiv.textContent = `正在處理 ${files.length} 個檔案...`;
+
+    for (const file of files) {
+        try {
+            const stat = await processFile(file);
+            allStats.push(stat);
+            renderResult(stat);
+        } catch (err) {
+            resultsDiv.innerHTML += `<div class="file-result"><h3>${file.name}</h3><p style="color:#f44">錯誤: ${err.message}</p></div>`;
+        }
+    }
+    statusDiv.textContent = `已完成 ${allStats.length} 個檔案的統計`;
+    btnDrive.disabled = allStats.length === 0;
+}
+
+async function processFile(file) {
+    const wb = new ExcelJS.Workbook();
+    const buffer = await file.arrayBuffer();
+    await wb.xlsx.load(buffer);
+
+    const ws = wb.getWorksheet('原始數據');
+    if (!ws) throw new Error('找不到「原始數據」工作表');
+
+    const pointWins = {}; // { 1: count, 2: count, ... 9: count }
+    for (let i = 1; i <= 9; i++) pointWins[i] = 0;
+    let tieCount = 0;
+    let totalRounds = 0;
+
+    ws.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return; // 跳過標題
+        const values = [];
+        for (let i = 1; i <= 11; i++) {
+            const cell = row.getCell(i);
+            // 用 cell.text 而非 String(cell.value)：ExcelJS 對 richText 等型態會把 value
+            // 包成物件，String() 會變 "[object Object]" 導致 cardPoint 算錯。cell.text 一律
+            // 回正確顯示字串（formula 結果、richText 串接後的純文字）。
+            values.push(cell.text != null ? String(cell.text) : '');
+        }
+
+        const parsed = parseRound(values);
+        if (!parsed) return;
+        totalRounds++;
+
+        if (parsed.result === '和') {
+            tieCount++;
+        } else {
+            // 贏家的點數
+            const winPts = parsed.result === '莊' ? parsed.bankerPts : parsed.playerPts;
+            if (winPts >= 1 && winPts <= 9) {
+                pointWins[winPts]++;
+            }
+        }
+    });
+
+    return { filename: file.name, pointWins, tieCount, totalRounds };
+}
+
+function renderResult(stat) {
+    const div = document.createElement('div');
+    div.className = 'file-result';
+
+    let html = `<h3>${stat.filename}</h3><table>`;
+    html += `<tr><th>點數</th><th>局數</th><th>比例</th></tr>`;
+
+    for (let i = 1; i <= 9; i++) {
+        const count = stat.pointWins[i];
+        const pct = stat.totalRounds > 0 ? ((count / stat.totalRounds) * 100).toFixed(1) : '0.0';
+        html += `<tr><td>${i} 點贏</td><td>${count}</td><td>${pct}%</td></tr>`;
+    }
+    const tiePct = stat.totalRounds > 0 ? ((stat.tieCount / stat.totalRounds) * 100).toFixed(1) : '0.0';
+    html += `<tr><td>和局</td><td>${stat.tieCount}</td><td>${tiePct}%</td></tr>`;
+    html += `<tr class="total-row"><td>總計</td><td>${stat.totalRounds}</td><td>100%</td></tr>`;
+    html += `</table>`;
+
+    div.innerHTML = html;
+    resultsDiv.appendChild(div);
+}
+
+// 理論機率（%）— 把莊X贏 + 閒X贏 合併（不分莊閒），來源 Wizard of Odds 8 副牌
+const THEORY_PCT = {
+    1: 0.979, 2: 1.780, 3: 2.718, 4: 4.992, 5: 6.794,
+    6: 11.642, 7: 15.852, 8: 21.722, 9: 24.007,
+    tie: 9.515
+};
+
+async function uploadAllToDrive() {
+    if (allStats.length === 0) return;
+    btnDrive.disabled = true;
+    statusDiv.textContent = '正在生成統計 Excel 並上傳...';
+
+    try {
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('點數統計');
+
+        // 標題：兩列 + 合併儲存格
+        // Row 1：檔案名稱 | 1點贏(合併B:C) | 2點贏(D:E) | … | 9點贏(R:S) | 和局(T:U) | 總局數(V)
+        // Row 2：(空)     | 局 | %         | 局 | %    | … | 局 | %    | 局 | %    | (空)
+        const headerRow1 = ['檔案名稱'];
+        for (let i = 1; i <= 9; i++) headerRow1.push(`${i}點贏`, '');
+        headerRow1.push('和局', '', '總局數');
+        ws.addRow(headerRow1);
+
+        const headerRow2 = [''];
+        for (let i = 0; i < 9; i++) headerRow2.push('局', '%');
+        headerRow2.push('局', '%', '');
+        ws.addRow(headerRow2);
+
+        // 合併：A1:A2（檔案名稱）、B1:C1 … T1:U1（10 個點數區塊）、V1:V2（總局數）
+        ws.mergeCells('A1:A2');
+        for (let i = 0; i < 10; i++) {
+            const sc = 2 + i * 2;  // B=2, D=4, …, T=20
+            ws.mergeCells(1, sc, 1, sc + 1);
+        }
+        ws.mergeCells(1, 22, 2, 22);
+
+        for (let rn = 1; rn <= 2; rn++) {
+            const r = ws.getRow(rn);
+            r.font = { bold: true };
+            r.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F3FF' } };
+            r.alignment = { horizontal: 'center', vertical: 'middle' };
+        }
+
+        // 對照行：理論機率（放第 3 列）— 比例存原始小數（0.00979），靠 numFmt 顯示為 0.979%
+        const theoryRow = ['理論機率'];
+        for (let i = 1; i <= 9; i++) {
+            theoryRow.push('—', THEORY_PCT[i] / 100);
+        }
+        theoryRow.push('—', THEORY_PCT.tie / 100, '—');
+        const tRow = ws.addRow(theoryRow);
+        tRow.font = { bold: true, color: { argb: 'FF1565C0' } };
+        tRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } };
+
+        // 合計列(多檔時)— 放在理論機率正下方,方便對照
+        // 改用 Excel 公式:資料增/刪時自動更新(範圍寫到 row 1000,推測夠用)
+        if (allStats.length > 1) {
+            const SUM_END = 1000;     // SUM 公式結束列(留大範圍讓 user 自由增刪資料列)
+            const DATA_START = 5;     // 資料列從第 5 列開始(1-2 標題、3 理論、4 合計)
+            const colLetter = (n) => {
+                let s = '';
+                while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = (n - m - 1) / 26; }
+                return s;
+            };
+            // V 欄(總局數,col 22)的公式,合計 % 用這個當分母
+            const totalFormula = `SUM(V${DATA_START}:V${SUM_END})`;
+            const sumRow = ['合計'];
+            for (let i = 0; i < 10; i++) {  // 9 個點數 + 和局 = 10 個區塊
+                const countCol = 2 + i * 2;       // B=2, D=4, ..., T=20
+                const countLetter = colLetter(countCol);
+                // 局數欄:SUM 該欄
+                sumRow.push({ formula: `SUM(${countLetter}${DATA_START}:${countLetter}${SUM_END})` });
+                // % 欄:該欄 SUM / V 欄 SUM(用 IFERROR 避開除以 0)
+                sumRow.push({ formula: `IFERROR(SUM(${countLetter}${DATA_START}:${countLetter}${SUM_END})/${totalFormula},0)` });
+            }
+            // V 欄(總局數)合計
+            sumRow.push({ formula: totalFormula });
+            const addedRow = ws.addRow(sumRow);
+            addedRow.font = { bold: true };
+            addedRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF3E0' } };
+            // 合計列的 % 欄(第 3, 5, 7, ..., 21 欄)直接設百分比格式(因 cell.value 是 formula 物件,後面 numFmt 迴圈會跳過)
+            for (let i = 0; i < 10; i++) {
+                addedRow.getCell(3 + i * 2).numFmt = '0.000%';
+            }
+        }
+
+        // 每個檔案一列：% 欄存原始小數（cnt/n）
+        for (const stat of allStats) {
+            const n = stat.totalRounds;
+            const row = [stat.filename];
+            for (let i = 1; i <= 9; i++) {
+                const cnt = stat.pointWins[i];
+                row.push(cnt, n > 0 ? cnt / n : 0);
+            }
+            row.push(stat.tieCount, n > 0 ? stat.tieCount / n : 0, n);
+            ws.addRow(row);
+        }
+
+        // 統一把 % 欄位（C, E, G, …, U；第 3, 5, 7, …, 21 欄）設成百分比格式
+        // 範圍：第 3 列（理論機率）一路到最後一列
+        const pctCols = [];
+        for (let i = 0; i < 10; i++) pctCols.push(3 + i * 2);
+        const lastRow = ws.rowCount;
+        for (let r = 3; r <= lastRow; r++) {
+            for (const c of pctCols) {
+                const cell = ws.getCell(r, c);
+                if (typeof cell.value === 'number') cell.numFmt = '0.000%';
+            }
+        }
+
+        // 欄寬（A=110px、% 欄=60px、其他=55px；ExcelJS width 單位是字元，1 字元 ≈ 7px）
+        const px2w = px => +((px - 5) / 7).toFixed(2);
+        ws.getColumn(1).width = px2w(110);   // A 檔案名稱 ≈ 15
+        const pctColSet = new Set();
+        for (let i = 0; i < 10; i++) pctColSet.add(3 + i * 2);  // % 欄：C、E、G、…、U
+        for (let i = 2; i <= 22; i++) {
+            ws.getColumn(i).width = pctColSet.has(i) ? px2w(60) : px2w(55);  // % 欄 ≈ 7.86，其他 ≈ 7.14
+            ws.getColumn(i).alignment = { horizontal: 'center', vertical: 'middle' };  // B 欄之後全部置中
+        }
+
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const filename = `point-stats-${Date.now()}.xlsx`;
+
+        // 上傳到 Google Drive
+        const base64Data = await blobToBase64(blob);
+        const uploadData = {
+            filename: filename,
+            base64Data: base64Data.split(',')[1]
+        };
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(uploadData)
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            statusDiv.innerHTML = `<span style="color:#4caf50">已上傳到雲端: ${result.fileName}</span>`;
+        } else {
+            throw new Error(result.message || result.error || '上傳失敗');
+        }
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44">上傳失敗: ${err.message}</span>`;
+    } finally {
+        btnDrive.disabled = false;
+    }
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+// ========== 從 Google 雲端載入 ==========
+// GAS 端的「服務錯誤：雲端硬碟」是偶發失敗（實測 4 次有 1 次掛），所以所有呼叫都帶 retry
+async function fetchJsonWithRetry(url, maxAttempts = 4) {
+    let lastErr = null;
+    for (let i = 0; i < maxAttempts; i++) {
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data && data.success) return data;
+            lastErr = data && data.error ? data.error : '未知錯誤';
+        } catch (e) {
+            lastErr = e.message;
+        }
+        // 短延遲再重試（避免立即重打）
+        if (i < maxAttempts - 1) await new Promise(r => setTimeout(r, 400));
+    }
+    throw new Error(lastErr || '載入失敗');
+}
+
+// 取得指定資料夾的檔案（不帶 folderId 走 GAS 預設 ROOT 已壞，所以強制帶 ROOT_FOLDER_ID）
+async function fetchFiles(folderId) {
+    const fid = folderId || ROOT_FOLDER_ID;
+    const url = `${GOOGLE_APPS_SCRIPT_URL}?folderId=${fid}`;
+    const data = await fetchJsonWithRetry(url);
+    return data.files || [];
+}
+
+// 取得新牌底下的一級子資料夾（GAS listFolders 不帶 folderId 也壞了，要顯式帶 ROOT_FOLDER_ID）
+async function fetchRootFolders() {
+    try {
+        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=listFolders&folderId=${ROOT_FOLDER_ID}`;
+        const data = await fetchJsonWithRetry(url);
+        return data.folders || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+async function loadFromCloud() {
+    statusDiv.textContent = '正在載入雲端檔案列表...';
+    try {
+        const [folders, files] = await Promise.all([
+            fetchRootFolders(),
+            fetchFiles(null)
+        ]);
+
+        if (folders.length === 0 && files.length === 0) {
+            statusDiv.textContent = '雲端沒有找到任何檔案';
+            return;
+        }
+
+        statusDiv.textContent = '';
+        showCloudDialog(folders, files);
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44">載入雲端失敗: ${err.message}</span>`;
+    }
+}
+
+function showCloudDialog(rootFolders, rootFiles) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;';
+
+    const dialog = document.createElement('div');
+    dialog.style.cssText = 'background:#1a1a2e;border:1px solid #444;border-radius:10px;padding:20px;min-width:520px;max-width:640px;color:#eee;font-family:sans-serif;';
+
+    dialog.innerHTML = `
+        <h3 style="margin:0 0 12px;color:#ffd700;">從雲端選擇 Excel 檔案</h3>
+        <div id="cloudPath" style="font-size:13px;color:#9ad;margin-bottom:10px;padding:6px 10px;background:#0f1828;border-radius:4px;">📂 新牌</div>
+
+        <div id="cloudFolderArea">
+            <label style="display:block;margin-bottom:4px;font-size:13px;color:#aaa;">子資料夾（點擊進入,可跨資料夾累積選檔)</label>
+            <div id="cloudFolderList" style="max-height:120px;overflow-y:auto;background:#2a2a4a;border:1px solid #555;border-radius:4px;margin-bottom:12px;"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label style="font-size:13px;color:#aaa;">檔案(勾選,跨資料夾累積)</label>
+            <span style="font-size:12px;">
+                <a href="#" id="cloudSelectAll" style="color:#4fc3f7;">全選此頁</a> /
+                <a href="#" id="cloudClearAll" style="color:#ff9800;">清空所選</a>
+            </span>
+        </div>
+        <div id="cloudFileList" style="max-height:280px;overflow-y:auto;background:#2a2a4a;border:1px solid #555;border-radius:4px;margin-bottom:12px;font-size:13px;"></div>
+
+        <div id="cloudSelectedSummary" style="font-size:13px;color:#9ad;margin-bottom:12px;padding:6px 10px;background:#0f2a1f;border-radius:4px;">已選 0 個檔案</div>
+
+        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
+            <button id="cloudBack" style="padding:8px 16px;background:#37495e;color:#eee;border:none;border-radius:4px;cursor:pointer;font-size:14px;display:none;">← 回新牌(根目錄)</button>
+            <div style="flex:1;"></div>
+            <button id="cloudCancel" style="padding:8px 20px;background:#444;color:#eee;border:none;border-radius:4px;cursor:pointer;font-size:14px;">取消</button>
+            <button id="cloudOk" style="padding:8px 20px;background:#2d6a4f;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">統計選取的檔案</button>
+        </div>
+    `;
+
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    const pathDiv = dialog.querySelector('#cloudPath');
+    const folderArea = dialog.querySelector('#cloudFolderArea');
+    const folderList = dialog.querySelector('#cloudFolderList');
+    const fileList = dialog.querySelector('#cloudFileList');
+    const backBtn = dialog.querySelector('#cloudBack');
+    const summaryDiv = dialog.querySelector('#cloudSelectedSummary');
+
+    // 跨資料夾累積選擇:id -> { id, name, folder }
+    const selectedFiles = new Map();
+    let currentFolderName = '新牌';
+    let currentFiles = [];
+
+    function updateSummary() {
+        const n = selectedFiles.size;
+        if (n === 0) {
+            summaryDiv.innerHTML = '已選 0 個檔案';
+        } else {
+            const names = Array.from(selectedFiles.values()).map(f => f.name).slice(0, 5).join('、');
+            const more = n > 5 ? `…等 ${n} 個` : '';
+            summaryDiv.innerHTML = `<b style="color:#4caf50">已選 ${n} 個檔案</b>:${names}${more ? ' ' + more : ''}`;
+        }
+    }
+
+    // 渲染檔案清單(checkbox + 名字,checkbox 狀態根據 selectedFiles 設定)
+    function renderFiles(files) {
+        currentFiles = files;
+        if (files.length === 0) {
+            fileList.innerHTML = '<div style="padding:12px;color:#888;text-align:center;">(此資料夾沒有 Excel 檔案)</div>';
+            return;
+        }
+        fileList.innerHTML = files.map(f => {
+            const date = new Date(f.lastModified).toLocaleString('zh-TW');
+            const checked = selectedFiles.has(f.id) ? 'checked' : '';
+            return `<label class="cloud-file-row" style="display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;border-bottom:1px solid #1f2a44;">
+                <input type="checkbox" data-id="${f.id}" data-name="${f.name}" ${checked} style="cursor:pointer;">
+                <span style="flex:1;">${f.name}</span>
+                <span style="color:#888;font-size:11px;">${date}</span>
+            </label>`;
+        }).join('');
+        fileList.querySelectorAll('input[type=checkbox]').forEach(cb => {
+            cb.onchange = () => {
+                const id = cb.dataset.id;
+                const name = cb.dataset.name;
+                if (cb.checked) {
+                    selectedFiles.set(id, { id, name, folder: currentFolderName });
+                } else {
+                    selectedFiles.delete(id);
+                }
+                updateSummary();
+            };
+        });
+    }
+
+    // 渲染子資料夾清單
+    function renderFolders(folders) {
+        if (folders.length === 0) { folderArea.style.display = 'none'; return; }
+        folderArea.style.display = '';
+        folderList.innerHTML = folders.map(f =>
+            `<div class="cloud-folder-item" data-id="${f.id}" data-name="${f.name}" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #1f2a44;font-size:14px;">📁 ${f.name}</div>`
+        ).join('');
+        folderList.querySelectorAll('.cloud-folder-item').forEach(item => {
+            item.onmouseenter = () => item.style.background = '#3a3a6a';
+            item.onmouseleave = () => item.style.background = '';
+            item.onclick = () => enterFolder(item.dataset.id, item.dataset.name);
+        });
+    }
+
+    async function enterFolder(folderId, folderName) {
+        currentFolderName = folderName;
+        pathDiv.textContent = `📂 新牌 / ${folderName}`;
+        backBtn.style.display = '';
+        folderArea.style.display = 'none';   // GAS 只支援一級子資料夾,進去後不能再列子層
+        fileList.innerHTML = '<div style="padding:12px;color:#888;text-align:center;">載入中...</div>';
+        try {
+            const files = await fetchFiles(folderId);
+            renderFiles(files);
+        } catch (e) {
+            fileList.innerHTML = `<div style="padding:12px;color:#f44;text-align:center;">載入失敗: ${e.message}</div>`;
+        }
+    }
+
+    backBtn.onclick = () => {
+        currentFolderName = '新牌';
+        pathDiv.textContent = '📂 新牌';
+        backBtn.style.display = 'none';
+        renderFolders(rootFolders);
+        renderFiles(rootFiles);
+    };
+
+    // 全選此頁/清空所選
+    dialog.querySelector('#cloudSelectAll').onclick = (e) => {
+        e.preventDefault();
+        currentFiles.forEach(f => selectedFiles.set(f.id, { id: f.id, name: f.name, folder: currentFolderName }));
+        renderFiles(currentFiles);  // 重新渲染以更新 checkbox
+        updateSummary();
+    };
+    dialog.querySelector('#cloudClearAll').onclick = (e) => {
+        e.preventDefault();
+        selectedFiles.clear();
+        renderFiles(currentFiles);
+        updateSummary();
+    };
+
+    // 初始:根目錄
+    renderFolders(rootFolders);
+    renderFiles(rootFiles);
+    updateSummary();
+
+    dialog.querySelector('#cloudCancel').onclick = () => overlay.remove();
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    dialog.querySelector('#cloudOk').onclick = async () => {
+        const selected = Array.from(selectedFiles.values());
+        if (selected.length === 0) { alert('請選擇至少一個檔案'); return; }
+        overlay.remove();
+        await downloadBatch(selected, true);
+    };
+}
+
+// 從雲端下載單一檔案 → File 物件（包含 base64 / GAS error JSON 防呆）
+async function downloadCloudFile(item) {
+    const downloadUrl = `${GOOGLE_APPS_SCRIPT_URL}?fileId=${item.id}`;
+    const response = await fetch(downloadUrl);
+    const text = await response.text();
+
+    // GAS 偶發回 error JSON 而不是 base64：先攔下來，給更明確的訊息
+    if (text.length < 2000 && text.trim().startsWith('{')) {
+        try {
+            const j = JSON.parse(text);
+            if (j && j.success === false) throw new Error('GAS: ' + (j.error || '未知錯誤'));
+        } catch (e) {
+            if (e.message && e.message.startsWith('GAS:')) throw e;
+            // 其他 JSON parse 錯誤就當 base64 繼續走
+        }
+    }
+
+    let bytes;
+    try {
+        const bs = atob(text);
+        bytes = new Uint8Array(bs.length);
+        for (let i = 0; i < bs.length; i++) bytes[i] = bs.charCodeAt(i);
+    } catch (e) {
+        const peek = text.slice(0, 80).replace(/\s+/g, ' ');
+        throw new Error(`回應非有效 base64（前段："${peek}"）`);
+    }
+
+    return new File([bytes.buffer], item.name, {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+}
+
+// 渲染錯誤卡片（含重試按鈕）
+function renderErrorCard(item, message) {
+    const div = document.createElement('div');
+    div.className = 'file-result';
+    div.dataset.fileId = item.id;
+    div.dataset.fileName = item.name;
+    const btnId = `retry-${item.id}-${Date.now()}`;
+    div.innerHTML = `
+        <h3>${item.name}</h3>
+        <p style="color:#f44;word-break:break-word;">錯誤: ${message}</p>
+        <button id="${btnId}" style="padding:6px 14px;background:#ff9800;color:#000;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;">🔄 重試</button>
+    `;
+    resultsDiv.appendChild(div);
+    div.querySelector(`#${btnId}`).onclick = async () => {
+        const btn = div.querySelector(`#${btnId}`);
+        btn.disabled = true;
+        btn.textContent = '重試中...';
+        const ok = await processOne(item, div);
+        if (!ok) {
+            btn.disabled = false;
+            btn.textContent = '🔄 重試';
+        }
+        statusDiv.textContent = `已完成 ${allStats.length} 個檔案的統計`;
+        btnDrive.disabled = allStats.length === 0;
+        // 更新「全部重試」按鈕狀態
+        updateRetryAllBtn();
+    };
+    return div;
+}
+
+// 處理單一檔案（成功 → 替換錯誤卡片為結果卡；失敗 → 留在錯誤卡片並更新訊息）
+async function processOne(item, existingErrorDiv = null) {
+    try {
+        statusDiv.textContent = `正在下載: ${item.name}...`;
+        const file = await downloadCloudFile(item);
+        const stat = await processFile(file);
+        allStats.push(stat);
+        if (existingErrorDiv) existingErrorDiv.remove();
+        renderResult(stat);
+        return true;
+    } catch (err) {
+        if (existingErrorDiv) {
+            const p = existingErrorDiv.querySelector('p');
+            if (p) p.textContent = '錯誤: ' + err.message;
+        } else {
+            renderErrorCard(item, err.message);
+        }
+        return false;
+    }
+}
+
+// 批次下載入口（first=true 代表新一輪，會清空 allStats 與 results）
+async function downloadBatch(items, first = false) {
+    if (first) {
+        resultsDiv.innerHTML = '';
+        allStats = [];
+    }
+    statusDiv.textContent = `正在從雲端下載並處理 ${items.length} 個檔案...`;
+    for (const item of items) {
+        await processOne(item);
+    }
+    statusDiv.textContent = `已完成 ${allStats.length} 個檔案的統計`;
+    btnDrive.disabled = allStats.length === 0;
+    updateRetryAllBtn();
+}
+
+// 顯示/隱藏「全部重試」按鈕
+function updateRetryAllBtn() {
+    let btn = document.getElementById('btnRetryAll');
+    const errorCards = resultsDiv.querySelectorAll('.file-result[data-file-id]');
+    if (errorCards.length === 0) {
+        if (btn) btn.remove();
+        return;
+    }
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'btnRetryAll';
+        btn.className = 'btn';
+        btn.style.cssText = 'background:#ff9800;color:#000;font-weight:bold;margin-left:6px;';
+        document.querySelector('.toolbar').appendChild(btn);
+        btn.onclick = async () => {
+            const cards = Array.from(resultsDiv.querySelectorAll('.file-result[data-file-id]'));
+            const items = cards.map(c => ({ id: c.dataset.fileId, name: c.dataset.fileName }));
+            btn.disabled = true;
+            for (let i = 0; i < items.length; i++) {
+                statusDiv.textContent = `重試 ${i + 1}/${items.length}: ${items[i].name}`;
+                await processOne(items[i], cards[i]);
+            }
+            btn.disabled = false;
+            statusDiv.textContent = `已完成 ${allStats.length} 個檔案的統計`;
+            btnDrive.disabled = allStats.length === 0;
+            updateRetryAllBtn();
+        };
+    }
+    btn.textContent = `🔄 全部重試 (${errorCards.length})`;
+}
+</script>
+</body>
+</html>

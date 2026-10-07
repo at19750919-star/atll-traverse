@@ -1,0 +1,24 @@
+# Node
+node_modules/
+package.json
+package-lock.json
+
+# Claude Code
+.claude/
+.mcp.json
+
+# Playwright MCP
+.playwright-mcp/
+console-*.txt
+page-*.png
+shoe-result.png
+
+# 清理搬移的舊檔（539MB，不進版控）
+archive/
+
+# 開發截圖 / 暫存
+*.png
+console-all.log
+*.xlsx
+*.bak_*
+__pycache__/

@@ -1,0 +1,4146 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <title>理牌助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+        transition: background-color 0.3s ease;
+        color: white;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      #upload-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #121212;
+      }
+      #upload-label {
+        padding: 20px 40px;
+        border: 2px dashed #555;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1.5em;
+        transition: all 0.2s ease;
+      }
+      #upload-label:hover {
+        background-color: #333;
+        border-color: #888;
+      }
+      #upload-label.drag-over {
+        background-color: #444;
+        border-color: #4fc3f7;
+        transform: scale(1.02);
+      }
+      #file-input {
+        display: none;
+      }
+      #loading-spinner {
+        display: none;
+        font-size: 2em;
+      }
+      #assistant-container {
+        display: none;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 15px;
+        padding-top: 5px;
+        box-sizing: border-box;
+        overflow-y: auto;
+      }
+      #assistant-layout {
+        display: none;
+        flex: 1;
+        width: 100%;
+        gap: 20px;
+        min-height: 0;
+      }
+      #assistant-layout.active {
+        display: flex;
+      }
+      #grid-panel {
+        flex: 1.6;
+        background-color: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        min-height: 300px;
+        max-height: 100%;
+        min-width: 0;
+      }
+      #playback-panel {
+        flex: 0.8;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-width: 0;
+      }
+      #card-display-wrapper {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 30px;
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      #jump-controls-wrapper {
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        min-width: 200px;
+        margin-left: auto;
+      }
+      #jump-controls-wrapper h4 {
+        margin: 0 0 12px 0;
+        font-size: 1em;
+        color: #4fc3f7;
+        text-align: center;
+      }
+      #jump-controls-wrapper #jump-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #jump-controls-wrapper .jump-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+      }
+      #grid-panel .panel-title {
+        margin: 0;
+        font-size: 1.1em;
+      }
+      .grid-panel-info {
+        font-size: 0.85em;
+        color: #cbd5f5;
+        margin: 4px 0 0 0;
+      }
+      .grid-panel-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+      .grid-panel-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+      #grid-scroll-container {
+        flex: 1;
+        overflow: auto;
+        margin-top: 0px;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 12px;
+        padding: 4px 4px 4px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        scroll-padding-top: 12px;
+      }
+      #grid-scroll-container::-webkit-scrollbar {
+        width: 8px;
+      }
+      #grid-scroll-container::-webkit-scrollbar-thumb {
+        background-color: rgba(148, 163, 184, 0.5);
+        border-radius: 4px;
+      }
+      #grid-preview {
+        --grid-cols: 16;
+        --grid-row-size: 40px;
+        --grid-row-gap: 6px;
+        --grid-col-gap: 2px;
+        --grid-row-step: calc(var(--grid-row-size) + var(--grid-row-gap));
+        --grid-row-line-thickness: var(--grid-row-gap);
+        --grid-row-odd-color: rgb(245, 188, 228);
+        --grid-row-even-color: rgba(36, 50, 251, 0.7);
+        --grid-row-band-odd: rgba(15, 23, 42, 0.35);
+        --grid-row-band-even: rgba(30, 41, 59, 0.25);
+        --grid-col-line-color: rgba(255, 255, 255, 0.16);
+        --grid-col-line-thickness: 2px;
+        display: grid;
+        grid-template-columns: repeat(var(--grid-cols), 1fr);
+        grid-auto-rows: var(--grid-row-size);
+        row-gap: var(--grid-row-gap);
+        column-gap: var(--grid-col-gap);
+        position: relative;
+        background-image: linear-gradient(
+          to bottom,
+          var(--grid-row-band-odd) 0,
+          var(--grid-row-band-odd) var(--grid-row-size),
+          transparent var(--grid-row-size),
+          transparent var(--grid-row-step),
+          var(--grid-row-band-even) var(--grid-row-step),
+          var(--grid-row-band-even)
+            calc(var(--grid-row-step) + var(--grid-row-size)),
+          transparent calc(var(--grid-row-step) + var(--grid-row-size)),
+          transparent calc(var(--grid-row-step) * 2)
+        );
+        background-size: 100% calc(var(--grid-row-step) * 2);
+        background-position: 0 0;
+      }
+      #grid-preview::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        background-image:
+          linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent var(--grid-row-size),
+            var(--grid-row-odd-color) var(--grid-row-size),
+            var(--grid-row-odd-color)
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent calc(var(--grid-row-step) * 2)
+          ),
+          linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent var(--grid-row-size),
+            var(--grid-row-even-color) var(--grid-row-size),
+            var(--grid-row-even-color)
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent calc(var(--grid-row-step) * 2)
+          );
+        background-size:
+          100% calc(var(--grid-row-step) * 2),
+          100% calc(var(--grid-row-step) * 2);
+        background-position:
+          0 0,
+          0 var(--grid-row-step);
+        background-repeat: repeat;
+      }
+      #grid-preview::after {
+        --grid-col-size: calc(
+          (100% - (var(--grid-cols) - 1) * var(--grid-col-gap)) /
+            var(--grid-cols)
+        );
+        --grid-col-step: calc(var(--grid-col-size) + var(--grid-col-gap));
+        --grid-col-line-offset: calc(
+          (var(--grid-col-gap) - var(--grid-col-line-thickness)) / 2
+        );
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        background-image: linear-gradient(
+          to right,
+          transparent 0,
+          transparent calc(var(--grid-col-size) + var(--grid-col-line-offset)),
+          var(--grid-col-line-color)
+            calc(var(--grid-col-size) + var(--grid-col-line-offset)),
+          var(--grid-col-line-color)
+            calc(
+              var(--grid-col-size) + var(--grid-col-line-offset) +
+                var(--grid-col-line-thickness)
+            ),
+          transparent
+            calc(
+              var(--grid-col-size) + var(--grid-col-line-offset) +
+                var(--grid-col-line-thickness)
+            ),
+          transparent var(--grid-col-step)
+        );
+        background-size: var(--grid-col-step) 100%;
+        background-repeat: repeat;
+      }
+      /* 全螢幕網格模式 */
+      .grid-fullscreen-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: #0f172a;
+        flex-direction: column;
+      }
+      .grid-fullscreen-overlay.show {
+        display: flex;
+      }
+      .grid-fullscreen-overlay .fullscreen-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 8px;
+        background: rgba(30, 41, 59, 0.9);
+        flex-shrink: 0;
+        height: 32px;
+        box-sizing: border-box;
+      }
+      .grid-fullscreen-overlay .fullscreen-topbar .fs-title {
+        color: #94a3b8;
+        font-size: 13px;
+      }
+      .grid-fullscreen-overlay .fullscreen-close-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 3px 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .grid-fullscreen-overlay .fullscreen-grid-wrap {
+        flex: 1;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 0 2px;
+      }
+      @media (max-width: 768px) {
+        .grid-fullscreen-overlay .fullscreen-topbar {
+          height: 28px;
+          padding: 2px 6px;
+        }
+        .grid-fullscreen-overlay .fullscreen-close-btn {
+          font-size: 12px;
+          padding: 2px 8px;
+        }
+      }
+      .fs-grid-clone {
+        --grid-cols: 16;
+        --grid-row-size: 40px;
+        --grid-row-gap: 6px;
+        --grid-col-gap: 2px;
+        --grid-row-step: calc(var(--grid-row-size) + var(--grid-row-gap));
+        --grid-row-line-thickness: var(--grid-row-gap);
+        --grid-row-odd-color: rgb(245, 188, 228);
+        --grid-row-even-color: rgba(36, 50, 251, 0.7);
+        --grid-row-band-odd: rgba(15, 23, 42, 0.35);
+        --grid-row-band-even: rgba(30, 41, 59, 0.25);
+        --grid-col-line-color: rgba(255, 255, 255, 0.16);
+        --grid-col-line-thickness: 2px;
+        display: grid;
+        grid-template-columns: repeat(var(--grid-cols), 1fr);
+        grid-auto-rows: var(--grid-row-size);
+        row-gap: var(--grid-row-gap);
+        column-gap: var(--grid-col-gap);
+        position: relative;
+        background-image: linear-gradient(
+          to bottom,
+          var(--grid-row-band-odd) 0,
+          var(--grid-row-band-odd) var(--grid-row-size),
+          transparent var(--grid-row-size),
+          transparent var(--grid-row-step),
+          var(--grid-row-band-even) var(--grid-row-step),
+          var(--grid-row-band-even)
+            calc(var(--grid-row-step) + var(--grid-row-size)),
+          transparent calc(var(--grid-row-step) + var(--grid-row-size)),
+          transparent calc(var(--grid-row-step) * 2)
+        );
+        background-size: 100% calc(var(--grid-row-step) * 2);
+        background-position: 0 0;
+      }
+      .fs-grid-clone::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        background-image:
+          linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent var(--grid-row-size),
+            var(--grid-row-odd-color) var(--grid-row-size),
+            var(--grid-row-odd-color)
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent calc(var(--grid-row-step) * 2)
+          ),
+          linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent var(--grid-row-size),
+            var(--grid-row-even-color) var(--grid-row-size),
+            var(--grid-row-even-color)
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent
+              calc(var(--grid-row-size) + var(--grid-row-line-thickness)),
+            transparent calc(var(--grid-row-step) * 2)
+          );
+        background-size:
+          100% calc(var(--grid-row-step) * 2),
+          100% calc(var(--grid-row-step) * 2);
+        background-position:
+          0 0,
+          0 var(--grid-row-step);
+        background-repeat: repeat;
+      }
+      .fs-grid-clone::after {
+        --grid-col-size: calc(
+          (100% - (var(--grid-cols) - 1) * var(--grid-col-gap)) /
+            var(--grid-cols)
+        );
+        --grid-col-step: calc(var(--grid-col-size) + var(--grid-col-gap));
+        --grid-col-line-offset: calc(
+          (var(--grid-col-gap) - var(--grid-col-line-thickness)) / 2
+        );
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        background-image: linear-gradient(
+          to right,
+          transparent 0,
+          transparent calc(var(--grid-col-size) + var(--grid-col-line-offset)),
+          var(--grid-col-line-color)
+            calc(var(--grid-col-size) + var(--grid-col-line-offset)),
+          var(--grid-col-line-color)
+            calc(
+              var(--grid-col-size) + var(--grid-col-line-offset) +
+                var(--grid-col-line-thickness)
+            ),
+          transparent
+            calc(
+              var(--grid-col-size) + var(--grid-col-line-offset) +
+                var(--grid-col-line-thickness)
+            ),
+          transparent var(--grid-col-step)
+        );
+        background-size: var(--grid-col-step) 100%;
+        background-repeat: repeat;
+      }
+      .grid-cell {
+        border-radius: 6px;
+        background-color: rgba(240, 240, 240, 0.08);
+        border: 5px solid transparent;
+        font-family: "Oswald", Impact, "Arial Narrow", sans-serif;
+        font-size: calc(var(--grid-row-size) * 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 400;
+        color: #e2e8f0;
+        transition:
+          transform 0.1s ease,
+          box-shadow 0.1s ease;
+        cursor: pointer;
+        position: relative;
+        z-index: 3;
+      }
+      .grid-cell.empty-cell {
+        background-color: transparent;
+        cursor: default;
+      }
+      .grid-row-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: calc(var(--grid-row-size) * 0.35);
+        color: #e2e8f0;
+        border-radius: 6px;
+        background-color: rgba(15, 23, 42, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        user-select: none;
+        position: relative;
+        z-index: 3;
+      }
+      .grid-row-highlight {
+        outline: 3px solid rgba(34, 197, 94, 0.9);
+        outline-offset: -3px;
+        box-shadow:
+          0 0 0 2px rgba(34, 197, 94, 0.6),
+          0 0 14px rgba(34, 197, 94, 0.7);
+        background-color: rgba(34, 197, 94, 0.18);
+      }
+      .grid-row-label.grid-row-highlight {
+        font-weight: 800;
+        color: #dcfce7;
+        background-color: rgba(34, 197, 94, 0.22);
+      }
+      .grid-cell.card-red {
+        background-color: #ffff00;
+        color: #1e293b;
+      }
+      .grid-cell.card-blue {
+        background-color: #00ffff;
+        color: #1e293b;
+      }
+      .grid-cell.signal-card {
+        color: #1e293b;
+        font-weight: 700;
+      }
+      .grid-cell.rank-a2 {
+        color: #ff0000 !important;
+        font-weight: 700;
+      }
+      .grid-cell.heart-marker-cell {
+        border-color: #ff1493 !important;
+        box-shadow: 0 0 14px 4px #ff1493 !important;
+        z-index: 10;
+        font-weight: 900 !important;
+        color: #8b00ff !important;
+        animation: heartMarkerPulse 1.2s ease-in-out infinite;
+      }
+      @keyframes heartMarkerPulse {
+        0%, 100% { box-shadow: 0 0 14px 4px #ff1493 !important; }
+        50% { box-shadow: 0 0 22px 7px #ff69b4 !important; }
+      }
+      .grid-cell.purple-font-cell {
+        color: #8b00ff !important;
+        font-weight: 700;
+      }
+      .grid-cell.grid-cell-active {
+        background-color: #7dd3fc !important;
+        color: #000 !important;
+        box-shadow:
+          inset 0 0 20 14px #0ea5e9,
+          inset 0 0 18px rgba(56, 189, 248, 0.95),
+          inset 0 0 36px rgba(56, 189, 248, 0.75);
+        transform: scale(1.3);
+        z-index: 999;
+        font-weight: 800;
+      }
+      .grid-cell.grid-cell-violation {
+        box-shadow: inset 0 0 0 2px #facc15;
+      }
+      .grid-cell.grid-cell-current-row {
+        box-shadow: inset 0 0 0 2px rgba(248 56 56);
+      }
+      .grid-cell.grid-cell-next-row-hint {
+        box-shadow:
+          0 0 0 2px rgba(56, 189, 248, 0.8),
+          0 0 12px rgba(56, 189, 248, 0.6);
+        animation: nextRowHintPulse 0.6s ease-in-out infinite alternate;
+      }
+      @keyframes nextRowHintPulse {
+        from {
+          transform: scale(1);
+          box-shadow:
+            0 0 0 2px rgba(56, 189, 248, 0.6),
+            0 0 8px rgba(56, 189, 248, 0.4);
+        }
+        to {
+          transform: scale(1.05);
+          box-shadow:
+            0 0 0 3px rgba(56, 189, 248, 0.9),
+            0 0 16px rgba(56, 189, 248, 0.7);
+        }
+      }
+      /* 亮高樣式：紅卡橘色、黑卡紫色 */
+      .grid-cell.card-red.grid-cell-search-hit {
+        animation: pulseHighlightOrange 1.2s ease-in-out infinite alternate;
+      }
+      .grid-cell.card-blue.grid-cell-search-hit {
+        animation: pulseHighlightPurple 1.2s ease-in-out infinite alternate;
+      }
+      .grid-cell.grid-cell-search-hit {
+        animation: pulseHighlightOrange 1.2s ease-in-out infinite alternate;
+      }
+      @keyframes pulseHighlightOrange {
+        from {
+          box-shadow:
+            0 0 0 3px #ff6b00,
+            0 0 15px rgba(255, 107, 0, 0.7);
+          transform: scale(1.05);
+        }
+        to {
+          box-shadow:
+            0 0 0 5px #ff8c00,
+            0 0 25px rgba(255, 140, 0, 0.5);
+          transform: scale(1.08);
+        }
+      }
+      @keyframes pulseHighlightPurple {
+        from {
+          box-shadow:
+            0 0 0 3px #9333ea,
+            0 0 15px rgba(147, 51, 234, 0.7);
+          transform: scale(1.05);
+        }
+        to {
+          box-shadow:
+            0 0 0 5px #a855f7,
+            0 0 25px rgba(168, 85, 247, 0.5);
+          transform: scale(1.08);
+        }
+      }
+      /* 標記樣式：紅卡橘色、黑卡紫色 */
+      .grid-cell.card-red.grid-cell-marked {
+        box-shadow: inset 0 0 0 3px #ff6b00;
+      }
+      .grid-cell.card-blue.grid-cell-marked {
+        box-shadow: inset 0 0 0 3px #9333ea;
+      }
+      .grid-cell.grid-cell-marked {
+        box-shadow: inset 0 0 0 3px #ff6b00;
+      }
+      .grid-placeholder {
+        grid-column: 1 / -1;
+        text-align: center;
+        color: #94a3b8;
+        padding: 20px 0;
+      }
+      .grid-search {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .grid-search input {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(30, 41, 59, 0.7);
+        color: white;
+        min-width: 250px;
+      }
+      .grid-search input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .grid-search button {
+        padding: 6px 14px;
+        border: none;
+        border-radius: 8px;
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+      }
+      .grid-search button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .grid-search .clear-btn {
+        padding: 6px 10px;
+        background: #64748b;
+        font-size: 0.9em;
+        min-width: auto;
+      }
+      .grid-search .clear-btn:hover:not(:disabled) {
+        background: #ef4444;
+      }
+      #grid-search-feedback {
+        margin-top: 10px;
+        font-size: 0.85em;
+        color: #e2e8f0;
+        min-height: 1.5em;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+      #card-display {
+        text-align: center;
+        user-select: none;
+        flex: 0 0 auto;
+        margin-left: auto;
+        margin-right: 20px;
+      }
+      #jump-controls-wrapper {
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        min-width: 200px;
+      }
+      #jump-controls-wrapper h4 {
+        margin: 0 0 12px 0;
+        font-size: 1em;
+        color: #4fc3f7;
+        text-align: center;
+      }
+      #jump-controls-wrapper #jump-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #jump-controls-wrapper .jump-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+      }
+      #rank {
+        font-size: 16vw;
+        font-weight: bold;
+        line-height: 1;
+      }
+      #suit {
+        font-size: 7vw;
+        line-height: 1;
+      }
+      #status,
+      #message {
+        font-size: 2em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        margin-top: 20px;
+      }
+
+      /* 備註功能樣式 */
+      #notes-section {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      #notes-section h4 {
+        margin: 0 0 10px 0;
+        font-size: 1.2em;
+        color: #4fc3f7;
+      }
+      #notes-info {
+        font-size: 0.9em;
+        color: #cbd5f5;
+        margin-bottom: 10px;
+        line-height: 1.5;
+      }
+      #notes-display {
+        min-height: 80px;
+        max-height: 150px;
+        overflow-y: auto;
+        padding: 10px;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        font-size: 0.95em;
+        line-height: 1.6;
+        color: #e2e8f0;
+      }
+      #notes-display.empty {
+        color: #94a3b8;
+        font-style: italic;
+      }
+      .note-item {
+        margin: 5px 0;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        border-left: 3px solid #4fc3f7;
+      }
+      .note-item.highlighted {
+        border-left-color: #fbbf24;
+        background: rgba(251, 191, 36, 0.15);
+      }
+      .note-card-info {
+        font-weight: 600;
+        color: #4fc3f7;
+        margin-bottom: 3px;
+      }
+      .note-text {
+        color: #e2e8f0;
+      }
+      #notes-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      #notes-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(30, 41, 59, 0.7);
+        color: white;
+        font-size: 1em;
+      }
+      #notes-input::placeholder {
+        color: #94a3b8;
+      }
+      .notes-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.95em;
+        transition:
+          background-color 0.2s,
+          transform 0.2s;
+      }
+      .notes-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+      }
+      .notes-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      #notes-add-btn {
+        background-color: #22c55e;
+        color: white;
+      }
+      #notes-add-btn:hover:not(:disabled) {
+        background-color: #16a34a;
+      }
+      #notes-highlight-btn {
+        background-color: #f59e0b;
+        color: white;
+      }
+      #notes-highlight-btn:hover:not(:disabled) {
+        background-color: #d97706;
+      }
+      #notes-clear-btn {
+        background-color: #ef4444;
+        color: white;
+      }
+      #notes-clear-btn:hover:not(:disabled) {
+        background-color: #dc2626;
+      }
+      /* 卡牌備註標記樣式 */
+      .grid-cell.has-note {
+        position: relative;
+      }
+      .grid-cell.has-note::after {
+        content: "📝";
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 0.7em;
+      }
+      .grid-cell.note-highlighted {
+        box-shadow:
+          0 0 0 3px #fbbf24,
+          0 0 15px rgba(251, 191, 36, 0.6) !important;
+      }
+      #controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 24px;
+        border-radius: 14px;
+        margin-top: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 1.2em;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .control-group.speed-control {
+        flex-direction: column;
+        gap: 12px;
+      }
+      #speed-slider {
+        width: 260px;
+        accent-color: #4fc3f7;
+      }
+      .speed-adjust {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .speed-display {
+        font-size: 2em;
+        min-width: 70px;
+        text-align: center;
+        font-weight: bold;
+      }
+      #jump-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1em;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #jump-input {
+        width: 80px;
+        padding: 6px;
+        border-radius: 5px;
+        border: none;
+        text-align: center;
+        outline: none;
+        font-size: 1em;
+      }
+      .jump-btn,
+      .speed-btn {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1em;
+        background-color: rgba(255, 255, 255, 0.25);
+        color: white;
+        transition:
+          background-color 0.2s,
+          transform 0.2s;
+        min-width: 70px;
+      }
+      .jump-btn:hover:not(:disabled),
+      .speed-btn:hover:not(:disabled) {
+        background-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-2px);
+      }
+      .jump-btn:disabled,
+      #jump-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .speed-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      #toggle-autoplay-btn {
+        padding: 10px 20px;
+        font-size: 1.2em;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        background-color: #1a73e8;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+      #toggle-autoplay-btn:hover {
+        filter: brightness(1.2);
+      }
+      .bg-red-card {
+        background-color: #d93025;
+      }
+      .bg-blue-card {
+        background-color: #1a73e8;
+      }
+      .font-red {
+        color: #fffdfd;
+      }
+      .font-black {
+        color: #212529;
+      }
+
+      /* 當前檔案名稱顯示 */
+      #current-file-display {
+        display: none;
+        position: fixed;
+        top: 55px;
+        left: 10px;
+        background-color: rgba(0, 0, 0, 0.85);
+        padding: 12px 18px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        z-index: 999;
+        max-width: 350px;
+      }
+      #current-file-display .file-label {
+        font-size: 0.75em;
+        color: #aaa;
+        margin-bottom: 4px;
+      }
+      #current-file-display .file-name-text {
+        font-size: 1.1em;
+        color: #4fc3f7;
+        font-weight: 600;
+        word-break: break-all;
+      }
+      #current-file-display .file-name-text.read-file {
+        color: #22c55e;
+      }
+      #current-file-display .file-name-text.read-file::before {
+        content: "✓ ";
+        font-weight: bold;
+      }
+      #mark-read-btn {
+        margin-top: 8px;
+        padding: 6px 12px;
+        background-color: #22c55e;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9em;
+        width: 100%;
+        transition: background-color 0.2s;
+      }
+      #mark-read-btn:hover {
+        background-color: #16a34a;
+      }
+      #mark-read-btn.marked {
+        background-color: #64748b;
+      }
+      #mark-read-btn.marked:hover {
+        background-color: #475569;
+      }
+
+      /* 檔案管理區域 */
+      #file-manager {
+        display: none;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background-color: #1b1b1b;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        z-index: 1000;
+        width: min(95vw, 900px);
+        max-width: 900px;
+      }
+      #file-manager h3 {
+        margin: 0 0 10px 0;
+        color: white;
+        font-size: 1.2em;
+      }
+      #saved-files-list {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .file-item {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 8px;
+        margin: 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        font-size: 0.9em;
+      }
+      .file-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+      .file-name {
+        flex: 1;
+        margin-right: 10px;
+        cursor: pointer;
+        color: #4fc3f7;
+      }
+      .file-name:hover {
+        text-decoration: underline;
+      }
+      .file-actions {
+        display: flex;
+        gap: 5px;
+      }
+      .file-btn {
+        padding: 2px 6px;
+        font-size: 0.8em;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        color: white;
+      }
+      .rename-btn {
+        background-color: #ff9800;
+      }
+      .delete-btn {
+        background-color: #f44336;
+      }
+      #save-current-btn {
+        display: none;
+        padding: 8px 12px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      #toggle-manager-btn {
+        display: none;
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 1001;
+        font-size: 1.2em;
+      }
+
+      /* 重新命名對話框 */
+      #rename-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 2000;
+      }
+      #rename-dialog {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #333;
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+      }
+      #rename-input {
+        padding: 10px;
+        margin: 10px 0;
+        width: 250px;
+        border: none;
+        border-radius: 5px;
+      }
+      #rename-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+      #rename-confirm,
+      #rename-cancel {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      #rename-confirm {
+        background-color: #4caf50;
+        color: white;
+      }
+      #rename-cancel {
+        background-color: #757575;
+        color: white;
+      }
+      /* 雲端檔案選擇對話框 */
+      .drive-modal {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.75);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        padding: 20px;
+      }
+      .drive-modal.show {
+        display: flex;
+      }
+      .drive-modal-content {
+        background-color: #1f1f1f;
+        width: min(95vw, 1200px);
+        max-width: 1200px;
+        max-height: 85vh;
+        overflow-y: auto;
+        border-radius: 14px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        color: #fff;
+      }
+      .drive-modal-content h3 {
+        margin: 0 0 15px 0;
+        font-size: 1.3em;
+        text-align: center;
+      }
+      #drive-file-list {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .drive-file-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: #fff;
+        cursor: pointer;
+        transition:
+          background-color 0.2s,
+          transform 0.2s;
+        position: relative;
+      }
+      .drive-file-item:hover {
+        background-color: rgba(102, 126, 234, 0.35);
+        transform: translateY(-2px);
+      }
+      .drive-file-item.selected {
+        background-color: rgba(102, 126, 234, 0.5);
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
+      }
+      .drive-file-item.selected::after {
+        content: '✔';
+        position: absolute;
+        top: 6px;
+        right: 10px;
+        color: #667eea;
+        font-size: 1.1em;
+        font-weight: bold;
+      }
+      .drive-file-item.read-file {
+        border-left: 4px solid #22c55e;
+      }
+      .drive-file-item.read-file .drive-file-name::before {
+        content: "✓ ";
+        color: #22c55e;
+        font-weight: bold;
+        margin-right: 6px;
+      }
+      .drive-file-name {
+        font-size: 1.05em;
+        font-weight: 600;
+      }
+      .drive-file-meta {
+        font-size: 0.85em;
+        color: #cbd5f5;
+        margin-top: 4px;
+      }
+      .drive-modal-actions {
+        margin-top: 18px;
+        display: flex;
+        justify-content: center;
+      }
+      #drive-cancel-btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 20px;
+        background-color: #4f4f4f;
+        color: white;
+        font-size: 1em;
+        cursor: pointer;
+      }
+      #drive-cancel-btn:hover {
+        background-color: #6b6b6b;
+      }
+      #drive-confirm-btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 20px;
+        background-color: #2d6a4f;
+        color: white;
+        font-size: 1em;
+        cursor: pointer;
+        margin-right: 10px;
+        display: none;
+      }
+      #drive-confirm-btn:hover {
+        background-color: #40916c;
+      }
+      .drive-select-count {
+        color: #667eea;
+        font-size: 0.9em;
+        margin-left: 10px;
+      }
+      /* 批次導航列 */
+      #batch-nav {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        background: #2a2a3e;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 0.95em;
+      }
+      #batch-nav button {
+        padding: 5px 14px;
+        border: none;
+        border-radius: 6px;
+        background: #4f4f6f;
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.9em;
+      }
+      #batch-nav button:hover:not(:disabled) {
+        background: #667eea;
+      }
+      #batch-nav button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      #batch-nav .batch-info {
+        flex: 1;
+        text-align: center;
+        color: #cbd5f5;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 1. 上傳介面 -->
+    <div id="upload-container">
+      <label for="file-input" id="upload-label"
+        >點擊此處，選擇 Excel 檔案<br /><small
+          >或直接拖放檔案到此區域</small
+        ></label
+      >
+      <div
+        style="
+          margin-top: 10px;
+          font-size: 0.9em;
+          color: #aaa;
+          text-align: center;
+        "
+      >
+        💡 提示：如果開啟的不是您要的資料夾，請在檔案選擇器中導航到正確位置
+      </div>
+      <input type="file" id="file-input" accept=".xlsx" />
+
+      <!-- 載入已儲存檔案按鈕 -->
+      <button
+        id="load-saved-btn"
+        style="
+          margin-top: 20px;
+          padding: 12px 24px;
+          background-color: #4caf50;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 1.1em;
+        "
+      >
+        📂 載入雲端檔案
+      </button>
+
+      <!-- 從雲端載入按鈕 -->
+      <button
+        id="import-drive-btn"
+        style="
+          margin-top: 10px;
+          padding: 12px 24px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 1.1em;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+          transition: all 0.3s ease;
+        "
+      >
+        ☁️ 從雲端載入
+      </button>
+
+      <button
+        id="skip-upload-btn"
+        style="
+          margin-top: 10px;
+          padding: 12px 24px;
+          background-color: #555;
+          color: #ccc;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 1em;
+        "
+      >
+        直接進入語音助手
+      </button>
+
+      <!-- 上傳頁面的檔案列表 -->
+      <div
+        id="upload-file-list"
+        style="
+          display: none;
+          margin-top: 20px;
+          max-width: 95%;
+          width: 95%;
+          background-color: #1b1b1b;
+          border-radius: 10px;
+          padding: 15px;
+        "
+      >
+        <h3 style="margin: 0 0 15px 0; color: white; text-align: center">
+          雲端檔案
+        </h3>
+        <div id="upload-saved-files"></div>
+        <button
+          id="close-list-btn"
+          style="
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #757575;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+          "
+        >
+          關閉
+        </button>
+      </div>
+
+      <div id="loading-spinner">處理中，請稍候...</div>
+    </div>
+
+    <!-- 檔案管理器 -->
+    <div id="file-manager">
+      <h3>雲端檔案</h3>
+      <button id="save-current-btn">儲存到雲端</button>
+      <div id="saved-files-list"></div>
+    </div>
+
+    <!-- 檔案管理器切換按鈕 -->
+    <button id="toggle-manager-btn">📁</button>
+
+    <!-- 批次導航列 -->
+    <div id="batch-nav">
+      <button id="batch-prev-btn">◀ 上一筆</button>
+      <span class="batch-info" id="batch-info">1 / 3</span>
+      <button id="batch-next-btn">下一筆 ▶</button>
+    </div>
+
+    <!-- 當前檔案名稱顯示 -->
+    <div id="current-file-display">
+      <div class="file-label">目前檔案</div>
+      <div class="file-name-text" id="current-file-name">未載入</div>
+      <button id="mark-read-btn" style="display: none">標記為已讀</button>
+    </div>
+
+    <!-- 重新命名對話框 -->
+    <div id="rename-modal">
+      <div id="rename-dialog">
+        <h3>重新命名檔案</h3>
+        <input type="text" id="rename-input" placeholder="輸入新的檔案名稱" />
+        <div id="rename-buttons">
+          <button id="rename-confirm">確認</button>
+          <button id="rename-cancel">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 雲端檔案選擇器 -->
+    <div id="drive-modal" class="drive-modal">
+      <div class="drive-modal-content">
+        <h3>選擇要載入的雲端檔案</h3>
+        <div id="drive-file-list"></div>
+        <div class="drive-modal-actions">
+          <button id="drive-confirm-btn">匯入選取 (0)</button>
+          <button id="drive-cancel-btn">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 理牌助手介面 (所有東西都在這裡面) -->
+    <div id="assistant-container">
+      <div id="assistant-layout">
+        <div id="grid-panel">
+          <div class="grid-panel-header">
+            <div>
+              <h3 class="panel-title" style="display: none">
+                卡牌預覽 (18 欄 × 24 行)
+              </h3>
+              <p class="grid-panel-info" style="display: none">
+                可上下滾動瀏覽完整牌序，顏色與 Excel 預覽分頁同步。
+              </p>
+            </div>
+            <div class="grid-panel-actions">
+              <div class="grid-search">
+                <input
+                  type="text"
+                  id="grid-search-input"
+                  placeholder="數字序列 (如 8751)"
+                  disabled
+                />
+                <button
+                  id="grid-search-clear-btn"
+                  class="clear-btn"
+                  disabled
+                  title="清除"
+                >
+                  ✕
+                </button>
+                <button id="grid-search-btn" disabled>搜尋段落</button>
+              </div>
+              <div class="grid-search">
+                <input
+                  type="number"
+                  id="card-number-input"
+                  placeholder="第幾張"
+                  min="1"
+                  disabled
+                  style="width: 80px; min-width: 80px"
+                />
+                <button
+                  id="card-number-clear-btn"
+                  class="clear-btn"
+                  disabled
+                  title="清除"
+                >
+                  ✕
+                </button>
+                <button id="card-highlight-btn" disabled>定位</button>
+              </div>
+              <div class="grid-search">
+                <select
+                  id="card-back-select"
+                  disabled
+                  style="
+                    padding: 6px 10px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    background: rgba(30, 41, 59, 0.7);
+                    color: white;
+                  "
+                >
+                  <option value="R">紅卡</option>
+                  <option value="B">黑卡</option>
+                </select>
+                <select
+                  id="card-rank-select"
+                  disabled
+                  style="
+                    padding: 6px 10px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    background: rgba(30, 41, 59, 0.7);
+                    color: white;
+                  "
+                >
+                  <option value="1">A</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="0">0 (10/J/Q/K)</option>
+                </select>
+                <select
+                  id="card-signal-select"
+                  disabled
+                  style="
+                    padding: 6px 10px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    background: rgba(30, 41, 59, 0.7);
+                    color: white;
+                  "
+                >
+                  <option value="all">全部</option>
+                  <option value="signal">訊號</option>
+                  <option value="non-signal">非訊號</option>
+                </select>
+                <button
+                  id="card-back-rank-clear-btn"
+                  class="clear-btn"
+                  disabled
+                  title="清除"
+                >
+                  ✕
+                </button>
+                <button id="card-back-rank-search-btn" disabled>
+                  搜尋卡牌
+                </button>
+              </div>
+              <div class="grid-search">
+                <button
+                  id="clear-all-marks-btn"
+                  disabled
+                  style="background: #ef4444"
+                >
+                  清除所有標記
+                </button>
+              </div>
+              <div class="grid-search" style="align-items:center">
+                <label style="color:white;font-size:13px;white-space:nowrap">每行張數</label>
+                <input type="number" id="gridColsInput" value="15" min="5" max="30"
+                  style="width:55px;min-width:55px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(30,41,59,0.7);color:white;text-align:center">
+                <button id="gridColsApplyBtn">套用</button>
+              </div>
+              <div class="grid-search">
+                <button id="gridFullscreenBtn" title="全螢幕網格" style="font-size:18px;padding:4px 12px">⛶</button>
+              </div>
+            </div>
+          </div>
+          <div id="grid-scroll-container">
+            <div id="grid-preview">
+              <div class="grid-placeholder">尚未載入 Excel 卡序</div>
+            </div>
+          </div>
+          <div id="grid-search-feedback">載入資料後可搜尋指定牌序。</div>
+        </div>
+        <div id="playback-panel">
+          <div id="card-display-wrapper">
+            <div id="card-display">
+              <div id="rank"></div>
+              <div id="suit"></div>
+            </div>
+            <!-- 調整張數區塊移到這裡 -->
+            <div id="jump-controls-wrapper">
+              <h4>調整張數</h4>
+              <div id="jump-controls">
+                <div class="jump-row">
+                  <button
+                    type="button"
+                    id="jump-back-btn"
+                    class="jump-btn"
+                    disabled
+                  >
+                    -1
+                  </button>
+                  <input
+                    type="number"
+                    id="jump-input"
+                    min="1"
+                    value="1"
+                    disabled
+                    style="width: 80px; text-align: center"
+                  />
+                  <button
+                    type="button"
+                    id="jump-forward-btn"
+                    class="jump-btn"
+                    disabled
+                  >
+                    +1
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  id="jump-apply-btn"
+                  class="jump-btn"
+                  disabled
+                  style="width: 100%"
+                >
+                  跳轉
+                </button>
+              </div>
+              <div class="control-group speed-control" style="margin-top: 16px">
+                <label for="speed-slider">速度 (秒/張):</label>
+                <div class="speed-adjust">
+                  <button type="button" id="speed-down-btn" class="speed-btn">
+                    -0.01
+                  </button>
+                  <div class="speed-display" id="speed-value">0.10</div>
+                  <button type="button" id="speed-up-btn" class="speed-btn">
+                    +0.01
+                  </button>
+                </div>
+                <input
+                  type="range"
+                  id="speed-slider"
+                  min="0.01"
+                  max="0.15"
+                  step="0.01"
+                  value="0.10"
+                />
+              </div>
+              <div
+                class="control-group"
+                style="
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 5px;
+                  margin-top: 16px;
+                "
+              >
+                <label style="font-size: 1em">計時器：</label>
+                <div
+                  id="timer-display"
+                  style="
+                    font-size: 1.5em;
+                    font-weight: bold;
+                    color: #4fc3f7;
+                    font-family: &quot;Courier New&quot;, monospace;
+                  "
+                >
+                  00:00
+                </div>
+              </div>
+              <div class="control-group" style="margin-top: 8px">
+                <button id="toggle-autoplay-btn">開始自動播放</button>
+              </div>
+              <div class="control-group" style="margin-top: 8px; gap: 8px">
+                <label style="font-size: 0.9em">從第</label>
+                <input
+                  type="number"
+                  id="autoplay-start-input"
+                  min="1"
+                  value="1"
+                  style="
+                    width: 60px;
+                    padding: 4px;
+                    text-align: center;
+                    border: 1px solid #4fc3f7;
+                    border-radius: 4px;
+                    background: rgba(255, 255, 255, 0.1);
+                    color: #fff;
+                  "
+                />
+                <label style="font-size: 0.9em">張開始</label>
+              </div>
+              <div class="control-group" style="margin-top: 8px; gap: 8px">
+                <label style="font-size: 0.9em">播放方向：</label>
+                <label style="display: flex; align-items: center; gap: 4px">
+                  <input
+                    type="radio"
+                    name="playback-direction"
+                    value="forward"
+                    checked
+                  />
+                  <span style="font-size: 0.9em">往後</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px">
+                  <input
+                    type="radio"
+                    name="playback-direction"
+                    value="backward"
+                  />
+                  <span style="font-size: 0.9em">往前</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div id="status"></div>
+          <div id="message"></div>
+
+          <!-- 備註功能區域 -->
+          <div id="notes-section">
+            <h4>📝 卡牌備註</h4>
+            <div id="notes-info">點擊左側卡牌格子選擇要備註的卡牌</div>
+            <div
+              id="selected-card-display"
+              style="
+                margin-bottom: 10px;
+                padding: 8px;
+                background: rgba(79, 195, 247, 0.2);
+                border-radius: 6px;
+                display: none;
+              "
+            >
+              <span style="color: #4fc3f7; font-weight: 600">已選擇：</span>
+              <span id="selected-card-text" style="color: #fff"></span>
+            </div>
+            <div id="notes-display" class="empty">尚無備註卡牌</div>
+            <div id="notes-controls">
+              <input
+                type="text"
+                id="notes-input"
+                placeholder="為選中的卡牌輸入備註..."
+                disabled
+              />
+              <button id="notes-add-btn" class="notes-btn" disabled>
+                新增備註
+              </button>
+              <button id="notes-highlight-btn" class="notes-btn" disabled>
+                切換高亮
+              </button>
+              <button id="notes-clear-btn" class="notes-btn">清除全部</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script>
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypt3_PnEL5TgdDPaBwg1M5bWAjQMR9dD5Jslicn3eZCtuNSTtqO35RafhQpuX-l9_m/exec';
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.getElementById("file-input");
+        const uploadContainer = document.getElementById("upload-container");
+        const loadingSpinner = document.getElementById("loading-spinner");
+        const assistantContainer = document.getElementById(
+          "assistant-container",
+        );
+        const assistantLayout = document.getElementById("assistant-layout");
+        const gridScrollContainer = document.getElementById(
+          "grid-scroll-container",
+        );
+        const gridContainer = document.getElementById("grid-preview");
+        const gridSearchInput = document.getElementById("grid-search-input");
+        const gridSearchBtn = document.getElementById("grid-search-btn");
+        const gridSearchClearBtn = document.getElementById(
+          "grid-search-clear-btn",
+        );
+        const cardNumberInput = document.getElementById("card-number-input");
+        const cardNumberClearBtn = document.getElementById(
+          "card-number-clear-btn",
+        );
+        const cardHighlightBtn = document.getElementById("card-highlight-btn");
+        const cardBackSelect = document.getElementById("card-back-select");
+        const cardRankSelect = document.getElementById("card-rank-select");
+        const cardSignalSelect = document.getElementById("card-signal-select");
+        const cardBackRankClearBtn = document.getElementById(
+          "card-back-rank-clear-btn",
+        );
+        const cardBackRankSearchBtn = document.getElementById(
+          "card-back-rank-search-btn",
+        );
+        const clearAllMarksBtn = document.getElementById("clear-all-marks-btn");
+        const gridSearchFeedback = document.getElementById(
+          "grid-search-feedback",
+        );
+        const timerDisplay = document.getElementById("timer-display");
+        const autoplayStartInput = document.getElementById(
+          "autoplay-start-input",
+        );
+        const playbackDirectionRadios =
+          document.getElementsByName("playback-direction");
+        const body = document.body;
+
+        // 當使用者修改起始位置時，重置 needsRestart
+        if (autoplayStartInput) {
+          autoplayStartInput.addEventListener("change", () => {
+            needsRestart = true;
+          });
+        }
+        const rankDiv = document.getElementById("rank");
+        const suitDiv = document.getElementById("suit");
+        const statusDiv = document.getElementById("status");
+        const messageDiv = document.getElementById("message");
+        const speedSlider = document.getElementById("speed-slider");
+        const speedValueSpan = document.getElementById("speed-value");
+        const speedDownBtn = document.getElementById("speed-down-btn");
+        const speedUpBtn = document.getElementById("speed-up-btn");
+        const toggleAutoplayBtn = document.getElementById(
+          "toggle-autoplay-btn",
+        );
+        speedValueSpan.textContent = parseFloat(speedSlider.value).toFixed(2);
+
+        // 檔案管理相關元素
+        const fileManager = document.getElementById("file-manager");
+        const toggleManagerBtn = document.getElementById("toggle-manager-btn");
+        const saveCurrentBtn = document.getElementById("save-current-btn");
+        const currentFileDisplay = document.getElementById(
+          "current-file-display",
+        );
+        const currentFileNameSpan =
+          document.getElementById("current-file-name");
+        const markReadBtn = document.getElementById("mark-read-btn");
+        const savedFilesList = document.getElementById("saved-files-list");
+        const recentFilesList = document.getElementById("recent-files-list");
+        const renameModal = document.getElementById("rename-modal");
+        const renameInput = document.getElementById("rename-input");
+        const renameConfirm = document.getElementById("rename-confirm");
+        const renameCancel = document.getElementById("rename-cancel");
+
+        // 上傳頁面的檔案列表相關元素
+        const loadSavedBtn = document.getElementById("load-saved-btn");
+        const uploadFileList = document.getElementById("upload-file-list");
+        const uploadSavedFiles = document.getElementById("upload-saved-files");
+        const closeListBtn = document.getElementById("close-list-btn");
+        const jumpInput = document.getElementById("jump-input");
+        const jumpApplyBtn = document.getElementById("jump-apply-btn");
+        const jumpBackBtn = document.getElementById("jump-back-btn");
+        const jumpForwardBtn = document.getElementById("jump-forward-btn");
+        let GRID_COLS = 15;
+        let GRID_COLS_WITH_LABEL = GRID_COLS + 1;
+        const driveModal = document.getElementById("drive-modal");
+        const driveFileList = document.getElementById("drive-file-list");
+        const driveCancelBtn = document.getElementById("drive-cancel-btn");
+        const DRIVE_PICKER_CANCELLED = "drive-picker-cancelled";
+
+        let currentDeck = null;
+
+        if (gridContainer) {
+          gridContainer.style.setProperty("--grid-cols", GRID_COLS_WITH_LABEL);
+        }
+
+        // 備註功能相關元素
+        const notesDisplay = document.getElementById("notes-display");
+        const notesInput = document.getElementById("notes-input");
+        const notesAddBtn = document.getElementById("notes-add-btn");
+        const notesHighlightBtn = document.getElementById(
+          "notes-highlight-btn",
+        );
+        const notesClearBtn = document.getElementById("notes-clear-btn");
+
+        let fullDeck = [];
+        let currentIndex = -1;
+        let autoplayTimer = null;
+        let isAutoplaying = false;
+        let needsRestart = true; // 追蹤是否需要重新開始（跳轉到起始位置）
+        let currentFileName = "";
+        let currentFileData = null;
+        let renamingFileId = null;
+        let cardSpeechTimeout = null;
+        let cardSpeechSequence = 0;
+        let waitingForAutoplay = false;
+        const speechConfig = {
+          rate: 2.0,
+          pitch: 1.0,
+          volume: 1.0,
+          pauseBetweenNumbers: 120,
+        };
+        const speechVoiceNameHints = [
+          "Google 國語",
+          "Google",
+          "Mei-Jia",
+          "Ting-Ting",
+          "Sin-ji",
+          "Microsoft Hanhan",
+          "Microsoft HsiaoChen",
+        ];
+        let preferredSpeechVoice = null;
+        let gridCells = [];
+        let gridValues = [];
+        let searchHighlightCells = [];
+        let activeGridCell = null;
+        let nextRowHintCell = null;
+        let currentRowCells = [];
+        let activeRowHighlightIndex = null;
+        let timerInterval = null;
+        let timerSeconds = 0;
+
+        // 備註功能變數
+        let cardNotes = {}; // { cardIndex: { text: string, highlighted: boolean } }
+        let selectedCardIndex = null;
+
+        // 事件監聽器
+        fileInput.addEventListener("change", handleFileSelect);
+        document.addEventListener("keydown", handleKeyPress);
+        if (speedDownBtn)
+          speedDownBtn.addEventListener("click", () => adjustSpeed(-0.01));
+        if (speedUpBtn)
+          speedUpBtn.addEventListener("click", () => adjustSpeed(0.01));
+        speedSlider.addEventListener("input", handleSpeedChange);
+        toggleAutoplayBtn.addEventListener("click", toggleAutoplay);
+        toggleManagerBtn.addEventListener("click", toggleFileManager);
+        saveCurrentBtn.addEventListener("click", saveCurrentFile);
+        renameConfirm.addEventListener("click", confirmRename);
+        renameCancel.addEventListener("click", cancelRename);
+        loadSavedBtn.addEventListener("click", showUploadFileList);
+        closeListBtn.addEventListener("click", hideUploadFileList);
+        jumpApplyBtn.addEventListener("click", handleJumpRequest);
+
+        // 備註功能事件監聽器
+        notesAddBtn.addEventListener("click", addCardNote);
+        notesHighlightBtn.addEventListener("click", toggleCardHighlight);
+        notesClearBtn.addEventListener("click", clearAllNotes);
+        notesInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            addCardNote();
+          }
+        });
+        jumpInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            handleJumpRequest();
+          }
+        });
+        jumpBackBtn.addEventListener("click", () => adjustCurrentIndex(-1));
+        jumpForwardBtn.addEventListener("click", () => adjustCurrentIndex(1));
+        if (gridSearchBtn) {
+          gridSearchBtn.addEventListener("click", handleGridSearch);
+        }
+        if (gridSearchInput) {
+          gridSearchInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              handleGridSearch();
+            }
+          });
+        }
+        if (markReadBtn) {
+          markReadBtn.addEventListener("click", toggleMarkAsRead);
+        }
+        // 搜尋段落清除按鈕
+        if (gridSearchClearBtn) {
+          gridSearchClearBtn.addEventListener("click", () => {
+            if (gridSearchInput) gridSearchInput.value = "";
+            clearSearchHighlights();
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = "已清除搜尋";
+          });
+        }
+        // 定位張數功能
+        if (cardHighlightBtn) {
+          cardHighlightBtn.addEventListener("click", handleCardNumberHighlight);
+        }
+        if (cardNumberInput) {
+          cardNumberInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              handleCardNumberHighlight();
+            }
+          });
+        }
+        // 定位張數清除按鈕
+        if (cardNumberClearBtn) {
+          cardNumberClearBtn.addEventListener("click", () => {
+            if (cardNumberInput) cardNumberInput.value = "";
+            clearSearchHighlights();
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = "已清除搜尋";
+          });
+        }
+        // 卡背+點數搜尋
+        if (cardBackRankSearchBtn) {
+          cardBackRankSearchBtn.addEventListener(
+            "click",
+            handleCardBackRankSearch,
+          );
+        }
+        // 卡背+點數清除按鈕
+        if (cardBackRankClearBtn) {
+          cardBackRankClearBtn.addEventListener("click", () => {
+            clearSearchHighlights();
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = "已清除搜尋";
+          });
+        }
+        // 清除所有標記
+        if (clearAllMarksBtn) {
+          clearAllMarksBtn.addEventListener("click", clearAllMarks);
+        }
+
+        // 根據容器寬度和列數計算正方形格子大小
+        function updateGridCellSize() {
+          if (!gridContainer) return;
+          const containerWidth = gridContainer.clientWidth;
+          if (containerWidth <= 0) return;
+          const totalCols = GRID_COLS_WITH_LABEL;
+          const colGap = 2;
+          const cellSize = Math.floor((containerWidth - (totalCols - 1) * colGap) / totalCols);
+          const clamped = Math.max(28, Math.min(60, cellSize));
+          gridContainer.style.setProperty("--grid-row-size", clamped + "px");
+        }
+
+        // 每行張數設定
+        const gridColsInput = document.getElementById("gridColsInput");
+        const gridColsApplyBtn = document.getElementById("gridColsApplyBtn");
+        if (gridColsApplyBtn) {
+          gridColsApplyBtn.addEventListener("click", () => {
+            const val = parseInt(gridColsInput.value) || 15;
+            const clamped = Math.max(5, Math.min(30, val));
+            gridColsInput.value = clamped;
+            GRID_COLS = clamped;
+            GRID_COLS_WITH_LABEL = GRID_COLS + 1;
+            if (gridContainer) {
+              gridContainer.style.setProperty("--grid-cols", GRID_COLS_WITH_LABEL);
+            }
+            updateGridCellSize();
+            if (currentDeck && currentDeck.length > 0) {
+              renderDeckGrid(currentDeck);
+              highlightCurrentCardInGrid();
+            }
+          });
+        }
+        window.addEventListener("resize", updateGridCellSize);
+
+        resetGridPanel();
+
+        // 匯出/匯入功能
+        const exportDataBtn = document.getElementById("export-data-btn");
+        const importDataBtn = document.getElementById("import-data-btn");
+        const importFileInput = document.getElementById("import-file-input");
+
+        // 匯出/匯入已改為雲端儲存，按鈕保留但改為提示
+        if (exportDataBtn) {
+          exportDataBtn.addEventListener("click", function () {
+            alert("檔案已儲存在 Google 雲端，不需要匯出。");
+          });
+        }
+        if (importDataBtn) {
+          importDataBtn.addEventListener("click", function () {
+            alert("檔案已儲存在 Google 雲端，不需要匯入。");
+          });
+        }
+
+        // ===== 批次雲端匯入 =====
+        let batchQueue = [];    // [{id, name, ...}, ...]
+        let batchIndex = -1;
+
+        const batchNav = document.getElementById("batch-nav");
+        const batchInfo = document.getElementById("batch-info");
+        const batchPrevBtn = document.getElementById("batch-prev-btn");
+        const batchNextBtn = document.getElementById("batch-next-btn");
+
+        function updateBatchNav() {
+          if (batchQueue.length <= 1) {
+            batchNav.style.display = "none";
+            return;
+          }
+          batchNav.style.display = "flex";
+          batchInfo.textContent = `${batchIndex + 1} / ${batchQueue.length}　${batchQueue[batchIndex].name}`;
+          batchPrevBtn.disabled = batchIndex <= 0;
+          batchNextBtn.disabled = batchIndex >= batchQueue.length - 1;
+        }
+
+        async function loadBatchFile(index) {
+          const file = batchQueue[index];
+          batchIndex = index;
+          updateBatchNav();
+
+          try {
+            loadingSpinner.style.display = "block";
+            loadingSpinner.textContent = `正在下載 (${index + 1}/${batchQueue.length}): ${file.name}...`;
+
+            const downloadUrl =
+              APPS_SCRIPT_URL + "?fileId=" +
+              file.id;
+            const fileResponse = await fetch(downloadUrl);
+            const base64Data = await fileResponse.text();
+
+            const binaryString = atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const arrayBuffer = bytes.buffer;
+
+            loadingSpinner.textContent = "正在處理資料...";
+
+            if (typeof ExcelJS === "undefined") {
+              const script = document.createElement("script");
+              script.src =
+                "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
+              await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+              });
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(arrayBuffer);
+
+            let ws =
+              workbook.getWorksheet("預覽") ||
+              workbook.getWorksheet("Preview");
+            if (!ws) {
+              throw new Error('找不到名為 "預覽" 或 "Preview" 的工作表。');
+            }
+
+            const deck = [];
+            const COLS = 21,
+              ROWS = 31;
+            const GROUP = 7;
+
+            for (let r = 1; r <= ROWS; r++) {
+              for (let c = 1; c <= COLS; c++) {
+                const sheetColIndex = c + Math.floor((c - 1) / GROUP);
+                if ((c - 1) % GROUP === 0) continue;
+
+                const cell = ws.getCell(r, sheetColIndex);
+                const value = cell.value ? String(cell.value) : "";
+                const fill = cell.fill;
+
+                let backColor = null;
+                if (fill && fill.fgColor && fill.fgColor.argb) {
+                  const fillColor = fill.fgColor.argb.toUpperCase();
+                  if (fillColor === "FFFFFF00" || fillColor === "FFFFE699") backColor = "R";
+                  else if (fillColor === "FF00FFFF" || fillColor === "FF00CFCF") backColor = "B";
+                }
+
+                // 愛心標記偵測：粉紅粗框
+                let isHeartMarker = false;
+                const border = cell.border;
+                if (border && border.top && border.top.color && border.top.color.argb) {
+                  const borderColor = border.top.color.argb.toUpperCase();
+                  if (borderColor === "FFFF1493") isHeartMarker = true;
+                }
+
+                if (!value && !backColor) continue;
+
+                const font = cell.font;
+                let suit = "♠";
+                let isSignal = false;
+
+                let isPurpleFont = false;
+                if (font && font.color && font.color.argb) {
+                  const fontColor = font.color.argb.toUpperCase();
+                  if (
+                    fontColor === "FFFF0000" ||
+                    fontColor === "FFFF4D4F" ||
+                    fontColor === "FFDC3545"
+                  ) {
+                    isSignal = true;
+                  }
+                  if (
+                    fontColor === "FF7030A0" ||
+                    fontColor === "FF8B00FF" ||
+                    fontColor === "FF9900CC" ||
+                    fontColor === "FF800080" ||
+                    fontColor === "FF4B0082"
+                  ) {
+                    isPurpleFont = true;
+                  }
+                }
+
+                let rank = value;
+                if (value === "0") rank = "K";
+                if (value === "1") rank = "A";
+
+                deck.push({ rank, suit, back: backColor, isSignal, isHeartMarker, isPurpleFont });
+              }
+            }
+
+            if (deck.length === 0) {
+              throw new Error("檔案中沒有找到有效的卡片資料");
+            }
+
+            currentFileName = file.name.replace(".xlsx", "");
+            currentFileData = arrayBuffer;
+
+            startAssistant(deck);
+            messageDiv.textContent = `已從雲端載入: ${currentFileName} (共 ${deck.length} 張卡片)`;
+          } catch (error) {
+            console.error("從雲端載入錯誤:", error);
+            loadingSpinner.style.display = "none";
+            alert("從雲端載入失敗: " + error.message);
+          }
+        }
+
+        if (batchPrevBtn) {
+          batchPrevBtn.addEventListener("click", () => {
+            if (batchIndex > 0) loadBatchFile(batchIndex - 1);
+          });
+        }
+        if (batchNextBtn) {
+          batchNextBtn.addEventListener("click", () => {
+            if (batchIndex < batchQueue.length - 1) loadBatchFile(batchIndex + 1);
+          });
+        }
+
+        // 從雲端載入按鈕事件
+        const importDriveBtn = document.getElementById("import-drive-btn");
+        if (importDriveBtn) {
+          importDriveBtn.addEventListener("click", async () => {
+            try {
+              loadingSpinner.style.display = "block";
+              loadingSpinner.textContent = "正在連接 Google Drive...";
+
+              const response = await fetch(
+                APPS_SCRIPT_URL,
+              );
+              const result = await response.json();
+
+              loadingSpinner.style.display = "none";
+
+              if (!result.success) {
+                alert(
+                  "無法連接到 Google Drive: " + (result.error || "未知錯誤"),
+                );
+                return;
+              }
+
+              const files = result.files;
+
+              if (!files || files.length === 0) {
+                alert("Google Drive 中沒有找到任何檔案");
+                return;
+              }
+
+              let selectedFiles = null;
+              try {
+                selectedFiles = await openDriveFilePicker(files);
+              } catch (pickerError) {
+                if (
+                  !pickerError ||
+                  pickerError.message !== DRIVE_PICKER_CANCELLED
+                ) {
+                  console.error("Drive picker error:", pickerError);
+                  alert("無法顯示雲端檔案清單，請稍後再試");
+                }
+                return;
+              }
+
+              if (!selectedFiles || selectedFiles.length === 0) {
+                return;
+              }
+
+              // 設定批次佇列
+              batchQueue = selectedFiles;
+              batchIndex = -1;
+
+              // 載入第一筆
+              await loadBatchFile(0);
+            } catch (error) {
+              console.error("從雲端載入錯誤:", error);
+              loadingSpinner.style.display = "none";
+              alert("從雲端載入失敗: " + error.message);
+            }
+          });
+        }
+
+        // 直接進入語音助手（不載入檔案）
+        const skipUploadBtn = document.getElementById("skip-upload-btn");
+        if (skipUploadBtn) {
+          skipUploadBtn.addEventListener("click", () => {
+            fullDeck = [];
+            currentIndex = 0;
+            currentFileName = "";
+            currentFileData = null;
+            uploadContainer.style.display = "none";
+            loadingSpinner.style.display = "none";
+            assistantContainer.style.display = "flex";
+            if (assistantLayout) {
+              assistantLayout.classList.add("active");
+              assistantLayout.style.display = "flex";
+            }
+            toggleManagerBtn.style.display = "block";
+            saveCurrentBtn.style.display = "block";
+            setJumpControlsEnabled(false);
+            messageDiv.textContent = "尚未載入檔案，請從檔案管理器載入";
+          });
+        }
+
+        // 拖放功能
+        const uploadLabel = document.getElementById("upload-label");
+        uploadLabel.addEventListener("dragover", handleDragOver);
+        uploadLabel.addEventListener("dragleave", handleDragLeave);
+        uploadLabel.addEventListener("drop", handleDrop);
+
+        // 載入已儲存的檔案
+        initSpeechVoice();
+        loadSavedFiles();
+        updateUploadFileList();
+
+        // 拖放處理函數
+        function handleDragOver(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          uploadLabel.classList.add("drag-over");
+        }
+
+        function handleDragLeave(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          uploadLabel.classList.remove("drag-over");
+        }
+
+        function handleDrop(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          uploadLabel.classList.remove("drag-over");
+
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            const file = files[0];
+            if (file.name.endsWith(".xlsx")) {
+              processFile(file);
+            } else {
+              alert("請選擇 Excel 檔案 (.xlsx)");
+            }
+          }
+        }
+        // 已讀檔案管理函數
+        function getReadFiles() {
+          const data = localStorage.getItem("readExcelFiles");
+          return data ? JSON.parse(data) : {};
+        }
+
+        function markFileAsRead(fileName) {
+          const readFiles = getReadFiles();
+          readFiles[fileName] = Date.now();
+          localStorage.setItem("readExcelFiles", JSON.stringify(readFiles));
+        }
+
+        function unmarkFileAsRead(fileName) {
+          const readFiles = getReadFiles();
+          delete readFiles[fileName];
+          localStorage.setItem("readExcelFiles", JSON.stringify(readFiles));
+        }
+
+        function isFileRead(fileName) {
+          const readFiles = getReadFiles();
+          return !!readFiles[fileName];
+        }
+
+        async function toggleMarkAsRead() {
+          if (!currentFileName) return;
+
+          const isRead = isFileRead(currentFileName);
+          const action = isRead ? "unmarkRead" : "markRead";
+
+          try {
+            markReadBtn.disabled = true;
+            markReadBtn.textContent = "處理中...";
+
+            // 調用雲端 API
+            const url = `${APPS_SCRIPT_URL}?action=${action}&fileName=${encodeURIComponent(currentFileName)}`;
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.success) {
+              // 同時更新本機快取
+              if (isRead) {
+                unmarkFileAsRead(currentFileName);
+                updateFileReadStatus(false);
+              } else {
+                markFileAsRead(currentFileName);
+                updateFileReadStatus(true);
+              }
+            } else {
+              alert("標記失敗：" + (result.error || "未知錯誤"));
+            }
+          } catch (error) {
+            console.error("標記已讀錯誤:", error);
+            alert("標記失敗：" + error.message);
+          } finally {
+            markReadBtn.disabled = false;
+            updateFileReadStatus(isFileRead(currentFileName));
+          }
+        }
+
+        function updateFileReadStatus(isRead) {
+          if (!currentFileNameSpan || !markReadBtn) return;
+
+          if (isRead) {
+            currentFileNameSpan.classList.add("read-file");
+            markReadBtn.textContent = "取消已讀標記";
+            markReadBtn.classList.add("marked");
+          } else {
+            currentFileNameSpan.classList.remove("read-file");
+            markReadBtn.textContent = "標記為已讀";
+            markReadBtn.classList.remove("marked");
+          }
+        }
+
+        function openDriveFilePicker(files) {
+          return new Promise((resolve, reject) => {
+            if (!driveModal || !driveFileList) {
+              reject(new Error("無法顯示雲端檔案清單"));
+              return;
+            }
+            const selectedSet = new Set();
+            const confirmBtn = document.getElementById("drive-confirm-btn");
+
+            const updateConfirmBtn = () => {
+              if (confirmBtn) {
+                const count = selectedSet.size;
+                confirmBtn.textContent = `匯入選取 (${count})`;
+                confirmBtn.style.display = count > 0 ? "inline-block" : "none";
+              }
+            };
+
+            driveFileList.innerHTML = "";
+            files.forEach((file, index) => {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "drive-file-item";
+              if (file.isRead) {
+                btn.classList.add("read-file");
+                const fileNameWithoutExt = file.name.replace(".xlsx", "");
+                markFileAsRead(fileNameWithoutExt);
+              }
+              btn.dataset.index = index;
+              const nameDiv = document.createElement("div");
+              nameDiv.className = "drive-file-name";
+              nameDiv.textContent = file.name || `未命名檔案 ${index + 1}`;
+              const metaDiv = document.createElement("div");
+              metaDiv.className = "drive-file-meta";
+              metaDiv.textContent = file.lastModified
+                ? new Date(file.lastModified).toLocaleString("zh-TW")
+                : "時間未知";
+              btn.appendChild(nameDiv);
+              btn.appendChild(metaDiv);
+              driveFileList.appendChild(btn);
+            });
+            driveModal.classList.add("show");
+            updateConfirmBtn();
+
+            const cleanup = () => {
+              driveModal.classList.remove("show");
+              driveFileList.removeEventListener("click", handleToggle);
+              if (confirmBtn) confirmBtn.removeEventListener("click", handleConfirm);
+              if (driveCancelBtn)
+                driveCancelBtn.removeEventListener("click", handleCancel);
+              driveModal.removeEventListener("click", handleBackdrop);
+              if (confirmBtn) confirmBtn.style.display = "none";
+            };
+
+            const handleToggle = (event) => {
+              const item = event.target.closest(".drive-file-item");
+              if (!item) return;
+              const idx = Number(item.dataset.index);
+              if (Number.isNaN(idx) || idx < 0 || idx >= files.length) return;
+
+              if (selectedSet.has(idx)) {
+                selectedSet.delete(idx);
+                item.classList.remove("selected");
+              } else {
+                selectedSet.add(idx);
+                item.classList.add("selected");
+              }
+              updateConfirmBtn();
+            };
+
+            const handleConfirm = () => {
+              if (selectedSet.size === 0) return;
+              // 按檔名排序
+              const sorted = [...selectedSet].sort((a, b) => {
+                const nameA = (files[a].name || "").toLowerCase();
+                const nameB = (files[b].name || "").toLowerCase();
+                return nameA.localeCompare(nameB, undefined, { numeric: true });
+              });
+              const selectedFiles = sorted.map(i => files[i]);
+              cleanup();
+              resolve(selectedFiles);
+            };
+
+            const handleCancel = () => {
+              cleanup();
+              reject(new Error(DRIVE_PICKER_CANCELLED));
+            };
+            const handleBackdrop = (event) => {
+              if (event.target === driveModal) {
+                handleCancel();
+              }
+            };
+            driveFileList.addEventListener("click", handleToggle);
+            if (confirmBtn) confirmBtn.addEventListener("click", handleConfirm);
+            if (driveCancelBtn)
+              driveCancelBtn.addEventListener("click", handleCancel);
+            driveModal.addEventListener("click", handleBackdrop);
+          });
+        }
+
+        async function processFile(file) {
+          uploadContainer.style.display = "none";
+          loadingSpinner.style.display = "block";
+
+          try {
+            // 儲存檔案資料
+            currentFileName = file.name.replace(".xlsx", "");
+            currentFileData = await file.arrayBuffer();
+
+            const deck = await parseExcelToDeck(file);
+            if (deck && deck.length > 0) {
+              startAssistant(deck);
+            } else {
+              throw new Error("無法從 Excel 中解析出任何有效的牌組資料。");
+            }
+          } catch (error) {
+            console.error("解析 Excel 時發生錯誤:", error);
+            alert(`解析失敗：${error.message}`);
+            uploadContainer.style.display = "block";
+            loadingSpinner.style.display = "none";
+          }
+        }
+
+        async function handleFileSelect(event) {
+          const file = event.target.files[0];
+          if (!file) {
+            return;
+          }
+          await processFile(file);
+        }
+        async function parseExcelToDeck(file) {
+          const deck = [];
+          const reader = new FileReader();
+          await new Promise((resolve, reject) => {
+            reader.onload = async (e) => {
+              try {
+                const buffer = e.target.result;
+                const wb = new ExcelJS.Workbook();
+                await wb.xlsx.load(buffer);
+                let ws = wb.getWorksheet("預覽") || wb.getWorksheet("Preview");
+                if (!ws) {
+                  throw new Error('找不到名為 "預覽" 或 "Preview" 的工作表。');
+                }
+                const COLS = 21,
+                  ROWS = 31;
+                const GROUP = 7;
+                for (let r = 1; r <= ROWS; r++) {
+                  for (let c = 1; c <= COLS; c++) {
+                    const sheetColIndex = c + Math.floor((c - 1) / GROUP);
+                    if ((c - 1) % GROUP === 0) continue; // 跳過結果 X/O/和 欄
+                    const cell = ws.getCell(r, sheetColIndex);
+                    const value = cell.value ? String(cell.value) : "";
+                    const fill = cell.fill;
+                    let backColor = null;
+                    if (fill && fill.fgColor && fill.fgColor.argb) {
+                      const fillColor = fill.fgColor.argb.toUpperCase();
+                      if (fillColor === "FFFFFF00") backColor = "R";
+                      else if (fillColor === "FF00FFFF") backColor = "B";
+                    }
+                    if (!value && !backColor) continue;
+                    const font = cell.font;
+                    let suit = "♠";
+                    let isSignal = false;
+                    let isPurpleFont = false;
+                    if (font && font.color && font.color.argb) {
+                      const fontColor = font.color.argb.toUpperCase();
+                      // 同時支援標準紅色(FFFF0000)與淺紅色、語音用紅色
+                      if (
+                        fontColor === "FFFF0000" ||
+                        fontColor === "FFFF4D4F" ||
+                        fontColor === "FFDC3545"
+                      ) {
+                        isSignal = true;
+                      }
+                      if (
+                        fontColor === "FF7030A0" ||
+                        fontColor === "FF8B00FF" ||
+                        fontColor === "FF9900CC" ||
+                        fontColor === "FF800080" ||
+                        fontColor === "FF4B0082"
+                      ) {
+                        isPurpleFont = true;
+                      }
+                    }
+                    let rank = value;
+                    if (value === "0") rank = "K";
+                    if (value === "1") rank = "A";
+                    deck.push({ rank, suit, back: backColor, isSignal, isPurpleFont });
+                  }
+                }
+                resolve();
+              } catch (err) {
+                reject(err);
+              }
+            };
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+          });
+          return deck;
+        }
+        function startAssistant(deck) {
+          fullDeck = Array.isArray(deck) ? deck : [];
+          currentIndex = 0;
+          colorHighlightActive = false;
+          searchHighlightCells = [];
+          resetTimer();
+
+          // 記錄到最近開啟檔案
+          if (currentFileName) {
+            addToRecentFiles(currentFileName);
+          }
+
+          prepareGridPanel(fullDeck);
+          loadingSpinner.style.display = "none";
+          uploadContainer.style.display = "none";
+          assistantContainer.style.display = "flex";
+          if (assistantLayout) {
+            assistantLayout.classList.add("active");
+            assistantLayout.style.display = "flex";
+          }
+
+          // 顯示檔案管理相關按鈕
+          toggleManagerBtn.style.display = "block";
+          saveCurrentBtn.style.display = "block";
+
+          // 顯示檔案名稱
+          if (currentFileDisplay && currentFileNameSpan) {
+            currentFileDisplay.style.display = "block";
+            currentFileNameSpan.textContent = currentFileName || "未知檔案";
+            if (markReadBtn) {
+              markReadBtn.style.display = "block";
+              updateFileReadStatus(isFileRead(currentFileName));
+            }
+          }
+
+          messageDiv.textContent = "自動播放中... 使用 [←] [→] 調整張數";
+          setJumpControlsEnabled(true);
+          updateCardDisplay();
+          // 自動開始播放
+          if (!isAutoplaying) {
+            toggleAutoplay();
+          }
+        }
+        function updateCardDisplay() {
+          updateJumpInputValue();
+          if (fullDeck.length === 0) {
+            rankDiv.textContent = "";
+            suitDiv.textContent = "";
+            statusDiv.textContent = "0 / 0";
+            body.className = "";
+            clearActiveGridHighlight();
+            return;
+          }
+          if (currentIndex < 0 || currentIndex >= fullDeck.length) {
+            rankDiv.textContent = "完成";
+            suitDiv.textContent = "🎉";
+            statusDiv.textContent = `${fullDeck.length} / ${fullDeck.length}`;
+            body.className = "";
+            clearActiveGridHighlight();
+            if (isAutoplaying) {
+              toggleAutoplay();
+            }
+            speak("全部排列完成，辛苦了！");
+            return;
+          }
+          const card = fullDeck[currentIndex];
+          body.className = card.back === "R" ? "bg-red-card" : "bg-blue-card";
+          rankDiv.textContent = card.rank;
+          suitDiv.textContent = card.suit;
+          const textClass = card.isSignal ? "font-red" : "font-black";
+          rankDiv.className = textClass;
+          suitDiv.className = textClass;
+          statusDiv.textContent = `${currentIndex + 1} / ${fullDeck.length}`;
+          speakCard(card);
+          highlightCurrentCardInGrid();
+        }
+        function updateJumpInputValue() {
+          if (!jumpInput) return;
+          const deckSize = fullDeck.length || 1;
+          const safeNumber = Math.min(Math.max(currentIndex + 1, 1), deckSize);
+          jumpInput.max = deckSize;
+          jumpInput.value = safeNumber;
+        }
+        function handleKeyPress(event) {
+          if (fullDeck.length === 0) return;
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            advanceCard(1);
+          } else if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            advanceCard(-1);
+          }
+        }
+        function handleSpeedChange() {
+          const speed = parseFloat(speedSlider.value).toFixed(2);
+          speedValueSpan.textContent = speed;
+          if (isAutoplaying && !waitingForAutoplay) {
+            scheduleNextAutoplay();
+          }
+        }
+        function adjustSpeed(delta) {
+          if (!speedSlider) return;
+          const current = parseFloat(speedSlider.value) || 0;
+          const min = parseFloat(speedSlider.min) || 0.05;
+          const max = parseFloat(speedSlider.max) || 1.5;
+          const next = Math.min(Math.max(current + delta, min), max);
+          const normalized = Math.round(next * 100) / 100;
+          if (Math.abs(normalized - current) < 0.0001) return;
+          speedSlider.value = normalized.toFixed(2);
+          handleSpeedChange();
+        }
+        function toggleAutoplay() {
+          if (!isAutoplaying) {
+            // 開始/繼續自動播放
+            // 如果需要重新開始，則跳轉到指定的起始位置
+            if (needsRestart && autoplayStartInput) {
+              const startNumber = parseInt(autoplayStartInput.value, 10) || 1;
+              const clampedStart = Math.min(
+                Math.max(startNumber, 1),
+                fullDeck.length,
+              );
+              currentIndex = clampedStart - 1;
+              updateCardDisplay();
+              needsRestart = false; // 標記為已開始，下次暫停再繼續時不會重置
+            }
+            // 繼續播放時保持當前位置，不重置
+
+            isAutoplaying = true;
+            toggleAutoplayBtn.textContent = "暫停播放";
+            toggleAutoplayBtn.style.backgroundColor = "#d93025";
+            messageDiv.textContent = "自動播放中... 按任意鍵可暫停";
+            waitingForAutoplay = false;
+            startTimer();
+            scheduleNextAutoplay();
+          } else {
+            // 暫停播放
+            isAutoplaying = false;
+            clearTimeout(autoplayTimer);
+            waitingForAutoplay = false;
+            toggleAutoplayBtn.textContent = "繼續自動播放";
+            toggleAutoplayBtn.style.backgroundColor = "#1a73e8";
+            messageDiv.textContent =
+              "已暫停。使用 [←] [→] 調整張數，或點擊按鈕繼續播放";
+            stopTimer();
+          }
+        }
+        function advanceCard(direction, isFromAutoplay = false) {
+          const newIndex = currentIndex + direction;
+          if (newIndex >= 0 && newIndex <= fullDeck.length) {
+            currentIndex = newIndex;
+            waitingForAutoplay =
+              isFromAutoplay &&
+              isAutoplaying &&
+              currentIndex < fullDeck.length &&
+              currentIndex >= 0;
+            updateCardDisplay();
+          }
+        }
+        function handleJumpRequest() {
+          if (fullDeck.length === 0) return;
+          const targetNumber = parseInt(jumpInput.value, 10);
+          if (Number.isNaN(targetNumber)) {
+            alert("請輸入有效的數字");
+            updateJumpInputValue();
+            return;
+          }
+          jumpToCardNumber(targetNumber);
+        }
+        function adjustCurrentIndex(delta) {
+          if (fullDeck.length === 0) return;
+          const targetNumber = currentIndex + 1 + delta;
+          jumpToCardNumber(targetNumber);
+        }
+        function jumpToCardNumber(cardNumber) {
+          if (fullDeck.length === 0) return;
+          if (Number.isNaN(cardNumber)) return;
+          const clampedNumber = Math.min(
+            Math.max(cardNumber, 1),
+            fullDeck.length,
+          );
+          if (isAutoplaying) {
+            toggleAutoplay();
+          }
+          waitingForAutoplay = false;
+          currentIndex = clampedNumber - 1;
+          needsRestart = true; // 手動跳轉後，下次播放會從輸入框的位置開始
+          updateCardDisplay();
+        }
+        function setJumpControlsEnabled(isEnabled) {
+          if (!jumpInput) return;
+          jumpInput.disabled = !isEnabled;
+          jumpApplyBtn.disabled = !isEnabled;
+          jumpBackBtn.disabled = !isEnabled;
+          jumpForwardBtn.disabled = !isEnabled;
+          if (isEnabled) {
+            updateJumpInputValue();
+          }
+        }
+        // 數字轉中文，避免 TTS 引擎把阿拉伯數字唸得太短或唸成英文
+        const digitToChinese = {
+          "0": "零", "1": "一", "2": "二", "3": "三", "4": "四",
+          "5": "五", "6": "六", "7": "七", "8": "八", "9": "九",
+        };
+        function speakCard(card) {
+          // 數字10、J、Q、K都唸成「0」
+          let rankText = card.rank;
+          if (rankText === "A") {
+            rankText = "1";
+          } else if (
+            rankText === "10" ||
+            rankText === "J" ||
+            rankText === "Q" ||
+            rankText === "K"
+          ) {
+            rankText = "0";
+          }
+
+          const isSignal = Boolean(card.isSignal);
+          const comboCode =
+            card.back === "R" ? (isSignal ? "3" : "1") : isSignal ? "4" : "2"; // 1:紅、2:黑、3:紅訊號、4:黑訊號
+
+          speakCardNumbers(comboCode, rankText);
+        }
+        function speakCardNumbers(firstNumber, secondNumber) {
+          if (cardSpeechTimeout) {
+            clearTimeout(cardSpeechTimeout);
+            cardSpeechTimeout = null;
+          }
+          const sequenceId = ++cardSpeechSequence;
+          const synth = window.speechSynthesis;
+          synth.pause();
+          synth.cancel();
+          const firstChinese = digitToChinese[firstNumber] || firstNumber;
+          const secondChinese = digitToChinese[secondNumber] || secondNumber;
+          const first = createSpeechUtterance(firstChinese);
+          const second = createSpeechUtterance(secondChinese);
+          second.onend = () => {
+            handleCardSpeechComplete(sequenceId);
+          };
+          second.onerror = () => {
+            handleCardSpeechComplete(sequenceId);
+          };
+          synth.speak(first);
+          synth.speak(second);
+          synth.resume();
+        }
+        function initSpeechVoice() {
+          const synth = window.speechSynthesis;
+          if (!synth) return;
+          resolvePreferredSpeechVoice(true);
+          const refreshVoice = () => {
+            preferredSpeechVoice = null;
+            resolvePreferredSpeechVoice(true);
+          };
+          if (typeof synth.addEventListener === "function") {
+            synth.addEventListener("voiceschanged", refreshVoice);
+          } else {
+            synth.onvoiceschanged = refreshVoice;
+          }
+        }
+        function resolvePreferredSpeechVoice(forceRefresh = false) {
+          if (preferredSpeechVoice && !forceRefresh) {
+            return preferredSpeechVoice;
+          }
+          const synth = window.speechSynthesis;
+          if (!synth) return null;
+          const voices = synth.getVoices();
+          if (!voices || voices.length === 0) return null;
+          const lower = (text) => String(text || "").toLowerCase();
+
+          for (const hint of speechVoiceNameHints) {
+            const byHint = voices.find((voice) =>
+              lower(voice.name).includes(lower(hint)),
+            );
+            if (byHint) {
+              preferredSpeechVoice = byHint;
+              return preferredSpeechVoice;
+            }
+          }
+
+          preferredSpeechVoice =
+            voices.find((voice) => lower(voice.lang) === "zh-tw") ||
+            voices.find((voice) => lower(voice.lang).startsWith("zh-tw")) ||
+            voices.find((voice) => lower(voice.lang).startsWith("zh")) ||
+            voices[0];
+          return preferredSpeechVoice || null;
+        }
+        function createSpeechUtterance(text) {
+          const utterance = new SpeechSynthesisUtterance(String(text));
+          utterance.lang = "zh-TW";
+          utterance.rate = speechConfig.rate;
+          utterance.pitch = speechConfig.pitch;
+          utterance.volume = speechConfig.volume;
+          const fixedVoice = resolvePreferredSpeechVoice();
+          if (fixedVoice) {
+            utterance.voice = fixedVoice;
+            return utterance;
+          }
+
+          // 為 iOS/iPad 選擇更好的語音引擎
+          const voices = window.speechSynthesis.getVoices();
+          const preferredVoices = [
+            "Mei-Jia", // iOS 台灣中文（最佳）
+            "Ting-Ting", // iOS 簡體中文（備用）
+            "Sin-ji", // iOS 粵語（備用）
+          ];
+
+          for (const name of preferredVoices) {
+            const voice = voices.find((v) => v.name.includes(name));
+            if (voice) {
+              utterance.voice = voice;
+              break;
+            }
+          }
+
+          return utterance;
+        }
+        function speak(text) {
+          cardSpeechSequence++;
+          if (cardSpeechTimeout) {
+            clearTimeout(cardSpeechTimeout);
+            cardSpeechTimeout = null;
+          }
+          window.speechSynthesis.cancel();
+          const utterance = createSpeechUtterance(text);
+          window.speechSynthesis.speak(utterance);
+        }
+        function handleCardSpeechComplete(sequenceId) {
+          if (sequenceId !== cardSpeechSequence) return;
+          if (cardSpeechTimeout) {
+            clearTimeout(cardSpeechTimeout);
+            cardSpeechTimeout = null;
+          }
+          if (waitingForAutoplay && isAutoplaying) {
+            waitingForAutoplay = false;
+            scheduleNextAutoplay();
+          }
+        }
+        function scheduleNextAutoplay() {
+          if (!isAutoplaying) return;
+
+          // 檢查播放方向
+          const direction =
+            Array.from(playbackDirectionRadios).find((r) => r.checked)?.value ||
+            "forward";
+          const step = direction === "forward" ? 1 : -1;
+
+          // 檢查是否已經到達邊界
+          if (
+            (step === 1 && currentIndex >= fullDeck.length) ||
+            (step === -1 && currentIndex < 0)
+          ) {
+            return;
+          }
+
+          clearTimeout(autoplayTimer);
+          const interval = parseFloat(speedSlider.value) * 1000;
+          autoplayTimer = setTimeout(() => advanceCard(step, true), interval);
+        }
+
+        function startTimer() {
+          if (timerInterval) return;
+          timerInterval = setInterval(() => {
+            timerSeconds++;
+            updateTimerDisplay();
+          }, 1000);
+        }
+
+        function stopTimer() {
+          if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+        }
+
+        function resetTimer() {
+          stopTimer();
+          timerSeconds = 0;
+          updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+          if (!timerDisplay) return;
+          const minutes = Math.floor(timerSeconds / 60);
+          const seconds = timerSeconds % 60;
+          timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        }
+
+        // 備註功能函式
+        function selectCardForNote(cardIndex) {
+          selectedCardIndex = cardIndex;
+          const selectedCardDisplay = document.getElementById(
+            "selected-card-display",
+          );
+          const selectedCardText =
+            document.getElementById("selected-card-text");
+
+          if (selectedCardDisplay && selectedCardText && fullDeck[cardIndex]) {
+            const card = fullDeck[cardIndex];
+            const cardDesc = `第 ${cardIndex + 1} 張 - ${card.back === "R" ? "紅" : "黑"}${card.rank}`;
+            selectedCardText.textContent = cardDesc;
+            selectedCardDisplay.style.display = "block";
+          }
+
+          // 啟用備註控制
+          if (notesInput) notesInput.disabled = false;
+          if (notesAddBtn) notesAddBtn.disabled = false;
+          if (notesHighlightBtn) notesHighlightBtn.disabled = false;
+
+          // 如果已有備註，顯示在輸入框
+          if (cardNotes[cardIndex] && cardNotes[cardIndex].text) {
+            notesInput.value = cardNotes[cardIndex].text;
+          } else {
+            notesInput.value = "";
+          }
+        }
+
+        function updateNotesDisplay() {
+          if (!notesDisplay) return;
+
+          const noteKeys = Object.keys(cardNotes);
+          if (noteKeys.length === 0) {
+            notesDisplay.innerHTML = "尚無備註卡牌";
+            notesDisplay.classList.add("empty");
+            return;
+          }
+
+          notesDisplay.classList.remove("empty");
+          let html = "";
+
+          noteKeys
+            .sort((a, b) => parseInt(a) - parseInt(b))
+            .forEach((index) => {
+              const note = cardNotes[index];
+              const card = fullDeck[index];
+              if (!card) return;
+
+              const cardDesc = `第 ${parseInt(index) + 1} 張 - ${card.back === "R" ? "紅" : "黑"}${card.rank}`;
+              const highlightClass = note.highlighted ? " highlighted" : "";
+              html += `<div class="note-item${highlightClass}">`;
+              html += `<div class="note-card-info">${cardDesc}</div>`;
+              if (note.text) {
+                html += `<div class="note-text">${escapeHTML(note.text)}</div>`;
+              }
+              html += `</div>`;
+            });
+
+          notesDisplay.innerHTML = html;
+        }
+
+        function escapeHTML(text) {
+          const div = document.createElement("div");
+          div.textContent = text;
+          return div.innerHTML;
+        }
+
+        function addCardNote() {
+          if (selectedCardIndex === null) {
+            alert("請先點擊卡牌格子選擇要備註的卡牌");
+            return;
+          }
+
+          const text = notesInput.value.trim();
+
+          if (!text) {
+            alert("請輸入備註文字");
+            return;
+          }
+
+          if (!cardNotes[selectedCardIndex]) {
+            cardNotes[selectedCardIndex] = { text: "", highlighted: false };
+          }
+
+          cardNotes[selectedCardIndex].text = text;
+          notesInput.value = "";
+
+          // 更新格子顯示
+          updateCardNoteMarker(selectedCardIndex);
+          updateNotesDisplay();
+        }
+
+        function toggleCardHighlight() {
+          if (selectedCardIndex === null) {
+            alert("請先點擊卡牌格子選擇要高亮的卡牌");
+            return;
+          }
+
+          if (!cardNotes[selectedCardIndex]) {
+            cardNotes[selectedCardIndex] = { text: "", highlighted: false };
+          }
+
+          cardNotes[selectedCardIndex].highlighted =
+            !cardNotes[selectedCardIndex].highlighted;
+
+          // 更新格子顯示
+          updateCardNoteMarker(selectedCardIndex);
+          updateNotesDisplay();
+        }
+
+        function clearAllNotes() {
+          if (Object.keys(cardNotes).length === 0) {
+            return;
+          }
+
+          if (confirm("確定要清除所有卡牌備註和高亮嗎？")) {
+            cardNotes = {};
+            selectedCardIndex = null;
+            if (notesInput) {
+              notesInput.value = "";
+              notesInput.disabled = true;
+            }
+            if (notesAddBtn) notesAddBtn.disabled = true;
+            if (notesHighlightBtn) notesHighlightBtn.disabled = true;
+            const selectedCardDisplay = document.getElementById(
+              "selected-card-display",
+            );
+            if (selectedCardDisplay) selectedCardDisplay.style.display = "none";
+
+            // 移除所有格子的標記
+            gridCells.forEach((cell) => {
+              cell.classList.remove("has-note", "note-highlighted");
+            });
+
+            updateNotesDisplay();
+          }
+        }
+
+        function updateCardNoteMarker(cardIndex) {
+          const cell = gridCells[cardIndex];
+          if (!cell) return;
+
+          const note = cardNotes[cardIndex];
+
+          if (note) {
+            if (note.text || note.highlighted) {
+              cell.classList.add("has-note");
+            } else {
+              cell.classList.remove("has-note");
+              delete cardNotes[cardIndex];
+            }
+
+            if (note.highlighted) {
+              cell.classList.add("note-highlighted");
+            } else {
+              cell.classList.remove("note-highlighted");
+            }
+          } else {
+            cell.classList.remove("has-note", "note-highlighted");
+          }
+        }
+
+        function resetGridPanel() {
+          gridCells = [];
+          gridValues = [];
+          searchHighlightCells = [];
+          activeGridCell = null;
+          activeRowHighlightIndex = null;
+
+          // 重置備註
+          cardNotes = {};
+          selectedCardIndex = null;
+          if (notesInput) {
+            notesInput.value = "";
+            notesInput.disabled = true;
+          }
+          if (notesAddBtn) notesAddBtn.disabled = true;
+          if (notesHighlightBtn) notesHighlightBtn.disabled = true;
+          const selectedCardDisplay = document.getElementById(
+            "selected-card-display",
+          );
+          if (selectedCardDisplay) selectedCardDisplay.style.display = "none";
+          updateNotesDisplay();
+
+          if (gridContainer) {
+            gridContainer.innerHTML =
+              '<div class="grid-placeholder">尚未載入 Excel 卡序</div>';
+          }
+          if (gridSearchFeedback) {
+            gridSearchFeedback.textContent = "載入資料後可搜尋指定牌序。";
+          }
+          updateGridSearchAvailability(false);
+        }
+
+        function prepareGridPanel(deck) {
+          currentDeck = deck;
+          clearSearchHighlights();
+          renderDeckGrid(deck);
+          updateGridCellSize();
+          updateGridSearchAvailability(Array.isArray(deck) && deck.length > 0);
+          if (gridSearchInput) {
+            gridSearchInput.value = "";
+          }
+          if (gridSearchFeedback) {
+            gridSearchFeedback.textContent =
+              deck.length > 0 ? "" : "載入資料後可搜尋指定牌序。";
+          }
+        }
+
+        function renderDeckGrid(deck) {
+          if (!gridContainer) return;
+          gridContainer.innerHTML = "";
+          // 移除舊的點擊事件
+          gridContainer.removeEventListener("click", handleCellClick);
+          gridContainer.removeEventListener("dblclick", handleRowDoubleClick);
+          activeRowHighlightIndex = null;
+          if (!Array.isArray(deck) || deck.length === 0) {
+            gridContainer.innerHTML =
+              '<div class="grid-placeholder">尚未載入 Excel 卡序</div>';
+            gridCells = [];
+            gridValues = [];
+            return;
+          }
+          gridCells = new Array(deck.length);
+          gridValues = new Array(deck.length);
+          let cardIndex = 0;
+          const rowCount = Math.ceil(deck.length / GRID_COLS);
+          for (let row = 0; row < rowCount; row++) {
+            const rowLabel = document.createElement("div");
+            rowLabel.className = "grid-row-label";
+            const rowStart = row * GRID_COLS + 1;
+            const rowEnd = Math.min(rowStart + GRID_COLS - 1, deck.length);
+            rowLabel.textContent = `${rowStart}~${rowEnd}`;
+            rowLabel.dataset.rowIndex = row;
+            gridContainer.appendChild(rowLabel);
+
+            for (let col = 0; col < GRID_COLS; col++) {
+              if (cardIndex < deck.length) {
+                const card = deck[cardIndex];
+                const cell = document.createElement("div");
+                cell.className = "grid-cell";
+                const value = formatCardValueForGrid(card);
+                gridValues[cardIndex] = value;
+                cell.textContent = value;
+                cell.dataset.cardIndex = cardIndex;
+                cell.dataset.rowIndex = row;
+                const backColor = card.back || card.back_color;
+                if (backColor === "R") cell.classList.add("card-red");
+                if (backColor === "B") cell.classList.add("card-blue");
+                if (card.isSignal) cell.classList.add("signal-card");
+                const rankUpper = String(card.rank).toUpperCase();
+                if (rankUpper === 'A' || rankUpper === '2') cell.classList.add("rank-a2");
+                if (card.isHeartMarker) cell.classList.add("heart-marker-cell");
+                if (card.isPurpleFont) cell.classList.add("purple-font-cell");
+                gridContainer.appendChild(cell);
+                gridCells[cardIndex] = cell;
+                cardIndex += 1;
+              } else {
+                const filler = document.createElement("div");
+                filler.className = "grid-cell empty-cell";
+                filler.dataset.rowIndex = row;
+                gridContainer.appendChild(filler);
+              }
+            }
+          }
+          // 加入點擊事件（用於標記）
+          gridContainer.addEventListener("click", handleCellClick);
+          gridContainer.addEventListener("dblclick", handleRowDoubleClick);
+        }
+
+        function formatCardValueForGrid(card) {
+          if (!card || !card.rank) return "";
+          const rank = String(card.rank).toUpperCase();
+          if (rank === "A") return "1";
+          if (["10", "J", "Q", "K"].includes(rank)) return "0";
+          const parsed = parseInt(rank, 10);
+          return Number.isNaN(parsed) ? rank : String(parsed);
+        }
+
+        function cardPointFromRank(rank) {
+          if (rank == null) return 0;
+          const upper = String(rank).toUpperCase();
+          if (upper === "A") return 1;
+          if (["10", "J", "Q", "K"].includes(upper)) return 0;
+          const parsed = parseInt(upper, 10);
+          return Number.isNaN(parsed) ? 0 : parsed;
+        }
+
+        function updateGridSearchAvailability(isReady) {
+          if (gridSearchInput) gridSearchInput.disabled = !isReady;
+          if (gridSearchBtn) gridSearchBtn.disabled = !isReady;
+          if (gridSearchClearBtn) gridSearchClearBtn.disabled = !isReady;
+          if (cardNumberInput) {
+            cardNumberInput.disabled = !isReady;
+            if (isReady && fullDeck.length)
+              cardNumberInput.max = fullDeck.length;
+          }
+          if (cardNumberClearBtn) cardNumberClearBtn.disabled = !isReady;
+          if (cardHighlightBtn) cardHighlightBtn.disabled = !isReady;
+          if (cardBackSelect) cardBackSelect.disabled = !isReady;
+          if (cardRankSelect) cardRankSelect.disabled = !isReady;
+          if (cardSignalSelect) cardSignalSelect.disabled = !isReady;
+          if (cardBackRankClearBtn) cardBackRankClearBtn.disabled = !isReady;
+          if (cardBackRankSearchBtn) cardBackRankSearchBtn.disabled = !isReady;
+          if (clearAllMarksBtn) clearAllMarksBtn.disabled = !isReady;
+        }
+
+        function clearSearchHighlights() {
+          if (
+            Array.isArray(searchHighlightCells) &&
+            searchHighlightCells.length
+          ) {
+            searchHighlightCells.forEach((cell) => {
+              if (cell) cell.classList.remove("grid-cell-search-hit");
+            });
+          }
+          searchHighlightCells = [];
+        }
+
+        function handleGridSearch() {
+          if (!fullDeck.length || !gridValues.length) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = "尚未載入牌組，無法搜尋。";
+            return;
+          }
+          if (!gridSearchInput) return;
+          const raw = gridSearchInput.value.trim();
+          clearSearchHighlights();
+          if (!raw) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent =
+                "請輸入要搜尋的數字（至少3個）。";
+            return;
+          }
+          // 支援兩種格式：1) 空格分隔 "8 7 5 1"  2) 連續數字 "8751"
+          let tokens = raw.replace(/[,;]+/g, " ").split(/\s+/).filter(Boolean);
+          // 如果只有一個 token 且長度 >= 3，則拆成單個字符
+          if (tokens.length === 1 && tokens[0].length >= 3) {
+            tokens = tokens[0].split("");
+          }
+          if (tokens.length < 3) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent =
+                "請至少輸入三個數字，避免結果過多。";
+            return;
+          }
+          const matches = [];
+          for (let i = 0; i <= gridValues.length - tokens.length; i++) {
+            let match = true;
+            for (let j = 0; j < tokens.length; j++) {
+              if (gridValues[i + j] !== tokens[j]) {
+                match = false;
+                break;
+              }
+            }
+            if (match) matches.push(i);
+          }
+          if (!matches.length) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = `找不到「${tokens.join(" ")}」`;
+            return;
+          }
+          matches.forEach((startIdx) => {
+            for (let offset = 0; offset < tokens.length; offset++) {
+              const cell = gridCells[startIdx + offset];
+              if (cell) {
+                cell.classList.add("grid-cell-search-hit");
+                searchHighlightCells.push(cell);
+              }
+            }
+          });
+          const preview = matches
+            .slice(0, 3)
+            .map((idx) => {
+              const row = Math.floor(idx / GRID_COLS) + 1;
+              const col = (idx % GRID_COLS) + 1;
+              const cardNo = idx + 1;
+              return `#${cardNo}(列${row},欄${col})`;
+            })
+            .join("、");
+          if (gridSearchFeedback) {
+            gridSearchFeedback.textContent = `找到 ${matches.length} 處，位置如：${preview}`;
+          }
+          const firstCell = gridCells[matches[0]];
+          if (firstCell) {
+            scrollCellIntoView(firstCell);
+          }
+        }
+
+        // 定位張數功能
+        function handleCardNumberHighlight() {
+          if (!fullDeck.length || !gridCells.length) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = "尚未載入牌組，無法定位。";
+            return;
+          }
+          if (!cardNumberInput) return;
+          const cardNum = parseInt(cardNumberInput.value, 10);
+          clearSearchHighlights();
+          if (Number.isNaN(cardNum) || cardNum < 1) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = "請輸入有效的張數（1 起）";
+            return;
+          }
+          if (cardNum > fullDeck.length) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = `超出範圍，最大為 ${fullDeck.length}`;
+            return;
+          }
+          const idx = cardNum - 1;
+          const cell = gridCells[idx];
+          if (cell) {
+            cell.classList.add("grid-cell-search-hit");
+            searchHighlightCells.push(cell);
+            scrollCellIntoView(cell);
+            const card = fullDeck[idx];
+            const backText = card.back === "R" ? "紅" : "黑";
+            const signalText = card.isSignal ? " [訊號]" : "";
+            // 顯示前後5張
+            const context = getCardContext(idx, 5);
+            if (gridSearchFeedback) {
+              gridSearchFeedback.innerHTML = `<strong>第 ${cardNum} 張：${backText}${card.rank}${card.suit}${signalText}</strong><br>${context}`;
+            }
+          }
+        }
+
+        // 卡背+點數搜尋功能
+        function handleCardBackRankSearch() {
+          if (!fullDeck.length || !gridCells.length) {
+            if (gridSearchFeedback)
+              gridSearchFeedback.textContent = "尚未載入牌組，無法搜尋。";
+            return;
+          }
+          clearSearchHighlights();
+          const selectedBack = cardBackSelect ? cardBackSelect.value : "R";
+          const selectedRank = cardRankSelect ? cardRankSelect.value : "1";
+          const selectedSignal = cardSignalSelect
+            ? cardSignalSelect.value
+            : "all";
+          const backText = selectedBack === "R" ? "紅" : "黑";
+          const rankText =
+            selectedRank === "1"
+              ? "A"
+              : selectedRank === "0"
+                ? "0(10/J/Q/K)"
+                : selectedRank;
+          const signalText =
+            selectedSignal === "signal"
+              ? "訊號"
+              : selectedSignal === "non-signal"
+                ? "非訊號"
+                : "全部";
+
+          // 找出所有符合的牌（先統計總數，再依訊號篩選）
+          const matches = [];
+          let totalMatches = 0;
+          let signalMatches = 0;
+          let nonSignalMatches = 0;
+          fullDeck.forEach((card, idx) => {
+            const cardRankValue = formatCardValueForGrid(card);
+            if (card.back === selectedBack && cardRankValue === selectedRank) {
+              totalMatches += 1;
+              if (card.isSignal) signalMatches += 1;
+              else nonSignalMatches += 1;
+              if (selectedSignal === "signal" && !card.isSignal) return;
+              if (selectedSignal === "non-signal" && card.isSignal) return;
+              matches.push(idx);
+            }
+          });
+
+          if (!matches.length) {
+            if (gridSearchFeedback) {
+              gridSearchFeedback.textContent = `找不到「${backText}${rankText} / ${signalText}」`;
+            }
+            return;
+          }
+
+          // 亮高所有符合的牌
+          matches.forEach((idx) => {
+            const cell = gridCells[idx];
+            if (cell) {
+              cell.classList.add("grid-cell-search-hit");
+              searchHighlightCells.push(cell);
+            }
+          });
+
+          // 顯示結果：每個位置的前後5張
+          let resultHtml = `<strong>找到 ${matches.length} 張「${backText}${rankText} / ${signalText}」</strong><br>`;
+          resultHtml += `<span style="opacity:0.9;">總計 ${totalMatches} 張（訊號 ${signalMatches} / 非訊號 ${nonSignalMatches}）</span><br>`;
+          matches.forEach((idx, i) => {
+            const cardNum = idx + 1;
+            const context = getCardContext(idx, 5);
+            resultHtml += `<div style="margin: 8px 0; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 4px;"><strong>#${i + 1} 第${cardNum}張：</strong> ${context}</div>`;
+          });
+
+          if (gridSearchFeedback) {
+            gridSearchFeedback.innerHTML = resultHtml;
+          }
+
+          // 捲動到第一個
+          const firstCell = gridCells[matches[0]];
+          if (firstCell) {
+            scrollCellIntoView(firstCell);
+          }
+        }
+
+        // 取得某張牌前後 N 張的文字描述
+        function getCardContext(idx, range) {
+          const start = Math.max(0, idx - range);
+          const end = Math.min(fullDeck.length - 1, idx + range);
+          let result = "";
+          for (let i = start; i <= end; i++) {
+            const card = fullDeck[i];
+            const val = formatCardValueForGrid(card);
+            const backColor = card.back === "R" ? "#FFFF00" : "#00FFFF";
+            const textColor = "#1e293b";
+            const isTarget = i === idx;
+            const style = isTarget
+              ? `background:${backColor};color:${textColor};padding:2px 4px;border-radius:3px;font-weight:bold;border:2px solid ${card.back === "R" ? "#ff6b00" : "#9333ea"};`
+              : `background:${backColor};color:${textColor};padding:2px 4px;border-radius:3px;`;
+            result += `<span style="${style}">${val}</span> `;
+          }
+          return result.trim();
+        }
+
+        // 點擊格子標記功能
+        function handleCellClick(event) {
+          const cell = event.target;
+          if (
+            !cell.classList.contains("grid-cell") ||
+            cell.classList.contains("empty-cell")
+          )
+            return;
+
+          const cardIndex = parseInt(cell.dataset.cardIndex, 10);
+          if (!isNaN(cardIndex)) {
+            // 點擊卡牌選擇來備註
+            selectCardForNote(cardIndex);
+          }
+
+          // 保留原有的標記功能
+          cell.classList.toggle("grid-cell-marked");
+        }
+
+        function clearRowHighlight() {
+          if (activeRowHighlightIndex === null || !gridContainer) return;
+          const prevRowCells = gridContainer.querySelectorAll(
+            `[data-row-index="${activeRowHighlightIndex}"]`,
+          );
+          prevRowCells.forEach((rowCell) => {
+            rowCell.classList.remove("grid-row-highlight");
+          });
+          activeRowHighlightIndex = null;
+        }
+
+        function toggleRowHighlight(rowIndex) {
+          if (!gridContainer) return;
+          if (activeRowHighlightIndex === rowIndex) {
+            clearRowHighlight();
+            return;
+          }
+          clearRowHighlight();
+          const rowCells = gridContainer.querySelectorAll(
+            `[data-row-index="${rowIndex}"]`,
+          );
+          rowCells.forEach((rowCell) => {
+            rowCell.classList.add("grid-row-highlight");
+          });
+          activeRowHighlightIndex = rowIndex;
+        }
+
+        function handleRowDoubleClick(event) {
+          const cell = event.target;
+          const isGridCell = cell.classList.contains("grid-cell");
+          const isRowLabel = cell.classList.contains("grid-row-label");
+          if (
+            (!isGridCell && !isRowLabel) ||
+            cell.classList.contains("empty-cell")
+          )
+            return;
+
+          const rowIndex = parseInt(cell.dataset.rowIndex, 10);
+          if (Number.isNaN(rowIndex)) return;
+          toggleRowHighlight(rowIndex);
+        }
+
+        // 清除所有標記（但保留備註標記）
+        function clearAllMarks() {
+          gridCells.forEach((cell) => {
+            if (cell) cell.classList.remove("grid-cell-marked");
+          });
+          if (gridSearchFeedback)
+            gridSearchFeedback.textContent = "已清除所有標記（備註保留）";
+        }
+
+        function scrollCellIntoView(cell) {
+          if (!gridScrollContainer || !cell) return;
+          const containerRect = gridScrollContainer.getBoundingClientRect();
+          const cellRect = cell.getBoundingClientRect();
+          if (
+            cellRect.top < containerRect.top ||
+            cellRect.bottom > containerRect.bottom
+          ) {
+            const offset =
+              cellRect.top - containerRect.top - containerRect.height / 3;
+            gridScrollContainer.scrollTop += offset;
+          }
+        }
+
+        function highlightCurrentCardInGrid() {
+          if (!gridCells || !gridCells.length) return;
+          if (activeGridCell) {
+            activeGridCell.classList.remove("grid-cell-active");
+            activeGridCell = null;
+          }
+          if (nextRowHintCell) {
+            nextRowHintCell.classList.remove("grid-cell-next-row-hint");
+            nextRowHintCell = null;
+          }
+          if (Array.isArray(currentRowCells) && currentRowCells.length) {
+            currentRowCells.forEach((cell) => {
+              if (cell) cell.classList.remove("grid-cell-current-row");
+            });
+            currentRowCells = [];
+          }
+          if (currentIndex < 0 || currentIndex >= gridCells.length) return;
+          const cell = gridCells[currentIndex];
+          if (cell) {
+            cell.classList.add("grid-cell-active");
+            activeGridCell = cell;
+            scrollCellIntoView(cell);
+          }
+          const rowStart = Math.floor(currentIndex / GRID_COLS) * GRID_COLS;
+          const rowEnd = Math.min(rowStart + GRID_COLS, gridCells.length);
+          for (let i = rowStart; i < rowEnd; i++) {
+            const rowCell = gridCells[i];
+            if (rowCell) {
+              rowCell.classList.add("grid-cell-current-row");
+              currentRowCells.push(rowCell);
+            }
+          }
+          if (
+            currentIndex % GRID_COLS === GRID_COLS - 1 &&
+            currentIndex + 1 < gridCells.length
+          ) {
+            const hintCell = gridCells[currentIndex + 1];
+            if (hintCell) {
+              hintCell.classList.add("grid-cell-next-row-hint");
+              nextRowHintCell = hintCell;
+            }
+          }
+        }
+
+        function clearActiveGridHighlight() {
+          if (activeGridCell) {
+            activeGridCell.classList.remove("grid-cell-active");
+            activeGridCell = null;
+          }
+          if (nextRowHintCell) {
+            nextRowHintCell.classList.remove("grid-cell-next-row-hint");
+            nextRowHintCell = null;
+          }
+          if (Array.isArray(currentRowCells) && currentRowCells.length) {
+            currentRowCells.forEach((cell) => {
+              if (cell) cell.classList.remove("grid-cell-current-row");
+            });
+            currentRowCells = [];
+          }
+        }
+
+        // 檔案管理功能
+        function toggleFileManager() {
+          if (
+            fileManager.style.display === "none" ||
+            !fileManager.style.display
+          ) {
+            fileManager.style.display = "block";
+            loadSavedFiles();
+            updateRecentFilesList();
+          } else {
+            fileManager.style.display = "none";
+          }
+        }
+
+        function addToRecentFiles(fileName) {
+          if (!fileName) return;
+
+          let recentFiles = JSON.parse(
+            localStorage.getItem("recentExcelFiles") || "[]",
+          );
+
+          // 移除重複的檔名
+          recentFiles = recentFiles.filter((f) => f !== fileName);
+
+          // 加入到最前面
+          recentFiles.unshift(fileName);
+
+          // 只保留最近 5 個
+          if (recentFiles.length > 5) {
+            recentFiles = recentFiles.slice(0, 5);
+          }
+
+          localStorage.setItem("recentExcelFiles", JSON.stringify(recentFiles));
+        }
+
+        function updateRecentFilesList() {
+          if (!recentFilesList) return;
+
+          let recentFiles = JSON.parse(
+            localStorage.getItem("recentExcelFiles") || "[]",
+          );
+
+          // 如果最近開啟記錄很少，從已讀標記補充
+          if (recentFiles.length < 3) {
+            const readFiles = getReadFiles();
+            const readFileNames = Object.keys(readFiles).sort(
+              (a, b) => readFiles[b] - readFiles[a],
+            ); // 按時間排序
+
+            readFileNames.forEach((fileName) => {
+              if (!recentFiles.includes(fileName)) {
+                recentFiles.push(fileName);
+              }
+            });
+
+            // 只保留前10個
+            if (recentFiles.length > 10) {
+              recentFiles = recentFiles.slice(0, 10);
+            }
+          }
+
+          if (recentFiles.length === 0) {
+            recentFilesList.innerHTML =
+              '<div style="color: #aaa; font-style: italic;">無記錄</div>';
+            return;
+          }
+
+          recentFilesList.innerHTML = "";
+
+          recentFiles.forEach((fileName, index) => {
+            const item = document.createElement("div");
+            item.style.cssText =
+              "display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1);";
+
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = `${index + 1}. ${fileName}`;
+            nameSpan.style.color = isFileRead(fileName) ? "#888" : "#fff";
+            nameSpan.style.textDecoration = isFileRead(fileName)
+              ? "line-through"
+              : "none";
+
+            const markBtn = document.createElement("button");
+            markBtn.textContent = isFileRead(fileName) ? "✓" : "標記";
+            markBtn.style.cssText =
+              "padding: 2px 8px; font-size: 0.8em; background: " +
+              (isFileRead(fileName) ? "#666" : "#4fc3f7") +
+              "; border: none; border-radius: 3px; cursor: pointer; color: white;";
+            markBtn.onclick = async () => {
+              const isRead = isFileRead(fileName);
+              const action = isRead ? "unmarkRead" : "markRead";
+
+              try {
+                markBtn.disabled = true;
+                markBtn.textContent = "...";
+
+                // 調用雲端 API
+                const url = `${APPS_SCRIPT_URL}?action=${action}&fileName=${encodeURIComponent(fileName)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success) {
+                  if (isRead) {
+                    unmarkFileAsRead(fileName);
+                  } else {
+                    markFileAsRead(fileName);
+                  }
+                  updateRecentFilesList();
+
+                  // 如果是當前檔案，也更新顯示
+                  if (fileName === currentFileName) {
+                    updateFileReadStatus(isFileRead(fileName));
+                  }
+                } else {
+                  alert("標記失敗：" + (result.error || "未知錯誤"));
+                }
+              } catch (error) {
+                console.error("標記已讀錯誤:", error);
+                alert("標記失敗：" + error.message);
+              } finally {
+                markBtn.disabled = false;
+                updateRecentFilesList();
+              }
+            };
+
+            item.appendChild(nameSpan);
+            item.appendChild(markBtn);
+            recentFilesList.appendChild(item);
+          });
+        }
+
+        async function saveCurrentFile() {
+          if (!currentFileData || !currentFileName) {
+            alert("沒有可儲存的檔案");
+            return;
+          }
+          try {
+            messageDiv.textContent = "正在上傳到雲端...";
+            const bytes = new Uint8Array(currentFileData);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            const base64Data = btoa(binary);
+            const filename = currentFileName.endsWith('.xlsx') ? currentFileName : currentFileName + '.xlsx';
+
+            const response = await fetch(APPS_SCRIPT_URL, {
+              method: 'POST',
+              body: JSON.stringify({ filename, base64Data })
+            });
+            const result = await response.json();
+            if (result.success) {
+              alert(`檔案 "${filename}" 已儲存到雲端`);
+              loadSavedFiles();
+              updateUploadFileList();
+            } else {
+              throw new Error(result.error || '上傳失敗');
+            }
+          } catch (error) {
+            alert("儲存失敗：" + error.message);
+          }
+          messageDiv.textContent = "";
+        }
+
+        async function loadSavedFiles() {
+          savedFilesList.innerHTML = '<div style="text-align:center;color:#aaa;padding:10px;">載入中...</div>';
+          try {
+            const res = await fetch(APPS_SCRIPT_URL);
+            const data = await res.json();
+            const files = (data.success && data.files) ? data.files : [];
+            savedFilesList.innerHTML = "";
+            if (files.length === 0) {
+              savedFilesList.innerHTML = '<div style="text-align:center;color:#aaa;padding:10px;">雲端沒有檔案</div>';
+              return;
+            }
+            files.forEach((file) => {
+              const fileItem = document.createElement("div");
+              fileItem.className = "file-item";
+              const date = new Date(file.lastModified).toLocaleString('zh-TW');
+              fileItem.innerHTML = `
+                <div class="file-name" onclick="loadSavedFile('${file.id}')">${file.name} <small style="color:#888">(${date})</small></div>
+              `;
+              savedFilesList.appendChild(fileItem);
+            });
+          } catch (err) {
+            savedFilesList.innerHTML = '<div style="color:#f44;padding:10px;">載入失敗: ' + err.message + '</div>';
+          }
+        }
+
+        // 從雲端下載檔案並解析 Excel 取得 deck
+        async function downloadAndParseFromDrive(fileId) {
+          const downloadUrl = `${APPS_SCRIPT_URL}?fileId=${fileId}`;
+          const response = await fetch(downloadUrl);
+          const base64Data = await response.text();
+
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const arrayBuffer = bytes.buffer;
+
+          if (typeof ExcelJS === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+            await new Promise((resolve, reject) => { script.onload = resolve; script.onerror = reject; document.head.appendChild(script); });
+          }
+
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(arrayBuffer);
+          let ws = workbook.getWorksheet('預覽') || workbook.getWorksheet('Preview');
+          if (!ws) throw new Error('找不到「預覽」工作表');
+
+          const deck = [];
+          const COLS = 21, ROWS = 31, GROUP = 7;
+          for (let r = 1; r <= ROWS; r++) {
+            for (let c = 1; c <= COLS; c++) {
+              const sheetColIndex = c + Math.floor((c - 1) / GROUP);
+              if ((c - 1) % GROUP === 0) continue;
+              const cell = ws.getCell(r, sheetColIndex);
+              const value = cell.value ? String(cell.value) : '';
+              const fill = cell.fill;
+              let backColor = null;
+              if (fill && fill.fgColor && fill.fgColor.argb) {
+                const fillColor = fill.fgColor.argb.toUpperCase();
+                if (fillColor === 'FFFFFF00') backColor = 'R';
+                else if (fillColor === 'FF00FFFF') backColor = 'B';
+              }
+              if (!value && !backColor) continue;
+              const font = cell.font;
+              let suit = '♠';
+              let isSignal = false;
+              let isPurpleFont = false;
+              if (font && font.color && font.color.argb) {
+                const fontColor = font.color.argb.toUpperCase();
+                if (fontColor === 'FFFF0000' || fontColor === 'FFFF4D4F' || fontColor === 'FFDC3545') {
+                  isSignal = true;
+                }
+                if (
+                  fontColor === 'FF7030A0' ||
+                  fontColor === 'FF8B00FF' ||
+                  fontColor === 'FF9900CC' ||
+                  fontColor === 'FF800080' ||
+                  fontColor === 'FF4B0082'
+                ) {
+                  isPurpleFont = true;
+                }
+              }
+              let rank = value;
+              if (value === '0') rank = 'K';
+              if (value === '1') rank = 'A';
+              deck.push({ rank, suit, back: backColor, isSignal, isPurpleFont });
+            }
+          }
+          if (deck.length === 0) throw new Error('檔案中沒有有效的卡片資料');
+          return { arrayBuffer, deck };
+        }
+
+        window.loadSavedFile = async function (fileId) {
+          try {
+            loadingSpinner.style.display = "block";
+            loadingSpinner.textContent = "正在從雲端下載...";
+
+            const { arrayBuffer, deck } = await downloadAndParseFromDrive(fileId);
+            // 從檔案列表取得檔名
+            const nameEl = document.querySelector(`[onclick="loadSavedFile('${fileId}')"]`);
+            const fileName = nameEl ? nameEl.textContent.trim().replace(/\s*\(.*$/, '') : 'cloud-file';
+
+            currentFileName = fileName.replace('.xlsx', '');
+            currentFileData = arrayBuffer;
+            currentIndex = 0;
+
+            startAssistant(deck);
+            loadingSpinner.style.display = "none";
+            fileManager.style.display = "none";
+            messageDiv.textContent = `已從雲端載入: ${currentFileName}`;
+          } catch (error) {
+            console.error('從雲端載入錯誤:', error);
+            loadingSpinner.style.display = "none";
+            alert('從雲端載入失敗: ' + error.message);
+          }
+        };
+
+        window.startRename = function () { /* 雲端模式不支援重新命名 */ };
+
+        function confirmRename() {
+          renameModal.style.display = "none";
+          renamingFileId = null;
+        }
+
+        function cancelRename() {
+          renameModal.style.display = "none";
+          renamingFileId = null;
+        }
+
+        window.deleteSavedFile = function () { /* 雲端模式不支援刪除 */ };
+
+        // 上傳頁面的檔案列表功能
+        function showUploadFileList() {
+          updateUploadFileList();
+          uploadFileList.style.display = "block";
+          loadSavedBtn.style.display = "none";
+        }
+
+        function hideUploadFileList() {
+          uploadFileList.style.display = "none";
+          loadSavedBtn.style.display = "block";
+        }
+
+        let _uploadFileCache = []; // 快取雲端檔案列表供批次使用
+
+        async function updateUploadFileList() {
+          uploadSavedFiles.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;">載入中...</div>';
+          try {
+            const res = await fetch(APPS_SCRIPT_URL);
+            const data = await res.json();
+            const files = (data.success && data.files) ? data.files : [];
+            _uploadFileCache = files;
+            uploadSavedFiles.innerHTML = "";
+
+            if (files.length === 0) {
+              uploadSavedFiles.innerHTML =
+                '<div style="text-align: center; color: #aaa; padding: 20px;">雲端沒有檔案</div>';
+              return;
+            }
+
+            // 全選 + 批次載入按鈕
+            const toolbar = document.createElement("div");
+            toolbar.style.cssText = "display:flex;gap:8px;margin-bottom:10px;align-items:center;";
+            toolbar.innerHTML = `
+              <label style="color:#aaa;cursor:pointer;font-size:0.9em;display:flex;align-items:center;gap:4px;">
+                <input type="checkbox" id="uploadSelectAll"> 全選
+              </label>
+              <button id="uploadBatchLoad" style="padding:6px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:0.9em;">
+                批次載入選取的檔案
+              </button>
+            `;
+            uploadSavedFiles.appendChild(toolbar);
+
+            // 網格容器：一行五個
+            const grid = document.createElement("div");
+            grid.style.cssText = "display:grid;grid-template-columns:repeat(5,1fr);gap:6px;";
+
+            files.forEach((file, idx) => {
+              const fileItem = document.createElement("div");
+              fileItem.style.cssText =
+                "display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;background:rgba(255,255,255,0.08);border-radius:6px;cursor:pointer;text-align:center;";
+              const shortName = file.name.replace('.xlsx', '');
+              fileItem.innerHTML = `
+                <input type="checkbox" class="upload-file-cb" data-idx="${idx}" style="flex-shrink:0;">
+                <div style="color:#4fc3f7;font-size:0.85em;word-break:break-all;" onclick="loadSavedFileFromUpload('${file.id}')">${shortName}</div>
+              `;
+              grid.appendChild(fileItem);
+            });
+            uploadSavedFiles.appendChild(grid);
+
+            // 全選切換
+            document.getElementById("uploadSelectAll").addEventListener("change", function() {
+              document.querySelectorAll(".upload-file-cb").forEach(cb => cb.checked = this.checked);
+            });
+
+            // 批次載入
+            document.getElementById("uploadBatchLoad").addEventListener("click", function() {
+              const checked = document.querySelectorAll(".upload-file-cb:checked");
+              if (checked.length === 0) { alert("請先勾選要載入的檔案"); return; }
+              const selected = Array.from(checked).map(cb => _uploadFileCache[cb.dataset.idx]);
+              // 設定批次佇列
+              batchQueue = selected;
+              batchIndex = -1;
+              // 隱藏列表
+              uploadFileList.style.display = "none";
+              loadSavedBtn.style.display = "block";
+              // 載入第一筆
+              loadBatchFile(0);
+            });
+          } catch (err) {
+            uploadSavedFiles.innerHTML = '<div style="color:#f44;padding:20px;">載入失敗: ' + err.message + '</div>';
+          }
+        }
+
+        window.loadSavedFileFromUpload = async function (fileId) {
+          try {
+            loadingSpinner.style.display = "block";
+            loadingSpinner.textContent = "正在從雲端下載...";
+            // 隱藏檔案列表
+            uploadFileList.style.display = "none";
+            loadSavedBtn.style.display = "block";
+
+            const { arrayBuffer, deck } = await downloadAndParseFromDrive(fileId);
+            // 從檔案列表取得檔名
+            const nameEl = document.querySelector(`[onclick="loadSavedFileFromUpload('${fileId}')"]`);
+            const fileName = nameEl ? nameEl.textContent.trim() : 'cloud-file';
+
+            currentFileName = fileName.replace('.xlsx', '');
+            currentFileData = arrayBuffer;
+            currentIndex = 0;
+
+            startAssistant(deck);
+            loadingSpinner.style.display = "none";
+            messageDiv.textContent = `已從雲端載入: ${currentFileName}`;
+          } catch (error) {
+            console.error('從雲端載入錯誤:', error);
+            loadingSpinner.style.display = "none";
+            alert('從雲端載入失敗: ' + error.message);
+          }
+        };
+      });
+    </script>
+
+    <!-- 全螢幕網格覆蓋層 -->
+    <div id="gridFullscreenOverlay" class="grid-fullscreen-overlay">
+      <div class="fullscreen-topbar">
+        <span class="fs-title" id="fsGridTitle"></span>
+        <button class="fullscreen-close-btn" id="fsCloseBtn">✕ 關閉</button>
+      </div>
+      <div class="fullscreen-grid-wrap" id="fsGridWrap"></div>
+    </div>
+
+    <script>
+    (function() {
+      const fsOverlay = document.getElementById("gridFullscreenOverlay");
+      const fsGridWrap = document.getElementById("fsGridWrap");
+      const fsCloseBtn = document.getElementById("fsCloseBtn");
+      const fsTitle = document.getElementById("fsGridTitle");
+      const openBtn = document.getElementById("gridFullscreenBtn");
+      const srcGrid = document.getElementById("grid-preview");
+      const srcScroll = document.getElementById("grid-scroll-container");
+
+      if (!openBtn || !fsOverlay) return;
+
+      openBtn.addEventListener("click", () => {
+        if (!srcGrid || !srcGrid.children.length) return;
+        // 複製整個 grid 到全螢幕
+        const clone = srcGrid.cloneNode(true);
+        clone.removeAttribute("id");
+        clone.classList.add("fs-grid-clone");
+        fsGridWrap.innerHTML = "";
+        fsGridWrap.appendChild(clone);
+
+        // 設定標題（目前檔名）
+        const fnSpan = document.getElementById("current-file-name");
+        fsTitle.textContent = fnSpan ? fnSpan.textContent : "";
+
+        // 讀取使用者設定的每行張數 + 1 標籤欄
+        const userCols = parseInt(document.getElementById("gridColsInput")?.value) || 15;
+        const fsCols = userCols + 1;
+        clone.style.setProperty("--grid-cols", fsCols);
+
+        // 寬度佔滿，高度按比例（正方形格子），可垂直捲動
+        const availW = window.innerWidth - 4;
+        const colGap = 2;
+        const cellSize = Math.floor((availW - (fsCols - 1) * colGap) / fsCols);
+        clone.style.setProperty("--grid-row-size", cellSize + "px");
+
+        fsOverlay.classList.add("show");
+        document.body.style.overflow = "hidden";
+      });
+
+      function closeFs() {
+        fsOverlay.classList.remove("show");
+        fsGridWrap.innerHTML = "";
+        document.body.style.overflow = "";
+      }
+
+      fsCloseBtn.addEventListener("click", closeFs);
+      fsOverlay.addEventListener("click", (e) => {
+        if (e.target === fsOverlay) closeFs();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && fsOverlay.classList.contains("show")) closeFs();
+      });
+    })();
+    </script>
+  </body>
+</html>
