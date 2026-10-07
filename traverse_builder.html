@@ -43,21 +43,29 @@ body {
   font-family: var(--font-sans);
   font-size: 14px;
 }
-.wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
-h1 { font-family: var(--font-display); font-size: 26px; margin: 0 0 4px; }
-.sub { color: var(--text-secondary); margin: 0 0 20px; line-height: 1.6; }
+.app { display: flex; flex-direction: column; height: 100vh; padding: 12px 16px; gap: 12px; }
+.topbar {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 24px;
+  background: var(--bg-paper); border: 2px solid var(--border-strong); border-radius: 10px; padding: 10px 16px;
+}
+.brand h1 { font-family: var(--font-display); font-size: 22px; margin: 0; white-space: nowrap; }
+.brand .sub { color: var(--text-tertiary); font-size: 12px; margin: 2px 0 0; white-space: nowrap; }
+.main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, max-content) minmax(400px, 1fr); gap: 12px; }
+.side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
 .card {
   background: var(--bg-paper);
   border: 2px solid var(--border-strong);
   border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
+  padding: 12px 14px;
+  display: flex; flex-direction: column; min-height: 0;
 }
-.card h2 { font-family: var(--font-display); font-size: 17px; margin: 0 0 12px; }
-.fields { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; }
+.card h2 { font-family: var(--font-display); font-size: 16px; margin: 0 0 10px; flex: none; }
+.card.grow { flex: 1; }
+.scroll { flex: 1; min-height: 0; overflow: auto; }
+.fields { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end; }
 .field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
 .field input {
-  width: 110px; padding: 6px 8px;
+  width: 90px; padding: 6px 8px;
   border: 1.5px solid var(--border-default); border-radius: 6px;
   background: #fff; font-family: var(--font-mono); font-size: 14px;
 }
@@ -69,11 +77,11 @@ h1 { font-family: var(--font-display); font-size: 26px; margin: 0 0 4px; }
 .btn:hover:not(:disabled) { background: var(--accent); color: #fff; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn.stop { background: var(--banker-bg); color: var(--banker); border-color: var(--banker); }
-#progress { margin-top: 12px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+#progress { flex-basis: 100%; margin-top: -2px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .stat { background: var(--bg-sunken); border-radius: 8px; padding: 10px 12px; }
 .stat .k { font-size: 12px; color: var(--text-secondary); }
-.stat .v { font-family: var(--font-mono); font-size: 20px; font-weight: 700; margin-top: 2px; }
+.stat .v { font-family: var(--font-mono); font-size: 18px; font-weight: 700; margin-top: 2px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { border-bottom: 1px solid var(--border-subtle); padding: 6px 8px; text-align: center; }
 th { color: var(--text-secondary); font-weight: 600; }
@@ -83,7 +91,6 @@ th { color: var(--text-secondary); font-weight: 600; }
 .empty { color: var(--text-tertiary); }
 
 /* ===== 一局一局牌表（樣式沿用主頁 index.html 的 .round-table） ===== */
-.table-container { overflow-x: auto; }
 .round-table { width: auto; table-layout: fixed; border-collapse: collapse; font-size: 22px; }
 .round-table th:nth-child(1), .round-table td:nth-child(1) { width: 25px; }
 .round-table th:nth-child(2), .round-table td:nth-child(2) { width: 300px; }
@@ -134,21 +141,22 @@ th { color: var(--text-secondary); font-weight: 600; }
 .tag-warn-amber { background: var(--b6win); color: white; }
 .tag-warn-purple { background: var(--duizhuang); color: white; }
 .tag-warn-red { background: var(--banker); color: white; }
-@media (max-width: 600px) {
-  .field input { width: 90px; }
+#chainTable thead th { position: sticky; top: 0; background: var(--bg-paper); }
+/* 窄螢幕：改成上下排列，牌表仍在最前面 */
+@media (max-width: 1100px) {
+  .app { height: auto; }
+  .main { grid-template-columns: 1fr; }
+  .card.grow { max-height: 80vh; }
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>穿越排牌</h1>
-  <p class="sub">
-    把 416 張牌反覆洗牌，撿出合格的穿越段（每局敏感、任一局對調後仍穿越），剩下的再用計算方式補排，最後把段接成長段。<br>
-    只看點數，不檢查卡色與訊號牌。撿不進去的牌放在整條牌最後面。
-  </p>
-
-  <div class="card">
-    <h2>設定</h2>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <h1>穿越排牌</h1>
+      <p class="sub">每局敏感、任一局對調後仍穿越｜只看點數，不管卡色與訊號牌｜排不進去的牌放最後</p>
+    </div>
     <div class="fields">
       <div class="field"><label for="idleLimit">連續撿不到幾次停止</label><input id="idleLimit" type="number" min="10" value="1000"></div>
       <div class="field"><label for="computeTries">計算補排嘗試次數</label><input id="computeTries" type="number" min="0" value="20000"></div>
@@ -160,28 +168,31 @@ th { color: var(--text-secondary); font-weight: 600; }
       <button id="btnCsv" class="btn" disabled>下載牌序 CSV</button>
     </div>
     <div id="progress"></div>
-  </div>
+  </header>
 
-  <div class="card">
-    <h2>結果</h2>
-    <div id="stats" class="stats"><div class="empty">尚未排牌</div></div>
-  </div>
+  <div class="main">
+    <section class="card grow">
+      <h2>牌表</h2>
+      <div class="scroll">
+        <table class="round-table" id="roundsTable">
+          <thead><tr><th>局</th><th>卡牌</th><th>結</th><th>閒家</th><th>莊家</th><th>閒</th><th>莊</th><th>調</th></tr></thead>
+          <tbody id="roundsBody"><tr><td colspan="8" class="empty">尚未排牌，按上方「開始排牌」</td></tr></tbody>
+        </table>
+      </div>
+    </section>
 
-  <div class="card">
-    <h2>長段驗證</h2>
-    <div class="table-scroll"><table id="chainTable"><thead><tr>
-      <th>#</th><th>起始張</th><th>張數</th><th>局數</th><th>穿越</th><th>每局敏感</th><th>對調後仍穿越</th>
-    </tr></thead><tbody><tr><td colspan="7" class="empty">尚未排牌</td></tr></tbody></table></div>
-  </div>
-
-  <div class="card">
-    <h2>牌表</h2>
-    <div class="table-container">
-      <table class="round-table" id="roundsTable">
-        <thead><tr><th>局</th><th>卡牌</th><th>結</th><th>閒家</th><th>莊家</th><th>閒</th><th>莊</th><th>調</th></tr></thead>
-        <tbody id="roundsBody"><tr><td colspan="8" class="empty">尚未排牌</td></tr></tbody>
-      </table>
-    </div>
+    <aside class="side">
+      <section class="card">
+        <h2>結果</h2>
+        <div id="stats" class="stats"><div class="empty">尚未排牌</div></div>
+      </section>
+      <section class="card grow">
+        <h2>長段驗證</h2>
+        <div class="scroll"><table id="chainTable"><thead><tr>
+          <th>#</th><th>起始</th><th>張</th><th>局</th><th>穿越</th><th>敏感</th><th>對調後</th>
+        </tr></thead><tbody><tr><td colspan="7" class="empty">尚未排牌</td></tr></tbody></table></div>
+      </section>
+    </aside>
   </div>
 </div>
 
