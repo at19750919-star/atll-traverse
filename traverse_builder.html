@@ -249,7 +249,7 @@ th { color: var(--text-secondary); font-weight: 600; }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=6"></script>
+<script src="traverse_builder.js?v=7"></script>
 <script src="traverse_export.js?v=3"></script>
 <script>
 (function () {
@@ -332,14 +332,24 @@ th { color: var(--text-secondary); font-weight: 600; }
   }
 
   // 三條規則違規：上一局是三條卻沒開和，或上一局不是三條卻開和（標在開和／該和的那一局）
+  // 相鄰局配對（上一局, 這一局）的索引；牌靴頭尾相連，第 1 局的上一局是最後一個完整局
+  function roundPairs(rounds) {
+    const pairs = [];
+    for (let k = 0; k + 1 < rounds.length; k++) {
+      if (rounds[k].hand && rounds[k + 1].hand) pairs.push([k, k + 1]);
+    }
+    let last = rounds.length - 1;
+    while (last > 0 && !rounds[last].hand) last--;
+    if (last > 0 && rounds[0].hand) pairs.push([last, 0]);
+    return pairs;
+  }
+
   function tripleViolations(rounds = shownRounds) {
     const out = [];
     if (!$('tripleTie').checked) return out;
-    for (let k = 0; k + 1 < rounds.length; k++) {
-      const a = rounds[k], b = rounds[k + 1];
-      if (!a.hand || !b.hand) continue;
-      const trip = TraverseBuilder.isTriple(a.cards.map((c) => c.point));
-      if (trip !== (b.result === '和')) out.push(k + 2);
+    for (const [i, j] of roundPairs(rounds)) {
+      const trip = TraverseBuilder.isTriple(rounds[i].cards.map((c) => c.point));
+      if (trip !== (rounds[j].result === '和')) out.push(j + 1);
     }
     return out;
   }
@@ -348,14 +358,13 @@ th { color: var(--text-secondary); font-weight: 600; }
   function signalViolations(rounds = shownRounds) {
     const out = [];
     if (!$('signalRule').checked) return out;
-    for (let k = 0; k + 1 < rounds.length; k++) {
-      const a = rounds[k], b = rounds[k + 1];
-      if (!a.hand || !b.hand) continue;
+    for (const [i, j] of roundPairs(rounds)) {
+      const a = rounds[i], b = rounds[j];
       const pts = a.cards.map((c) => c.point);
       if ($('tripleTie').checked && TraverseBuilder.isTriple(pts)) continue; // 歸三條規則
       const need = TraverseBuilder.isSignalHand(pts) ? '莊' : '閒';
-      if (b.result !== '和' && b.result !== need) out.push(k + 2);
-      else if (b.result === '和' && !$('tripleTie').checked) out.push(k + 2);
+      if (b.result !== '和' && b.result !== need) out.push(j + 1);
+      else if (b.result === '和' && !$('tripleTie').checked) out.push(j + 1);
     }
     return out;
   }
@@ -375,7 +384,11 @@ th { color: var(--text-secondary); font-weight: 600; }
     const g = collectViolations(rounds);
     const trav = (n) => rounds[n - 1] && rounds[n - 1].segment === 'A';
     if (g.noSwap.concat(g.same).some(trav)) return false;
-    return !g.triple.concat(g.signal).some((n) => trav(n) && trav(n - 1));
+    // 第 1 局的上一局是最後一個完整局
+    let last = rounds.length;
+    while (last > 1 && !rounds[last - 1].hand) last--;
+    const prevNo = (n) => (n === 1 ? last : n - 1);
+    return !g.triple.concat(g.signal).some((n) => trav(n) && trav(prevNo(n)));
   }
   function computeSafeCuts() {
     safeCuts = [];

@@ -391,7 +391,7 @@
         (rules.tripleTie && isTriple(prevHand)) ? '和' : (isSignalHand(prevHand) ? '莊' : '閒');
 
     // 訊號牌規則（照百家3.0）：上一局是三條 → 這局和（三條優先，含三條 A／2）；
-    // 上一局有 A 或 2 → 這局莊；都沒有 → 這局閒。
+    // 上一局有 A 或 2 → 這局莊；都沒有 → 這局閒。第 1 局的上一局是最後一局（完整局）。
     // 做法：排好後由前往後，把不符合的局對調前兩張（敏感局對調必定莊閒互換、張數不變），
     // 對調後每條長段重新完整驗證（任一張當起點都穿越、每局敏感、單局對調仍穿越、三條規則）。
     // 直接改 chains / leftover 內的點數；回傳 { ok, flips, conflicts }
@@ -406,8 +406,13 @@
             cur += h.size;
         }
         let flips = 0, conflicts = 0;
-        for (let k = 1; k < rounds.length; k++) {
-            const prev = rounds[k - 1], cur = rounds[k];
+        // 依序處理第 2 局到最後一局，最後再處理第 1 局：牌靴頭尾相連，第 1 局看最後一局（完整局）
+        const n = rounds.length;
+        const order = [];
+        for (let k = 1; k < n; k++) order.push(k);
+        if (n > 1) order.push(0);
+        for (const k of order) {
+            const prev = rounds[(k - 1 + n) % n], cur = rounds[k];
             const need = neededAfter(seq.slice(prev.start, prev.start + prev.size));
             const h = simulateHand(seq, cur.start, cur.start + cur.size);
             if (!h || h.result === need) continue;
@@ -429,9 +434,11 @@
         // 只算穿越段的衝突；排不進去的牌本來就不保證
         const travEnd = off;
         let travConflicts = 0;
-        for (let k = 1; k < rounds.length; k++) {
+        for (let k = 0; k < n; k++) {
             if (rounds[k].start >= travEnd) break;
-            const need = neededAfter(seq.slice(rounds[k - 1].start, rounds[k - 1].start + rounds[k - 1].size));
+            if (k === 0 && n < 2) continue;
+            const prev = rounds[(k - 1 + n) % n];
+            const need = neededAfter(seq.slice(prev.start, prev.start + prev.size));
             if (simulateHand(seq, rounds[k].start, rounds[k].start + rounds[k].size).result !== need) travConflicts++;
         }
         const ok = travConflicts === 0 && chains.every(ch => qualifies(ch) && (!rules.strong || segmentsStrong(ch)));
