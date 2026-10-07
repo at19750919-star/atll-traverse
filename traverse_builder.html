@@ -49,7 +49,11 @@ body {
   background: var(--bg-paper); border: 2px solid var(--border-strong); border-radius: 10px; padding: 10px 16px;
 }
 .main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, max-content) minmax(400px, 1fr); gap: 12px; }
-.side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.side { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+/* 右欄各區塊不被壓扁：內容多就整欄捲動；長段驗證表自己限高捲動 */
+.side > .card { flex: none; }
+.side > .card.grow { flex: none; }
+.side > .card.grow .scroll { max-height: 320px; }
 .card {
   background: var(--bg-paper);
   border: 2px solid var(--border-strong);
@@ -100,10 +104,10 @@ body {
 .cut-table td { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
 .safe-col { flex: 1 1 0; min-width: 0; }
 .safe-col-h { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-.safe-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-.safe-list { display: flex; gap: 12px; max-height: 140px; overflow: auto; }
+.safe-chips { display: flex; flex-wrap: wrap; gap: 4px; max-height: 220px; overflow-y: auto; align-content: flex-start; }
+.safe-list { display: flex; gap: 16px; align-items: flex-start; }
 .safe-chip {
-  font-family: var(--font-mono); font-size: 12px; cursor: pointer; color: var(--tie);
+  font-family: var(--font-mono); font-size: 13px; line-height: 20px; cursor: pointer; color: var(--tie);
   border: 1px solid var(--tie); border-radius: 4px; padding: 0 5px; background: rgba(46,138,74,0.08);
 }
 .safe-chip:hover, .safe-chip.on { background: var(--tie); color: #fff; }
