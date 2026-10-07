@@ -78,7 +78,9 @@ body {
 .field-inline { display: inline-flex; align-items: center; gap: 6px; }
 .field-inline label { margin: 0; }
 .sep { width: 1.5px; align-self: stretch; background: var(--border-subtle); margin: 0 4px; }
-.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); padding-bottom: 8px; }
+.toggle { display: inline-flex; align-items: center; user-select: none; background: var(--bg-paper); color: var(--text-tertiary); }
+.toggle input { display: none; }
+.toggle:has(input:checked) { background: var(--accent); color: #fff; }
 .btn.stop { background: var(--banker-bg); color: var(--banker); border-color: var(--banker); }
 #progress { flex: 1; min-width: 200px; text-align: right; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); min-height: 18px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
@@ -184,9 +186,9 @@ th { color: var(--text-secondary); font-weight: 600; }
       <div class="field"><label for="chainAttempts">接段嘗試次數</label><input id="chainAttempts" type="number" min="1" value="20"></div>
       <div class="field"><label for="maxLeftover" title="空白＝不重跑">排不進超過幾張就重跑</label><input id="maxLeftover" type="number" min="0" max="416" value="5"></div>
       <span class="sep"></span>
-      <label class="check" title="三條的下一局必開和，其他局的下一局不能開和"><input id="tripleTie" type="checkbox" checked> 三條規則</label>
-      <label class="check" title="上一局有 A、2 這局開莊，沒有則開閒（三條優先）"><input id="signalRule" type="checkbox" checked> 訊號牌規則（A、2）</label>
-      <label class="check" title="實驗用：段內除了剩 1、2、3、7 張的豁免起點，從任何一張開始發，每一局都要是敏感局。合格段極少，只跑一次、不自動重跑。"><input id="strongMode" type="checkbox"> 強條件（實驗）</label>
+      <label class="btn toggle"><input id="tripleTie" type="checkbox" checked>三條</label>
+      <label class="btn toggle"><input id="signalRule" type="checkbox" checked>A.2</label>
+      <label class="btn toggle"><input id="strongMode" type="checkbox">強</label>
     </div>
     <!-- 第二排：操作與進度 -->
     <div class="fields actions">
