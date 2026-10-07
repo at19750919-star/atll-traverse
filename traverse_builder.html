@@ -204,6 +204,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       <label class="btn toggle"><input id="tripleTie" type="checkbox" checked>三條</label>
       <label class="btn toggle"><input id="signalRule" type="checkbox" checked>A.2</label>
       <label class="btn toggle"><input id="strongMode" type="checkbox">強</label>
+      <label class="btn toggle"><input id="endingNine" type="checkbox">末張9</label>
     </div>
     <!-- 第二排：操作與進度 -->
     <div class="fields actions">
@@ -412,6 +413,27 @@ th { color: var(--text-secondary); font-weight: 600; }
       .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n))));
     return bad.length ? Math.max(...bad) : 0;
   }
+  // 排牌結果 → baseCards（標記穿越段的牌，切牌後仍能辨認）
+  function prepareBase(result) {
+    baseCards = result.cards.map((c) => ({ ...c, traverse: false }));
+    result.chains.forEach((ch) => {
+      for (let k = ch.start - 1; k < ch.start - 1 + ch.length; k++) baseCards[k].traverse = true;
+    });
+  }
+
+  // 末張 9（同百家3.0）：在某局結束、且該局最後一張是 9 的地方切牌，切完牌靴最後一張就是 9。
+  // 只挑切下去完全沒有違規的位置，隨機選一個；沒有就回傳 null
+  function findEndingNineCut() {
+    const rounds = TraverseExport.dealRounds(baseCards);
+    const cands = [];
+    for (const r of rounds) {
+      if (!r.hand || r.cards[r.cards.length - 1].rank !== '9') continue;
+      const c = (r.start + r.cards.length) % 416;
+      if (cutLastViolation(c) === 0) cands.push(c);
+    }
+    return cands.length ? cands[Math.floor(Math.random() * cands.length)] : null;
+  }
+
   let cutBuckets = null;
   function computeSafeCuts() {
     safeCuts = [];
@@ -708,6 +730,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       // 空白＝不重跑；0＝一張都不能剩
       const rawLimit = $('maxLeftover').value.trim();
       const maxLeftover = rawLimit === '' ? null : Math.max(0, parseInt(rawLimit, 10) || 0);
+      let nineCut = null;
       const t0 = Date.now();
       let reruns = 0;
       for (;;) {
@@ -745,26 +768,31 @@ th { color: var(--text-secondary); font-weight: 600; }
         const tooMany = maxLeftover !== null && lastResult.leftoverCount > maxLeftover;
         const signalBad = lastResult.signal && !lastResult.signal.ok;
         const colorBad = !lastResult.colorOk;
-        if (!tooMany && !signalBad && !colorBad) break;
+        if (!tooMany && !signalBad && !colorBad) {
+          if (!$('endingNine').checked) break;
+          // 末張 9：找一個局結束在 9、而且切下去沒有違規的位置；找不到就重跑
+          prepareBase(lastResult);
+          nineCut = findEndingNineCut();
+          if (nineCut !== null) break;
+        }
         reruns++;
-        $('progress').textContent = tooMany
+        $('progress').textContent = (!tooMany && !signalBad && !colorBad) ? `找不到末張是 9 的安全切點，重跑第 ${reruns} 次…` : tooMany
           ? `剩 ${lastResult.leftoverCount} 張排不進去，超過 ${maxLeftover} 張，重跑第 ${reruns} 次…`
           : signalBad ? `訊號牌對調後有長段不合格，重跑第 ${reruns} 次…`
           : `卡色排不出來，重跑第 ${reruns} 次…`;
       }
       lastResult.reruns = reruns;
       lastResult.totalMs = Date.now() - t0;
-      // 標記穿越段的牌，切牌後仍能辨認
-      baseCards = lastResult.cards.map((c) => ({ ...c, traverse: false }));
-      lastResult.chains.forEach((ch) => {
-        for (let k = ch.start - 1; k < ch.start - 1 + ch.length; k++) baseCards[k].traverse = true;
-      });
-      cutPos = 0;
-      $('cutPos').value = 0;
+      prepareBase(lastResult);
+      // 末張 9 開啟時直接切在找到的位置，牌靴最後一張就是 9
+      cutPos = (nineCut !== null) ? nineCut : 0;
+      $('cutPos').value = cutPos;
       render(lastResult);
       computeSafeCuts();
-      $('progress').textContent = cancelled ? '已停止，顯示目前為止的結果'
-        : ($('strongMode').checked ? `完成（強條件，只跑一次）：撿到 ${lastResult.chains.length} 段，排進 ${416 - lastResult.leftoverCount} 張` : '完成');
+      const nineNote = nineCut !== null ? `｜末張 9：已切牌 ${nineCut} 張`
+        : ($('endingNine').checked ? '｜末張 9：沒找到合適位置' : '');
+      $('progress').textContent = (cancelled ? '已停止，顯示目前為止的結果'
+        : ($('strongMode').checked ? `完成（強條件，只跑一次）：撿到 ${lastResult.chains.length} 段，排進 ${416 - lastResult.leftoverCount} 張` : '完成')) + nineNote;
       setReady(true);
     } catch (e) {
       console.error(e);
