@@ -412,6 +412,10 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 
     <aside class="side">
       <section class="card gframe">
+        <h2>違規 <span id="vioTotal" class="vio-total"></span></h2>
+        <div id="violations"><div class="empty">尚未排牌</div></div>
+      </section>
+      <section class="card gframe">
         <h2>結果</h2>
         <div id="bpt" class="bpt"></div>
         <div id="stats" class="stats"><div class="empty">尚未排牌</div></div>
@@ -421,10 +425,6 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
           <button id="btnSafeToggle" class="btn tool-btn btn-mini" type="button">展開</button></h2>
         <div id="cutStats" class="cut-stats" title="416 個切牌位置各切一次，依最後一個違規落在第幾局分組"></div>
         <div id="safeCuts" class="safe-list" hidden><div class="empty">尚未排牌</div></div>
-      </section>
-      <section class="card gframe">
-        <h2>違規 <span id="vioTotal" class="vio-total"></span></h2>
-        <div id="violations"><div class="empty">尚未排牌</div></div>
       </section>
       <section class="card grow gframe">
         <h2>長段驗證</h2>
@@ -965,6 +965,15 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     $('btnExport').disabled = true;
     try {
       const dir = await getExportDir();
+      // 同百家3.0：有違規先跳確認，按取消就不導出
+      const g = collectViolations(shownRounds);
+      const items = [['無法對調', g.noSwap], ['對調後結果不變', g.same], ['三條規則', g.triple], ['訊號牌規則', g.signal], ['卡色', g.color]]
+        .filter(([, list]) => list.length);
+      if (items.length) {
+        const msg = '⚠️ 檢測到以下違規:\n\n' + items.map(([k, list]) => `• ${k}違規: ${list.length} 處\n`).join('')
+          + '\n是否仍要繼續導出 Excel？';
+        if (!confirm(msg)) { $('progress').textContent = '已取消導出，請先修正違規問題。'; return; }
+      }
       const blob = await TraverseExport.buildWorkbook(shownRounds);
       $('progress').textContent = '讀取雲端編號…';
       const files = await cloudFiles();
