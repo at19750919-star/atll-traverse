@@ -205,6 +205,9 @@ th { color: var(--text-secondary); font-weight: 600; }
       <label class="btn toggle"><input id="signalRule" type="checkbox" checked>A.2</label>
       <label class="btn toggle"><input id="strongMode" type="checkbox">強</label>
       <label class="btn toggle"><input id="endingNine" type="checkbox">末張9</label>
+      <span class="sep"></span>
+      <label class="btn toggle"><input id="sideRule" type="checkbox">莊閒</label>
+      <div class="field field-inline"><label for="sideLimit">差距上限</label><input id="sideLimit" type="number" min="0" max="100" value="10"></div>
     </div>
     <!-- 第二排：操作與進度 -->
     <div class="fields actions">
@@ -413,6 +416,13 @@ th { color: var(--text-secondary); font-weight: 600; }
       .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n))));
     return bad.length ? Math.max(...bad) : 0;
   }
+  // 莊的局數 與 閒＋和的局數 相差幾局（從頭發的完整局）
+  function sideDiffOf(cards, cut) {
+    const rounds = TraverseExport.dealRounds(TraverseExport.cutDeck(cards, cut)).filter((r) => r.hand);
+    const banker = rounds.filter((r) => r.result === '莊').length;
+    return Math.abs(banker - (rounds.length - banker));
+  }
+
   // 排牌結果 → baseCards（標記穿越段的牌，切牌後仍能辨認）
   function prepareBase(result) {
     baseCards = result.cards.map((c) => ({ ...c, traverse: false }));
@@ -769,14 +779,25 @@ th { color: var(--text-secondary); font-weight: 600; }
         const signalBad = lastResult.signal && !lastResult.signal.ok;
         const colorBad = !lastResult.colorOk;
         if (!tooMany && !signalBad && !colorBad) {
-          if (!$('endingNine').checked) break;
-          // 末張 9：找一個局結束在 9、而且切下去沒有違規的位置；找不到就重跑
-          prepareBase(lastResult);
-          nineCut = findEndingNineCut();
-          if (nineCut !== null) break;
+          nineCut = null;
+          let nineOk = true;
+          if ($('endingNine').checked) {
+            // 末張 9：找一個局結束在 9、而且切下去沒有違規的位置；找不到就重跑
+            prepareBase(lastResult);
+            nineCut = findEndingNineCut();
+            nineOk = nineCut !== null;
+          }
+          // 莊閒差距（同百家3.0：莊 vs 閒＋和，超過上限整副重跑），以最後要顯示／導出的牌序計算
+          const sideDiff = nineOk ? sideDiffOf(lastResult.cards, nineCut || 0) : 0;
+          const sideBad = nineOk && $('sideRule').checked && sideDiff > (parseInt($('sideLimit').value, 10) || 0);
+          if (nineOk && !sideBad) break;
+          reruns++;
+          $('progress').textContent = !nineOk ? `找不到末張是 9 的安全切點，重跑第 ${reruns} 次…`
+            : `莊閒差距 ${sideDiff} 局，超過上限，重跑第 ${reruns} 次…`;
+          continue;
         }
         reruns++;
-        $('progress').textContent = (!tooMany && !signalBad && !colorBad) ? `找不到末張是 9 的安全切點，重跑第 ${reruns} 次…` : tooMany
+        $('progress').textContent = tooMany
           ? `剩 ${lastResult.leftoverCount} 張排不進去，超過 ${maxLeftover} 張，重跑第 ${reruns} 次…`
           : signalBad ? `訊號牌對調後有長段不合格，重跑第 ${reruns} 次…`
           : `卡色排不出來，重跑第 ${reruns} 次…`;
