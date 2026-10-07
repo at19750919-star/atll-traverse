@@ -119,7 +119,7 @@
 
     // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
     // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
-    const rules = { tripleTie: true };
+    const rules = { tripleTie: true, strong: false };
     function tripleRuleOk(arr, rounds) {
         const trip = rounds.map(r => isTriple(arr.slice(r.start, r.start + r.size)));
         if (rounds[0].result === '和' || trip[trip.length - 1]) return false;
@@ -129,7 +129,33 @@
         return true;
     }
 
-    function qualifies(arr) {
+    // 強條件（實驗）：段內每個非豁免起點（剩 1、2、3、7 張除外）發出的每一局都要是敏感局
+    function strongOk(seg) {
+        for (let p = 1; p < seg.length; p++) {
+            if (ALLOWED_RESIDUE.has(seg.length - p)) continue;
+            for (let cur = p; cur < seg.length;) {
+                const h = simulateHand(seg, cur, seg.length);
+                if (!h || !handSensitive(seg.slice(cur, cur + h.size))) return false;
+                cur += h.size;
+            }
+        }
+        return true;
+    }
+
+    // 長段由哪些短段接成（豁免位置以各短段自己的段尾計算）
+    function segmentsStrong(ch) {
+        const parts = ch.parts || [ch.length];
+        let off = 0;
+        for (const len of parts) {
+            if (!strongOk(ch.slice(off, off + len))) return false;
+            off += len;
+        }
+        return true;
+    }
+
+    // single：檢查的是單一短段（撿段時）才套強條件；接段後的長段改用 segmentsStrong 逐段檢查
+    function qualifies(arr, single = false) {
+        if (single && rules.strong && !strongOk(arr)) return false;
         if (!isTraverse(arr)) return false;
         const rounds = roundsFromStart(arr);
         if (!rounds) return false;
@@ -192,7 +218,7 @@
                     for (let k = s; k < s + L; k++) if (used[k]) { overlap = true; break; }
                     if (overlap) continue;
                     const a = rest.slice(s, s + L);
-                    if (!qualifies(a)) continue;
+                    if (!qualifies(a, true)) continue;
                     const z = a.filter(p => p === 0).length;
                     if (opts.zeroPolicy === 'quota' && z < Math.floor(zeroShare * L * opts.quotaFactor)) continue;
                     if (opts.zeroPolicy === 'none') { pick = { L, a }; break; }
@@ -295,7 +321,7 @@
                     if (!fits(cand, c)) break;
                     for (const p of cand) c[p]--;
                     seq = seq.concat(cand);
-                    if (seq.length >= opts.minLen && qualifies(seq)) { found = seq; break; }
+                    if (seq.length >= opts.minLen && qualifies(seq, true)) { found = seq; break; }
                 }
             }
             if (found) {
@@ -315,7 +341,7 @@
         let best = null;
         for (let attempt = 0; attempt < opts.chainAttempts; attempt++) {
             if (ctx.cancelled()) break;
-            const pool = shuffleInPlace(segs.map(s => s.slice()), opts.rng);
+            const pool = shuffleInPlace(segs.map(s => { const c = s.slice(); c.parts = [s.length]; return c; }), opts.rng);
             const chains = [];
             while (pool.length) {
                 let chain = pool.shift();
@@ -324,6 +350,7 @@
                     extended = false;
                     for (let i = 0; i < pool.length; i++) {
                         const joined = chain.concat(pool[i]);
+                        joined.parts = chain.parts.concat(pool[i].parts);
                         if (qualifies(joined)) {
                             chain = joined;
                             pool.splice(i, 1);
@@ -407,7 +434,7 @@
             const need = neededAfter(seq.slice(rounds[k - 1].start, rounds[k - 1].start + rounds[k - 1].size));
             if (simulateHand(seq, rounds[k].start, rounds[k].start + rounds[k].size).result !== need) travConflicts++;
         }
-        const ok = travConflicts === 0 && chains.every(ch => qualifies(ch));
+        const ok = travConflicts === 0 && chains.every(ch => qualifies(ch) && (!rules.strong || segmentsStrong(ch)));
         return { ok, flips, conflicts: travConflicts };
     }
 
@@ -421,10 +448,12 @@
             rng: options.rng || Math.random,
             tripleTie: options.tripleTie !== false,
             signalRule: options.signalRule !== false,
+            strong: options.strong === true,
             zeroPolicy: options.zeroPolicy || 'quota',
             quotaFactor: options.quotaFactor ?? 1,
         };
         rules.tripleTie = opts.tripleTie;
+        rules.strong = opts.strong;
         opts.scanLengths = [];
         for (let L = opts.maxLen; L >= opts.minLen; L--) opts.scanLengths.push(L);
         const ctx = {
@@ -463,7 +492,7 @@
                 rounds: rounds ? rounds.length : 0,
                 traverse: isTraverse(ch),
                 allSensitive: !!rounds && rounds.every(r => handSensitive(ch.slice(r.start, r.start + r.size))),
-                qualified: qualifies(ch),
+                qualified: qualifies(ch) && (!rules.strong || segmentsStrong(ch)),
             };
             offset += ch.length;
             return report;

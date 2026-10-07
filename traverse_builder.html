@@ -187,6 +187,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       <div class="field"><label for="maxLeftover">排不進超過幾張就重跑（空白＝不重跑）</label><input id="maxLeftover" type="number" min="0" max="416" value="5"></div>
       <label class="check"><input id="tripleTie" type="checkbox" checked> 三條規則（三條下一局必和，其他局不和）</label>
       <label class="check"><input id="signalRule" type="checkbox" checked> 訊號牌規則（有 A、2 下一局莊，沒有則閒）</label>
+      <label class="check" title="實驗用：段內除了剩 1、2、3、7 張的豁免起點，從任何一張開始發，每一局都要是敏感局。合格段極少，只跑一次、不自動重跑。"><input id="strongMode" type="checkbox"> 強條件：每個起點都敏感（豁免除外，實驗）</label>
       <button id="btnRun" class="btn">開始排牌</button>
       <button id="btnStop" class="btn stop" disabled>停止</button>
       <span class="sep"></span>
@@ -230,7 +231,7 @@ th { color: var(--text-secondary); font-weight: 600; }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=5"></script>
+<script src="traverse_builder.js?v=6"></script>
 <script src="traverse_export.js?v=3"></script>
 <script>
 (function () {
@@ -602,11 +603,13 @@ th { color: var(--text-secondary); font-weight: 600; }
           chainAttempts: num('chainAttempts'),
           tripleTie: $('tripleTie').checked,
           signalRule: $('signalRule').checked,
+          strong: $('strongMode').checked,
           onProgress: (m) => { $('progress').textContent = tag + m; },
           isCancelled: () => cancelled,
         });
         // 排不進的張數超過設定、或訊號牌對調後穿越段不合格，就整副重跑；按停止則保留目前這次
-        if (cancelled) break;
+        // 強條件合格段極少，重跑也排不滿，只跑一次讓人看結果
+        if (cancelled || $('strongMode').checked) break;
         const tooMany = maxLeftover !== null && lastResult.leftoverCount > maxLeftover;
         const signalBad = lastResult.signal && !lastResult.signal.ok;
         if (!tooMany && !signalBad) break;
@@ -625,7 +628,8 @@ th { color: var(--text-secondary); font-weight: 600; }
       cutPos = 0;
       $('cutPos').value = 0;
       render(lastResult);
-      $('progress').textContent = cancelled ? '已停止，顯示目前為止的結果' : '完成';
+      $('progress').textContent = cancelled ? '已停止，顯示目前為止的結果'
+        : ($('strongMode').checked ? `完成（強條件，只跑一次）：撿到 ${lastResult.chains.length} 段，排進 ${416 - lastResult.leftoverCount} 張` : '完成');
       setReady(true);
     } catch (e) {
       console.error(e);
