@@ -111,6 +111,8 @@ body {
 .round-table.swap-mode .card-label { cursor: pointer; }
 .round-table.swap-mode .card-label:hover { border-color: var(--accent); }
 /* 百家3.0：color #ff3b3b + 粗體；這裡是米色底，改用同色系較深的牌桌紅確保看得清楚 */
+.card-label.card-back-red  { background: rgba(180,50,35,0.13); border-color: rgba(180,50,35,0.45); }
+.card-label.card-back-blue { background: rgba(28,58,140,0.13); border-color: rgba(28,58,140,0.4); }
 .card-label.s-signal-card { color: var(--banker); font-weight: 700; }
 .card-label.selected-first  { background: rgba(46,138,74,0.18); border: 3px solid #2e8a4a; color: #2e8a4a; }
 .card-label.selected-second { background: rgba(212,160,30,0.22); border: 3px solid #b8842a; color: #8a5e0e; }
@@ -255,8 +257,8 @@ th { color: var(--text-secondary); font-weight: 600; }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=7"></script>
-<script src="traverse_export.js?v=3"></script>
+<script src="traverse_builder.js?v=8"></script>
+<script src="traverse_export.js?v=4"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -269,7 +271,8 @@ th { color: var(--text-secondary); font-weight: 600; }
   // 牌面文字沿用主表格：10 顯示成 T，點數在前、花色在後
   const cardText = (c) => `${c.rank === '10' ? 'T' : c.rank}${c.suit}`;
   // 訊號牌（A、2）亮紅字，跟百家3.0 的 .s-signal-card 一樣
-  const sigCls = (c) => (c.point === 1 || c.point === 2) ? ' s-signal-card' : '';
+  const sigCls = (c) => ((c.point === 1 || c.point === 2) ? ' s-signal-card' : '')
+    + (c.back_color === 'R' ? ' card-back-red' : c.back_color === 'B' ? ' card-back-blue' : '');
   const label = (c) => `<span class="card-label${sigCls(c)}">${esc(cardText(c))}</span>`;
 
   const outcomeClass = { '莊': 'banker', '閒': 'player', '和': 'tie' };
@@ -376,8 +379,19 @@ th { color: var(--text-secondary); font-weight: 600; }
   }
 
   // 各類違規的局號（1 起算）
+  // 卡色違規：前 4 張牌背不是 RRRB／BBBR（第 5、6 張與殘牌不限）
+  const COLOR_OK = new Set(TraverseBuilder.COLOR_PATTERNS.map((p) => p.join('')));
+  function colorViolations(rounds) {
+    const out = [];
+    rounds.forEach((r, i) => {
+      if (!r.hand) return;
+      if (!COLOR_OK.has(r.cards.slice(0, 4).map((c) => c.back_color).join(''))) out.push(i + 1);
+    });
+    return out;
+  }
+
   function collectViolations(rounds) {
-    const groups = { noSwap: [], same: [], triple: tripleViolations(rounds), signal: signalViolations(rounds) };
+    const groups = { noSwap: [], same: [], triple: tripleViolations(rounds), signal: signalViolations(rounds), color: colorViolations(rounds) };
     rounds.forEach((r, i) => { const v = violationOf(r); if (v) groups[v].push(i + 1); });
     return groups;
   }
@@ -394,7 +408,7 @@ th { color: var(--text-secondary); font-weight: 600; }
     let last = rounds.length;
     while (last > 1 && !rounds[last - 1].hand) last--;
     const prevNo = (n) => (n === 1 ? last : n - 1);
-    const bad = g.noSwap.concat(g.same).filter(trav)
+    const bad = g.noSwap.concat(g.same, g.color).filter(trav)
       .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n))));
     return bad.length ? Math.max(...bad) : 0;
   }
@@ -443,7 +457,7 @@ th { color: var(--text-secondary); font-weight: 600; }
 
   function renderViolations() {
     const groups = collectViolations(shownRounds);
-    const vioRounds = new Set([...groups.noSwap, ...groups.same, ...groups.triple, ...groups.signal]);
+    const vioRounds = new Set([...groups.noSwap, ...groups.same, ...groups.triple, ...groups.signal, ...groups.color]);
     document.querySelectorAll('#roundsBody tr[id^="round-"]').forEach((tr) => {
       tr.classList.toggle('violation-row', vioRounds.has(Number(tr.id.slice(6))));
     });
@@ -458,7 +472,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       ? `<div class="vio-group"><span class="k">${name}（${list.length}）</span>${list.map((n) => `<a class="vio-link" data-goto="${n}">第${n}局</a>`).join('')}</div>`
       : '';
     $('violations').innerHTML = line('無法對調', groups.noSwap) + line('對調後結果不變', groups.same)
-      + line('三條規則', groups.triple) + line('訊號牌規則', groups.signal);
+      + line('三條規則', groups.triple) + line('訊號牌規則', groups.signal) + line('卡色', groups.color);
   }
 
   // 點違規連結：捲到那一局並閃一下
@@ -711,11 +725,13 @@ th { color: var(--text-secondary); font-weight: 600; }
         if (cancelled || $('strongMode').checked) break;
         const tooMany = maxLeftover !== null && lastResult.leftoverCount > maxLeftover;
         const signalBad = lastResult.signal && !lastResult.signal.ok;
-        if (!tooMany && !signalBad) break;
+        const colorBad = !lastResult.colorOk;
+        if (!tooMany && !signalBad && !colorBad) break;
         reruns++;
         $('progress').textContent = tooMany
           ? `剩 ${lastResult.leftoverCount} 張排不進去，超過 ${maxLeftover} 張，重跑第 ${reruns} 次…`
-          : `訊號牌對調後有長段不合格，重跑第 ${reruns} 次…`;
+          : signalBad ? `訊號牌對調後有長段不合格，重跑第 ${reruns} 次…`
+          : `卡色排不出來，重跑第 ${reruns} 次…`;
       }
       lastResult.reruns = reruns;
       lastResult.totalMs = Date.now() - t0;

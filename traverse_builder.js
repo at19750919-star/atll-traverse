@@ -372,17 +372,71 @@
     }
 
     // 點數 → 實際牌（每個點數從 8 副牌的牌池隨機取）
+    // 卡色（牌背）：8 副牌中 4 副紅背、4 副藍背（同百家3.0 generateDeck）。
+    // 每局前 4 張必須是 RRRB 或 BBBR（百家3.0 預設、不開混色），第 5、6 張與殘牌不限。
+    // 這兩種樣式前兩張同色，所以對調前兩張不會破壞卡色。
+    const COLOR_PATTERNS = [['R', 'R', 'R', 'B'], ['B', 'B', 'B', 'R']];
+
+    // 依點數決定每局用哪個卡色樣式，使各點數紅背／藍背的需求不超過牌數。
+    // 回傳每個位置要的顏色（'R'／'B'／null＝不限），做不到回傳 null
+    function planColors(points, rng) {
+        const rounds = [];
+        for (let cur = 0; cur < points.length;) {
+            const h = simulateHand(points, cur, points.length);
+            if (!h) break;
+            rounds.push(cur);
+            cur += h.size;
+        }
+        const supply = new Array(10).fill(0);
+        for (const p of points) supply[p]++;
+        const half = supply.map(n => n / 2); // 每個點數紅、藍各半
+        for (let attempt = 0; attempt < 50; attempt++) {
+            const pick = rounds.map(() => (rng() < 0.5 ? 0 : 1));
+            const demand = () => {
+                const d = { R: new Array(10).fill(0), B: new Array(10).fill(0) };
+                rounds.forEach((st, i) => COLOR_PATTERNS[pick[i]].forEach((c, k) => d[c][points[st + k]]++));
+                return d;
+            };
+            const overflow = (d) => {
+                let o = 0;
+                for (let p = 0; p < 10; p++) o += Math.max(0, d.R[p] - half[p]) + Math.max(0, d.B[p] - half[p]);
+                return o;
+            };
+            let d = demand(), cur = overflow(d);
+            for (let step = 0; step < 4000 && cur > 0; step++) {
+                const i = Math.floor(rng() * rounds.length);
+                pick[i] ^= 1;
+                const d2 = demand(), o2 = overflow(d2);
+                if (o2 <= cur) { d = d2; cur = o2; } else pick[i] ^= 1;
+            }
+            if (cur === 0) {
+                const need = new Array(points.length).fill(null);
+                rounds.forEach((st, i) => COLOR_PATTERNS[pick[i]].forEach((c, k) => { need[st + k] = c; }));
+                return need;
+            }
+        }
+        return null;
+    }
+
+    // 點數 → 實際牌（含牌背顏色）。colorOk＝每局前 4 張都符合卡色樣式
     function assignCards(points, rng) {
         const pool = new Map();
-        for (let p = 0; p < 10; p++) pool.set(p, []);
+        for (let p = 0; p < 10; p++) pool.set(p, { R: [], B: [] });
         for (let deck = 0; deck < 8; deck++)
             for (const suit of SUITS)
-                for (const rank of RANKS) pool.get(rankPoint(rank)).push({ rank, suit });
-        for (const list of pool.values()) shuffleInPlace(list, rng);
-        return points.map(p => {
-            const card = pool.get(p).pop();
-            return { rank: card.rank, suit: card.suit, point: p };
+                for (const rank of RANKS) pool.get(rankPoint(rank))[deck < 4 ? 'R' : 'B'].push({ rank, suit });
+        for (const v of pool.values()) { shuffleInPlace(v.R, rng); shuffleInPlace(v.B, rng); }
+        const need = planColors(points, rng);
+        const cards = new Array(points.length);
+        const take = (p, c) => { const card = pool.get(p)[c].pop(); return { rank: card.rank, suit: card.suit, point: p, back_color: c }; };
+        // 先放指定顏色的位置，再用剩下的牌填不限顏色的位置
+        points.forEach((p, i) => { if (need && need[i]) cards[i] = take(p, need[i]); });
+        points.forEach((p, i) => {
+            if (cards[i]) return;
+            const v = pool.get(p);
+            cards[i] = take(p, v.R.length >= v.B.length ? 'R' : 'B');
         });
+        return { cards, colorOk: !!need };
     }
 
     // 訊號牌：全花色 A、2（百家3.0 預設 A.2 模式）
@@ -487,7 +541,7 @@
             signal = applySignalRule(chains, leftover);
         }
         const points = chains.flat().concat(leftover);
-        const cards = assignCards(points, opts.rng);
+        const { cards, colorOk } = assignCards(points, opts.rng);
 
         // 每條長段的驗證結果
         let offset = 0;
@@ -509,6 +563,7 @@
             cards,
             chains: chainReports,
             leftoverCount: leftover.length,
+            colorOk,
             signal,
             stats: {
                 shuffles: p1.shuffles,
@@ -521,6 +576,6 @@
         };
     }
 
-    global.TraverseBuilder = { build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { COLOR_PATTERNS, build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);

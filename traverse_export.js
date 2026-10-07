@@ -1,7 +1,7 @@
 // ============================================================
 // 穿越排牌：發牌、切牌、Excel 導出
 // Excel 格式照搬百家3.0 exportRoundsAsExcelWithDrive（預覽／原始數據／直立式牌靴／回復分析統計）
-// 不檢查卡色與訊號牌：色序依花色（♥♦=R、♠♣=B），訊號欄留空
+// 色序用牌背顏色（back_color），訊號欄留空
 // ============================================================
 
 (function (global) {
@@ -94,7 +94,8 @@
     }
 
     const cardLabel = (c) => `${c.rank === '10' ? 'T' : c.rank}${c.suit}`;
-    const colorCode = (c) => (c.suit === '♥' || c.suit === '♦') ? 'R' : 'B';
+    // 牌背顏色；沒有牌背資料時才依花色推（同百家3.0 getCardColorCode）
+    const colorCode = (c) => c.back_color || ((c.suit === '♥' || c.suit === '♦') ? 'R' : 'B');
     function gridValue(c) {
         if (c.rank === 'A') return '1';
         if (['10', 'J', 'Q', 'K'].includes(c.rank)) return '0';
