@@ -358,6 +358,59 @@
         });
     }
 
+    // 訊號牌：全花色 A、2（百家3.0 預設 A.2 模式）
+    const isSignalHand = (hand) => hand.some(p => p === 1 || p === 2);
+    const neededAfter = (prevHand) =>
+        (rules.tripleTie && isTriple(prevHand)) ? '和' : (isSignalHand(prevHand) ? '莊' : '閒');
+
+    // 訊號牌規則（照百家3.0）：上一局是三條 → 這局和（三條優先，含三條 A／2）；
+    // 上一局有 A 或 2 → 這局莊；都沒有 → 這局閒。
+    // 做法：排好後由前往後，把不符合的局對調前兩張（敏感局對調必定莊閒互換、張數不變），
+    // 對調後每條長段重新完整驗證（任一張當起點都穿越、每局敏感、單局對調仍穿越、三條規則）。
+    // 直接改 chains / leftover 內的點數；回傳 { ok, flips, conflicts }
+    function applySignalRule(chains, leftover) {
+        const seq = chains.flat().concat(leftover);
+        // 從頭發到不足一局為止（排不進去的牌最後可能剩殘牌）
+        const rounds = [];
+        for (let cur = 0; cur < seq.length;) {
+            const h = simulateHand(seq, cur, seq.length);
+            if (!h) break;
+            rounds.push({ start: cur, size: h.size });
+            cur += h.size;
+        }
+        let flips = 0, conflicts = 0;
+        for (let k = 1; k < rounds.length; k++) {
+            const prev = rounds[k - 1], cur = rounds[k];
+            const need = neededAfter(seq.slice(prev.start, prev.start + prev.size));
+            const h = simulateHand(seq, cur.start, cur.start + cur.size);
+            if (!h || h.result === need) continue;
+            if (need === '和' || h.result === '和') { conflicts++; continue; }
+            [seq[cur.start], seq[cur.start + 1]] = [seq[cur.start + 1], seq[cur.start]];
+            const after = simulateHand(seq, cur.start, cur.start + cur.size);
+            if (!after || after.size !== cur.size || after.result !== need) {
+                // 對調不成就換回來，記為衝突
+                [seq[cur.start], seq[cur.start + 1]] = [seq[cur.start + 1], seq[cur.start]];
+                conflicts++;
+                continue;
+            }
+            flips++;
+        }
+        // 寫回原陣列
+        let off = 0;
+        for (const ch of chains) { for (let i = 0; i < ch.length; i++) ch[i] = seq[off + i]; off += ch.length; }
+        for (let i = 0; i < leftover.length; i++) leftover[i] = seq[off + i];
+        // 只算穿越段的衝突；排不進去的牌本來就不保證
+        const travEnd = off;
+        let travConflicts = 0;
+        for (let k = 1; k < rounds.length; k++) {
+            if (rounds[k].start >= travEnd) break;
+            const need = neededAfter(seq.slice(rounds[k - 1].start, rounds[k - 1].start + rounds[k - 1].size));
+            if (simulateHand(seq, rounds[k].start, rounds[k].start + rounds[k].size).result !== need) travConflicts++;
+        }
+        const ok = travConflicts === 0 && chains.every(ch => qualifies(ch));
+        return { ok, flips, conflicts: travConflicts };
+    }
+
     async function build(options = {}) {
         const opts = {
             idleLimit: options.idleLimit ?? 1000,
@@ -367,6 +420,7 @@
             maxLen: options.maxLen ?? 12,
             rng: options.rng || Math.random,
             tripleTie: options.tripleTie !== false,
+            signalRule: options.signalRule !== false,
             zeroPolicy: options.zeroPolicy || 'quota',
             quotaFactor: options.quotaFactor ?? 1,
         };
@@ -386,9 +440,16 @@
         const p1 = await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
         const segs = p1.segs.concat(p2.segs);
-        const chains = await phaseChain(segs, opts, ctx);
-        const leftover = shuffleInPlace(p2.rest.slice(), opts.rng);
+        let chains = await phaseChain(segs, opts, ctx);
+        let leftover = shuffleInPlace(p2.rest.slice(), opts.rng);
 
+        let signal = opts.signalRule ? applySignalRule(chains, leftover) : null;
+        // 訊號牌對調後長段不合格：段不變，只換接段順序再試，省掉整副重排
+        for (let t = 0; signal && !signal.ok && t < 30 && !ctx.cancelled(); t++) {
+            chains = await phaseChain(segs, { ...opts, chainAttempts: 1 }, ctx);
+            leftover = shuffleInPlace(p2.rest.slice(), opts.rng);
+            signal = applySignalRule(chains, leftover);
+        }
         const points = chains.flat().concat(leftover);
         const cards = assignCards(points, opts.rng);
 
@@ -412,6 +473,7 @@
             cards,
             chains: chainReports,
             leftoverCount: leftover.length,
+            signal,
             stats: {
                 shuffles: p1.shuffles,
                 phase1Segments: p1.segs.length,
@@ -423,6 +485,6 @@
         };
     }
 
-    global.TraverseBuilder = { build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, rules };
+    global.TraverseBuilder = { build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);
