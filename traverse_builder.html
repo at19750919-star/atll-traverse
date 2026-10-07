@@ -658,21 +658,39 @@ th { color: var(--text-secondary); font-weight: 600; }
     throw new Error(`讀取雲端「穿越牌」清單失敗：${lastError && lastError.message}`);
   }
 
-  async function nextExportFilename() {
-    const files = await fetchFolderFiles();
+  // 雲端清單預先讀取：排好牌就在背景讀，按導出時多半已經讀好，不用再等
+  let cloudFilesPromise = null;
+  function prefetchCloudList() {
+    if (!CLOUD_UPLOAD_ENABLED) return;
+    const p = fetchFolderFiles();
+    p.catch(() => {}); // 背景失敗先不吵，導出時會重讀
+    cloudFilesPromise = p;
+  }
+  async function cloudFiles() {
+    if (!cloudFilesPromise) prefetchCloudList();
+    try {
+      return await cloudFilesPromise;
+    } catch (e) {
+      cloudFilesPromise = fetchFolderFiles(); // 預讀失敗：當場重讀一次
+      return await cloudFilesPromise;
+    }
+  }
+
+  async function nextExportFilename(files) {
     const re = new RegExp(`^${EXPORT_PREFIX}(\\d+)\\.xlsx$`, 'i');
     let max = 0;
     files.forEach((f) => { const m = (f.name || '').match(re); if (m) max = Math.max(max, parseInt(m[1], 10)); });
     return `${EXPORT_PREFIX}${String(max + 1).padStart(3, '0')}.xlsx`;
   }
 
-  async function uploadToDrive(blob, filename) {
+  // knownFiles：編號時讀到的雲端清單，直接拿來比對，不用上傳前再讀一次
+  async function uploadToDrive(blob, filename, knownFiles) {
     const buf = new Uint8Array(await blob.arrayBuffer());
     let bin = '';
     for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
     const body = JSON.stringify({ filename, base64Data: btoa(bin), folderId: DRIVE_FOLDER_ID });
     const countSame = async () => (await fetchFolderFiles()).filter((f) => f.name === filename).length;
-    const before = await countSame();
+    const before = knownFiles.filter((f) => f.name === filename).length;
     let lastError = null;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
@@ -696,7 +714,8 @@ th { color: var(--text-secondary); font-weight: 600; }
     try {
       const blob = await TraverseExport.buildWorkbook(shownRounds);
       $('progress').textContent = '讀取雲端編號…';
-      const filename = await nextExportFilename();
+      const files = await cloudFiles();
+      const filename = await nextExportFilename(files);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = filename;
@@ -708,7 +727,14 @@ th { color: var(--text-secondary); font-weight: 600; }
       if (CLOUD_UPLOAD_ENABLED) {
         $('progress').textContent = `已下載 ${filename}，正在上傳雲端「穿越牌」…`;
         try {
-          await uploadToDrive(blob, filename);
+          await uploadToDrive(blob, filename, files);
+          // 上傳成功：清單直接補上這個檔，下次導出不必重讀；背景再同步一次雲端
+          files.push({ name: filename });
+          cloudFilesPromise = Promise.resolve(files);
+          // 背景同步雲端（例如別台電腦也導出過），讀到才替換，不讓下次導出等它
+          fetchFolderFiles().then((f) => {
+            if (f.some((x) => x.name === filename)) cloudFilesPromise = Promise.resolve(f);
+          }).catch(() => {});
           $('progress').textContent = `已導出 ${filename}（${which}），本機與雲端「穿越牌」都已存好`;
         } catch (e) {
           $('progress').textContent = `已下載 ${filename}（${which}），但上傳雲端失敗：${e.message || e}`;
@@ -810,6 +836,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       $('cutPos').value = cutPos;
       render(lastResult);
       computeSafeCuts();
+      prefetchCloudList();
       const nineNote = nineCut !== null ? `｜末張 9：已切牌 ${nineCut} 張`
         : ($('endingNine').checked ? '｜末張 9：沒找到合適位置' : '');
       $('progress').textContent = (cancelled ? '已停止，顯示目前為止的結果'
