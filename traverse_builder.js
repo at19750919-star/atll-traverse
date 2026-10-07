@@ -12,6 +12,7 @@
 //
 // 流程：
 //   階段 1  洗牌 → 撿出所有合格段 → 剩下的重洗再撿，直到連續 N 次撿不到
+//           每段 0 點比例不得低於剩餘牌堆的 0 點比例（避免最後剩一堆 0 點）
 //   階段 2  剩下的牌改用「敏感局組合」計算排列，再撿出合格段
 //   階段 3  把合格段接成長段（接縫處重新完整檢查）
 //   剩下撿不進去的牌放在整條牌最後面
@@ -160,20 +161,28 @@
             shuffleInPlace(rest, opts.rng);
             const used = new Uint8Array(rest.length);
             let got = 0;
+            const zerosInRest = rest.reduce((n, p) => n + (p === 0 ? 1 : 0), 0);
+            const zeroShare = zerosInRest / rest.length;
             for (let s = 0; s < rest.length; s++) {
+                let pick = null;
                 for (const L of opts.scanLengths) {
                     if (s + L > rest.length) continue;
                     let overlap = false;
                     for (let k = s; k < s + L; k++) if (used[k]) { overlap = true; break; }
                     if (overlap) continue;
                     const a = rest.slice(s, s + L);
-                    if (qualifies(a)) {
-                        segs.push(a);
-                        for (let k = s; k < s + L; k++) used[k] = 1;
-                        got++;
-                        s += L - 1;
-                        break;
-                    }
+                    if (!qualifies(a)) continue;
+                    const z = a.filter(p => p === 0).length;
+                    if (opts.zeroPolicy === 'quota' && z < Math.floor(zeroShare * L * opts.quotaFactor)) continue;
+                    if (opts.zeroPolicy === 'none') { pick = { L, a }; break; }
+                    const score = z / L;
+                    if (!pick || score > pick.score) pick = { L, a, score };
+                }
+                if (pick) {
+                    segs.push(pick.a);
+                    for (let k = s; k < s + pick.L; k++) used[k] = 1;
+                    got++;
+                    s += pick.L - 1;
                 }
             }
             if (got) rest = rest.filter((_, i) => !used[i]);
@@ -218,6 +227,17 @@
         return out;
     }
 
+    // 從可用敏感局隨機抽 3 個，取 0 點比例最高的
+    function pickZeroHeavy(usable, rng) {
+        let best = null, bs = -1;
+        for (let i = 0; i < 3; i++) {
+            const h = usable[Math.floor(rng() * usable.length)];
+            const z = h.filter(p => p === 0).length / h.length;
+            if (z > bs) { bs = z; best = h; }
+        }
+        return best;
+    }
+
     function countsOf(points) {
         const c = new Array(10).fill(0);
         for (const p of points) c[p]++;
@@ -249,7 +269,7 @@
                 const c = counts.slice();
                 let seq = [];
                 while (seq.length < opts.maxLen) {
-                    const cand = usable[Math.floor(opts.rng() * usable.length)];
+                    const cand = opts.zeroPolicy === 'none' ? usable[Math.floor(opts.rng() * usable.length)] : pickZeroHeavy(usable, opts.rng);
                     if (seq.length + cand.length > opts.maxLen) break;
                     if (!fits(cand, c)) break;
                     for (const p of cand) c[p]--;
@@ -325,6 +345,8 @@
             minLen: options.minLen ?? 8,
             maxLen: options.maxLen ?? 12,
             rng: options.rng || Math.random,
+            zeroPolicy: options.zeroPolicy || 'quota',
+            quotaFactor: options.quotaFactor ?? 1,
         };
         opts.scanLengths = [];
         for (let L = opts.maxLen; L >= opts.minLen; L--) opts.scanLengths.push(L);

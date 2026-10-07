@@ -26,6 +26,11 @@
   --player: #2660b3;
   --player-bg: #cfdef2;
   --tie: #2e8a4a;
+  --bg-cream: #fff8e3;
+  --ink: #221c0e;
+  --duizhuang: #7d3aa5;
+  --b6win: #d4661c;
+  --row-h: 36px;
   --font-sans: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
   --font-display: 'Noto Serif TC', serif;
   --font-mono: 'Roboto Mono', ui-monospace, monospace;
@@ -75,22 +80,60 @@ th { color: var(--text-secondary); font-weight: 600; }
 .ok { color: var(--tie); font-weight: 700; }
 .ng { color: var(--banker); font-weight: 700; }
 .table-scroll { overflow-x: auto; }
-.shoe { display: flex; flex-direction: column; gap: 10px; }
-.chain-row { border-left: 4px solid var(--accent); padding-left: 10px; }
-.chain-row.leftover { border-left-color: var(--text-tertiary); }
-.chain-title { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-.rounds { display: flex; flex-wrap: wrap; gap: 6px; }
-.round {
-  display: flex; align-items: center; gap: 2px;
-  border: 1.5px solid var(--border-default); border-radius: 6px;
-  padding: 3px 5px; background: #fff;
-}
-.round.B { border-color: var(--banker); background: var(--banker-bg); }
-.round.P { border-color: var(--player); background: var(--player-bg); }
-.c { font-family: var(--font-mono); font-size: 12px; min-width: 26px; text-align: center; }
-.c.red { color: var(--banker); }
-.res { font-size: 11px; font-weight: 700; margin-left: 3px; }
 .empty { color: var(--text-tertiary); }
+
+/* ===== 一局一局牌表（樣式沿用主頁 index.html 的 .round-table） ===== */
+.table-container { overflow-x: auto; }
+.round-table { width: auto; table-layout: fixed; border-collapse: collapse; font-size: 22px; }
+.round-table th:nth-child(1), .round-table td:nth-child(1) { width: 25px; }
+.round-table th:nth-child(2), .round-table td:nth-child(2) { width: 300px; }
+.round-table th:nth-child(3), .round-table td:nth-child(3) { width: 80px; }
+.round-table th:nth-child(4), .round-table td:nth-child(4) { width: 140px; }
+.round-table th:nth-child(5), .round-table td:nth-child(5) { width: 140px; }
+.round-table th:nth-child(6), .round-table td:nth-child(6) { width: 40px; color: var(--player); }
+.round-table th:nth-child(7), .round-table td:nth-child(7) { width: 40px; color: var(--banker); }
+.round-table th:nth-child(8), .round-table td:nth-child(8) { width: 82px; text-align: center; }
+.round-table thead th {
+  background: var(--bg-cream); text-align: center; font-weight: 700; font-size: 15px;
+  letter-spacing: 0.1em; color: var(--text-secondary); padding: 3px 24px;
+  border-bottom: 1.5px solid var(--ink); font-family: var(--font-display); white-space: nowrap;
+  position: sticky; top: 0; z-index: 2;
+}
+.round-table tbody tr { background: var(--bg-paper); border-bottom: 1px solid var(--border-subtle); }
+.round-table tbody tr:nth-child(even) { background: var(--bg-cream); }
+.round-table tbody tr:hover { background: var(--accent-bg); }
+.round-table tbody tr.traverse-round { background: rgba(125,58,165,0.06); }
+.round-table tbody tr.traverse-round td:last-child { border-right: 2px solid var(--duizhuang); }
+.round-table td { padding: 4px 7px; vertical-align: middle; height: var(--row-h); text-align: left; }
+.round-table td.minor-column, .round-table td.hand-point-cell { text-align: center; font-family: var(--font-mono); font-weight: 700; }
+.round-table td.result-cell { text-align: center; vertical-align: middle; }
+.round-table td.banker-six-point { color: var(--b6win) !important; font-weight: 700; }
+.round-table tr.group-row td {
+  background: var(--bg-sunken); font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  color: var(--text-secondary); padding: 6px 10px; height: auto;
+}
+.card-strip, .hand-chip-strip { display: inline-flex; gap: 3px; flex-wrap: wrap; align-items: center; }
+.card-label {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 38px; min-width: 38px; border-radius: 3px;
+  background: var(--bg-paper); border: 1.5px solid var(--ink);
+  font-family: var(--font-mono); font-size: 20px; font-weight: 400; color: #6b5e45; white-space: nowrap;
+}
+.outcome {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 4px; font-weight: 800; font-size: 20px;
+  font-family: var(--font-display); border: 1.5px solid var(--ink); box-shadow: 1px 1px 0 var(--ink);
+}
+.outcome-banker { background: var(--banker); color: white; }
+.outcome-player { background: var(--player); color: white; }
+.outcome-tie { background: var(--tie); color: white; }
+.row-tag {
+  display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 12px;
+  font-size: 12px; font-weight: 700; border: 1.5px solid var(--ink); font-family: var(--font-mono);
+}
+.tag-warn-amber { background: var(--b6win); color: white; }
+.tag-warn-purple { background: var(--duizhuang); color: white; }
+.tag-warn-red { background: var(--banker); color: white; }
 @media (max-width: 600px) {
   .field input { width: 90px; }
 }
@@ -132,8 +175,13 @@ th { color: var(--text-secondary); font-weight: 600; }
   </div>
 
   <div class="card">
-    <h2>牌序</h2>
-    <div id="shoe" class="shoe"><div class="empty">尚未排牌</div></div>
+    <h2>牌表</h2>
+    <div class="table-container">
+      <table class="round-table" id="roundsTable">
+        <thead><tr><th>局</th><th>卡牌</th><th>結</th><th>閒家</th><th>莊家</th><th>閒</th><th>莊</th><th>調</th></tr></thead>
+        <tbody id="roundsBody"><tr><td colspan="8" class="empty">尚未排牌</td></tr></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -147,20 +195,82 @@ th { color: var(--text-secondary); font-weight: 600; }
   const num = (id) => parseInt($(id).value, 10);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  function cardHtml(c) {
-    const red = c.suit === '♥' || c.suit === '♦';
-    return `<span class="c${red ? ' red' : ''}">${esc(c.suit + c.rank)}</span>`;
+  // 牌面文字沿用主表格：10 顯示成 T，點數在前、花色在後
+  const cardText = (c) => `${c.rank === '10' ? 'T' : c.rank}${c.suit}`;
+  const label = (c) => `<span class="card-label">${esc(cardText(c))}</span>`;
+
+  // 一局的閒/莊分牌（與 TraverseBuilder.simulateHand 同一套補牌規則）
+  function dealDetail(points, start, limit) {
+    if (start + 4 > limit) return null;
+    const P = [start, start + 2];
+    const Bk = [start + 1, start + 3];
+    let pp = (points[start] + points[start + 2]) % 10;
+    let bb = (points[start + 1] + points[start + 3]) % 10;
+    if (pp < 8 && bb < 8) {
+      if (pp <= 5) {
+        if (start + 5 > limit) return null;
+        const p3 = points[start + 4];
+        P.push(start + 4);
+        pp = (pp + p3) % 10;
+        let bd;
+        if (bb <= 2) bd = true;
+        else if (bb === 3) bd = p3 !== 8;
+        else if (bb === 4) bd = p3 >= 2 && p3 <= 7;
+        else if (bb === 5) bd = p3 >= 4 && p3 <= 7;
+        else if (bb === 6) bd = p3 === 6 || p3 === 7;
+        else bd = false;
+        if (bd) {
+          if (start + 6 > limit) return null;
+          Bk.push(start + 5);
+          bb = (bb + points[start + 5]) % 10;
+        }
+      } else if (bb <= 5) {
+        if (start + 5 > limit) return null;
+        Bk.push(start + 4);
+        bb = (bb + points[start + 4]) % 10;
+      }
+    }
+    const result = pp > bb ? '閒' : (bb > pp ? '莊' : '和');
+    return { P, B: Bk, pp, bb, result, size: P.length + Bk.length };
   }
 
-  function renderRounds(cards) {
+  const outcomeClass = { '莊': 'banker', '閒': 'player', '和': 'tie' };
+  const badge = (r) => `<span class="outcome outcome-${outcomeClass[r]}">${r}</span>`;
+
+  // 把 [from, to) 的牌一局一局轉成表格列，roundNo 為起始局號
+  function rowsFor(cards, from, to, roundNo, isTraverse) {
     const points = cards.map((c) => c.point);
-    const rounds = TraverseBuilder.roundsFromStart(points);
-    if (!rounds) return cards.map(cardHtml).join('');
-    return rounds.map((r) => {
-      const cls = r.result === '莊' ? 'B' : (r.result === '閒' ? 'P' : '');
-      const cs = cards.slice(r.start, r.start + r.size).map(cardHtml).join('');
-      return `<span class="round ${cls}">${cs}<span class="res">${r.result}</span></span>`;
-    }).join('');
+    const rows = [];
+    let cur = from;
+    while (cur < to) {
+      const d = dealDetail(points, cur, to);
+      if (!d) {
+        // 殘牌：不足一局
+        const rest = cards.slice(cur, to);
+        rows.push(`<tr><td class="minor-column">${roundNo++}</td><td><span class="card-strip">${rest.map(label).join('')}</span></td><td class="result-cell"></td><td></td><td></td><td></td><td></td><td>--</td></tr>`);
+        break;
+      }
+      const swapped = points.slice();
+      [swapped[cur], swapped[cur + 1]] = [swapped[cur + 1], swapped[cur]];
+      const sw = dealDetail(swapped, cur, cur + d.size);
+      let swapCell;
+      if (!sw || sw.size !== d.size) swapCell = '<span class="row-tag tag-warn-red">無法對調</span>';
+      else if (d.result === '莊' && d.bb === 6 && d.pp <= 5) swapCell = '<span class="row-tag tag-warn-amber">莊6贏</span>';
+      else if (sw.result === '莊' && sw.bb === 6) swapCell = '<span class="row-tag tag-warn-purple">對調莊6</span>';
+      else swapCell = badge(sw.result);
+      const roundCards = cards.slice(cur, cur + d.size);
+      rows.push(`<tr${isTraverse ? ' class="traverse-round"' : ''}>
+        <td class="minor-column">${roundNo++}</td>
+        <td><span class="card-strip">${roundCards.map(label).join('')}</span></td>
+        <td class="result-cell">${badge(d.result)}</td>
+        <td><span class="hand-chip-strip">${d.P.map((i) => label(cards[i])).join('')}</span></td>
+        <td><span class="hand-chip-strip">${d.B.map((i) => label(cards[i])).join('')}</span></td>
+        <td class="hand-point-cell">${d.pp}</td>
+        <td class="hand-point-cell${d.bb === 6 ? ' banker-six-point' : ''}">${d.bb}</td>
+        <td>${swapCell}</td></tr>`);
+      cur += d.size;
+    }
+    return { rows, roundNo };
   }
 
   function render(result) {
@@ -185,15 +295,18 @@ th { color: var(--text-secondary); font-weight: 600; }
       || '<tr><td colspan="7" class="empty">沒有排出任何段</td></tr>';
 
     const parts = [];
+    let roundNo = 1;
     result.chains.forEach((c, i) => {
-      const cards = result.cards.slice(c.start - 1, c.start - 1 + c.length);
-      parts.push(`<div class="chain-row"><div class="chain-title">長段 ${i + 1}｜第 ${c.start}～${c.start + c.length - 1} 張｜${c.length} 張 ${c.rounds} 局</div><div class="rounds">${renderRounds(cards)}</div></div>`);
+      parts.push(`<tr class="group-row"><td colspan="8">長段 ${i + 1}｜第 ${c.start}～${c.start + c.length - 1} 張｜${c.length} 張 ${c.rounds} 局</td></tr>`);
+      const out = rowsFor(result.cards, c.start - 1, c.start - 1 + c.length, roundNo, true);
+      parts.push(...out.rows);
+      roundNo = out.roundNo;
     });
     if (result.leftoverCount) {
-      const left = result.cards.slice(416 - result.leftoverCount);
-      parts.push(`<div class="chain-row leftover"><div class="chain-title">排不進去的牌｜第 ${417 - result.leftoverCount}～416 張｜${result.leftoverCount} 張</div><div class="rounds">${left.map(cardHtml).join('')}</div></div>`);
+      parts.push(`<tr class="group-row"><td colspan="8">排不進去的牌｜第 ${417 - result.leftoverCount}～416 張｜${result.leftoverCount} 張</td></tr>`);
+      parts.push(...rowsFor(result.cards, 416 - result.leftoverCount, 416, roundNo, false).rows);
     }
-    $('shoe').innerHTML = parts.join('');
+    $('roundsBody').innerHTML = parts.join('');
   }
 
   function downloadCsv(result) {
