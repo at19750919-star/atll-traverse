@@ -503,8 +503,15 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     if (cutPos === 0) {
       // 原序：依長段分組（長段邊界一定落在局的起點）
       const groupAt = new Map();
-      result.chains.forEach((c, i) => groupAt.set(c.start - 1, `長段 ${i + 1}｜第 ${c.start}～${c.start + c.length - 1} 張｜${c.length} 張 ${c.rounds} 局`));
-      if (result.leftoverCount) groupAt.set(416 - result.leftoverCount, `排不進去的牌｜第 ${417 - result.leftoverCount}～416 張｜${result.leftoverCount} 張`);
+      result.chains.forEach((c, i) => {
+        groupAt.set(c.start - 1, `長段 ${i + 1}｜第 ${spanText(c.start, c.length)} 張｜${c.length} 張 ${c.rounds} 局`);
+        // 末張 9 把牌序轉過之後，有一段會跨過第 416 張接回第 1 張
+        if (c.start - 1 + c.length > 416) groupAt.set(0, `長段 ${i + 1}（接上）｜第 ${spanText(c.start, c.length)} 張`);
+      });
+      if (result.leftoverCount) {
+        const ls = result.leftoverStart ?? (416 - result.leftoverCount);
+        groupAt.set(ls, `排不進去的牌｜第 ${spanText(ls + 1, result.leftoverCount)} 張｜${result.leftoverCount} 張`);
+      }
       shownRounds.forEach((r, i) => {
         if (groupAt.has(r.start)) parts.push(`<tr class="group-row"><td colspan="8">${groupAt.get(r.start)}</td></tr>`);
         parts.push(roundRow(r, i + 1));
@@ -614,8 +621,20 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   function prepareBase(result) {
     baseCards = result.cards.map((c) => ({ ...c, traverse: false }));
     result.chains.forEach((ch) => {
-      for (let k = ch.start - 1; k < ch.start - 1 + ch.length; k++) baseCards[k].traverse = true;
+      for (let k = ch.start - 1; k < ch.start - 1 + ch.length; k++) baseCards[k % 416].traverse = true;
     });
+  }
+  // 第 a 張起 n 張的範圍文字；跨過第 416 張時寫成「a～416、1～b」
+  function spanText(a, n) {
+    const end = a + n - 1;
+    return end <= 416 ? `${a}～${end}` : `${a}～416、1～${end - 416}`;
+  }
+  // 末張 9：把「切 k 張後」的牌序直接當成新的第 1 張（切牌張數歸 0），牌表、切牌、導出編號一致
+  function rotateResult(result, k) {
+    if (!k) return;
+    result.cards = result.cards.slice(k).concat(result.cards.slice(0, k));
+    result.chains.forEach((c) => { c.start = ((c.start - 1 - k + 416) % 416) + 1; });
+    result.leftoverStart = (416 - result.leftoverCount - k + 416) % 416;
   }
 
   // 末張 9（同百家3.0）：在某局結束、且該局最後一張是 9 的地方切牌，切完牌靴最後一張就是 9。
@@ -755,7 +774,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   function refreshChainChecks() {
     const pts = baseCards.map((c) => c.point);
     lastResult.chains.forEach((c) => {
-      const seg = pts.slice(c.start - 1, c.start - 1 + c.length);
+      const seg = Array.from({ length: c.length }, (_, j) => pts[(c.start - 1 + j) % 416]);
       const rounds = TraverseBuilder.roundsFromStart(seg);
       c.traverse = TraverseBuilder.isTraverse(seg);
       c.allSensitive = !!rounds && rounds.every((r) => TraverseBuilder.handSensitive(seg.slice(r.start, r.start + r.size)));
@@ -1091,14 +1110,15 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       }
       lastResult.reruns = reruns;
       lastResult.totalMs = Date.now() - t0;
+      // 末張 9 開啟時把找到的切點直接當成第 1 張，牌靴最後一張就是 9，切牌張數維持 0
+      if (nineCut !== null) rotateResult(lastResult, nineCut);
       prepareBase(lastResult);
-      // 末張 9 開啟時直接切在找到的位置，牌靴最後一張就是 9
-      cutPos = (nineCut !== null) ? nineCut : 0;
+      cutPos = 0;
       $('cutPos').value = cutPos;
       render(lastResult);
       computeSafeCuts();
       prefetchCloudList();
-      const nineNote = nineCut !== null ? `｜末張 9：已切牌 ${nineCut} 張`
+      const nineNote = nineCut !== null ? `｜末張 9：已從原本第 ${nineCut + 1} 張起重排，最後一張是 9`
         : ($('endingNine').checked ? '｜末張 9：沒找到合適位置' : '');
       $('progress').textContent = (cancelled ? '已停止，顯示目前為止的結果'
         : ($('strongMode').checked ? `完成（強條件，只跑一次）：撿到 ${lastResult.chains.length} 段，排進 ${416 - lastResult.leftoverCount} 張` : '完成')) + nineNote;
