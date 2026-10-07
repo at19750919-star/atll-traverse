@@ -156,7 +156,8 @@
         return details;
     }
 
-    async function buildWorkbook(rounds) {
+    // opts.startRounds[i]：從第 i+1 張開始發，最後一個違規落在第幾局（0＝沒有違規），寫在直立式牌靴第 3 欄
+    async function buildWorkbook(rounds, opts = {}) {
         if (typeof ExcelJS === 'undefined' || !ExcelJS.Workbook) throw new Error('ExcelJS 載入失敗');
         const deckCards = rounds.flatMap(r => r.cards);
         const wb = new ExcelJS.Workbook();
@@ -234,7 +235,13 @@
         // === 工作表3：直立式牌靴 ===
         const ws3 = wb.addWorksheet('直立式牌靴');
         deckCards.forEach((card, i) => {
-            const dataRow = ws3.addRow([i + 1, cardLabel(card)]);
+            const depth = opts.startRounds ? opts.startRounds[i] : undefined;
+            const dataRow = ws3.addRow(depth === undefined ? [i + 1, cardLabel(card)] : [i + 1, cardLabel(card), depth]);
+            if (depth !== undefined) {
+                const dCell = dataRow.getCell(3);
+                dCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                dCell.font = { size: 11, bold: depth > 0, color: { argb: depth > 0 ? 'FFC00000' : 'FF000000' } };
+            }
             const cardCell = dataRow.getCell(2);
             cardCell.alignment = { vertical: 'middle', horizontal: 'center' };
             cardCell.font = { size: 16, bold: true, color: { argb: 'FF000000' } };
@@ -245,6 +252,7 @@
         });
         ws3.getColumn(1).width = 8;
         ws3.getColumn(2).width = 10;
+        ws3.getColumn(3).width = 8;
 
         // === 工作表4：回復分析統計 ===
         const ws4 = wb.addWorksheet('回復分析統計');

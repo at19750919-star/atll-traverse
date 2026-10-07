@@ -438,7 +438,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="traverse_builder.js?v=10"></script>
-<script src="traverse_export.js?v=5"></script>
+<script src="traverse_export.js?v=6"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -632,10 +632,12 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   }
 
   let cutBuckets = null, cutBucketsColor = null;
+  let cutDepths = [];  // cutDepths[c]：切 c 張後最後一個違規在第幾局（不含卡色），導出直立式牌靴用
   function bucketsOf(withColor, list) {
     const b = { none: 0, r12: 0, r34: 0, r5: 0, sum: 0 };
     for (let c = 0; c < 416; c++) {
       const m = cutLastViolation(c, withColor);
+      if (!withColor) cutDepths[c] = m;
       b.sum += m;
       if (m === 0) { list.push(c); b.none++; }
       else if (m <= 2) b.r12++;
@@ -974,7 +976,9 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
           + '\n是否仍要繼續導出 Excel？';
         if (!confirm(msg)) { $('progress').textContent = '已取消導出，請先修正違規問題。'; return; }
       }
-      const blob = await TraverseExport.buildWorkbook(shownRounds);
+      // 直立式牌靴每張牌後面標「從這張開始發，違規到第幾局」（換算成切牌前的位置）
+      const startRounds = Array.from({ length: 416 }, (_, i) => cutDepths[(cutPos + i) % 416]);
+      const blob = await TraverseExport.buildWorkbook(shownRounds, { startRounds });
       $('progress').textContent = '讀取雲端編號…';
       const files = await cloudFiles();
       const filename = await nextExportFilename(files);
