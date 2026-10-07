@@ -175,7 +175,7 @@ th { color: var(--text-secondary); font-weight: 600; }
   <header class="topbar">
     <div class="brand">
       <h1>穿越排牌</h1>
-      <p class="sub">每局敏感、任一局對調後仍穿越｜只看點數，不管卡色與訊號牌｜排不進去的牌放最後</p>
+      <p class="sub">每局敏感（和局對調後仍和也算）、任一局對調後仍穿越｜只看點數，不管卡色與訊號牌｜排不進去的牌放最後</p>
     </div>
     <div class="fields">
       <div class="field"><label for="idleLimit">連續撿不到幾次停止</label><input id="idleLimit" type="number" min="10" value="1000"></div>
@@ -247,12 +247,12 @@ th { color: var(--text-secondary); font-weight: 600; }
   let cutPos = 0;
   let shownRounds = [];   // 目前牌表上的局（切牌後重新發）
 
-  // 違規判定：無法對調，或對調前兩張後結果沒變（莊→莊、閒→閒、和→和）
+  // 違規判定：無法對調，或對調前兩張後莊→莊、閒→閒（和→和可以）
   function violationOf(round) {
     if (!round.hand) return null;
     const sw = TraverseExport.swappedTotals(round);
     if (!sw || sw.size !== round.hand.size) return 'noSwap';
-    if (sw.result === round.hand.result) return 'same';
+    if (sw.result === round.hand.result && sw.result !== '和') return 'same';
     return null;
   }
 

@@ -6,8 +6,8 @@
 // 合格段條件（只看點數，不管卡色、訊號牌）：
 //   1. 穿越：從段內任一張開始照百家樂規則發牌，最後一局剛好用完段尾
 //      （剩 1、2、3、7 張時豁免，與 traverse_segment.js 一致）
-//   2. 每局敏感：從段頭發出的每一局，對調前兩張後莊↔閒互換，
-//      雙方都不能是和，且用牌張數不變
+//   2. 每局敏感：從段頭發出的每一局，對調前兩張後莊↔閒互換，或和局對調後仍是和，
+//      且用牌張數不變
 //   3. 對調後仍穿越：任一局單獨對調前兩張後，整段仍符合條件 1
 //
 // 流程：
@@ -98,15 +98,16 @@
         return out;
     }
 
-    // 一局（點數陣列，恰好 size 張）是否敏感：莊↔閒互換、皆非和、張數不變
+    // 一局（點數陣列，恰好 size 張）是否敏感：張數不變，且莊↔閒互換或和→和
     function handSensitive(hand) {
         const orig = simulateHand(hand, 0, hand.length);
-        if (!orig || orig.size !== hand.length || orig.result === '和') return false;
+        if (!orig || orig.size !== hand.length) return false;
         const sw = hand.slice();
         [sw[0], sw[1]] = [sw[1], sw[0]];
         const h = simulateHand(sw, 0, sw.length);
-        if (!h || h.size !== hand.length || h.result === '和') return false;
-        return h.result !== orig.result;
+        if (!h || h.size !== hand.length) return false;
+        if (orig.result === '和') return h.result === '和';
+        return h.result !== '和' && h.result !== orig.result;
     }
 
     function qualifies(arr) {
