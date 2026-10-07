@@ -121,7 +121,6 @@ th { color: var(--text-secondary); font-weight: 600; }
 .round-table td { padding: 4px 7px; vertical-align: middle; height: var(--row-h); text-align: left; }
 .round-table td.minor-column, .round-table td.hand-point-cell { text-align: center; font-family: var(--font-mono); font-weight: 700; }
 .round-table td.result-cell { text-align: center; vertical-align: middle; }
-.round-table td.banker-six-point { color: var(--b6win) !important; font-weight: 700; }
 .round-table tr.group-row td {
   background: var(--bg-sunken); font-family: var(--font-display); font-size: 14px; font-weight: 700;
   color: var(--text-secondary); padding: 6px 10px; height: auto;
@@ -145,8 +144,6 @@ th { color: var(--text-secondary); font-weight: 600; }
   display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 12px;
   font-size: 12px; font-weight: 700; border: 1.5px solid var(--ink); font-family: var(--font-mono);
 }
-.tag-warn-amber { background: var(--b6win); color: white; }
-.tag-warn-purple { background: var(--duizhuang); color: white; }
 .tag-warn-red { background: var(--banker); color: white; }
 #chainTable thead th { position: sticky; top: 0; background: var(--bg-paper); }
 /* 窄螢幕：改成上下排列，牌表仍在最前面 */
@@ -238,8 +235,6 @@ th { color: var(--text-secondary); font-weight: 600; }
     const sw = TraverseExport.swappedTotals(round);
     let swapCell;
     if (!sw || sw.size !== d.size) swapCell = '<span class="row-tag tag-warn-red">無法對調</span>';
-    else if (d.result === '莊' && d.bb === 6 && d.pp <= 5) swapCell = '<span class="row-tag tag-warn-amber">莊6贏</span>';
-    else if (sw.result === '莊' && sw.bb === 6) swapCell = '<span class="row-tag tag-warn-purple">對調莊6</span>';
     else swapCell = badge(sw.result);
     const at = (i) => round.cards[i - round.start];
     return `<tr${round.segment === 'A' ? ' class="traverse-round"' : ''}>
@@ -249,7 +244,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       <td><span class="hand-chip-strip">${d.P.map((i) => label(at(i))).join('')}</span></td>
       <td><span class="hand-chip-strip">${d.B.map((i) => label(at(i))).join('')}</span></td>
       <td class="hand-point-cell">${d.pp}</td>
-      <td class="hand-point-cell${d.bb === 6 ? ' banker-six-point' : ''}">${d.bb}</td>
+      <td class="hand-point-cell">${d.bb}</td>
       <td>${swapCell}</td></tr>`;
   }
 
