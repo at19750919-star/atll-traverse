@@ -412,8 +412,17 @@ th { color: var(--text-secondary); font-weight: 600; }
     let last = rounds.length;
     while (last > 1 && !rounds[last - 1].hand) last--;
     const prevNo = (n) => (n === 1 ? last : n - 1);
-    const bad = g.noSwap.concat(g.same, g.color).filter(trav)
-      .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n))));
+    // 卡色、訊號牌（莊閒）是切牌之後才調整的，不算切牌違規；
+    // 只有「對調前兩張也調不出要的結果」才算（三條要和、A、2 要莊、沒有則閒）。
+    const fixable = (n) => {
+      const r = rounds[n - 1], p = rounds[prevNo(n) - 1];
+      const need = TraverseBuilder.neededAfter(p.cards.map((c) => c.point));
+      if (r.result === need) return true;
+      const sw = TraverseExport.swappedTotals(r);
+      return !!sw && sw.size === r.hand.size && sw.result === need;
+    };
+    const bad = g.noSwap.concat(g.same).filter(trav)
+      .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n)) && !fixable(n)));
     return bad.length ? Math.max(...bad) : 0;
   }
   // 莊的局數 與 閒＋和的局數 相差幾局（從頭發的完整局）
