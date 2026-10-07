@@ -313,8 +313,8 @@ th { color: var(--text-secondary); font-weight: 600; }
   // 雲端：沿用百家3.0 的 Apps Script，但存到另一個資料夾「穿越牌」
   const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypt3_PnEL5TgdDPaBwg1M5bWAjQMR9dD5Jslicn3eZCtuNSTtqO35RafhQpuX-l9_m/exec';
   const DRIVE_FOLDER_ID = '17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx';
-  // Apps Script 的 doPost 支援 folderId 之後才能打開，否則檔案會存進百家3.0 的「新牌」資料夾
-  const CLOUD_UPLOAD_ENABLED = false;
+  // 「百家樂語音」Apps Script 的 doPost 已支援 folderId（2026-10-07）；關掉就只下載不上傳
+  const CLOUD_UPLOAD_ENABLED = true;
 
   // 導出檔名：TR 開頭獨立編號，與百家3.0 的 F 編號分開
   const EXPORT_PREFIX = 'TR';
