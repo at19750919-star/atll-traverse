@@ -708,24 +708,71 @@ th { color: var(--text-secondary); font-weight: 600; }
     throw lastError;
   }
 
+  // ===== 本機存檔位置：使用者指定的資料夾（例如「下載\穿越」），瀏覽器記住授權 =====
+  // 第一次導出會跳出選資料夾視窗；重開瀏覽器後第一次導出可能要再按一次允許。
+  // 沒有這個功能（或使用者取消）就照舊下載到預設的「下載」資料夾。
+  function exportDirStore(mode, value) {
+    return new Promise((resolve, reject) => {
+      const open = indexedDB.open('traverse-export-dir', 1);
+      open.onupgradeneeded = () => open.result.createObjectStore('h');
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const tx = open.result.transaction('h', mode);
+        const req = mode === 'readonly' ? tx.objectStore('h').get('dir') : tx.objectStore('h').put(value, 'dir');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      };
+    });
+  }
+  // 必須在按鈕點擊當下（還沒 await 其他東西前）呼叫，瀏覽器才允許跳視窗
+  async function getExportDir() {
+    if (!window.showDirectoryPicker) return null;
+    try {
+      let dir = null;
+      try { dir = await exportDirStore('readonly'); } catch (e) { dir = null; }
+      if (dir) {
+        if ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted') return dir;
+        if ((await dir.requestPermission({ mode: 'readwrite' })) === 'granted') return dir;
+      }
+      dir = await window.showDirectoryPicker({ id: 'traverse-export', startIn: 'downloads', mode: 'readwrite' });
+      try { await exportDirStore('readwrite', dir); } catch (e) { /* 記不住就下次再選 */ }
+      return dir;
+    } catch (e) {
+      return null; // 使用者取消或不支援：改用一般下載
+    }
+  }
+  async function saveLocal(blob, filename, dir) {
+    if (dir) {
+      const fh = await dir.getFileHandle(filename, { create: true });
+      const w = await fh.createWritable();
+      await w.write(blob);
+      await w.close();
+      return dir.name;
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return '下載';
+  }
+
   async function exportExcel() {
     if (!shownRounds.length) return;
     $('btnExport').disabled = true;
     try {
+      const dir = await getExportDir();
       const blob = await TraverseExport.buildWorkbook(shownRounds);
       $('progress').textContent = '讀取雲端編號…';
       const files = await cloudFiles();
       const filename = await nextExportFilename(files);
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      const savedTo = await saveLocal(blob, filename, dir);
+      $('progress').textContent = `已存到本機「${savedTo}」資料夾：${filename}`;
       const which = cutPos ? `切牌 ${cutPos} 張後` : '原序';
       if (CLOUD_UPLOAD_ENABLED) {
-        $('progress').textContent = `已下載 ${filename}，正在上傳雲端「穿越牌」…`;
+        $('progress').textContent = `已存到本機「${savedTo}」：${filename}，正在上傳雲端「穿越牌」…`;
         try {
           await uploadToDrive(blob, filename, files);
           // 上傳成功：清單直接補上這個檔，下次導出不必重讀；背景再同步一次雲端
@@ -735,12 +782,12 @@ th { color: var(--text-secondary); font-weight: 600; }
           fetchFolderFiles().then((f) => {
             if (f.some((x) => x.name === filename)) cloudFilesPromise = Promise.resolve(f);
           }).catch(() => {});
-          $('progress').textContent = `已導出 ${filename}（${which}），本機與雲端「穿越牌」都已存好`;
+          $('progress').textContent = `已導出 ${filename}（${which}），本機「${savedTo}」與雲端「穿越牌」都已存好`;
         } catch (e) {
-          $('progress').textContent = `已下載 ${filename}（${which}），但上傳雲端失敗：${e.message || e}`;
+          $('progress').textContent = `已存到本機「${savedTo}」：${filename}（${which}），但上傳雲端失敗：${e.message || e}`;
         }
       } else {
-        $('progress').textContent = `已下載 ${filename}（${which}），雲端上傳尚未開啟`;
+        $('progress').textContent = `已存到本機「${savedTo}」：${filename}（${which}），雲端上傳尚未開啟`;
       }
     } catch (e) {
       console.error(e);
