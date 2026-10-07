@@ -667,7 +667,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     $('safeTotal').textContent = `含卡色 ${safeCutsColor.length}｜不含卡色 ${safeCuts.length}（/416）`;
     if (cutBuckets) {
       // 平均：416 個切牌位置「最後違規落在第幾局」的平均（安全位置算 0 局）
-      const head = ['', '違規 0 局', '第 1～2 局', '第 3～4 局', '第 5 局以上', '平均'];
+      const head = ['', '0 局', '第 1～2 局', '第 3～4 局', '第 5 局以上', '平均'];
       const row = (name, b) => [name, b.none, b.r12, b.r34, b.r5, `${(b.sum / 416).toFixed(1)} 局`];
       $('cutStats').innerHTML = `<table class="cut-table"><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>`
         + [row('含卡色', cutBucketsColor), row('不含卡色', cutBuckets)]
