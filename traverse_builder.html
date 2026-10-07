@@ -87,13 +87,21 @@ body {
 .vio-total { font-family: var(--font-mono); font-size: 14px; color: var(--banker); }
 .vio-total.clean { color: var(--tie); }
 .btn-mini { padding: 1px 10px; font-size: 12px; margin-left: 8px; vertical-align: middle; }
-.cut-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 8px; }
+.cut-stats { display: block; }
 .cut-stats:empty { display: none; }
 .cut-stat { background: var(--bg-sunken); border-radius: 6px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
 .cut-stat .k { font-size: 12px; color: var(--text-secondary); }
 .cut-stat .v { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
 .safe-list[hidden] { display: none; }
-.safe-list { display: flex; flex-wrap: wrap; gap: 4px; max-height: 92px; overflow: auto; }
+.cut-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+.cut-table th, .cut-table td { padding: 3px 6px; border-bottom: 1px solid var(--border-subtle); text-align: center; }
+.cut-table thead th { color: var(--text-secondary); font-weight: 600; }
+.cut-table tbody th { text-align: left; color: var(--text-secondary); white-space: nowrap; }
+.cut-table td { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+.safe-col { flex: 1 1 0; min-width: 0; }
+.safe-col-h { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.safe-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.safe-list { display: flex; gap: 12px; max-height: 140px; overflow: auto; }
 .safe-chip {
   font-family: var(--font-mono); font-size: 12px; cursor: pointer; color: var(--tie);
   border: 1px solid var(--tie); border-radius: 4px; padding: 0 5px; background: rgba(46,138,74,0.08);
@@ -372,6 +380,7 @@ th { color: var(--text-secondary); font-weight: 600; }
     const out = [];
     if (!$('signalRule').checked) return out;
     for (const [i, j] of roundPairs(rounds)) {
+      if (j === 0) continue; // 第 1 局實際發牌時沒有上一局，不算訊號牌違規
       const a = rounds[i], b = rounds[j];
       const pts = a.cards.map((c) => c.point);
       if ($('tripleTie').checked && TraverseBuilder.isTriple(pts)) continue; // 歸三條規則
@@ -402,9 +411,10 @@ th { color: var(--text-secondary); font-weight: 600; }
 
   // ===== 安全切牌點：0～415 每個位置都切一次，穿越段內完全沒有違規的就是安全 =====
   // 排不進去的牌本來就不保證，所以只看整局都是穿越段的牌的局（看上一局的規則，上一局也要是）
-  let safeCuts = [];
-  // 切牌 c 張後，穿越段內「最後一個違規」落在第幾局；0＝沒有違規（安全）
-  function cutLastViolation(c) {
+  let safeCuts = [];        // 不算卡色
+  let safeCutsColor = [];   // 算卡色
+  // 切牌 c 張後，穿越段內「最後一個違規」落在第幾局；0＝沒有違規（安全）。withColor＝卡色也算違規
+  function cutLastViolation(c, withColor = false) {
     const rounds = TraverseExport.dealRounds(TraverseExport.cutDeck(baseCards, c));
     const g = collectViolations(rounds);
     const trav = (n) => rounds[n - 1] && rounds[n - 1].segment === 'A';
@@ -421,7 +431,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       const sw = TraverseExport.swappedTotals(r);
       return !!sw && sw.size === r.hand.size && sw.result === need;
     };
-    const bad = g.noSwap.concat(g.same).filter(trav)
+    const bad = g.noSwap.concat(g.same, withColor ? g.color : []).filter(trav)
       .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n)) && !fixable(n)));
     return bad.length ? Math.max(...bad) : 0;
   }
@@ -453,37 +463,51 @@ th { color: var(--text-secondary); font-weight: 600; }
     return cands.length ? cands[Math.floor(Math.random() * cands.length)] : null;
   }
 
-  let cutBuckets = null;
+  let cutBuckets = null, cutBucketsColor = null;
+  function bucketsOf(withColor, list) {
+    const b = { none: 0, r12: 0, r34: 0, r5: 0, sum: 0 };
+    for (let c = 0; c < 416; c++) {
+      const m = cutLastViolation(c, withColor);
+      b.sum += m;
+      if (m === 0) { list.push(c); b.none++; }
+      else if (m <= 2) b.r12++;
+      else if (m <= 4) b.r34++;
+      else b.r5++;
+    }
+    return b;
+  }
   function computeSafeCuts() {
     safeCuts = [];
-    cutBuckets = { none: 0, r12: 0, r34: 0, r5: 0, sum: 0 };
-    for (let c = 0; c < 416; c++) {
-      const m = cutLastViolation(c);
-      cutBuckets.sum += m;
-      if (m === 0) { safeCuts.push(c); cutBuckets.none++; }
-      else if (m <= 2) cutBuckets.r12++;
-      else if (m <= 4) cutBuckets.r34++;
-      else cutBuckets.r5++;
-    }
+    safeCutsColor = [];
+    cutBucketsColor = bucketsOf(true, safeCutsColor);
+    cutBuckets = bucketsOf(false, safeCuts);
     renderSafeCuts();
   }
-  function renderSafeCuts() {
-    $('safeTotal').textContent = `${safeCuts.length} / 416`;
-    if (cutBuckets) {
-      // 平均：416 個切牌位置「最後違規落在第幾局」的平均（安全位置算 0 局）
-      $('cutStats').innerHTML = [['違規 0 局', cutBuckets.none], ['第 1～2 局', cutBuckets.r12], ['第 3～4 局', cutBuckets.r34], ['第 5 局以上', cutBuckets.r5], ['平均', `${(cutBuckets.sum / 416).toFixed(1)} 局`]]
-        .map(([k, v]) => `<div class="cut-stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
-    }
-    // 連續位置合併成區段顯示，例如 12～15
+  // 連續位置合併成區段顯示，例如 12～15
+  function chipsOf(list) {
     const chips = [];
-    for (let i = 0; i < safeCuts.length;) {
+    for (let i = 0; i < list.length;) {
       let j = i;
-      while (j + 1 < safeCuts.length && safeCuts[j + 1] === safeCuts[j] + 1) j++;
-      const a = safeCuts[i], b = safeCuts[j];
+      while (j + 1 < list.length && list[j + 1] === list[j] + 1) j++;
+      const a = list[i], b = list[j];
       chips.push(`<a class="safe-chip${cutPos >= a && cutPos <= b ? ' on' : ''}" data-cut="${a}">${a === b ? a : `${a}～${b}`}</a>`);
       i = j + 1;
     }
-    $('safeCuts').innerHTML = chips.join('') || '<div class="empty">沒有安全的切牌點</div>';
+    return chips.join('') || '<span class="empty">沒有</span>';
+  }
+  function renderSafeCuts() {
+    $('safeTotal').textContent = `含卡色 ${safeCutsColor.length}｜不含卡色 ${safeCuts.length}（/416）`;
+    if (cutBuckets) {
+      // 平均：416 個切牌位置「最後違規落在第幾局」的平均（安全位置算 0 局）
+      const head = ['', '違規 0 局', '第 1～2 局', '第 3～4 局', '第 5 局以上', '平均'];
+      const row = (name, b) => [name, b.none, b.r12, b.r34, b.r5, `${(b.sum / 416).toFixed(1)} 局`];
+      $('cutStats').innerHTML = `<table class="cut-table"><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>`
+        + [row('含卡色', cutBucketsColor), row('不含卡色', cutBuckets)]
+          .map((r) => `<tr>${r.map((v, i) => (i ? `<td>${v}</td>` : `<th>${v}</th>`)).join('')}</tr>`).join('')
+        + '</tbody></table>';
+    }
+    $('safeCuts').innerHTML = `<div class="safe-col"><div class="safe-col-h">含卡色（${safeCutsColor.length}）</div><div class="safe-chips">${chipsOf(safeCutsColor)}</div></div>`
+      + `<div class="safe-col"><div class="safe-col-h">不含卡色（${safeCuts.length}）</div><div class="safe-chips">${chipsOf(safeCuts)}</div></div>`;
   }
   // 安全切牌點清單預設收起，按按鈕才展開
   $('btnSafeToggle').addEventListener('click', () => {
@@ -916,7 +940,7 @@ th { color: var(--text-secondary); font-weight: 600; }
     cutPos = v;
     renderTable(lastResult);
     renderSafeCuts();
-    const safe = safeCuts.includes(v) ? '（安全切牌點）' : '（不安全：穿越段內有違規）';
+    const safe = `（含卡色：${safeCutsColor.includes(v) ? '安全' : '不安全'}｜不含卡色：${safeCuts.includes(v) ? '安全' : '不安全'}）`;
     $('progress').textContent = (v ? `已切牌 ${v} 張，從原本第 ${v + 1} 張開始發` : '已恢復原序') + safe;
   });
   $('btnExport').addEventListener('click', exportExcel);
