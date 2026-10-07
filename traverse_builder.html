@@ -87,6 +87,11 @@ body {
 .vio-total { font-family: var(--font-mono); font-size: 14px; color: var(--banker); }
 .vio-total.clean { color: var(--tie); }
 .btn-mini { padding: 1px 10px; font-size: 12px; margin-left: 8px; vertical-align: middle; }
+.cut-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+.cut-stats:empty { display: none; }
+.cut-stat { background: var(--bg-sunken); border-radius: 6px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.cut-stat .k { font-size: 12px; color: var(--text-secondary); }
+.cut-stat .v { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
 .safe-list[hidden] { display: none; }
 .safe-list { display: flex; flex-wrap: wrap; gap: 4px; max-height: 92px; overflow: auto; }
 .safe-chip {
@@ -232,6 +237,7 @@ th { color: var(--text-secondary); font-weight: 600; }
       <section class="card">
         <h2>安全切牌點 <span id="safeTotal" class="vio-total clean"></span>
           <button id="btnSafeToggle" class="btn btn-mini" type="button">展開</button></h2>
+        <div id="cutStats" class="cut-stats" title="416 個切牌位置各切一次，依最後一個違規落在第幾局分組"></div>
         <div id="safeCuts" class="safe-list" hidden><div class="empty">尚未排牌</div></div>
       </section>
       <section class="card">
@@ -379,24 +385,38 @@ th { color: var(--text-secondary); font-weight: 600; }
   // ===== 安全切牌點：0～415 每個位置都切一次，穿越段內完全沒有違規的就是安全 =====
   // 排不進去的牌本來就不保證，所以只看整局都是穿越段的牌的局（看上一局的規則，上一局也要是）
   let safeCuts = [];
-  function cutIsSafe(c) {
+  // 切牌 c 張後，穿越段內「最後一個違規」落在第幾局；0＝沒有違規（安全）
+  function cutLastViolation(c) {
     const rounds = TraverseExport.dealRounds(TraverseExport.cutDeck(baseCards, c));
     const g = collectViolations(rounds);
     const trav = (n) => rounds[n - 1] && rounds[n - 1].segment === 'A';
-    if (g.noSwap.concat(g.same).some(trav)) return false;
     // 第 1 局的上一局是最後一個完整局
     let last = rounds.length;
     while (last > 1 && !rounds[last - 1].hand) last--;
     const prevNo = (n) => (n === 1 ? last : n - 1);
-    return !g.triple.concat(g.signal).some((n) => trav(n) && trav(prevNo(n)));
+    const bad = g.noSwap.concat(g.same).filter(trav)
+      .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n))));
+    return bad.length ? Math.max(...bad) : 0;
   }
+  let cutBuckets = null;
   function computeSafeCuts() {
     safeCuts = [];
-    for (let c = 0; c < 416; c++) if (cutIsSafe(c)) safeCuts.push(c);
+    cutBuckets = { none: 0, r12: 0, r34: 0, r5: 0 };
+    for (let c = 0; c < 416; c++) {
+      const m = cutLastViolation(c);
+      if (m === 0) { safeCuts.push(c); cutBuckets.none++; }
+      else if (m <= 2) cutBuckets.r12++;
+      else if (m <= 4) cutBuckets.r34++;
+      else cutBuckets.r5++;
+    }
     renderSafeCuts();
   }
   function renderSafeCuts() {
     $('safeTotal').textContent = `${safeCuts.length} / 416`;
+    if (cutBuckets) {
+      $('cutStats').innerHTML = [['違規 0 局', cutBuckets.none], ['第 1～2 局', cutBuckets.r12], ['第 3～4 局', cutBuckets.r34], ['第 5 局以上', cutBuckets.r5]]
+        .map(([k, v]) => `<div class="cut-stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+    }
     // 連續位置合併成區段顯示，例如 12～15
     const chips = [];
     for (let i = 0; i < safeCuts.length;) {
