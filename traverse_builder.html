@@ -371,6 +371,8 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <div class="field"><label for="computeTries">補排次數</label><input class="numbox" id="computeTries" type="number" min="0" value="20000"></div>
       <div class="field"><label for="chainAttempts">接段次數</label><input class="numbox" id="chainAttempts" type="number" min="1" value="20"></div>
       <div class="field"><label for="maxLeftover" title="空白＝不重跑">剩幾張重跑</label><input class="numbox" id="maxLeftover" type="number" min="0" max="416" value="0"></div>
+      <div class="field"><label for="minLen">最少張數</label><input class="numbox" id="minLen" type="number" min="4" max="416" step="1" value="8"></div>
+      <div class="field"><label for="maxLen">最多張數</label><input class="numbox" id="maxLen" type="number" min="4" max="416" step="1" value="12"></div>
     </div>
     </section>
     <section class="control-panel gframe">
@@ -1036,6 +1038,17 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   }
 
   $('btnRun').addEventListener('click', async () => {
+    const minRaw = $('minLen').value.trim();
+    const maxRaw = $('maxLen').value.trim();
+    const minLen = Number(minRaw);
+    const maxLen = Number(maxRaw);
+    if (!/^\d+$/.test(minRaw) || !/^\d+$/.test(maxRaw) ||
+        !Number.isSafeInteger(minLen) || !Number.isSafeInteger(maxLen) ||
+        minLen < 4 || maxLen > 416 || minLen > maxLen) {
+      $('progress').textContent = '張數範圍須為 4～416 的整數，且最少張數不能大於最多張數';
+      $(minLen < 4 || !/^\d+$/.test(minRaw) ? 'minLen' : 'maxLen').focus();
+      return;
+    }
     cancelled = false;
     swapState.on = false;
     swapState.first = swapState.second = null;
@@ -1053,6 +1066,8 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       for (;;) {
         const tag = reruns ? `［重跑第 ${reruns} 次］` : '';
         const buildOpts = {
+          minLen,
+          maxLen,
           idleLimit: num('idleLimit'),
           computeTries: num('computeTries'),
           chainAttempts: num('chainAttempts'),
