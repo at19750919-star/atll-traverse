@@ -54,7 +54,7 @@ function violationOf(round) {
   if (!round.hand) return null;
   const sw = E.swappedTotals(round);
   if (!sw || sw.size !== round.hand.size) return 'noSwap';
-  if (sw.result === round.hand.result && sw.result !== '和') return 'same';
+  if (round.hand.result === '和' ? sw.result !== '和' : sw.result === '和' || sw.result === round.hand.result) return 'same';
   return null;
 }
 function roundPairs(rounds) {
@@ -233,7 +233,7 @@ async function main() {
       for (const issue of res.signal.issues || []) say(`${issue.chain ? `第 ${issue.chain} 長段：` : ''}${issue.message}`);
     }
     const g = collectViolations(rounds);
-    const vio = [['無法對調', g.noSwap], ['對調後結果不變', g.same], ['三條規則', g.triple], ['訊號牌規則', g.signal], ['卡色', g.color]]
+    const vio = [['無法對調', g.noSwap], ['不符敏感局', g.same], ['三條規則', g.triple], ['訊號牌規則', g.signal], ['卡色', g.color]]
       .filter(([, l]) => l.length).map(([k, l]) => `${k} 第${l.join('、')}局`);
     if (vio.length) say(`${tagNo} 注意：牌表上有違規（${vio.join('；')}）`);
 

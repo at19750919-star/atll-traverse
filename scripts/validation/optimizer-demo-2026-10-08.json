@@ -1,0 +1,8064 @@
+{
+  "date": "2026-10-08",
+  "seed": 1139,
+  "rule": "莊閒互換或和仍和；不含卡色；訊號三條依現行安全判定",
+  "beforeCount": 94,
+  "afterCount": 115,
+  "changedRounds": 16,
+  "gained": [
+    36,
+    40,
+    44,
+    75,
+    85,
+    91,
+    114,
+    120,
+    125,
+    148,
+    159,
+    190,
+    193,
+    196,
+    200,
+    232,
+    276,
+    277,
+    280,
+    281,
+    287
+  ],
+  "lost": [],
+  "before": {
+    "cards": [
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      }
+    ],
+    "chains": [
+      {
+        "start": 412,
+        "length": 186,
+        "parts": [
+          10,
+          9,
+          9,
+          9,
+          11,
+          11,
+          8,
+          10,
+          12,
+          12,
+          12,
+          11,
+          11,
+          8,
+          11,
+          11,
+          11,
+          10
+        ],
+        "rounds": 36,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 182,
+        "length": 36,
+        "parts": [
+          10,
+          8,
+          10,
+          8
+        ],
+        "rounds": 8,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 218,
+        "length": 20,
+        "parts": [
+          10,
+          10
+        ],
+        "rounds": 4,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 238,
+        "length": 18,
+        "parts": [
+          8,
+          10
+        ],
+        "rounds": 4,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 256,
+        "length": 18,
+        "parts": [
+          10,
+          8
+        ],
+        "rounds": 4,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 274,
+        "length": 12,
+        "parts": [
+          12
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 286,
+        "length": 12,
+        "parts": [
+          12
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 298,
+        "length": 12,
+        "parts": [
+          12
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 310,
+        "length": 11,
+        "parts": [
+          11
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 321,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 331,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 341,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 351,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 361,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 371,
+        "length": 9,
+        "parts": [
+          9
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 380,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 388,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 396,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 404,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      }
+    ],
+    "leftoverCount": 0,
+    "colorOk": true,
+    "signal": {
+      "ok": true,
+      "flips": 49,
+      "conflicts": 0,
+      "issues": []
+    },
+    "stats": {
+      "shuffles": 4942,
+      "phase1Segments": 41,
+      "phase1Rest": 12,
+      "phase2Segments": 1,
+      "totalCards": 416,
+      "ms": 1055
+    },
+    "leftoverStart": 411
+  },
+  "after": {
+    "cards": [
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♠",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♠",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♦",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♦",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♦",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♥",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♣",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♥",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♣",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♣",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♥",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♠",
+        "point": 9,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♠",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♦",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♥",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♥",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♣",
+        "point": 6,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♣",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♣",
+        "point": 8,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "8",
+        "suit": "♠",
+        "point": 8,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♣",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♦",
+        "point": 3,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♣",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♥",
+        "point": 4,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "4",
+        "suit": "♠",
+        "point": 4,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♠",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♥",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♥",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♣",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "A",
+        "suit": "♠",
+        "point": 1,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "J",
+        "suit": "♦",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "3",
+        "suit": "♥",
+        "point": 3,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "5",
+        "suit": "♦",
+        "point": 5,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♦",
+        "point": 7,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "6",
+        "suit": "♦",
+        "point": 6,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "Q",
+        "suit": "♣",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "10",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "7",
+        "suit": "♠",
+        "point": 7,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "2",
+        "suit": "♥",
+        "point": 2,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "B",
+        "traverse": true
+      },
+      {
+        "rank": "K",
+        "suit": "♠",
+        "point": 0,
+        "back_color": "R",
+        "traverse": true
+      },
+      {
+        "rank": "9",
+        "suit": "♦",
+        "point": 9,
+        "back_color": "R",
+        "traverse": true
+      }
+    ],
+    "chains": [
+      {
+        "start": 412,
+        "length": 186,
+        "parts": [
+          10,
+          9,
+          9,
+          9,
+          11,
+          11,
+          8,
+          10,
+          12,
+          12,
+          12,
+          11,
+          11,
+          8,
+          11,
+          11,
+          11,
+          10
+        ],
+        "rounds": 36,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 182,
+        "length": 36,
+        "parts": [
+          10,
+          8,
+          10,
+          8
+        ],
+        "rounds": 8,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 218,
+        "length": 20,
+        "parts": [
+          10,
+          10
+        ],
+        "rounds": 4,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 238,
+        "length": 18,
+        "parts": [
+          8,
+          10
+        ],
+        "rounds": 4,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 256,
+        "length": 18,
+        "parts": [
+          10,
+          8
+        ],
+        "rounds": 4,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 274,
+        "length": 12,
+        "parts": [
+          12
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 286,
+        "length": 12,
+        "parts": [
+          12
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 298,
+        "length": 12,
+        "parts": [
+          12
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 310,
+        "length": 11,
+        "parts": [
+          11
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 321,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 331,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 341,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 351,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 361,
+        "length": 10,
+        "parts": [
+          10
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 371,
+        "length": 9,
+        "parts": [
+          9
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 380,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 388,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 396,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      },
+      {
+        "start": 404,
+        "length": 8,
+        "parts": [
+          8
+        ],
+        "rounds": 2,
+        "traverse": true,
+        "allSensitive": true,
+        "qualified": true
+      }
+    ],
+    "leftoverCount": 0,
+    "colorOk": false,
+    "signal": {
+      "ok": true,
+      "flips": 49,
+      "conflicts": 0,
+      "issues": []
+    },
+    "stats": {
+      "shuffles": 4942,
+      "phase1Segments": 41,
+      "phase1Rest": 12,
+      "phase2Segments": 1,
+      "totalCards": 416,
+      "ms": 1055
+    },
+    "leftoverStart": 411
+  },
+  "changes": [
+    {
+      "round": 10,
+      "start": 43,
+      "before": [
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♠",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♠",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♠",
+          "point": 9,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♠",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "9",
+          "suit": "♠",
+          "point": 9,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♠",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♠",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♠",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        true,
+        false,
+        true,
+        true,
+        false
+      ],
+      "from": [
+        4,
+        2,
+        1,
+        3,
+        5
+      ],
+      "result": "莊",
+      "size": 5,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 16,
+      "start": 72,
+      "before": [
+        {
+          "rank": "2",
+          "suit": "♥",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♦",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "8",
+          "suit": "♥",
+          "point": 8,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "2",
+          "suit": "♥",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♦",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "8",
+          "suit": "♥",
+          "point": 8,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "from": [
+        1,
+        5,
+        3,
+        6,
+        4,
+        2
+      ],
+      "result": "莊",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 18,
+      "start": 84,
+      "before": [
+        {
+          "rank": "4",
+          "suit": "♣",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♣",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♥",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♣",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "4",
+          "suit": "♣",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♣",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♥",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♣",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false
+      ],
+      "from": [
+        1,
+        2,
+        5,
+        3,
+        4,
+        6
+      ],
+      "result": "莊",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 19,
+      "start": 90,
+      "before": [
+        {
+          "rank": "K",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♣",
+          "point": 9,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♦",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♥",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♥",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "K",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♣",
+          "point": 9,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♥",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♥",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♦",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "from": [
+        1,
+        2,
+        5,
+        6,
+        3,
+        4
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 23,
+      "start": 113,
+      "before": [
+        {
+          "rank": "10",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♥",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♣",
+          "point": 3,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "8",
+          "suit": "♦",
+          "point": 8,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "10",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♥",
+          "point": 1,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♣",
+          "point": 3,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "8",
+          "suit": "♦",
+          "point": 8,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        true,
+        false,
+        true,
+        false
+      ],
+      "from": [
+        1,
+        2,
+        5,
+        4,
+        3,
+        6
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 24,
+      "start": 119,
+      "before": [
+        {
+          "rank": "10",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♦",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♦",
+          "point": 5,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "5",
+          "suit": "♦",
+          "point": 5,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♦",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "from": [
+        5,
+        2,
+        1,
+        3,
+        4
+      ],
+      "result": "莊",
+      "size": 5,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 25,
+      "start": 124,
+      "before": [
+        {
+          "rank": "9",
+          "suit": "♥",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "8",
+          "suit": "♦",
+          "point": 8,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♠",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♣",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♣",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♣",
+          "point": 5,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "9",
+          "suit": "♥",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "8",
+          "suit": "♦",
+          "point": 8,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♠",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♣",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♣",
+          "point": 5,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♣",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "from": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        4
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 30,
+      "start": 149,
+      "before": [
+        {
+          "rank": "J",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♥",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♦",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♥",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♥",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "J",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♥",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♦",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♥",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♥",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        true,
+        false,
+        false,
+        true
+      ],
+      "from": [
+        1,
+        5,
+        3,
+        4,
+        2
+      ],
+      "result": "莊",
+      "size": 5,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 32,
+      "start": 160,
+      "before": [
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♦",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♠",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♦",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♦",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♠",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♦",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "from": [
+        1,
+        2,
+        3,
+        5,
+        4
+      ],
+      "result": "莊",
+      "size": 5,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 37,
+      "start": 185,
+      "before": [
+        {
+          "rank": "9",
+          "suit": "♠",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♥",
+          "point": 7,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♠",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♥",
+          "point": 3,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♦",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♣",
+          "point": 4,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "9",
+          "suit": "♠",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♥",
+          "point": 7,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "5",
+          "suit": "♠",
+          "point": 5,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♣",
+          "point": 4,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♦",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♥",
+          "point": 3,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "from": [
+        1,
+        2,
+        3,
+        6,
+        5,
+        4
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 39,
+      "start": 195,
+      "before": [
+        {
+          "rank": "8",
+          "suit": "♣",
+          "point": 8,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♦",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♦",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "K",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "K",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♦",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "8",
+          "suit": "♣",
+          "point": 8,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♦",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        true,
+        false,
+        true,
+        true
+      ],
+      "from": [
+        4,
+        2,
+        1,
+        3
+      ],
+      "result": "閒",
+      "size": 4,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 40,
+      "start": 199,
+      "before": [
+        {
+          "rank": "J",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♥",
+          "point": 7,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♠",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "J",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♠",
+          "point": 6,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♥",
+          "point": 7,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "Q",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "from": [
+        1,
+        2,
+        3,
+        6,
+        5,
+        4
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 47,
+      "start": 231,
+      "before": [
+        {
+          "rank": "K",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♠",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "K",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♣",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♣",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "10",
+          "suit": "♥",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♦",
+          "point": 4,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♠",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false
+      ],
+      "from": [
+        1,
+        2,
+        4,
+        5,
+        3,
+        6
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 56,
+      "start": 273,
+      "before": [
+        {
+          "rank": "3",
+          "suit": "♠",
+          "point": 3,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "K",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♥",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♠",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♦",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "3",
+          "suit": "♠",
+          "point": 3,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♥",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "K",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♦",
+          "point": 2,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "4",
+          "suit": "♠",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "from": [
+        1,
+        2,
+        4,
+        3,
+        6,
+        5
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 57,
+      "start": 279,
+      "before": [
+        {
+          "rank": "4",
+          "suit": "♠",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♠",
+          "point": 3,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♣",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♥",
+          "point": 9,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♣",
+          "point": 7,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "4",
+          "suit": "♠",
+          "point": 4,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♠",
+          "point": 3,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♣",
+          "point": 7,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♣",
+          "point": 9,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "9",
+          "suit": "♥",
+          "point": 9,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♠",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false
+      ],
+      "from": [
+        1,
+        2,
+        5,
+        3,
+        4,
+        6
+      ],
+      "result": "莊",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    },
+    {
+      "round": 58,
+      "start": 285,
+      "before": [
+        {
+          "rank": "J",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♦",
+          "point": 3,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "A",
+          "suit": "♠",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♥",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♣",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♠",
+          "point": 7,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "after": [
+        {
+          "rank": "A",
+          "suit": "♠",
+          "point": 1,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "3",
+          "suit": "♦",
+          "point": 3,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "J",
+          "suit": "♦",
+          "point": 0,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "2",
+          "suit": "♥",
+          "point": 2,
+          "back_color": "R",
+          "traverse": true
+        },
+        {
+          "rank": "7",
+          "suit": "♠",
+          "point": 7,
+          "back_color": "B",
+          "traverse": true
+        },
+        {
+          "rank": "6",
+          "suit": "♣",
+          "point": 6,
+          "back_color": "B",
+          "traverse": true
+        }
+      ],
+      "moved": [
+        true,
+        false,
+        true,
+        false,
+        true,
+        true
+      ],
+      "from": [
+        3,
+        2,
+        1,
+        4,
+        6,
+        5
+      ],
+      "result": "閒",
+      "size": 6,
+      "sensitiveBefore": true,
+      "sensitiveAfter": true
+    }
+  ]
+}

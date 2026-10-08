@@ -619,6 +619,7 @@
             const report = {
                 start: offset + 1,
                 length: ch.length,
+                parts: (ch.parts || [ch.length]).slice(),
                 rounds: rounds ? rounds.length : 0,
                 traverse: isTraverse(ch),
                 allSensitive: !!rounds && rounds.every(r => handSensitive(ch.slice(r.start, r.start + r.size))),

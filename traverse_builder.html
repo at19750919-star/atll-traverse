@@ -358,6 +358,35 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 .scroll, .side .scroll, .felt > .scroll { max-height:none; overflow:visible; }
 .side { overflow:visible; }
 .safe-chips { max-height:none; overflow:visible; }
+.optimizer-panel { padding:22px; }
+.optimizer-panel[hidden] { display:none; }
+.optimizer-head { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:12px; }
+.optimizer-head h2 { color:var(--gold-1); font-size:18px; letter-spacing:.1em; margin:0; }
+.optimizer-note { color:var(--txt-dim); font-size:13px; line-height:1.8; margin:8px 0; }
+.optimizer-summary { display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin:16px 0; }
+.optimizer-count { padding:12px 20px; border:1px solid #35433b; border-radius:8px; min-width:120px; }
+.optimizer-count span { display:block; font-size:12px; color:var(--txt-dim); }
+.optimizer-count strong { font:600 34px var(--disp); color:var(--gold-1); }
+.optimizer-gain { color:var(--ok); font-size:19px; }
+.optimizer-actions { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+.optimizer-actions .tool-btn { letter-spacing:.05em; text-indent:0; }
+.optimizer-checks { color:var(--ok); font-size:13px; line-height:1.8; }
+.optimizer-rows { display:grid; gap:12px; }
+.optimizer-content { display:grid; grid-template-columns:1.1fr 1fr; gap:16px; align-items:start; }
+.optimizer-change,.optimizer-example { padding:15px; border:1px solid #34443c; border-radius:8px; background:rgba(5,16,12,.7); }
+.optimizer-change h3,.optimizer-example h3 { margin:0 0 10px; font-size:14px; color:var(--gold-2); }
+.optimizer-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.optimizer-pair .caption { font-size:12px; color:var(--txt-dim); margin-bottom:7px; }
+.optimizer-cards { display:flex; flex-wrap:wrap; gap:6px; }
+.optimizer-card-slot { display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11px; color:var(--txt-dim); }
+.optimizer-card-slot .moved { outline:2px solid var(--gold-1); outline-offset:1px; }
+.optimizer-change p { margin:12px 0 0; font-size:12px; color:var(--txt-dim); line-height:1.8; }
+.optimizer-example { margin:0; border-color:#63703d; }
+.optimizer-cut-list { display:flex; flex-wrap:wrap; gap:5px; margin:10px 0; }
+.optimizer-cut-list .tool-btn { height:30px; min-width:44px; padding:0 9px; letter-spacing:0; text-indent:0; }
+.optimizer-panel details summary { cursor:pointer; color:var(--gold-2); padding:12px 0; }
+@media(max-width:1100px) { .optimizer-content { grid-template-columns:1fr; } }
+@media(max-width:650px) { .optimizer-panel { padding:15px; } .optimizer-pair { grid-template-columns:1fr; gap:12px; } .optimizer-count { padding:8px 12px; min-width:100px; } }
 </style>
 </head>
 <body>
@@ -402,9 +431,28 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <div class="field field-inline"><label for="cutPos">切牌張數</label><input class="numbox" id="cutPos" type="number" min="0" max="415" value="0" disabled title="0＝原序"></div>
       <button id="btnCut" class="btn tool-btn" disabled>切牌</button>
       <button id="btnSwap" class="btn tool-btn" disabled>換牌</button>
+      <button id="btnOptimize" class="btn tool-btn" disabled>局內優化</button>
+      <button id="btnOptimizeDemo" class="btn tool-btn">看一副示範</button>
       <span class="sep"></span>
       <button id="btnExport" class="btn tool-btn" disabled>導出</button>
   </div>
+
+  <section id="optimizerPanel" class="optimizer-panel gframe" hidden aria-label="局內優化前後比較">
+    <div class="optimizer-head"><h2>同一副牌・局內優化前後比較</h2></div>
+    <p class="optimizer-note">只調整同一局內的牌序。金框標出移動的牌，下方數字標示它原本是這局的第幾張。</p>
+    <div id="optimizerSummary" class="optimizer-summary"></div>
+    <div id="optimizerChecks" class="optimizer-checks"></div>
+    <div class="optimizer-actions">
+      <button id="btnOptBefore" class="btn tool-btn">看調整前牌表</button>
+      <button id="btnOptAfter" class="btn tool-btn">看調整後牌表</button>
+      <button id="btnOptOriginalCut" class="btn tool-btn">回到第 1 張發牌</button>
+      <span id="optimizerView" class="optimizer-note"></span>
+    </div>
+    <div class="optimizer-content">
+      <div id="optimizerChanges" class="optimizer-rows"></div>
+      <div id="optimizerExample" class="optimizer-example"></div>
+    </div>
+  </section>
 
   <div class="main">
     <section class="pit">
@@ -450,8 +498,9 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=12"></script>
+<script src="traverse_builder.js?v=13"></script>
 <script src="traverse_export.js?v=6"></script>
+<script src="traverse_optimizer.js?v=2"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -474,13 +523,124 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   let baseCards = null;   // 排牌結果（未切牌）
   let cutPos = 0;
   let shownRounds = [];   // 目前牌表上的局（切牌後重新發）
+  let optimization = null, optimizationView = 'after', optimizationBusy = false;
+  const optimizerOptions = () => ({ tripleTie: $('tripleTie').checked, signalRule: $('signalRule').checked,
+    strong: $('strongMode').checked, preserveLastNine: $('endingNine').checked });
+  function clearOptimization() { optimization = null; $('optimizerPanel').hidden = true; }
 
-  // 違規判定：無法對調，或對調前兩張後莊→莊、閒→閒（和→和可以）
+  function displayOptimizationVersion(which) {
+    if (!optimization || optimizationBusy) return;
+    optimizationView = which;
+    lastResult = JSON.parse(JSON.stringify(optimization[which]));
+    prepareBase(lastResult);
+    swapState.on = false; swapState.first = swapState.second = null;
+    render(lastResult); computeSafeCuts();
+    $('btnOptBefore').classList.toggle('active', which === 'before');
+    $('btnOptAfter').classList.toggle('active', which === 'after');
+    $('optimizerView').textContent = `下方牌表：${which === 'before' ? '調整前' : '調整後'}｜${cutPos ? `從第 ${cutPos + 1} 張開始` : '從第 1 張開始'}`;
+  }
+  function optimizerCardRow(cards, moved, origins) {
+    return cards.map((c, i) => `<div class="optimizer-card-slot"><span class="card-label${sigCls(c)}${moved[i] ? ' moved' : ''}">${esc(cardText(c))}</span><span>${origins ? `原第 ${origins[i]} 張` : `第 ${i + 1} 張`}</span></div>`).join('');
+  }
+  function optimizerChange(change) {
+    return `<article class="optimizer-change"><h3>原序第 ${change.round} 局｜第 ${change.start + 1}～${change.start + change.size} 張</h3>
+      <div class="optimizer-pair"><div><div class="caption">調整前</div><div class="optimizer-cards">${optimizerCardRow(change.before, change.moved)}</div></div>
+      <div><div class="caption">調整後</div><div class="optimizer-cards">${optimizerCardRow(change.after, change.moved, change.from)}</div></div></div>
+      <p>${change.result} → ${change.result}｜${change.size} 張 → ${change.size} 張｜敏感局：是 → 是</p></article>`;
+  }
+  function renderOptimizerExample(cut) {
+    if (!optimization || !optimization.gained.length) {
+      $('optimizerExample').innerHTML = '<h3>這次沒有找到更多安全切點，已保留原牌序。</h3>'; return;
+    }
+    const c = cut ?? optimization.gained[0];
+    const beforeCards = TraverseOptimizer.prepare(optimization.before), afterCards = TraverseOptimizer.prepare(optimization.after);
+    const before = TraverseOptimizer.traceCut(beforeCards, c, optimization.rules);
+    const after = TraverseOptimizer.traceCut(afterCards, c, optimization.rules);
+    const bad = before.find(r => r.issues.length), same = bad && after[bad.no - 1];
+    const row = (r) => r ? `<div class="optimizer-cards">${r.cards.map(label).join('')}</div>` : '';
+    $('optimizerExample').innerHTML = `<h3>新增安全切點示範：從第 ${c + 1} 張開始發（切 ${c} 張）</h3>
+      <div class="optimizer-pair"><div><div class="caption">調整前：不安全${bad ? `，切牌後第 ${bad.no} 局` : ''}</div>${row(bad)}<p class="optimizer-note">${bad ? esc(bad.issues.join('；')) : ''}</p></div>
+      <div><div class="caption">調整後：同樣切牌，整副穿越區無點數違規</div>${row(same)}<p class="optimizer-checks">安全切點檢查通過</p></div></div>
+      <div class="optimizer-actions"><button class="btn tool-btn" data-opt-cut="${c}" data-opt-version="before">牌表看調整前的這個切點</button><button class="btn tool-btn" data-opt-cut="${c}" data-opt-version="after">牌表看調整後的這個切點</button></div>
+      <details><summary>其他新增安全起點（${optimization.gained.length} 個）</summary><div class="optimizer-cut-list">${optimization.gained.map(p => `<button class="btn tool-btn" data-opt-example="${p}">${p + 1}</button>`).join('')}</div></details>`;
+  }
+  function renderOptimization() {
+    const o = optimization, gain = o.final.count - o.initial.count;
+    $('optimizerPanel').hidden = false;
+    $('optimizerSummary').innerHTML = `<div class="optimizer-count"><span>調整前安全切點</span><strong>${o.initial.count}</strong></div><span>→</span><div class="optimizer-count"><span>調整後安全切點</span><strong>${o.final.count}</strong></div><div class="optimizer-gain">增加 ${gain} 個</div><span class="optimizer-note">共 416 個切點・不含卡色</span>`;
+    $('optimizerChecks').textContent = `✓ 同一副 416 張牌　✓ 每局結果、張數與敏感局維持　✓ 訊號狀態維持　✓ 長段實際穿越通過｜共調整 ${o.changes.length} 局。新增 ${o.gained.length} 個安全起點、減少 ${o.lost.length} 個，淨增加 ${gain} 個。`;
+    const first = o.changes.slice(0, 1), rest = o.changes.slice(1);
+    $('optimizerChanges').innerHTML = first.map(optimizerChange).join('') + (rest.length ? `<details><summary>展開其餘 ${rest.length} 局的前後對照</summary><div class="optimizer-rows">${rest.map(optimizerChange).join('')}</div></details>` : '');
+    renderOptimizerExample();
+    displayOptimizationVersion('after');
+  }
+  function optimizerBusy(busy) {
+    optimizationBusy = busy;
+    $('btnRun').disabled = busy; $('btnStop').disabled = !busy; $('btnOptimizeDemo').disabled = busy;
+    setReady(!busy && !!lastResult);
+    ['tripleTie','signalRule','strongMode','endingNine','sideRule','sideLimit','minLen','maxLen','idleLimit','computeTries','chainAttempts','maxLeftover'].forEach(id => { $(id).disabled = busy; });
+    ['btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id => { $(id).disabled = busy; });
+  }
+  $('btnOptimize').addEventListener('click', async () => {
+    if (!lastResult || optimizationBusy) return;
+    const source = JSON.parse(JSON.stringify(lastResult));
+    source.cards = baseCards.map(c => ({ ...c }));
+    const opts = optimizerOptions();
+    cancelled = false; clearOptimization(); optimizerBusy(true);
+    $('progress').textContent = '正在比較同一局內的不同排列…';
+    try {
+      optimization = await TraverseOptimizer.optimize(source, { ...opts, isCancelled: () => cancelled,
+        onProgress: p => { $('progress').textContent = `局內優化：第 ${p.pass} 輪・${p.round}/${p.total} 局｜安全切點 ${p.before} → ${p.best}`; } });
+      cutPos = 0; $('cutPos').value = 0;
+      optimizerBusy(false); renderOptimization();
+      $('progress').textContent = `${optimization.cancelled ? '已停止，保留目前最佳結果' : '局內優化完成'}｜安全切點 ${optimization.initial.count} → ${optimization.final.count}`;
+      $('optimizerPanel').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    } catch (e) { $('progress').textContent = `局內優化：${e.message || e}`; }
+    finally { optimizerBusy(false); }
+  });
+  $('btnOptBefore').addEventListener('click', () => displayOptimizationVersion('before'));
+  $('btnOptAfter').addEventListener('click', () => displayOptimizationVersion('after'));
+  $('btnOptOriginalCut').addEventListener('click', () => { cutPos = 0; $('cutPos').value = 0; displayOptimizationVersion(optimizationView); });
+  $('optimizerExample').addEventListener('click', e => {
+    if (optimizationBusy) return;
+    const example = e.target.closest('[data-opt-example]');
+    if (example) { renderOptimizerExample(Number(example.dataset.optExample)); return; }
+    const button = e.target.closest('[data-opt-cut]');
+    if (!button) return;
+    cutPos = Number(button.dataset.optCut); $('cutPos').value = cutPos;
+    displayOptimizationVersion(button.dataset.optVersion);
+    $('roundsTable').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+  ['tripleTie','signalRule','strongMode','endingNine'].forEach(id => $(id).addEventListener('change', () => {
+    clearOptimization(); TraverseBuilder.rules.tripleTie = $('tripleTie').checked; TraverseBuilder.rules.strong = $('strongMode').checked;
+    if (lastResult) computeSafeCuts();
+  }));
+  $('btnOptimizeDemo').addEventListener('click', async () => {
+    cancelled = false; clearOptimization(); optimizerBusy(true);
+    $('progress').textContent = '正在排出固定示範牌…';
+    try {
+      $('tripleTie').checked = $('signalRule').checked = $('endingNine').checked = $('sideRule').checked = true;
+      $('strongMode').checked = false; $('sideLimit').value = 8;
+      let seed = 1139;
+      const rng = () => { let t = seed += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+      const demo = await TraverseBuilder.build({ rng, onProgress: m => { $('progress').textContent = `示範牌：${m}`; }, isCancelled: () => cancelled });
+      if (cancelled) { $('progress').textContent = '已取消載入示範牌'; return; }
+      prepareBase(demo);
+      const nine = TraverseExport.dealRounds(baseCards).find(r => r.hand && r.cards.at(-1).rank === '9' && cutLastViolation((r.start + r.cards.length) % 416) === 0);
+      if (nine) rotateResult(demo, (nine.start + nine.cards.length) % 416);
+      lastResult = demo; prepareBase(lastResult); cutPos = 0; $('cutPos').value = 0;
+      render(lastResult); computeSafeCuts();
+      $('progress').textContent = `示範牌已排好：安全切點 ${safeCuts.length} 個。按「局內優化」看同一副牌的前後差別。`;
+    } catch (e) { $('progress').textContent = `示範牌：${e.message || e}`; }
+    finally { optimizerBusy(false); }
+  });
+
+  // 敏感局必須莊↔閒，或和→和；和與莊閒互換也不合格。
   function violationOf(round) {
     if (!round.hand) return null;
     const sw = TraverseExport.swappedTotals(round);
     if (!sw || sw.size !== round.hand.size) return 'noSwap';
-    if (sw.result === round.hand.result && sw.result !== '和') return 'same';
+    if (round.hand.result === '和' ? sw.result !== '和' : sw.result === '和' || sw.result === round.hand.result) return 'same';
     return null;
   }
 
@@ -740,7 +900,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     const line = (name, list) => list.length
       ? `<div class="vio-group"><span class="k">${name}（${list.length}）</span>${list.map((n) => `<a class="vio-link" data-goto="${n}">第${n}局</a>`).join('')}</div>`
       : '';
-    $('violations').innerHTML = line('無法對調', groups.noSwap) + line('對調後結果不變', groups.same)
+    $('violations').innerHTML = line('無法對調', groups.noSwap) + line('不符敏感局', groups.same)
       + line('三條規則', groups.triple) + line('訊號牌規則', groups.signal) + line('卡色', groups.color);
   }
 
@@ -788,6 +948,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     const pts = baseCards.map((c) => c.point);
     lastResult.chains.forEach((c) => {
       const seg = Array.from({ length: c.length }, (_, j) => pts[(c.start - 1 + j) % 416]);
+      if (c.parts) seg.parts = c.parts.slice();
       const rounds = TraverseBuilder.roundsFromStart(seg);
       c.traverse = TraverseBuilder.isTraverse(seg);
       c.allSensitive = !!rounds && rounds.every((r) => TraverseBuilder.handSensitive(seg.slice(r.start, r.start + r.size)));
@@ -815,6 +976,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     const a = (swapState.first + cutPos) % 416;
     const b = (swapState.second + cutPos) % 416;
     const ca = baseCards[a], cb = baseCards[b];
+    clearOptimization();
     // 穿越段標記跟著位置走，不跟著牌走
     const fa = ca.traverse, fb = cb.traverse;
     [baseCards[a], baseCards[b]] = [cb, ca];
@@ -1016,7 +1178,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       const dir = await getExportDir();
       // 同百家3.0：有違規先跳確認，按取消就不導出
       const g = collectViolations(shownRounds);
-      const items = [['無法對調', g.noSwap], ['對調後結果不變', g.same], ['三條規則', g.triple], ['訊號牌規則', g.signal], ['卡色', g.color]]
+      const items = [['無法對調', g.noSwap], ['不符敏感局', g.same], ['三條規則', g.triple], ['訊號牌規則', g.signal], ['卡色', g.color]]
         .filter(([, list]) => list.length);
       if (items.length) {
         const msg = '⚠️ 檢測到以下違規:\n\n' + items.map(([k, list]) => `• ${k}違規: ${list.length} 處\n`).join('')
@@ -1059,7 +1221,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   }
 
   function setReady(ready) {
-    ['cutPos', 'btnCut', 'btnSwap', 'btnExport'].forEach((id) => { $(id).disabled = !ready; });
+    ['cutPos', 'btnCut', 'btnSwap', 'btnExport', 'btnOptimize'].forEach((id) => { $(id).disabled = !ready; });
   }
 
   $('btnRun').addEventListener('click', async () => {
@@ -1075,6 +1237,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       return;
     }
     cancelled = false;
+    clearOptimization(); $('btnOptimizeDemo').disabled = true;
     swapState.on = false;
     swapState.first = swapState.second = null;
     $('btnRun').disabled = true;
@@ -1165,6 +1328,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     } finally {
       $('btnRun').disabled = false;
       $('btnStop').disabled = true;
+      $('btnOptimizeDemo').disabled = false;
     }
   });
   $('btnStop').addEventListener('click', () => { cancelled = true; });
@@ -1179,6 +1343,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     renderSafeCuts();
     const safe = `（含卡色：${safeCutsColor.includes(v) ? '安全' : '不安全'}｜不含卡色：${safeCuts.includes(v) ? '安全' : '不安全'}）`;
     $('progress').textContent = (v ? `已切牌 ${v} 張，從原本第 ${v + 1} 張開始發` : '已恢復原序') + safe;
+    if (optimization) $('optimizerView').textContent = `下方牌表：${optimizationView === 'before' ? '調整前' : '調整後'}｜從第 ${v + 1} 張開始`;
   });
   $('btnExport').addEventListener('click', exportExcel);
 })();
