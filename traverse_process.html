@@ -25,7 +25,7 @@
  <section class="panel focus"><div class="section-head"><h2>正在做的動作</h2><span id="candidateInfo">等待開始</span></div><div id="candidate" class="cards"></div><div id="verification"></div></section>
  <section class="panel felt"><div class="section-head"><h2 id="deckTitle">剩餘牌堆</h2><span id="deckInfo"></span></div><p class="hint">每張牌下方是固定編號；滑鼠停留可看第幾副。金框標示目前挑選的牌。</p><div id="deck" class="cards deck"></div></section>
  <section class="panel"><div class="section-head"><h2 id="segmentsTitle">已撿出的合格段</h2><span>點選任一段查看逐局驗證</span></div><div id="segments"></div></section>
- <section class="panel"><div class="section-head"><h2>最近動作</h2><span>可回看最近 500 步</span></div><ol id="log"></ol></section>
+ <section class="panel"><div class="section-head"><h2>最近動作</h2><label><input type="checkbox" id="hideEmpty" checked> 隱藏撿不到的輪次</label><span>可回看最近 500 步</span></div><ol id="log" reversed></ol></section>
 </main>
-<script src="traverse_builder.js"></script><script src="traverse_process_engine.js"></script><script src="traverse_process.js"></script>
+<script src="traverse_builder.js"></script><script src="traverse_process_engine.js"></script><script src="traverse_process.js?v=2"></script>
 </body></html>

@@ -50,7 +50,12 @@
         $('step').disabled = done && cursor === history.length - 1;
         $('play').disabled = done && cursor === history.length - 1;
         $('play').textContent = playing ? '暫停' : sequence <= 1 ? '開始播放' : '繼續播放';
-        $('log').replaceChildren(...history.slice(Math.max(0, cursor - 7), cursor + 1).reverse().map(e => { const li = document.createElement('li'); li.textContent = `${e.number}. ${e.message}`; return li; }));
+        const past = history.slice(0, cursor + 1);
+        const emptyRounds = new Set(past.filter(e => e.kind === 'sweep' && e.idle > 0).map(e => e.shuffles));
+        const visible = $('hideEmpty').checked
+            ? past.filter(e => !(e.phase === 1 && emptyRounds.has(e.shuffles)))
+            : past;
+        $('log').replaceChildren(...visible.slice(-8).reverse().map(e => { const li = document.createElement('li'); li.value = e.number; li.textContent = e.message; return li; }));
     }
     function pause() { playing = false; clearTimeout(timer); $('play').textContent = '繼續播放'; }
     function advance() {
@@ -82,6 +87,7 @@
     $('back').onclick = () => { pause(); cursor = Math.max(0, cursor - 1); render(); };
     $('live').onclick = () => { pause(); cursor = history.length - 1; render(); };
     $('timeline').oninput = () => { pause(); cursor = Number($('timeline').value); render(); };
+    $('hideEmpty').onchange = render;
     $('download').onclick = () => {
         if (!finalShoe) return;
         const last = history[history.length - 1], end = 416 - last.rest.length;
