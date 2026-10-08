@@ -1,6 +1,7 @@
 # ATLL-穿越排牌
 
 ## 已定案
+- [2026-10-08｜Codex] 新增可操作的排牌過程頁，展示 416 張洗牌、反覆撿段、敏感局補排與接段，只用三項點數條件，未排入牌放最後（使用者要求）。
 - [2026-10-08｜Codex] 穿越排牌頁沿用百家3.0 主頁風格與本地 logo，僅保留穿越頁既有功能及演算法（使用者要求）。
 - [2026-10-07｜Claude] 穿越排牌做成獨立頁 traverse_builder.html，不接入 ATLL／百家3.0 原本的生成流程（使用者要求另外複製一份改）
 - [2026-10-07｜Claude] 穿越段條件：任一張當起點都在段尾剛好發完、從段頭發出的每局都是敏感局、任一局單獨對調後仍穿越（使用者確認）
@@ -14,6 +15,7 @@
 - [2026-10-08｜Claude] 末張 9 的切點直接當成新的第 1 張（切牌張數歸 0），牌表與導出牌序一致（使用者要求兩邊起點相同）
 
 ## 專案說明
+- 過程頁：traverse_process.html，搭配 traverse_process_engine.js／traverse_process.js／traverse_process.css；每張牌固定 ID，支援單步、暫停、回看最近 500 步及 CSV。只讀共用的百家樂判定與敏感局表，不套原排牌頁額外規則；測試：node scripts/test-traverse-process.cjs。
 - 從 ATLL（暫停中，commit 5c2fa1c）複製出的百家樂實驗版，專做「穿越排牌」：反覆洗牌撿合格短段（8～12 張）、計算補排、接成長段，再套三條與 A、2 規則。
 - 主要檔案：traverse_builder.html（頁面）、traverse_builder.js（排牌演算法）、traverse_export.js（發牌、切牌、Excel 導出）；scripts/batch-traverse.mjs 為批次排牌腳本（3D 工作室百家樂面板以 node 執行，cwd 為本資料夾）；suit/at-spade-logo-current.png 為頁面背景 logo。
 - 純前端、無建置步驟：直接用瀏覽器開 traverse_builder.html；Excel 用 CDN 的 exceljs 4.4.0。

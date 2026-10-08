@@ -580,6 +580,6 @@
         };
     }
 
-    global.TraverseBuilder = { COLOR_PATTERNS, build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>穿越排牌・過程桌</title>
+<link rel="icon" href="suit/at-spade-logo-current.png"><link rel="stylesheet" href="traverse_process.css"></head>
+<body>
+<header><img src="suit/at-spade-logo-current.png" alt="ATLL"><div><small>ATLL / PROCESS TABLE</small><h1>穿越排牌・過程桌</h1></div><a href="traverse_builder.html">返回排牌頁 ↗</a></header>
+<div class="controls">
+ <button id="play" class="primary">開始播放</button><button id="step">下一步</button><button id="reset">重新開始</button>
+ <label>播放速度 <select id="speed"><option value="900">慢速</option><option value="250" selected>正常</option><option value="20">快速</option><option value="0">極速</option></select></label>
+ <label class="check"><input type="checkbox" id="inspect">逐一看候選檢查</label>
+ <button id="download" disabled>下載牌序 CSV</button>
+</div>
+<details class="settings"><summary>排牌設定與規則</summary><div class="fields">
+ <label>連續撿不到 N 次 <input id="idleLimit" type="number" min="1" max="10000" value="100"></label>
+ <label>計算嘗試上限 <input id="computeTries" type="number" min="1" max="1000000" value="20000"></label>
+ <label>接段嘗試 <input id="chainAttempts" type="number" min="1" max="100" value="3"></label>
+ <label>最短段 <input id="minLen" type="number" min="4" max="32" value="8"></label>
+ <label>最長段 <input id="maxLen" type="number" min="4" max="32" value="12"></label>
+ <label>洗牌種子 <input id="seed" type="number" min="0" max="4294967295" value="416"></label>
+</div><p>只檢查點數：任一起點穿越（剩 1、2、3、7 張的起點豁免）、每局敏感、任一局單獨對調後仍穿越。洗牌撿段的 0 點比例不得低於當時剩餘牌堆；不套卡色、三條與訊號牌。相同設定、種子可重現牌序。設定修改後按「重新開始」套用。</p><p>未勾逐一檢查時，計算階段每 100 次顯示最近候選；洗牌、撿段與每次試接仍會逐步顯示。各長段分別驗證，長段之間與未排入尾牌不保證穿越。</p></details>
+<nav id="phases"><span>01 洗牌撿段</span><span>02 計算補排</span><span>03 接成長段</span><span>04 完整牌靴</span></nav>
+<section class="status"><div><small id="eventLabel">準備</small><h2 id="message" aria-live="polite">準備 416 張牌</h2></div><div id="totals"></div></section>
+<div class="timeline"><button id="back">上一步紀錄</button><input id="timeline" aria-label="過程紀錄" type="range" min="0" max="0" value="0"><span id="historyLabel"></span><button id="live">回到最新</button></div>
+<main>
+ <section class="panel focus"><div class="section-head"><h2>正在做的動作</h2><span id="candidateInfo">等待開始</span></div><div id="candidate" class="cards"></div><div id="verification"></div></section>
+ <section class="panel felt"><div class="section-head"><h2 id="deckTitle">剩餘牌堆</h2><span id="deckInfo"></span></div><p class="hint">每張牌下方是固定編號；滑鼠停留可看第幾副。金框標示目前挑選的牌。</p><div id="deck" class="cards deck"></div></section>
+ <section class="panel"><div class="section-head"><h2 id="segmentsTitle">已撿出的合格段</h2><span>點選任一段查看逐局驗證</span></div><div id="segments"></div></section>
+ <section class="panel"><div class="section-head"><h2>最近動作</h2><span>可回看最近 500 步</span></div><ol id="log"></ol></section>
+</main>
+<script src="traverse_builder.js"></script><script src="traverse_process_engine.js"></script><script src="traverse_process.js"></script>
+</body></html>
