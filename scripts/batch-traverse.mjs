@@ -156,14 +156,14 @@ async function buildOne(tagNo) {
     if (Date.now() - lastLog > 10000) { lastLog = Date.now(); say(`${tagNo} 排牌中…已重跑 ${reruns} 次`); }
     if (res.rejected) { reruns++; continue; }
     const tooMany = opt.maxLeftover !== null && res.leftoverCount > opt.maxLeftover;
-    const signalBad = res.signal && !res.signal.ok;
-    if (tooMany || signalBad || !res.colorOk) { reruns++; continue; }
+    // 訊號重跑暫停但保留；卡色與末張 9 的整副重跑已依使用者要求移除，不得加回。
+    const signalBad = B.SIGNAL_RETRY_ENABLED && res.signal && !res.signal.ok;
+    if (tooMany || signalBad) { reruns++; continue; }
     const base = prepareBase(res);
     let cut = 0;
     if (opt.endingNine) {
       const c = findEndingNineCut(base);
-      if (c === null) { reruns++; continue; }
-      cut = c;
+      if (c !== null) cut = c;
     }
     if (opt.sideRule && sideDiffOf(res.cards, cut) > opt.sideLimit) { reruns++; continue; }
     return { res, base, cut, reruns };
@@ -228,6 +228,10 @@ async function main() {
     const player = done.filter((r) => r.result === '閒').length;
     const tie = done.length - banker - player;
     say(`${tagNo} 排好：${done.length} 局（莊 ${banker}／閒 ${player}／和 ${tie}）｜切牌 ${cut} 張｜重跑 ${reruns} 次｜${((Date.now() - t0) / 1000).toFixed(1)} 秒`);
+    if (res.signal && !res.signal.ok) {
+      say(`${tagNo} 訊號調整檢查未通過（訊號重跑已停用，保留結果）：`);
+      for (const issue of res.signal.issues || []) say(`${issue.chain ? `第 ${issue.chain} 長段：` : ''}${issue.message}`);
+    }
     const g = collectViolations(rounds);
     const vio = [['無法對調', g.noSwap], ['對調後結果不變', g.same], ['三條規則', g.triple], ['訊號牌規則', g.signal], ['卡色', g.color]]
       .filter(([, l]) => l.length).map(([k, l]) => `${k} 第${l.join('、')}局`);

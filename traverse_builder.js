@@ -120,6 +120,8 @@
     // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
     // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
     const rules = { tripleTie: true, strong: false };
+    // 使用者暫停訊號失敗的重接與整副重跑；保留兩類重試程式供日後明確要求時恢復。
+    const SIGNAL_RETRY_ENABLED = false;
     function tripleRuleOk(arr, rounds) {
         const trip = rounds.map(r => isTriple(arr.slice(r.start, r.start + r.size)));
         if (rounds[0].result === '和' || trip[trip.length - 1]) return false;
@@ -169,6 +171,47 @@
             if (!isTraverse(sw)) return false;
         }
         return true;
+    }
+
+    // 只在失敗結果上找第一個具體原因，不改動 qualifies 的判定與撿段效能。
+    function traversalFailure(arr) {
+        for (let p = 0; p < arr.length; p++) {
+            if (ALLOWED_RESIDUE.has(arr.length - p)) continue;
+            let cur = p;
+            while (cur < arr.length) {
+                const h = simulateHand(arr, cur, arr.length);
+                if (!h) return { from: p + 1, stoppedAt: cur + 1, remaining: arr.length - cur };
+                cur += h.size;
+            }
+        }
+        return null;
+    }
+
+    function diagnoseChain(arr) {
+        const fail = traversalFailure(arr);
+        const tail = (f) => `從段內第 ${f.from} 張開始發，到了第 ${f.stoppedAt} 張，剩 ${f.remaining} 張無法成局`;
+        if (fail) return { kind: 'traverse', ...fail, before: arr.slice(), message: tail(fail) };
+        const rounds = roundsFromStart(arr);
+        if (!rounds) return { kind: 'incomplete', message: '從段頭發牌也無法剛好發完' };
+        for (let i = 0; i < rounds.length; i++) {
+            const r = rounds[i];
+            if (!handSensitive(arr.slice(r.start, r.start + r.size))) {
+                return { kind: 'sensitive', round: i + 1, message: `段內第 ${i + 1} 局對調前兩張後，不符合敏感局條件` };
+            }
+        }
+        if (rules.tripleTie && !tripleRuleOk(arr, rounds)) return { kind: 'triple', message: '段內三條與下一局結果不符，或段頭為和／段尾為三條' };
+        for (let i = 0; i < rounds.length; i++) {
+            const r = rounds[i], sw = arr.slice();
+            [sw[r.start], sw[r.start + 1]] = [sw[r.start + 1], sw[r.start]];
+            const failure = traversalFailure(sw);
+            if (failure) return {
+                kind: 'swap-traverse', round: i + 1, ...failure,
+                swappedPositions: [r.start + 1, r.start + 2], before: arr.slice(), after: sw,
+                message: `段內第 ${i + 1} 局再單獨對調前兩張後，${tail(failure)}`,
+            };
+        }
+        if (rules.strong && !segmentsStrong(arr)) return { kind: 'strong', message: '短段內有起點不符合強條件' };
+        return null;
     }
 
     function shuffleInPlace(a, rng) {
@@ -488,15 +531,34 @@
         // 只算穿越段的衝突；排不進去的牌本來就不保證
         const travEnd = off;
         let travConflicts = 0;
+        const issues = [];
         for (let k = 0; k < n; k++) {
             if (rounds[k].start >= travEnd) break;
             if (k === 0 && n < 2) continue;
             const prev = rounds[(k - 1 + n) % n];
-            const need = neededAfter(seq.slice(prev.start, prev.start + prev.size));
-            if (simulateHand(seq, rounds[k].start, rounds[k].start + rounds[k].size).result !== need) travConflicts++;
+            const prevPoints = seq.slice(prev.start, prev.start + prev.size);
+            const need = neededAfter(prevPoints);
+            const actual = simulateHand(seq, rounds[k].start, rounds[k].start + rounds[k].size).result;
+            if (actual !== need) {
+                travConflicts++;
+                const why = rules.tripleTie && isTriple(prevPoints) ? '上一局是三條，依三條優先應開和'
+                    : isSignalHand(prevPoints) ? '上一局有 A／2，應開莊' : '上一局沒有 A／2，應開閒';
+                issues.push({ kind: 'signal', round: k + 1, start: rounds[k].start + 1, need, actual,
+                    message: `原排牌第 ${k + 1} 局：${k === 0 ? '以最後一個完整局為上一局；' : ''}${why}，調整後仍是${actual}` });
+            }
         }
         const ok = travConflicts === 0 && chains.every(ch => qualifies(ch) && (!rules.strong || segmentsStrong(ch)));
-        return { ok, flips, conflicts: travConflicts };
+        if (!ok) {
+            let start = 1;
+            chains.forEach((ch, i) => {
+                if (!qualifies(ch) || (rules.strong && !segmentsStrong(ch))) {
+                    const issue = diagnoseChain(ch);
+                    if (issue) issues.push({ ...issue, chain: i + 1, start });
+                }
+                start += ch.length;
+            });
+        }
+        return { ok, flips, conflicts: travConflicts, issues };
     }
 
     async function build(options = {}) {
@@ -539,7 +601,7 @@
 
         let signal = opts.signalRule ? applySignalRule(chains, leftover) : null;
         // 訊號牌對調後長段不合格：段不變，只換接段順序再試，省掉整副重排
-        for (let t = 0; signal && !signal.ok && t < 30 && !ctx.cancelled(); t++) {
+        for (let t = 0; SIGNAL_RETRY_ENABLED && signal && !signal.ok && t < 30 && !ctx.cancelled(); t++) {
             chains = await phaseChain(segs, { ...opts, chainAttempts: 1 }, ctx);
             leftover = shuffleInPlace(p2.rest.slice(), opts.rng);
             signal = applySignalRule(chains, leftover);
@@ -580,6 +642,6 @@
         };
     }
 
-    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, build, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, build, diagnoseChain, qualifies, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);

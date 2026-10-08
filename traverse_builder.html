@@ -260,6 +260,9 @@ button:focus-visible,.toggle:has(input:focus-visible),a:focus-visible { outline:
 .safe-chip:hover,.safe-chip.on { color:#120e04; border-color:#c9a25a; background:linear-gradient(180deg,#f4dfa4,#c9a25a); }
 .vio-group { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; margin-bottom:8px; }
 .vio-group .k { color:var(--txt-dim); font-size:12px; min-width:108px; }
+#signalDiagnostics { line-height:1.8; overflow-wrap:anywhere; }
+#signalDiagnostics .vio-group { display:block; margin:12px 0; }
+#signalDiagnostics .vio-group strong { display:block; color:var(--gold-1); }
 .vio-link { font:12px/22px var(--sans); color:var(--danger); cursor:pointer; border:1px solid #733d35; border-radius:4px; padding:0 6px; background:rgba(224,92,79,.1); }
 .vio-link:hover { background:rgba(224,92,79,.3); color:#fff; }
 .empty { color:var(--txt-dim); font-size:13px; }
@@ -426,6 +429,10 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
         <div id="bpt" class="bpt"></div>
         <div id="stats" class="stats"><div class="empty">尚未排牌</div></div>
       </section>
+      <section class="card gframe" id="signalDiagnosticPanel" hidden>
+        <h2>訊號調整檢查</h2>
+        <div id="signalDiagnostics"></div>
+      </section>
       <section class="card gframe safe-panel">
         <h2>安全切牌點 <span id="safeTotal" class="vio-total clean"></span>
           <button id="btnSafeToggle" class="btn tool-btn btn-mini" type="button">展開</button></h2>
@@ -443,7 +450,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=10"></script>
+<script src="traverse_builder.js?v=11"></script>
 <script src="traverse_export.js?v=6"></script>
 <script>
 (function () {
@@ -835,7 +842,23 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       + `<div class="bpt-item bpt-total">共 <span class="bpt-num">${total}</span> 局</div>`;
   }
 
+  function renderSignalDiagnostics(result) {
+    const signal = result.signal;
+    $('signalDiagnosticPanel').hidden = !signal || signal.ok;
+    if (!signal || signal.ok) { $('signalDiagnostics').innerHTML = ''; return; }
+    const note = TraverseBuilder.SIGNAL_RETRY_ENABLED ? '訊號檢查未通過' : '訊號重跑已停用，保留這副牌供檢查';
+    const outcome = signal.conflicts ? `仍有 ${signal.conflicts} 局的訊號結果不符。` : '訊號牌要求的莊、閒、和結果都已符合；以下是額外的長段驗證未通過。';
+    const details = (signal.issues || []).map(issue => {
+      const title = issue.chain ? `第 ${issue.chain} 長段` : '訊號結果';
+      const points = issue.before ? `<div>調整後點數：${esc(issue.before.join('、'))}</div>` : '';
+      const after = issue.after ? `<div>再對調第 ${issue.swappedPositions.join('、')} 張：${esc(issue.after.join('、'))}</div>` : '';
+      return `<div class="vio-group"><strong>${esc(title)}</strong><div>${esc(issue.message)}</div>${points}${after}</div>`;
+    }).join('');
+    $('signalDiagnostics').innerHTML = `<div class="ng">${note}</div><p>${outcome}</p>${details}<div class="empty">以上保留的是訊號調整當下、末張 9 切牌及手動換牌之前的檢查。</div>`;
+  }
+
   function render(result) {
+    renderSignalDiagnostics(result);
     const s = result.stats;
     const longest = result.chains.length ? result.chains[0].length : 0;
     const allOk = result.chains.every((c) => c.qualified);
@@ -1097,35 +1120,30 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
           continue;
         }
         lastResult = res;
-        // 排不進的張數超過設定、或訊號牌對調後穿越段不合格，就整副重跑；按停止則保留目前這次
+        // 只因剩牌超標、莊閒差距或明確恢復的訊號重跑而重排；卡色與末張 9 不得觸發重跑。
         // 強條件合格段極少，重跑也排不滿，只跑一次讓人看結果
         if (cancelled || $('strongMode').checked) break;
         const tooMany = maxLeftover !== null && lastResult.leftoverCount > maxLeftover;
-        const signalBad = lastResult.signal && !lastResult.signal.ok;
-        const colorBad = !lastResult.colorOk;
-        if (!tooMany && !signalBad && !colorBad) {
+        const signalBad = TraverseBuilder.SIGNAL_RETRY_ENABLED && lastResult.signal && !lastResult.signal.ok;
+        if (!tooMany && !signalBad) {
           nineCut = null;
-          let nineOk = true;
           if ($('endingNine').checked) {
-            // 末張 9：找一個局結束在 9、而且切下去沒有違規的位置；找不到就重跑
+            // 保留末張 9 選點；沒有合適切點就維持原序，不能因此整副重跑。
             prepareBase(lastResult);
             nineCut = findEndingNineCut();
-            nineOk = nineCut !== null;
           }
           // 莊閒差距（同百家3.0：莊 vs 閒＋和，超過上限整副重跑），以最後要顯示／導出的牌序計算
-          const sideDiff = nineOk ? sideDiffOf(lastResult.cards, nineCut || 0) : 0;
-          const sideBad = nineOk && $('sideRule').checked && sideDiff > (parseInt($('sideLimit').value, 10) || 0);
-          if (nineOk && !sideBad) break;
+          const sideDiff = sideDiffOf(lastResult.cards, nineCut || 0);
+          const sideBad = $('sideRule').checked && sideDiff > (parseInt($('sideLimit').value, 10) || 0);
+          if (!sideBad) break;
           reruns++;
-          $('progress').textContent = !nineOk ? `找不到末張是 9 的安全切點，重跑第 ${reruns} 次…`
-            : `莊閒差距 ${sideDiff} 局，超過上限，重跑第 ${reruns} 次…`;
+          $('progress').textContent = `莊閒差距 ${sideDiff} 局，超過上限，重跑第 ${reruns} 次…`;
           continue;
         }
         reruns++;
         $('progress').textContent = tooMany
           ? `剩 ${lastResult.leftoverCount} 張排不進去，超過 ${maxLeftover} 張，重跑第 ${reruns} 次…`
-          : signalBad ? `訊號牌對調後有長段不合格，重跑第 ${reruns} 次…`
-          : `卡色排不出來，重跑第 ${reruns} 次…`;
+          : `訊號牌對調後有長段不合格，重跑第 ${reruns} 次…`;
       }
       lastResult.reruns = reruns;
       lastResult.totalMs = Date.now() - t0;
