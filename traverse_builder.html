@@ -442,7 +442,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <section class="card grow gframe">
         <h2>長段驗證</h2>
         <div class="scroll"><table id="chainTable"><thead><tr>
-          <th>#</th><th>起始</th><th>張</th><th>局</th><th>穿越</th><th>敏感</th><th>對調後</th>
+          <th>#</th><th>起始</th><th>張</th><th>局</th><th>穿越</th><th>敏感</th><th>合格</th>
         </tr></thead><tbody><tr><td colspan="7" class="empty">尚未排牌</td></tr></tbody></table></div>
       </section>
     </aside>
@@ -450,7 +450,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=11"></script>
+<script src="traverse_builder.js?v=12"></script>
 <script src="traverse_export.js?v=6"></script>
 <script>
 (function () {
@@ -791,7 +791,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       const rounds = TraverseBuilder.roundsFromStart(seg);
       c.traverse = TraverseBuilder.isTraverse(seg);
       c.allSensitive = !!rounds && rounds.every((r) => TraverseBuilder.handSensitive(seg.slice(r.start, r.start + r.size)));
-      c.qualified = TraverseBuilder.qualifies(seg);
+      c.qualified = TraverseBuilder.qualifiesFinal(seg);
       c.rounds = rounds ? rounds.length : 0;
     });
   }
@@ -847,12 +847,11 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     $('signalDiagnosticPanel').hidden = !signal || signal.ok;
     if (!signal || signal.ok) { $('signalDiagnostics').innerHTML = ''; return; }
     const note = TraverseBuilder.SIGNAL_RETRY_ENABLED ? '訊號檢查未通過' : '訊號重跑已停用，保留這副牌供檢查';
-    const outcome = signal.conflicts ? `仍有 ${signal.conflicts} 局的訊號結果不符。` : '訊號牌要求的莊、閒、和結果都已符合；以下是額外的長段驗證未通過。';
+    const outcome = signal.conflicts ? `仍有 ${signal.conflicts} 局的訊號結果不符。` : '訊號牌要求的莊、閒、和結果都已符合；以下是實際牌序的長段驗證未通過。';
     const details = (signal.issues || []).map(issue => {
       const title = issue.chain ? `第 ${issue.chain} 長段` : '訊號結果';
       const points = issue.before ? `<div>調整後點數：${esc(issue.before.join('、'))}</div>` : '';
-      const after = issue.after ? `<div>再對調第 ${issue.swappedPositions.join('、')} 張：${esc(issue.after.join('、'))}</div>` : '';
-      return `<div class="vio-group"><strong>${esc(title)}</strong><div>${esc(issue.message)}</div>${points}${after}</div>`;
+      return `<div class="vio-group"><strong>${esc(title)}</strong><div>${esc(issue.message)}</div>${points}</div>`;
     }).join('');
     $('signalDiagnostics').innerHTML = `<div class="ng">${note}</div><p>${outcome}</p>${details}<div class="empty">以上保留的是訊號調整當下、末張 9 切牌及手動換牌之前的檢查。</div>`;
   }

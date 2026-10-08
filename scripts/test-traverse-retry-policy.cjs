@@ -95,13 +95,25 @@ function rng(seed) {
       await h.run(); assert.equal(h.calls(), 2);
     });
   }
-  await check('訊號診斷指出實際失敗的局與穿越起點', () => {
-    const result = witness.signal.result, c = result.chains.find(c => !c.qualified);
-    const points = result.cards.slice(c.start - 1, c.start - 1 + c.length).map(c => c.point);
+  await check('使用者第9長段：實際牌序合格，不再假設反向判失敗', () => {
+    const points = [0, 8, 0, 1, 5, 7, 6, 5, 0, 1];
+    assert.equal(B.qualifies(points), false, '撿段時仍保留原本的對調承受條件');
+    assert.equal(B.qualifiesFinal(points), true);
+    assert.equal(B.diagnoseChain(points), null);
+  });
+  await check('實際牌序本身不能穿越時仍不合格', () => {
+    const points = [8, 0, 0, 1, 5, 7, 6, 5, 0, 1];
+    assert.equal(B.qualifiesFinal(points), false);
     const issue = B.diagnoseChain(points);
-    assert.equal(issue.kind, 'swap-traverse'); assert.equal(issue.round, 1);
-    assert.ok(issue.from > 0 && issue.remaining > 0);
-    assert.match(issue.message, /第 1 局/);
+    assert.equal(issue.kind, 'traverse');
+    assert.equal(issue.from, 2);
+    assert.equal(issue.remaining, 3);
+  });
+  await check('歷史上僅因假設反向失敗的長段，現在可通過最終驗收', () => {
+    const result = witness.signal.result, c = result.chains.find(c => !c.qualified);
+    const points = result.cards.slice(c.start - 1, c.start - 1 + c.length).map(card => card.point);
+    assert.equal(B.qualifiesFinal(points), true);
+    assert.equal(B.diagnoseChain(points), null);
   });
   await check('真實引擎停用訊號重接、保留診斷並顯示', async () => {
     let chainSteps = 0;
@@ -112,11 +124,23 @@ function rng(seed) {
     assert.ok(result.signal.issues.some(issue => issue.kind === 'signal' && issue.message.includes('三條')));
     for (const c of result.chains) {
       const points = result.cards.slice(c.start - 1, c.start - 1 + c.length).map(card => card.point);
+      assert.equal(c.qualified, B.qualifiesFinal(points));
       assert.equal(B.diagnoseChain(points) === null, c.qualified);
     }
+    assert.ok(result.signal.issues.every(issue => issue.kind !== 'swap-traverse'));
     const h = harness('page', [result]); await h.run();
     assert.match(h.node('signalDiagnostics').innerHTML, /重跑已停用/);
     assert.match(h.node('signalDiagnostics').innerHTML, /第 \d+ 長段/);
+  });
+  await check('真實整副牌僅有假設反向失敗時，訊號、結果與畫面均通過', async () => {
+    const result = await B.build({ rng: rng(1002) });
+    assert.ok(result.chains.some(c => !B.qualifies(result.cards.slice(c.start - 1, c.start - 1 + c.length).map(card => card.point))));
+    assert.equal(result.signal.ok, true);
+    assert.deepEqual(result.signal.issues, []);
+    assert.ok(result.chains.every(c => c.qualified));
+    const h = harness('page', [result]); await h.run();
+    assert.equal(h.node('signalDiagnosticPanel').hidden, true);
+    assert.match(h.node('stats').innerHTML, />通過</);
   });
   console.log(JSON.stringify({ passed: checks.filter(c => c.pass).length, total: checks.length, failures: checks.filter(c => !c.pass) }, null, 2));
   if (checks.some(c => !c.pass)) process.exitCode = 1;
