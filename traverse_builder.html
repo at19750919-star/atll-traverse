@@ -422,7 +422,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <label class="btn tool-btn toggle"><input id="tripleTie" type="checkbox" checked>三條</label>
       <label class="btn tool-btn toggle"><input id="signalRule" type="checkbox" checked>A.2</label>
       <label class="btn tool-btn toggle"><input id="strongMode" type="checkbox">強</label>
-      <label class="btn tool-btn toggle" title="每個短段從第二張開始發，完整局都須敏感；段尾不足一局不檢查"><input id="secondStart" type="checkbox">第二張敏感</label>
+      <label class="btn tool-btn toggle" title="每個短段從第二張開始發，完整局都須敏感；段尾不足一局不檢查。排不下的牌改用原條件續排"><input id="secondStart" type="checkbox">第二張敏感</label>
       <label class="btn tool-btn toggle"><input id="endingNine" type="checkbox" checked>末張9</label>
       <span class="sep"></span>
       <label class="btn tool-btn toggle"><input id="sideRule" type="checkbox" checked>莊閒</label>
@@ -513,9 +513,9 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=15"></script>
+<script src="traverse_builder.js?v=16"></script>
 <script src="traverse_export.js?v=6"></script>
-<script src="traverse_optimizer.js?v=3"></script>
+<script src="traverse_optimizer.js?v=4"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
 <script>
 (function () {
@@ -983,6 +983,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     lastResult.chains.forEach((c) => {
       const seg = Array.from({ length: c.length }, (_, j) => pts[(c.start - 1 + j) % 416]);
       if (c.parts) seg.parts = c.parts.slice();
+      if (c.secondParts) seg.secondParts = c.secondParts.slice();
       const rounds = TraverseBuilder.roundsFromStart(seg);
       c.traverse = TraverseBuilder.isTraverse(seg);
       c.allSensitive = !!rounds && rounds.every((r) => TraverseBuilder.handSensitive(seg.slice(r.start, r.start + r.size)));
@@ -1058,7 +1059,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     const longest = result.chains.length ? result.chains[0].length : 0;
     const allOk = result.chains.every((c) => c.qualified);
     $('stats').innerHTML = [
-      ['排進穿越段', `${416 - result.leftoverCount} 張`],
+      ['排進穿越段', `${416 - result.leftoverCount} 張${s.fallbackCards ? `（原條件 ${s.fallbackCards}）` : ''}`],
       ['剩下排不進去', `${result.leftoverCount} 張`],
       ['長段數', result.chains.length],
       ['最長一段', `${longest} 張`],

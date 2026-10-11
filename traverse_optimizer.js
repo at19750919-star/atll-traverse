@@ -69,6 +69,7 @@
     function chainPoints(cards, ch) {
         const ps = Array.from({ length: ch.length }, (_, j) => cards[(ch.start - 1 + j) % cards.length].point);
         if (ch.parts) ps.parts = ch.parts.slice();
+        if (ch.secondParts) ps.secondParts = ch.secondParts.slice();
         return ps;
     }
     // 共用引擎目前使用全域規則；只在同步驗證期間暫存，避免 await 期間影響其他操作。

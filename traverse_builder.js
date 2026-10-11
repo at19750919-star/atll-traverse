@@ -14,6 +14,7 @@
 //   階段 1  洗牌 → 撿出所有合格段 → 剩下的重洗再撿，直到連續 N 次撿不到
 //           每段 0 點比例不得低於剩餘牌堆的 0 點比例（避免最後剩一堆 0 點）
 //   階段 2  剩下的牌改用「敏感局組合」計算排列，再撿出合格段
+//           開啟第二張敏感時，補排也照 0 點比例；排不下的牌關掉第二張條件，重做階段 1、2
 //   階段 3  把合格段接成長段（接縫處重新完整檢查）
 //   剩下撿不進去的牌放在整條牌最後面
 //
@@ -157,11 +158,14 @@
         return complete > 0;
     }
 
+    // secondParts 標記哪些短段須檢查第二張；原條件續排撿到的短段為 false，沒有標記時全部檢查。
     function segmentsSecondStart(ch) {
+        const parts = ch.parts || [ch.length];
         let off = 0;
-        for (const len of ch.parts || [ch.length]) {
-            if (!secondStartOk(ch.slice(off, off + len))) return false;
-            off += len;
+        for (let i = 0; i < parts.length; i++) {
+            const check = !ch.secondParts || ch.secondParts[i];
+            if (check && !secondStartOk(ch.slice(off, off + parts[i]))) return false;
+            off += parts[i];
         }
         return true;
     }
@@ -392,7 +396,12 @@
                     if (!fits(cand, c)) break;
                     for (const p of cand) c[p]--;
                     seq = seq.concat(cand);
-                    if (seq.length >= opts.minLen && qualifies(seq, true)) { found = seq; break; }
+                    if (seq.length >= opts.minLen && qualifies(seq, true)) {
+                        // 第二張敏感開啟時補排也照 0 點比例，否則 0 點會堆到最後排不進去
+                        if (opts.computeQuota && seq.filter(p => p === 0).length < Math.floor(counts[0] / rest.length * seq.length * opts.quotaFactor)) continue;
+                        found = seq;
+                        break;
+                    }
                 }
             }
             if (found) {
@@ -412,7 +421,12 @@
         let best = null;
         for (let attempt = 0; attempt < opts.chainAttempts; attempt++) {
             if (ctx.cancelled()) break;
-            const pool = shuffleInPlace(segs.map(s => { const c = s.slice(); c.parts = [s.length]; return c; }), opts.rng);
+            const pool = shuffleInPlace(segs.map(s => {
+                const c = s.slice();
+                c.parts = [s.length];
+                c.secondParts = [s.secondStart !== false];
+                return c;
+            }), opts.rng);
             const chains = [];
             while (pool.length) {
                 let chain = pool.shift();
@@ -422,6 +436,7 @@
                     for (let i = 0; i < pool.length; i++) {
                         const joined = chain.concat(pool[i]);
                         joined.parts = chain.parts.concat(pool[i].parts);
+                        joined.secondParts = chain.secondParts.concat(pool[i].secondParts);
                         if (qualifies(joined)) {
                             chain = joined;
                             pool.splice(i, 1);
@@ -633,6 +648,7 @@
             zeroPolicy: options.zeroPolicy || 'quota',
             quotaFactor: options.quotaFactor ?? 1,
         };
+        opts.computeQuota = opts.secondStart && opts.zeroPolicy === 'quota';
         rules.tripleTie = opts.tripleTie;
         rules.strong = opts.strong;
         rules.secondStart = opts.secondStart;
@@ -650,19 +666,37 @@
 
         const p1 = await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
-        // 剩下的張數已超過上限：注定要重跑，跳過接段／A、2／卡色，省時間
-        if (options.rejectAbove != null && p2.rest.length > options.rejectAbove && !ctx.cancelled()) {
-            return { rejected: true, leftoverCount: p2.rest.length, stats: { ms: Date.now() - t0 } };
-        }
         const segs = p1.segs.concat(p2.segs);
+        let restCards = p2.rest;
+        let fallbackSegs = [];
+        // 第二張敏感排不下的牌改用原條件續撿、續補；這些短段標記為不檢查第二張
+        if (opts.secondStart && restCards.length >= opts.minLen) {
+            segs.forEach(s => { s.secondStart = true; });
+            const fbCtx = { ...ctx, progress: m => ctx.progress(`原條件續排｜${m}`) };
+            rules.secondStart = false;
+            try {
+                const p3 = await phaseShuffle(restCards.slice(), opts, fbCtx);
+                const p4 = await phaseCompute(p3.rest, opts, fbCtx);
+                fallbackSegs = p3.segs.concat(p4.segs);
+                restCards = p4.rest;
+            } finally {
+                rules.secondStart = true;
+            }
+            fallbackSegs.forEach(s => { s.secondStart = false; });
+            segs.push(...fallbackSegs);
+        }
+        // 剩下的張數已超過上限：注定要重跑，跳過接段／A、2／卡色，省時間
+        if (options.rejectAbove != null && restCards.length > options.rejectAbove && !ctx.cancelled()) {
+            return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0 } };
+        }
         let chains = await phaseChain(segs, opts, ctx);
-        let leftover = shuffleInPlace(p2.rest.slice(), opts.rng);
+        let leftover = shuffleInPlace(restCards.slice(), opts.rng);
 
         let signal = opts.signalRule ? applySignalRule(chains, leftover) : null;
         // 訊號牌對調後長段不合格：段不變，只換接段順序再試，省掉整副重排
         for (let t = 0; SIGNAL_RETRY_ENABLED && signal && !signal.ok && t < 30 && !ctx.cancelled(); t++) {
             chains = await phaseChain(segs, { ...opts, chainAttempts: 1 }, ctx);
-            leftover = shuffleInPlace(p2.rest.slice(), opts.rng);
+            leftover = shuffleInPlace(restCards.slice(), opts.rng);
             signal = applySignalRule(chains, leftover);
         }
         const points = chains.flat().concat(leftover);
@@ -676,6 +710,7 @@
                 start: offset + 1,
                 length: ch.length,
                 parts: (ch.parts || [ch.length]).slice(),
+                secondParts: (ch.secondParts || [ch.secondStart !== false]).slice(),
                 rounds: rounds ? rounds.length : 0,
                 traverse: isTraverse(ch),
                 allSensitive: !!rounds && rounds.every(r => handSensitive(ch.slice(r.start, r.start + r.size))),
@@ -696,6 +731,8 @@
                 phase1Segments: p1.segs.length,
                 phase1Rest: p1.rest.length,
                 phase2Segments: p2.segs.length,
+                fallbackSegments: fallbackSegs.length,
+                fallbackCards: fallbackSegs.reduce((n, s) => n + s.length, 0),
                 totalCards: points.length,
                 ms: Date.now() - t0,
             },

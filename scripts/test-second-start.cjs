@@ -13,9 +13,13 @@ function verifyParts(result) {
   for (const ch of result.chains) {
     const points = Array.from({ length: ch.length }, (_, j) => result.cards[(ch.start - 1 + j) % 416].point);
     points.parts = ch.parts;
+    points.secondParts = ch.secondParts;
+    assert.equal(ch.secondParts.length, ch.parts.length);
     let off = 0, ok = true;
-    for (const len of ch.parts) {
+    for (const [i, len] of ch.parts.entries()) {
       const seg = points.slice(off, off + len);
+      // 原條件續排的短段不檢查第二張
+      if (!ch.secondParts[i]) { off += len; continue; }
       // 逐局獨立檢查，不用 secondStartOk 算預期值。
       let cur = 1, complete = 0;
       while (cur < seg.length) {
@@ -48,7 +52,26 @@ function verifyParts(result) {
   assert.equal(B.diagnoseChain(bad).kind, 'secondStart');
   const joined = good.concat(bad); joined.parts = [8, 8];
   assert.equal(B.qualifiesFinal(joined), false, '接段後也檢查後面短段的第二張');
-  console.log('PASS 第二張起發、尾牌豁免、後續完整局、短段邊界及診斷');
+  B.rules.secondStart = false;
+  const baseOk = B.qualifiesFinal(joined);
+  B.rules.secondStart = true;
+  joined.secondParts = [true, false];
+  assert.equal(B.qualifiesFinal(joined), baseOk, '原條件續排的短段不檢查第二張');
+  joined.secondParts = [false, true];
+  assert.equal(B.qualifiesFinal(joined), false, '有標記的短段仍要檢查第二張');
+  console.log('PASS 第二張起發、尾牌豁免、後續完整局、短段邊界、續排標記及診斷');
+
+  // 與 200 副離線實驗同種子：第二張排不下的牌改用原條件續排後剛好排滿
+  const mixed = await B.build({ minLen: 8, maxLen: 12, secondStart: true, signalRule: false, chainAttempts: 1, rng: rng(5076) });
+  assert.equal(mixed.leftoverCount, 0);
+  for (let p = 0; p < 10; p++) assert.equal(mixed.cards.filter(c => c.point === p).length, p ? 32 : 128);
+  assert.ok(mixed.chains.every(ch => ch.qualified));
+  const fbCards = mixed.chains.reduce((n, ch) => n + ch.parts.reduce((m, len, i) => m + (ch.secondParts[i] ? 0 : len), 0), 0);
+  assert.ok(mixed.stats.fallbackSegments > 0);
+  assert.equal(fbCards, mixed.stats.fallbackCards);
+  verifyParts(mixed);
+  assert.equal(B.rules.secondStart, true, '續排結束後要恢復第二張檢查');
+  console.log(`PASS 原條件續排排滿整副（原條件 ${fbCards} 張）`);
 
   const result = await B.build({ minLen: 8, maxLen: 12, secondStart: true, signalRule: false, rng: rng(1002) });
   assert.equal(result.cards.length, 416);

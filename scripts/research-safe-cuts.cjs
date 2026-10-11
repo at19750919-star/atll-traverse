@@ -95,7 +95,7 @@ function analyze(cards, verify = false) {
 function compact(a) { const { safe, safeColor, depths, firstBadPositions, badPositions, ...r } = a; return r; }
 function cardCounts(cards) { return cards.reduce((a, c) => (a[c.point]++, a), new Array(10).fill(0)); }
 function candidate(chains, leftover, random) {
-  chains = chains.map(ch => { const x = ch.slice(); x.parts = ch.parts; return x; });
+  chains = chains.map(ch => { const x = ch.slice(); x.parts = ch.parts; x.secondParts = ch.secondParts; return x; });
   leftover = leftover.slice();
   const signal = R.applySignalRule(chains, leftover);
   const pts = chains.flat().concat(leftover);
