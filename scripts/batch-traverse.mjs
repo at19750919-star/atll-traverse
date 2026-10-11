@@ -96,14 +96,14 @@ function colorViolations(rounds) {
   });
   return out;
 }
-function collectViolations(rounds) {
-  const g = { noSwap: [], same: [], triple: tripleViolations(rounds), signal: signalViolations(rounds), color: colorViolations(rounds) };
+function collectViolations(rounds, includeColor = true) {
+  const g = { noSwap: [], same: [], triple: tripleViolations(rounds), signal: signalViolations(rounds), color: includeColor ? colorViolations(rounds) : [] };
   rounds.forEach((r, i) => { const v = violationOf(r); if (v) g[v].push(i + 1); });
   return g;
 }
-function cutLastViolation(base, c, withColor = false) {
+function cutLastViolation(base, c) {
   const rounds = E.dealRounds(E.cutDeck(base, c));
-  const g = collectViolations(rounds);
+  const g = collectViolations(rounds, false);
   const trav = (n) => rounds[n - 1] && rounds[n - 1].segment === 'A';
   let last = rounds.length;
   while (last > 1 && !rounds[last - 1].hand) last--;
@@ -115,7 +115,7 @@ function cutLastViolation(base, c, withColor = false) {
     const sw = E.swappedTotals(r);
     return !!sw && sw.size === r.hand.size && sw.result === need;
   };
-  const bad = g.noSwap.concat(g.same, withColor ? g.color : []).filter(trav)
+  const bad = g.noSwap.concat(g.same).filter(trav)
     .concat(g.triple.concat(g.signal).filter((n) => trav(n) && trav(prevNo(n)) && !fixable(n)));
   return bad.length ? Math.max(...bad) : 0;
 }

@@ -9,7 +9,7 @@ const fixture = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/validation/s
 const batch = fs.readFileSync(path.join(ROOT, 'scripts/batch-traverse.mjs'), 'utf8');
 const opt = { tripleTie: true, signalRule: true };
 const ref = vm.createContext({ B, E, opt });
-vm.runInContext(batch.slice(batch.indexOf('function violationOf('), batch.indexOf('// ===== 一副')) + '\nglobalThis.cut = cutLastViolation;', ref);
+vm.runInContext(batch.slice(batch.indexOf('function violationOf('), batch.indexOf('// ===== 一副')) + '\nglobalThis.cut = cutLastViolation; globalThis.violations = collectViolations;', ref);
 const clone = x => JSON.parse(JSON.stringify(x));
 const resultOf = seed => { const row = fixture.shoes.find(x => x.seed === seed); return {
   cards: clone(row.baselineCards), chains: clone(row.baselineChains), leftoverCount: 0,
@@ -72,6 +72,24 @@ function uiHarness() {
   return { node, api: ctx.testUI };
 }
 (async () => {
+  await check('切點不計卡色，但主頁與導出共用的卡色違規仍保留', () => {
+    const h = uiHarness(), original = resultOf(1139), changed = clone(original);
+    changed.cards.forEach(c => { c.back_color = 'R'; });
+    const snapshot = result => {
+      h.api.load(result);
+      return { total: h.node('safeTotal').textContent, stats: h.node('cutStats').innerHTML };
+    };
+    assert.deepEqual(snapshot(changed), snapshot(original));
+    assert.doesNotMatch(h.node('cutStats').innerHTML, /含卡色/);
+    const cards = O.prepare(changed), normal = O.prepare(original);
+    for (let c = 0; c < 416; c++) assert.equal(ref.cut(cards, c), ref.cut(normal, c));
+    snapshot(changed);
+    assert.ok(h.node('violations').innerHTML.includes('卡色（84）'));
+    assert.equal(h.node('vioTotal').textContent, '84 局');
+    assert.equal(ref.violations(E.dealRounds(cards)).color.length, 84, '批次卡色違規檢查保留');
+    cards.forEach(card => Object.defineProperty(card, 'back_color', { get() { throw new Error('切點不應讀取牌背顏色'); } }));
+    for (let c = 0; c < 416; c++) assert.equal(ref.cut(cards, c), ref.cut(normal, c));
+  });
   await check('和→閒、閒→和即使張數相同，也必須排除安全切點', () => {
     for (const pts of [[9, 0, 6, 5, 0], [0, 9, 6, 5, 0]]) {
       const cards = pts.map(point => ({ point, rank: point ? String(point) : 'K', suit: '♠', back_color: 'R', traverse: true }));
@@ -133,9 +151,9 @@ function uiHarness() {
     assert.match(h.node('optimizerExample').innerHTML, /新增安全切點示範/);
     h.node('btnOptBefore').listeners.click();
     assert.deepEqual(JSON.parse(JSON.stringify(h.api.get().lastResult.cards)), JSON.parse(JSON.stringify(o.before.cards)));
-    assert.ok(h.node('safeTotal').textContent.includes(`不含卡色 ${o.initial.count}`));
+    assert.ok(h.node('safeTotal').textContent.includes(`${o.initial.count} 個`));
     h.node('btnOptAfter').listeners.click();
-    assert.ok(h.node('safeTotal').textContent.includes(`不含卡色 ${o.final.count}`));
+    assert.ok(h.node('safeTotal').textContent.includes(`${o.final.count} 個`));
     assert.equal(h.api.get().optimizationBusy, false); assert.equal(h.node('btnOptimize').disabled, false);
     h.node('tripleTie').listeners.change(); assert.equal(h.api.get().optimization, null);
     console.log(JSON.stringify({ demoBefore: o.initial.count, demoAfter: o.final.count, changed: o.changes.length, firstNewCut: o.gained[0] }));
