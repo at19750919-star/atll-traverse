@@ -6,9 +6,12 @@
   const close = document.getElementById('btnOptClose');
   let positioned = false, drag = null, returnFocus = null;
   function move(x, y) {
-    const rect = panel.getBoundingClientRect(), gap = 8;
-    panel.style.left = `${Math.max(gap, Math.min(x, window.innerWidth - rect.width - gap))}px`;
-    panel.style.top = `${Math.max(gap, Math.min(y, window.innerHeight - rect.height - gap))}px`;
+    const rect = panel.getBoundingClientRect(), header = handle.getBoundingClientRect();
+    // Allow the body off-screen while leaving a usable piece of the drag handle.
+    const visibleWidth = Math.min(160, rect.width, window.innerWidth);
+    const visibleHeight = Math.min(32, header.height, window.innerHeight);
+    panel.style.left = `${Math.max(visibleWidth - rect.width, Math.min(x, window.innerWidth - visibleWidth))}px`;
+    panel.style.top = `${Math.max(visibleHeight - header.height, Math.min(y, window.innerHeight - visibleHeight))}px`;
   }
   function endDrag() {
     if (drag && handle.hasPointerCapture(drag.id)) handle.releasePointerCapture(drag.id);
