@@ -1,0 +1,2031 @@
+{
+  "method": "Real engine compiled in memory; only single-segment qualification gains exact round count; phase 1/2 capture is read-only. No production edits. All other rules and search budgets unchanged. Seeds 1000 onward, same seeds in both groups. Full chain/signal/color stages run only if no cards remain. Does not simulate the page ending-nine/side-difference checks.",
+  "sourceSha256": "02752eda0c72752f264ab84fb7de4cd410bdc318ab4f2683a85ccfe9da891679",
+  "settings": {
+    "idleLimit": 1000,
+    "computeTries": 20000,
+    "chainAttempts": 20,
+    "tripleTie": true,
+    "signalRule": true,
+    "strong": false,
+    "zeroPolicy": "quota",
+    "rejectAbove": 0
+  },
+  "groups": [
+    {
+      "rounds": 2,
+      "minLen": 8,
+      "maxLen": 12,
+      "attempts": [
+        {
+          "seed": 1000,
+          "phase1Segments": 41,
+          "phase1Rest": 16,
+          "phase2Segments": 1,
+          "computeTries": 719,
+          "lengths": {
+            "8": 8,
+            "9": 6,
+            "10": 18,
+            "11": 7,
+            "12": 3
+          },
+          "leftover": 5,
+          "ms": 321,
+          "rejected": true
+        },
+        {
+          "seed": 1001,
+          "phase1Segments": 40,
+          "phase1Rest": 17,
+          "phase2Segments": 1,
+          "computeTries": 607,
+          "lengths": {
+            "8": 7,
+            "9": 1,
+            "10": 23,
+            "11": 6,
+            "12": 4
+          },
+          "leftover": 7,
+          "ms": 252,
+          "rejected": true
+        },
+        {
+          "seed": 1002,
+          "phase1Segments": 41,
+          "phase1Rest": 6,
+          "phase2Segments": 0,
+          "computeTries": 0,
+          "lengths": {
+            "8": 8,
+            "9": 2,
+            "10": 18,
+            "11": 8,
+            "12": 5
+          },
+          "leftover": 6,
+          "ms": 290,
+          "rejected": true
+        },
+        {
+          "seed": 1003,
+          "phase1Segments": 40,
+          "phase1Rest": 19,
+          "phase2Segments": 1,
+          "computeTries": 20122,
+          "lengths": {
+            "8": 8,
+            "9": 4,
+            "10": 18,
+            "11": 5,
+            "12": 6
+          },
+          "leftover": 9,
+          "ms": 290,
+          "rejected": true
+        },
+        {
+          "seed": 1004,
+          "phase1Segments": 42,
+          "phase1Rest": 6,
+          "phase2Segments": 0,
+          "computeTries": 0,
+          "lengths": {
+            "8": 10,
+            "9": 3,
+            "10": 20,
+            "11": 5,
+            "12": 4
+          },
+          "leftover": 6,
+          "ms": 312,
+          "rejected": true
+        },
+        {
+          "seed": 1005,
+          "phase1Segments": 40,
+          "phase1Rest": 13,
+          "phase2Segments": 0,
+          "computeTries": 20000,
+          "lengths": {
+            "8": 8,
+            "9": 2,
+            "10": 15,
+            "11": 9,
+            "12": 6
+          },
+          "leftover": 13,
+          "ms": 368,
+          "rejected": true
+        },
+        {
+          "seed": 1006,
+          "phase1Segments": 39,
+          "phase1Rest": 38,
+          "phase2Segments": 3,
+          "computeTries": 3405,
+          "lengths": {
+            "8": 10,
+            "9": 3,
+            "10": 18,
+            "11": 7,
+            "12": 4
+          },
+          "leftover": 4,
+          "ms": 253,
+          "rejected": true
+        },
+        {
+          "seed": 1007,
+          "phase1Segments": 41,
+          "phase1Rest": 13,
+          "phase2Segments": 1,
+          "computeTries": 4612,
+          "lengths": {
+            "8": 8,
+            "9": 3,
+            "10": 22,
+            "11": 6,
+            "12": 3
+          },
+          "leftover": 3,
+          "ms": 222,
+          "rejected": true
+        },
+        {
+          "seed": 1008,
+          "phase1Segments": 40,
+          "phase1Rest": 14,
+          "phase2Segments": 1,
+          "computeTries": 620,
+          "lengths": {
+            "8": 8,
+            "9": 2,
+            "10": 16,
+            "11": 8,
+            "12": 7
+          },
+          "leftover": 2,
+          "ms": 216,
+          "rejected": true
+        },
+        {
+          "seed": 1009,
+          "phase1Segments": 40,
+          "phase1Rest": 27,
+          "phase2Segments": 2,
+          "computeTries": 268,
+          "lengths": {
+            "8": 13,
+            "9": 2,
+            "10": 15,
+            "11": 5,
+            "12": 7
+          },
+          "leftover": 5,
+          "ms": 323,
+          "rejected": true
+        },
+        {
+          "seed": 1010,
+          "phase1Segments": 38,
+          "phase1Rest": 34,
+          "phase2Segments": 2,
+          "computeTries": 20104,
+          "lengths": {
+            "8": 5,
+            "9": 5,
+            "10": 16,
+            "11": 7,
+            "12": 7
+          },
+          "leftover": 10,
+          "ms": 310,
+          "rejected": true
+        },
+        {
+          "seed": 1011,
+          "phase1Segments": 37,
+          "phase1Rest": 47,
+          "phase2Segments": 3,
+          "computeTries": 21022,
+          "lengths": {
+            "8": 6,
+            "9": 1,
+            "10": 22,
+            "11": 4,
+            "12": 7
+          },
+          "leftover": 11,
+          "ms": 336,
+          "rejected": true
+        },
+        {
+          "seed": 1012,
+          "phase1Segments": 41,
+          "phase1Rest": 12,
+          "phase2Segments": 1,
+          "computeTries": 1774,
+          "lengths": {
+            "8": 10,
+            "9": 1,
+            "10": 20,
+            "11": 7,
+            "12": 4
+          },
+          "leftover": 2,
+          "ms": 254,
+          "rejected": true
+        },
+        {
+          "seed": 1013,
+          "phase1Segments": 37,
+          "phase1Rest": 40,
+          "phase2Segments": 2,
+          "computeTries": 30732,
+          "lengths": {
+            "8": 3,
+            "9": 2,
+            "10": 23,
+            "11": 4,
+            "12": 7
+          },
+          "leftover": 16,
+          "ms": 471,
+          "rejected": true
+        },
+        {
+          "seed": 1014,
+          "phase1Segments": 41,
+          "phase1Rest": 10,
+          "phase2Segments": 0,
+          "computeTries": 20000,
+          "lengths": {
+            "8": 5,
+            "9": 5,
+            "10": 23,
+            "11": 5,
+            "12": 3
+          },
+          "leftover": 10,
+          "ms": 345,
+          "rejected": true
+        },
+        {
+          "seed": 1015,
+          "phase1Segments": 40,
+          "phase1Rest": 21,
+          "phase2Segments": 1,
+          "computeTries": 21708,
+          "lengths": {
+            "8": 5,
+            "9": 6,
+            "10": 22,
+            "11": 5,
+            "12": 3
+          },
+          "leftover": 11,
+          "ms": 352,
+          "rejected": true
+        },
+        {
+          "seed": 1016,
+          "phase1Segments": 40,
+          "phase1Rest": 11,
+          "phase2Segments": 0,
+          "computeTries": 20000,
+          "lengths": {
+            "8": 7,
+            "9": 1,
+            "10": 18,
+            "11": 8,
+            "12": 6
+          },
+          "leftover": 11,
+          "ms": 346,
+          "rejected": true
+        },
+        {
+          "seed": 1017,
+          "phase1Segments": 40,
+          "phase1Rest": 22,
+          "phase2Segments": 1,
+          "computeTries": 20142,
+          "lengths": {
+            "8": 8,
+            "9": 4,
+            "10": 19,
+            "11": 4,
+            "12": 6
+          },
+          "leftover": 10,
+          "ms": 335,
+          "rejected": true
+        },
+        {
+          "seed": 1018,
+          "phase1Segments": 40,
+          "phase1Rest": 26,
+          "phase2Segments": 1,
+          "computeTries": 33349,
+          "lengths": {
+            "8": 11,
+            "9": 2,
+            "10": 15,
+            "11": 10,
+            "12": 3
+          },
+          "leftover": 14,
+          "ms": 486,
+          "rejected": true
+        },
+        {
+          "seed": 1019,
+          "phase1Segments": 39,
+          "phase1Rest": 33,
+          "phase2Segments": 2,
+          "computeTries": 20812,
+          "lengths": {
+            "8": 10,
+            "9": 3,
+            "10": 16,
+            "11": 4,
+            "12": 8
+          },
+          "leftover": 9,
+          "ms": 326,
+          "rejected": true
+        },
+        {
+          "seed": 1020,
+          "phase1Segments": 36,
+          "phase1Rest": 49,
+          "phase2Segments": 4,
+          "computeTries": 8308,
+          "lengths": {
+            "8": 6,
+            "9": 2,
+            "10": 16,
+            "11": 5,
+            "12": 11
+          },
+          "leftover": 3,
+          "ms": 358,
+          "rejected": true
+        },
+        {
+          "seed": 1021,
+          "phase1Segments": 39,
+          "phase1Rest": 22,
+          "phase2Segments": 2,
+          "computeTries": 8851,
+          "lengths": {
+            "8": 7,
+            "9": 2,
+            "10": 19,
+            "11": 5,
+            "12": 8
+          },
+          "leftover": 1,
+          "ms": 232,
+          "rejected": true
+        },
+        {
+          "seed": 1022,
+          "phase1Segments": 41,
+          "phase1Rest": 16,
+          "phase2Segments": 1,
+          "computeTries": 964,
+          "lengths": {
+            "8": 8,
+            "9": 4,
+            "10": 23,
+            "11": 2,
+            "12": 5
+          },
+          "leftover": 4,
+          "ms": 257,
+          "rejected": true
+        },
+        {
+          "seed": 1023,
+          "phase1Segments": 43,
+          "phase1Rest": 5,
+          "phase2Segments": 0,
+          "computeTries": 0,
+          "lengths": {
+            "8": 13,
+            "9": 3,
+            "10": 20,
+            "11": 4,
+            "12": 3
+          },
+          "leftover": 5,
+          "ms": 347,
+          "rejected": true
+        },
+        {
+          "seed": 1024,
+          "phase1Segments": 39,
+          "phase1Rest": 32,
+          "phase2Segments": 2,
+          "computeTries": 20318,
+          "lengths": {
+            "8": 10,
+            "9": 2,
+            "10": 18,
+            "11": 2,
+            "12": 9
+          },
+          "leftover": 8,
+          "ms": 301,
+          "rejected": true
+        },
+        {
+          "seed": 1025,
+          "phase1Segments": 43,
+          "phase1Rest": 10,
+          "phase2Segments": 0,
+          "computeTries": 20000,
+          "lengths": {
+            "8": 15,
+            "9": 5,
+            "10": 16,
+            "11": 3,
+            "12": 4
+          },
+          "leftover": 10,
+          "ms": 345,
+          "rejected": true
+        },
+        {
+          "seed": 1026,
+          "phase1Segments": 40,
+          "phase1Rest": 26,
+          "phase2Segments": 2,
+          "computeTries": 8687,
+          "lengths": {
+            "8": 11,
+            "9": 2,
+            "10": 16,
+            "11": 8,
+            "12": 5
+          },
+          "leftover": 2,
+          "ms": 299,
+          "rejected": true
+        },
+        {
+          "seed": 1027,
+          "phase1Segments": 39,
+          "phase1Rest": 27,
+          "phase2Segments": 1,
+          "computeTries": 20040,
+          "lengths": {
+            "8": 8,
+            "9": 1,
+            "10": 19,
+            "11": 6,
+            "12": 6
+          },
+          "leftover": 15,
+          "ms": 314,
+          "rejected": true
+        },
+        {
+          "seed": 1028,
+          "phase1Segments": 39,
+          "phase1Rest": 21,
+          "phase2Segments": 1,
+          "computeTries": 20634,
+          "lengths": {
+            "8": 3,
+            "9": 5,
+            "10": 21,
+            "11": 4,
+            "12": 7
+          },
+          "leftover": 9,
+          "ms": 287,
+          "rejected": true
+        },
+        {
+          "seed": 1029,
+          "phase1Segments": 41,
+          "phase1Rest": 24,
+          "phase2Segments": 1,
+          "computeTries": 20149,
+          "lengths": {
+            "8": 14,
+            "9": 4,
+            "10": 12,
+            "11": 8,
+            "12": 4
+          },
+          "leftover": 12,
+          "ms": 274,
+          "rejected": true
+        }
+      ],
+      "best": {
+        "seed": 1021,
+        "phase1Segments": 39,
+        "phase1Rest": 22,
+        "phase2Segments": 2,
+        "computeTries": 8851,
+        "lengths": {
+          "8": 7,
+          "9": 2,
+          "10": 19,
+          "11": 5,
+          "12": 8
+        },
+        "leftover": 1,
+        "ms": 232,
+        "rejected": true,
+        "segments": [
+          [
+            0,
+            5,
+            3,
+            4,
+            5,
+            0,
+            0,
+            0,
+            7,
+            6
+          ],
+          [
+            5,
+            8,
+            0,
+            0,
+            2,
+            3,
+            4,
+            4
+          ],
+          [
+            0,
+            2,
+            7,
+            6,
+            7,
+            6,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            6,
+            5,
+            0,
+            3,
+            0,
+            0,
+            4,
+            9
+          ],
+          [
+            9,
+            0,
+            0,
+            0,
+            3,
+            2,
+            4,
+            4
+          ],
+          [
+            8,
+            0,
+            3,
+            5,
+            6,
+            4,
+            7,
+            6,
+            0,
+            0
+          ],
+          [
+            0,
+            8,
+            0,
+            0,
+            8,
+            0,
+            4,
+            4,
+            3,
+            2
+          ],
+          [
+            1,
+            8,
+            0,
+            0,
+            9,
+            2,
+            3,
+            1,
+            0,
+            8
+          ],
+          [
+            0,
+            5,
+            5,
+            5,
+            6,
+            6,
+            2,
+            2,
+            0,
+            0,
+            7,
+            7
+          ],
+          [
+            3,
+            0,
+            2,
+            0,
+            1,
+            9,
+            1,
+            3,
+            0,
+            3,
+            8
+          ],
+          [
+            6,
+            0,
+            9,
+            9,
+            0,
+            4,
+            0,
+            0,
+            6,
+            8
+          ],
+          [
+            0,
+            6,
+            8,
+            9,
+            8,
+            0,
+            5,
+            4,
+            2,
+            3
+          ],
+          [
+            2,
+            4,
+            0,
+            9,
+            0,
+            0,
+            0,
+            4,
+            0,
+            3,
+            8
+          ],
+          [
+            7,
+            3,
+            6,
+            5,
+            7,
+            6,
+            0,
+            0
+          ],
+          [
+            1,
+            3,
+            6,
+            6,
+            6,
+            7,
+            0,
+            0
+          ],
+          [
+            9,
+            5,
+            7,
+            7,
+            5,
+            0,
+            1,
+            0,
+            0,
+            5,
+            9
+          ],
+          [
+            1,
+            0,
+            4,
+            6,
+            5,
+            6,
+            7,
+            0,
+            0
+          ],
+          [
+            6,
+            5,
+            0,
+            8,
+            8,
+            2,
+            1,
+            0,
+            0,
+            7,
+            7
+          ],
+          [
+            0,
+            4,
+            8,
+            9,
+            0,
+            1,
+            3,
+            1,
+            4,
+            8
+          ],
+          [
+            0,
+            8,
+            4,
+            5,
+            6,
+            2,
+            2,
+            3,
+            0,
+            9,
+            7,
+            0
+          ],
+          [
+            3,
+            5,
+            0,
+            9,
+            5,
+            6,
+            0,
+            2,
+            0,
+            0,
+            5,
+            8
+          ],
+          [
+            6,
+            0,
+            7,
+            6,
+            0,
+            0,
+            2,
+            0,
+            5,
+            9
+          ],
+          [
+            3,
+            0,
+            0,
+            1,
+            3,
+            4,
+            4,
+            3,
+            7,
+            7,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            2,
+            1,
+            5,
+            5,
+            4,
+            0,
+            0,
+            0,
+            3,
+            8
+          ],
+          [
+            6,
+            7,
+            0,
+            0,
+            2,
+            3,
+            4,
+            4
+          ],
+          [
+            9,
+            0,
+            9,
+            9,
+            0,
+            0,
+            2,
+            1,
+            5,
+            6
+          ],
+          [
+            1,
+            3,
+            7,
+            8,
+            0,
+            1,
+            1,
+            0,
+            4,
+            9
+          ],
+          [
+            7,
+            0,
+            4,
+            3,
+            7,
+            7,
+            0,
+            0,
+            3,
+            0,
+            4,
+            7
+          ],
+          [
+            0,
+            7,
+            7,
+            6,
+            5,
+            2,
+            0,
+            0,
+            0,
+            5,
+            8
+          ],
+          [
+            1,
+            9,
+            9,
+            0,
+            9,
+            0,
+            1,
+            4,
+            6,
+            3
+          ],
+          [
+            1,
+            8,
+            0,
+            0,
+            2,
+            1,
+            5,
+            5
+          ],
+          [
+            5,
+            0,
+            9,
+            8,
+            0,
+            2,
+            0,
+            0,
+            4,
+            8
+          ],
+          [
+            1,
+            0,
+            7,
+            7,
+            2,
+            0,
+            2,
+            1,
+            4,
+            8
+          ],
+          [
+            2,
+            0,
+            9,
+            9,
+            0,
+            1,
+            0,
+            0,
+            5,
+            9
+          ],
+          [
+            0,
+            1,
+            8,
+            8,
+            0,
+            1,
+            4,
+            1,
+            0,
+            8
+          ],
+          [
+            6,
+            8,
+            0,
+            0,
+            2,
+            9,
+            2,
+            3,
+            4,
+            3
+          ],
+          [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            9,
+            6,
+            4,
+            5,
+            2,
+            3
+          ],
+          [
+            3,
+            9,
+            0,
+            0,
+            7,
+            6,
+            6,
+            5,
+            0,
+            1
+          ],
+          [
+            2,
+            8,
+            7,
+            7,
+            0,
+            1,
+            4,
+            0,
+            0,
+            9
+          ],
+          [
+            2,
+            3,
+            0,
+            9,
+            7,
+            8,
+            1,
+            0,
+            1,
+            0,
+            3,
+            9
+          ],
+          [
+            8,
+            9,
+            0,
+            0,
+            1,
+            0,
+            1,
+            5,
+            8
+          ]
+        ],
+        "rest": [
+          6
+        ],
+        "result": {
+          "rejected": true,
+          "leftoverCount": 1,
+          "stats": {
+            "ms": 232
+          }
+        }
+      },
+      "summary": {
+        "attempts": 30,
+        "zeroLeftover": 0,
+        "minLeftover": 1,
+        "maxLeftover": 16,
+        "meanLeftover": 7.766666666666667,
+        "totalPhase1Segments": 1197,
+        "totalPhase2Segments": 37,
+        "elapsedMs": 9422
+      }
+    },
+    {
+      "rounds": 3,
+      "minLen": 12,
+      "maxLen": 18,
+      "attempts": [
+        {
+          "seed": 1000,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 18,
+          "computeTries": 31624,
+          "lengths": {
+            "16": 1,
+            "17": 7,
+            "18": 10
+          },
+          "leftover": 101,
+          "ms": 527,
+          "rejected": true
+        },
+        {
+          "seed": 1001,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 39422,
+          "lengths": {
+            "16": 3,
+            "17": 3,
+            "18": 14
+          },
+          "leftover": 65,
+          "ms": 497,
+          "rejected": true
+        },
+        {
+          "seed": 1002,
+          "phase1Segments": 2,
+          "phase1Rest": 384,
+          "phase2Segments": 17,
+          "computeTries": 36649,
+          "lengths": {
+            "16": 3,
+            "17": 4,
+            "18": 12
+          },
+          "leftover": 84,
+          "ms": 1204,
+          "rejected": true
+        },
+        {
+          "seed": 1003,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 54061,
+          "lengths": {
+            "16": 2,
+            "17": 3,
+            "18": 15
+          },
+          "leftover": 63,
+          "ms": 544,
+          "rejected": true
+        },
+        {
+          "seed": 1004,
+          "phase1Segments": 2,
+          "phase1Rest": 388,
+          "phase2Segments": 19,
+          "computeTries": 48640,
+          "lengths": {
+            "13": 1,
+            "15": 2,
+            "16": 3,
+            "17": 3,
+            "18": 12
+          },
+          "leftover": 58,
+          "ms": 864,
+          "rejected": true
+        },
+        {
+          "seed": 1005,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 48655,
+          "lengths": {
+            "16": 1,
+            "17": 5,
+            "18": 14
+          },
+          "leftover": 63,
+          "ms": 527,
+          "rejected": true
+        },
+        {
+          "seed": 1006,
+          "phase1Segments": 3,
+          "phase1Rest": 369,
+          "phase2Segments": 18,
+          "computeTries": 35904,
+          "lengths": {
+            "15": 2,
+            "16": 1,
+            "17": 9,
+            "18": 9
+          },
+          "leftover": 55,
+          "ms": 1091,
+          "rejected": true
+        },
+        {
+          "seed": 1007,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 35540,
+          "lengths": {
+            "15": 2,
+            "17": 4,
+            "18": 14
+          },
+          "leftover": 66,
+          "ms": 494,
+          "rejected": true
+        },
+        {
+          "seed": 1008,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 19,
+          "computeTries": 29059,
+          "lengths": {
+            "16": 1,
+            "17": 6,
+            "18": 12
+          },
+          "leftover": 82,
+          "ms": 502,
+          "rejected": true
+        },
+        {
+          "seed": 1009,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 38838,
+          "lengths": {
+            "16": 3,
+            "17": 2,
+            "18": 15
+          },
+          "leftover": 64,
+          "ms": 510,
+          "rejected": true
+        },
+        {
+          "seed": 1010,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 17,
+          "computeTries": 37771,
+          "lengths": {
+            "17": 3,
+            "18": 14
+          },
+          "leftover": 113,
+          "ms": 550,
+          "rejected": true
+        },
+        {
+          "seed": 1011,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 31605,
+          "lengths": {
+            "15": 1,
+            "17": 10,
+            "18": 9
+          },
+          "leftover": 69,
+          "ms": 510,
+          "rejected": true
+        },
+        {
+          "seed": 1012,
+          "phase1Segments": 1,
+          "phase1Rest": 400,
+          "phase2Segments": 18,
+          "computeTries": 44194,
+          "lengths": {
+            "16": 2,
+            "17": 4,
+            "18": 13
+          },
+          "leftover": 82,
+          "ms": 693,
+          "rejected": true
+        },
+        {
+          "seed": 1013,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 19,
+          "computeTries": 35822,
+          "lengths": {
+            "16": 2,
+            "17": 5,
+            "18": 12
+          },
+          "leftover": 83,
+          "ms": 472,
+          "rejected": true
+        },
+        {
+          "seed": 1014,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 19,
+          "computeTries": 35407,
+          "lengths": {
+            "16": 1,
+            "17": 6,
+            "18": 12
+          },
+          "leftover": 82,
+          "ms": 485,
+          "rejected": true
+        },
+        {
+          "seed": 1015,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 39115,
+          "lengths": {
+            "16": 1,
+            "17": 8,
+            "18": 11
+          },
+          "leftover": 66,
+          "ms": 486,
+          "rejected": true
+        },
+        {
+          "seed": 1016,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 42055,
+          "lengths": {
+            "15": 2,
+            "16": 1,
+            "17": 8,
+            "18": 9
+          },
+          "leftover": 72,
+          "ms": 521,
+          "rejected": true
+        },
+        {
+          "seed": 1017,
+          "phase1Segments": 2,
+          "phase1Rest": 387,
+          "phase2Segments": 19,
+          "computeTries": 54100,
+          "lengths": {
+            "14": 1,
+            "15": 2,
+            "17": 3,
+            "18": 15
+          },
+          "leftover": 51,
+          "ms": 963,
+          "rejected": true
+        },
+        {
+          "seed": 1018,
+          "phase1Segments": 1,
+          "phase1Rest": 401,
+          "phase2Segments": 18,
+          "computeTries": 41760,
+          "lengths": {
+            "15": 2,
+            "16": 1,
+            "17": 3,
+            "18": 13
+          },
+          "leftover": 85,
+          "ms": 566,
+          "rejected": true
+        },
+        {
+          "seed": 1019,
+          "phase1Segments": 1,
+          "phase1Rest": 401,
+          "phase2Segments": 20,
+          "computeTries": 52075,
+          "lengths": {
+            "15": 1,
+            "16": 4,
+            "17": 4,
+            "18": 12
+          },
+          "leftover": 53,
+          "ms": 678,
+          "rejected": true
+        },
+        {
+          "seed": 1020,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 20,
+          "computeTries": 36658,
+          "lengths": {
+            "15": 1,
+            "16": 1,
+            "17": 9,
+            "18": 9
+          },
+          "leftover": 70,
+          "ms": 516,
+          "rejected": true
+        },
+        {
+          "seed": 1021,
+          "phase1Segments": 3,
+          "phase1Rest": 372,
+          "phase2Segments": 18,
+          "computeTries": 39215,
+          "lengths": {
+            "13": 1,
+            "15": 2,
+            "16": 2,
+            "17": 5,
+            "18": 11
+          },
+          "leftover": 58,
+          "ms": 1064,
+          "rejected": true
+        },
+        {
+          "seed": 1022,
+          "phase1Segments": 1,
+          "phase1Rest": 400,
+          "phase2Segments": 18,
+          "computeTries": 31948,
+          "lengths": {
+            "16": 1,
+            "17": 1,
+            "18": 17
+          },
+          "leftover": 77,
+          "ms": 521,
+          "rejected": true
+        },
+        {
+          "seed": 1023,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 19,
+          "computeTries": 38207,
+          "lengths": {
+            "16": 1,
+            "17": 5,
+            "18": 13
+          },
+          "leftover": 81,
+          "ms": 516,
+          "rejected": true
+        },
+        {
+          "seed": 1024,
+          "phase1Segments": 2,
+          "phase1Rest": 384,
+          "phase2Segments": 18,
+          "computeTries": 51107,
+          "lengths": {
+            "15": 1,
+            "16": 4,
+            "17": 9,
+            "18": 6
+          },
+          "leftover": 76,
+          "ms": 695,
+          "rejected": true
+        },
+        {
+          "seed": 1025,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 21,
+          "computeTries": 35105,
+          "lengths": {
+            "15": 2,
+            "16": 1,
+            "17": 6,
+            "18": 12
+          },
+          "leftover": 52,
+          "ms": 518,
+          "rejected": true
+        },
+        {
+          "seed": 1026,
+          "phase1Segments": 1,
+          "phase1Rest": 400,
+          "phase2Segments": 19,
+          "computeTries": 40925,
+          "lengths": {
+            "16": 4,
+            "17": 6,
+            "18": 10
+          },
+          "leftover": 70,
+          "ms": 617,
+          "rejected": true
+        },
+        {
+          "seed": 1027,
+          "phase1Segments": 2,
+          "phase1Rest": 387,
+          "phase2Segments": 18,
+          "computeTries": 32122,
+          "lengths": {
+            "13": 1,
+            "16": 2,
+            "17": 5,
+            "18": 12
+          },
+          "leftover": 70,
+          "ms": 821,
+          "rejected": true
+        },
+        {
+          "seed": 1028,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 19,
+          "computeTries": 31746,
+          "lengths": {
+            "16": 2,
+            "17": 6,
+            "18": 11
+          },
+          "leftover": 84,
+          "ms": 495,
+          "rejected": true
+        },
+        {
+          "seed": 1029,
+          "phase1Segments": 0,
+          "phase1Rest": 416,
+          "phase2Segments": 19,
+          "computeTries": 33973,
+          "lengths": {
+            "18": 19
+          },
+          "leftover": 74,
+          "ms": 478,
+          "rejected": true
+        }
+      ],
+      "best": {
+        "seed": 1017,
+        "phase1Segments": 2,
+        "phase1Rest": 387,
+        "phase2Segments": 19,
+        "computeTries": 54100,
+        "lengths": {
+          "14": 1,
+          "15": 2,
+          "17": 3,
+          "18": 15
+        },
+        "leftover": 51,
+        "ms": 963,
+        "rejected": true,
+        "segments": [
+          [
+            8,
+            9,
+            0,
+            0,
+            5,
+            0,
+            6,
+            6,
+            0,
+            0,
+            2,
+            0,
+            5,
+            8
+          ],
+          [
+            0,
+            8,
+            0,
+            0,
+            9,
+            1,
+            5,
+            4,
+            0,
+            4,
+            5,
+            0,
+            7,
+            6,
+            9
+          ],
+          [
+            0,
+            6,
+            4,
+            5,
+            4,
+            0,
+            9,
+            7,
+            6,
+            4,
+            5,
+            4,
+            4,
+            6,
+            7,
+            9,
+            7,
+            0
+          ],
+          [
+            5,
+            7,
+            9,
+            0,
+            7,
+            0,
+            1,
+            1,
+            4,
+            4,
+            5,
+            5,
+            4,
+            0,
+            0,
+            7,
+            7
+          ],
+          [
+            9,
+            0,
+            4,
+            3,
+            0,
+            7,
+            1,
+            0,
+            2,
+            0,
+            9,
+            9,
+            3,
+            0,
+            0,
+            1,
+            7,
+            7
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            9,
+            8,
+            1,
+            0,
+            0,
+            3,
+            6,
+            6,
+            1,
+            2,
+            1,
+            0,
+            6,
+            7
+          ],
+          [
+            0,
+            6,
+            0,
+            0,
+            4,
+            4,
+            3,
+            7,
+            9,
+            6,
+            7,
+            1,
+            0,
+            1,
+            2,
+            6,
+            5
+          ],
+          [
+            0,
+            8,
+            3,
+            4,
+            7,
+            3,
+            3,
+            0,
+            2,
+            0,
+            0,
+            8,
+            9,
+            8,
+            2,
+            2,
+            5,
+            5
+          ],
+          [
+            9,
+            0,
+            4,
+            2,
+            4,
+            6,
+            2,
+            3,
+            9,
+            0,
+            5,
+            7,
+            0,
+            1,
+            3,
+            1,
+            4,
+            8
+          ],
+          [
+            5,
+            4,
+            0,
+            7,
+            0,
+            8,
+            9,
+            0,
+            5,
+            1,
+            5,
+            7,
+            1,
+            9,
+            2,
+            1,
+            5,
+            6
+          ],
+          [
+            4,
+            1,
+            0,
+            9,
+            2,
+            2,
+            4,
+            3,
+            0,
+            1,
+            6,
+            0,
+            8,
+            9,
+            2,
+            3,
+            5,
+            4
+          ],
+          [
+            5,
+            0,
+            5,
+            0,
+            6,
+            4,
+            9,
+            0,
+            5,
+            1,
+            5,
+            7,
+            0,
+            1,
+            0,
+            2,
+            7,
+            7
+          ],
+          [
+            4,
+            3,
+            0,
+            2,
+            6,
+            9,
+            8,
+            0,
+            5,
+            3,
+            6,
+            4,
+            2,
+            3,
+            0,
+            2,
+            6,
+            4
+          ],
+          [
+            6,
+            8,
+            7,
+            7,
+            6,
+            1,
+            1,
+            5,
+            0,
+            9,
+            7,
+            7,
+            1,
+            0,
+            0,
+            3,
+            7,
+            4
+          ],
+          [
+            7,
+            0,
+            3,
+            4,
+            2,
+            1,
+            5,
+            1,
+            9,
+            0,
+            7,
+            6,
+            2,
+            5,
+            0,
+            8,
+            7,
+            9
+          ],
+          [
+            8,
+            9,
+            5,
+            3,
+            8,
+            0,
+            6,
+            8,
+            4,
+            6,
+            6,
+            4,
+            3,
+            3,
+            0,
+            8,
+            7,
+            9
+          ],
+          [
+            0,
+            3,
+            2,
+            0,
+            3,
+            5,
+            4,
+            1,
+            0,
+            0,
+            2,
+            8,
+            1,
+            0,
+            3,
+            0,
+            4,
+            7
+          ],
+          [
+            9,
+            8,
+            2,
+            4,
+            9,
+            0,
+            2,
+            3,
+            2,
+            9,
+            8,
+            8,
+            0,
+            5,
+            0,
+            5,
+            6,
+            3
+          ],
+          [
+            3,
+            1,
+            0,
+            1,
+            3,
+            6,
+            0,
+            3,
+            0,
+            0,
+            6,
+            6,
+            2,
+            0,
+            1,
+            2,
+            6,
+            5
+          ],
+          [
+            0,
+            1,
+            3,
+            0,
+            6,
+            9,
+            9,
+            0,
+            1,
+            6,
+            7,
+            2,
+            0,
+            1,
+            0,
+            5,
+            9
+          ],
+          [
+            0,
+            2,
+            2,
+            0,
+            3,
+            8,
+            9,
+            8,
+            0,
+            0,
+            0,
+            3,
+            0,
+            3,
+            8
+          ]
+        ],
+        "rest": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          8,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          2
+        ],
+        "result": {
+          "rejected": true,
+          "leftoverCount": 51,
+          "stats": {
+            "ms": 963
+          }
+        }
+      },
+      "summary": {
+        "attempts": 30,
+        "zeroLeftover": 0,
+        "minLeftover": 51,
+        "maxLeftover": 113,
+        "meanLeftover": 72.3,
+        "totalPhase1Segments": 21,
+        "totalPhase2Segments": 570,
+        "elapsedMs": 18925
+      }
+    }
+  ]
+}
