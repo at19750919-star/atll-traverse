@@ -72,6 +72,36 @@ function uiHarness() {
   return { node, api: ctx.testUI };
 }
 (async () => {
+  await check('第二張敏感開關傳入首次排牌與重跑，改變時清除舊比較', async () => {
+    const h = uiHarness(), original = B.build, calls = [];
+    h.node('secondStart').checked = true;
+    h.node('sideRule').checked = h.node('endingNine').checked = false;
+    h.node('secondStart').listeners.change();
+    assert.equal(B.rules.secondStart, true);
+    try {
+      B.build = async opts => {
+        calls.push(opts);
+        return calls.length === 1 ? { rejected: true, leftoverCount: 5 } : resultOf(1139);
+      };
+      await h.node('btnRun').listeners.click();
+      assert.equal(calls.length, 2);
+      assert.ok(calls.every(o => o.secondStart === true && o.minLen === 8 && o.maxLen === 12 && o.rejectAbove === 0));
+      assert.match(h.node('progress').textContent, /^完成/);
+      assert.equal(h.node('secondStart').disabled, false);
+      const optimize = O.optimize;
+      try {
+        O.optimize = async (result, options) => {
+          assert.equal(options.secondStart, true);
+          throw new Error('test-second-start-option');
+        };
+        await h.node('btnOptimize').listeners.click();
+        assert.match(h.node('progress').textContent, /test-second-start-option/);
+      } finally { O.optimize = optimize; }
+      h.node('secondStart').checked = false;
+      h.node('secondStart').listeners.change();
+      assert.equal(B.rules.secondStart, false);
+    } finally { B.build = original; B.rules.secondStart = false; }
+  });
   await check('卡色按鈕依目前切點配色、同步牌表與導出資料；失敗保留原牌', () => {
     const h = uiHarness(); h.api.load(resultOf(1139));
     h.node('cutPos').value = '36'; h.node('btnCut').listeners.click();

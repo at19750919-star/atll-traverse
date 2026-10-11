@@ -1,0 +1,170 @@
+{
+  "method": "Five fixed seeds per setting, real build and point-only cut analysis, default phase budgets/triple/signal rules. One build per seed, keep leftovers, no automatic reruns or ending-nine rotation. Generated shoes differ; not a same-shoe optimization comparison or general success rate.",
+  "rows": [
+    {
+      "minLen": 8,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1000,
+      "safeCuts": 101,
+      "leftover": 5,
+      "signalOk": false,
+      "allQualified": false,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 8,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1001,
+      "safeCuts": 3,
+      "leftover": 7,
+      "signalOk": false,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 8,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1002,
+      "safeCuts": 3,
+      "leftover": 6,
+      "signalOk": true,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 8,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1003,
+      "safeCuts": 6,
+      "leftover": 9,
+      "signalOk": true,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 8,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1004,
+      "safeCuts": 97,
+      "leftover": 6,
+      "signalOk": false,
+      "allQualified": false,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 9,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1000,
+      "safeCuts": 97,
+      "leftover": 4,
+      "signalOk": true,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 9,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1001,
+      "safeCuts": 4,
+      "leftover": 8,
+      "signalOk": true,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 9,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1002,
+      "safeCuts": 94,
+      "leftover": 1,
+      "signalOk": true,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 9,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1003,
+      "safeCuts": 3,
+      "leftover": 10,
+      "signalOk": true,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 9,
+      "secondStart": false,
+      "maxLen": 12,
+      "seed": 1004,
+      "safeCuts": 107,
+      "leftover": 14,
+      "signalOk": true,
+      "allQualified": true,
+      "secondStartIssues": 0
+    },
+    {
+      "minLen": 9,
+      "secondStart": true,
+      "maxLen": 12,
+      "seed": 1000,
+      "safeCuts": 137,
+      "leftover": 50,
+      "signalOk": false,
+      "allQualified": false,
+      "secondStartIssues": 2
+    },
+    {
+      "minLen": 9,
+      "secondStart": true,
+      "maxLen": 12,
+      "seed": 1001,
+      "safeCuts": 22,
+      "leftover": 72,
+      "signalOk": false,
+      "allQualified": false,
+      "secondStartIssues": 2
+    },
+    {
+      "minLen": 9,
+      "secondStart": true,
+      "maxLen": 12,
+      "seed": 1002,
+      "safeCuts": 141,
+      "leftover": 74,
+      "signalOk": false,
+      "allQualified": false,
+      "secondStartIssues": 1
+    },
+    {
+      "minLen": 9,
+      "secondStart": true,
+      "maxLen": 12,
+      "seed": 1003,
+      "safeCuts": 119,
+      "leftover": 64,
+      "signalOk": false,
+      "allQualified": false,
+      "secondStartIssues": 1
+    },
+    {
+      "minLen": 9,
+      "secondStart": true,
+      "maxLen": 12,
+      "seed": 1004,
+      "safeCuts": 48,
+      "leftover": 70,
+      "signalOk": false,
+      "allQualified": false,
+      "secondStartIssues": 1
+    }
+  ]
+}

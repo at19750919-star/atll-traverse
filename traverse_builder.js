@@ -119,7 +119,7 @@
 
     // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
     // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
-    const rules = { tripleTie: true, strong: false };
+    const rules = { tripleTie: true, strong: false, secondStart: false };
     // 使用者暫停訊號失敗的重接與整副重跑；保留兩類重試程式供日後明確要求時恢復。
     const SIGNAL_RETRY_ENABLED = false;
     function tripleRuleOk(arr, rounds) {
@@ -140,6 +140,28 @@
                 if (!h || !handSensitive(seg.slice(cur, cur + h.size))) return false;
                 cur += h.size;
             }
+        }
+        return true;
+    }
+
+    // 每個短段從第二張發牌；不足一局的尾牌略過，但至少須有一個完整局。
+    function secondStartOk(seg) {
+        let complete = 0;
+        for (let cur = 1; cur < seg.length;) {
+            const h = simulateHand(seg, cur, seg.length);
+            if (!h) break;
+            if (!handSensitive(seg.slice(cur, cur + h.size))) return false;
+            complete++;
+            cur += h.size;
+        }
+        return complete > 0;
+    }
+
+    function segmentsSecondStart(ch) {
+        let off = 0;
+        for (const len of ch.parts || [ch.length]) {
+            if (!secondStartOk(ch.slice(off, off + len))) return false;
+            off += len;
         }
         return true;
     }
@@ -171,6 +193,7 @@
     // single：只有撿單一短段時套 strongOk；接好的長段用 segmentsStrong。
     function qualifies(arr, single = false) {
         if (single && rules.strong && !strongOk(arr)) return false;
+        if (rules.secondStart && !(single ? secondStartOk(arr) : segmentsSecondStart(arr))) return false;
         const rounds = actualChainRounds(arr);
         if (!rounds) return false;
         for (const r of rounds) {
@@ -183,7 +206,8 @@
 
     // 最終驗收使用已按訊號調整的實際牌序，不再要求不會採用的反向也能穿越。
     function qualifiesFinal(arr) {
-        return !!actualChainRounds(arr) && (!rules.strong || segmentsStrong(arr));
+        return !!actualChainRounds(arr) && (!rules.strong || segmentsStrong(arr))
+            && (!rules.secondStart || segmentsSecondStart(arr));
     }
 
     // 只在失敗結果上找第一個具體原因，不改動 qualifies 的判定與撿段效能。
@@ -214,6 +238,7 @@
         }
         if (rules.tripleTie && !tripleRuleOk(arr, rounds)) return { kind: 'triple', message: '段內三條與下一局結果不符，或段頭為和／段尾為三條' };
         if (rules.strong && !segmentsStrong(arr)) return { kind: 'strong', message: '短段內有起點不符合強條件' };
+        if (rules.secondStart && !segmentsSecondStart(arr)) return { kind: 'secondStart', message: '短段從第二張起發的完整局不全是敏感局（不足一局的尾牌不檢查）' };
         return null;
     }
 
@@ -604,11 +629,13 @@
             tripleTie: options.tripleTie !== false,
             signalRule: options.signalRule !== false,
             strong: options.strong === true,
+            secondStart: options.secondStart === true,
             zeroPolicy: options.zeroPolicy || 'quota',
             quotaFactor: options.quotaFactor ?? 1,
         };
         rules.tripleTie = opts.tripleTie;
         rules.strong = opts.strong;
+        rules.secondStart = opts.secondStart;
         opts.scanLengths = [];
         for (let L = opts.maxLen; L >= opts.minLen; L--) opts.scanLengths.push(L);
         const ctx = {
@@ -675,6 +702,6 @@
         };
     }
 
-    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);

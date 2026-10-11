@@ -422,6 +422,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <label class="btn tool-btn toggle"><input id="tripleTie" type="checkbox" checked>三條</label>
       <label class="btn tool-btn toggle"><input id="signalRule" type="checkbox" checked>A.2</label>
       <label class="btn tool-btn toggle"><input id="strongMode" type="checkbox">強</label>
+      <label class="btn tool-btn toggle" title="每個短段從第二張開始發，完整局都須敏感；段尾不足一局不檢查"><input id="secondStart" type="checkbox">第二張敏感</label>
       <label class="btn tool-btn toggle"><input id="endingNine" type="checkbox" checked>末張9</label>
       <span class="sep"></span>
       <label class="btn tool-btn toggle"><input id="sideRule" type="checkbox" checked>莊閒</label>
@@ -512,9 +513,9 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=14"></script>
+<script src="traverse_builder.js?v=15"></script>
 <script src="traverse_export.js?v=6"></script>
-<script src="traverse_optimizer.js?v=2"></script>
+<script src="traverse_optimizer.js?v=3"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
 <script>
 (function () {
@@ -540,7 +541,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   let shownRounds = [];   // 目前牌表上的局（切牌後重新發）
   let optimization = null, optimizationView = 'after', optimizationBusy = false;
   const optimizerOptions = () => ({ tripleTie: $('tripleTie').checked, signalRule: $('signalRule').checked,
-    strong: $('strongMode').checked, preserveLastNine: $('endingNine').checked });
+    strong: $('strongMode').checked, secondStart: $('secondStart').checked, preserveLastNine: $('endingNine').checked });
   function clearOptimization() { optimization = null; OptimizerDialog.reset(); }
 
   function displayOptimizationVersion(which) {
@@ -593,7 +594,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     optimizationBusy = busy;
     $('btnRun').disabled = busy; $('btnStop').disabled = !busy; $('btnOptimizeDemo').disabled = busy;
     setReady(!busy && !!lastResult);
-    ['tripleTie','signalRule','strongMode','endingNine','sideRule','sideLimit','minLen','maxLen','idleLimit','computeTries','chainAttempts','maxLeftover'].forEach(id => { $(id).disabled = busy; });
+    ['tripleTie','signalRule','strongMode','secondStart','endingNine','sideRule','sideLimit','minLen','maxLen','idleLimit','computeTries','chainAttempts','maxLeftover'].forEach(id => { $(id).disabled = busy; });
     ['btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id => { $(id).disabled = busy; });
   }
   $('btnOptimize').addEventListener('click', async () => {
@@ -625,8 +626,9 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     displayOptimizationVersion(button.dataset.optVersion);
     $('roundsTable').scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
-  ['tripleTie','signalRule','strongMode','endingNine'].forEach(id => $(id).addEventListener('change', () => {
+  ['tripleTie','signalRule','strongMode','secondStart','endingNine'].forEach(id => $(id).addEventListener('change', () => {
     clearOptimization(); TraverseBuilder.rules.tripleTie = $('tripleTie').checked; TraverseBuilder.rules.strong = $('strongMode').checked;
+    TraverseBuilder.rules.secondStart = $('secondStart').checked;
     if (lastResult) computeSafeCuts();
   }));
   $('btnOptimizeDemo').addEventListener('click', async () => {
@@ -634,7 +636,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     $('progress').textContent = '正在排出固定示範牌…';
     try {
       $('tripleTie').checked = $('signalRule').checked = $('endingNine').checked = $('sideRule').checked = true;
-      $('strongMode').checked = false; $('sideLimit').value = 8;
+      $('strongMode').checked = $('secondStart').checked = false; $('sideLimit').value = 8;
       let seed = 1139;
       const rng = () => { let t = seed += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
       const demo = await TraverseBuilder.build({ rng, onProgress: m => { $('progress').textContent = `示範牌：${m}`; }, isCancelled: () => cancelled });
@@ -1294,6 +1296,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
           tripleTie: $('tripleTie').checked,
           signalRule: $('signalRule').checked,
           strong: $('strongMode').checked,
+          secondStart: $('secondStart').checked,
           onProgress: (m) => { $('progress').textContent = tag + m; },
           isCancelled: () => cancelled,
         };

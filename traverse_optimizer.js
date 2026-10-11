@@ -3,7 +3,8 @@
     'use strict';
     const B = global.TraverseBuilder, E = global.TraverseExport;
     const clone = x => JSON.parse(JSON.stringify(x));
-    const settings = o => ({ tripleTie: o.tripleTie !== false, signalRule: o.signalRule !== false, strong: o.strong === true });
+    const settings = o => ({ tripleTie: o.tripleTie !== false, signalRule: o.signalRule !== false,
+        strong: o.strong === true, secondStart: o.secondStart === true });
 
     function prepare(result) {
         const cards = result.cards.map(c => ({ ...c, traverse: false }));
@@ -73,7 +74,7 @@
     // 共用引擎目前使用全域規則；只在同步驗證期間暫存，避免 await 期間影響其他操作。
     function validChain(cards, ch, opts) {
         const saved = { ...B.rules };
-        try { Object.assign(B.rules, { tripleTie: opts.tripleTie, strong: opts.strong }); return B.qualifiesFinal(chainPoints(cards, ch)); }
+        try { Object.assign(B.rules, { tripleTie: opts.tripleTie, strong: opts.strong, secondStart: opts.secondStart }); return B.qualifiesFinal(chainPoints(cards, ch)); }
         finally { Object.assign(B.rules, saved); }
     }
     function permutations(cards) {
