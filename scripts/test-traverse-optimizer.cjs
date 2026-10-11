@@ -64,6 +64,7 @@ function uiHarness() {
   }
   const ctx = vm.createContext({ TraverseBuilder: B, TraverseExport: E, TraverseOptimizer: O,
     document: { getElementById: node, querySelectorAll: () => [] }, console, setTimeout,
+    OptimizerDialog: { show() { node('optimizerPanel').hidden = false; }, reset() { node('optimizerPanel').hidden = true; } },
     fetch: async () => ({ json: async () => ({ success: true, files: [] }) }) });
   let inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
   inline = inline.replace(/\}\)\(\);\s*$/, 'globalThis.testUI = { get: () => ({ lastResult, baseCards, cutPos, optimization, optimizationBusy }), load: r => { lastResult=r; prepareBase(r); render(r); computeSafeCuts(); setReady(true); } }; })();');

@@ -100,6 +100,7 @@ const context = vm.createContext({
     return result;
   } },
   document: { getElementById: node, querySelectorAll: () => [] },
+  OptimizerDialog: { reset() { node('optimizerPanel').hidden = true; } },
   console: { error(e) { if (e !== budget) errors.push(String(e.stack || e)); } },
   Math: math, setTimeout,
   // 只承接完成後的背景清單預讀，不進行外部存取或上傳。

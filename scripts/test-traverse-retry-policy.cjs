@@ -44,6 +44,7 @@ function harness(mode, results, settings = {}, signalRetry = B.SIGNAL_RETRY_ENAB
   const ctx = vm.createContext({
     TraverseBuilder: builder, TraverseExport: E, B: builder, E,
     document: { getElementById: node, querySelectorAll: () => [] },
+    OptimizerDialog: { reset() { node('optimizerPanel').hidden = true; } },
     console: { error: e => errors.push(e.message) }, Math: math, setTimeout,
     fetch: async () => ({ ok: true, json: async () => ({ success: true, files: [] }) }),
     path, os: require('node:os'), process: { argv: ['node', 'batch'], stdout: { write: s => logs.push(s) } },
