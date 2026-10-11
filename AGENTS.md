@@ -1,6 +1,7 @@
 # ATLL-穿越排牌
 
 ## 已定案
+- [2026-10-11｜Codex] 專案部署到 GitHub Pages，使用 at19750919-star/atll-traverse 儲存庫（使用者要求部署到 GitHub）。
 - [2026-10-08｜Codex] 主頁提供局內優化與同副牌前後比較，保留每局結果、張數、敏感性、訊號狀態及長段實際穿越，示範列出移牌與新增安全切點（使用者要求實作並可見示範）。
 - [2026-10-08｜Codex] 增加安全切牌點只以不含卡色的點數規則為目標，卡色留到事後處理，不把卡色違規當成優化限制（使用者明確要求）。
 - [2026-10-08｜Codex] 訊號調整後的最終驗收只檢查實際牌序，不再假設各局反向後仍須穿越；撿段、接段的候選規則保留（使用者認為訊號已決定方向，不需驗證違反訊號的反向）。
@@ -23,6 +24,7 @@
 - [2026-10-08｜Claude] 末張 9 的切點直接當成新的第 1 張（切牌張數歸 0），牌表與導出牌序一致（使用者要求兩邊起點相同）
 
 ## 專案說明
+- 線上入口：https://at19750919-star.github.io/atll-traverse/；GitHub：https://github.com/at19750919-star/atll-traverse。Pages 從 master 根目錄發布，後續推送 master 自動更新；index.html 導向 traverse_builder.html。
 - 過程頁：traverse_process.html，搭配 traverse_process_engine.js／traverse_process.js／traverse_process.css；每張牌固定 ID，支援單步、暫停、回看最近 500 步及 CSV。只讀共用的百家樂判定與敏感局表，不套原排牌頁額外規則；測試：node scripts/test-traverse-process.cjs。
 - 從 ATLL（暫停中，commit 5c2fa1c）複製出的百家樂實驗版，專做「穿越排牌」：反覆洗牌撿合格短段（8～12 張）、計算補排、接成長段，再套三條與 A、2 規則。
 - 主要檔案：traverse_builder.html（頁面）、traverse_builder.js（排牌演算法）、traverse_export.js（發牌、切牌、Excel 導出）；scripts/batch-traverse.mjs 為批次排牌腳本（3D 工作室百家樂面板以 node 執行，cwd 為本資料夾）；suit/at-spade-logo-current.png 為頁面背景 logo。
