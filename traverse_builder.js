@@ -425,7 +425,7 @@
 
     // 依點數決定每局用哪個卡色樣式，使各點數紅背／藍背的需求不超過牌數。
     // 回傳每個位置要的顏色（'R'／'B'／null＝不限），做不到回傳 null
-    function planColors(points, rng) {
+    function planColors(points, rng, groups = points, limits = null) {
         const rounds = [];
         for (let cur = 0; cur < points.length;) {
             const h = simulateHand(points, cur, points.length);
@@ -433,19 +433,20 @@
             rounds.push(cur);
             cur += h.size;
         }
-        const supply = new Array(10).fill(0);
-        for (const p of points) supply[p]++;
+        const supply = new Array(Math.max(...groups) + 1).fill(0);
+        for (const p of groups) supply[p]++;
         const half = supply.map(n => n / 2); // 每個點數紅、藍各半
+        const available = limits || { R: half, B: half };
         for (let attempt = 0; attempt < 50; attempt++) {
             const pick = rounds.map(() => (rng() < 0.5 ? 0 : 1));
             const demand = () => {
-                const d = { R: new Array(10).fill(0), B: new Array(10).fill(0) };
-                rounds.forEach((st, i) => COLOR_PATTERNS[pick[i]].forEach((c, k) => d[c][points[st + k]]++));
+                const d = { R: new Array(supply.length).fill(0), B: new Array(supply.length).fill(0) };
+                rounds.forEach((st, i) => COLOR_PATTERNS[pick[i]].forEach((c, k) => d[c][groups[st + k]]++));
                 return d;
             };
             const overflow = (d) => {
                 let o = 0;
-                for (let p = 0; p < 10; p++) o += Math.max(0, d.R[p] - half[p]) + Math.max(0, d.B[p] - half[p]);
+                for (let p = 0; p < supply.length; p++) o += Math.max(0, d.R[p] - available.R[p]) + Math.max(0, d.B[p] - available.B[p]);
                 return o;
             };
             let d = demand(), cur = overflow(d);
@@ -483,6 +484,34 @@
             cards[i] = take(p, v.R.length >= v.B.length ? 'R' : 'B');
         });
         return { cards, colorOk: !!need };
+    }
+
+    // 只重配牌背，保留每個位置的牌面、點數及同牌面紅藍張數。
+    function reassignColors(cards, rng = Math.random) {
+        if (!Array.isArray(cards) || !cards.length || cards.some(c =>
+            !Number.isInteger(c.point) || c.point < 0 || c.point > 9 || !['R', 'B'].includes(c.back_color))) {
+            throw new Error('牌張或牌背資料不完整，無法重新分配卡色');
+        }
+        const ids = new Map(), groups = cards.map(c => {
+            const key = `${c.rank}|${c.suit}`;
+            if (!ids.has(key)) ids.set(key, ids.size);
+            return ids.get(key);
+        });
+        const limits = { R: new Array(ids.size).fill(0), B: new Array(ids.size).fill(0) };
+        cards.forEach((c, i) => limits[c.back_color][groups[i]]++);
+        const need = planColors(cards.map(c => c.point), rng, groups, limits);
+        if (!need) return { ok: false, cards, changed: 0 };
+        const remaining = { R: limits.R.slice(), B: limits.B.slice() };
+        need.forEach((color, i) => { if (color) remaining[color][groups[i]]--; });
+        const assigned = cards.map((card, i) => {
+            let color = need[i];
+            if (!color) {
+                color = remaining[card.back_color][groups[i]] > 0 ? card.back_color : card.back_color === 'R' ? 'B' : 'R';
+                remaining[color][groups[i]]--;
+            }
+            return { ...card, back_color: color };
+        });
+        return { ok: true, cards: assigned, changed: assigned.filter((c, i) => c.back_color !== cards[i].back_color).length };
     }
 
     // 訊號牌：全花色 A、2（百家3.0 預設 A.2 模式）
@@ -646,6 +675,6 @@
         };
     }
 
-    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, build, diagnoseChain, qualifies, qualifiesFinal, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);

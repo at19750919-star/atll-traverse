@@ -72,6 +72,27 @@ function uiHarness() {
   return { node, api: ctx.testUI };
 }
 (async () => {
+  await check('卡色按鈕依目前切點配色、同步牌表與導出資料；失敗保留原牌', () => {
+    const h = uiHarness(); h.api.load(resultOf(1139));
+    h.node('cutPos').value = '36'; h.node('btnCut').listeners.click();
+    const original = clone(h.api.get().lastResult), total = h.node('safeTotal').textContent;
+    h.node('btnColor').listeners.click();
+    const current = h.api.get();
+    assert.match(h.node('progress').textContent, /卡色已重新分配/);
+    assert.equal(current.cutPos,36);
+    assert.deepEqual(current.lastResult.cards.map(({back_color,...c})=>c), original.cards.map(({back_color,...c})=>c));
+    assert.deepEqual(identity(current.lastResult.cards),identity(original.cards));
+    assert.deepEqual(current.baseCards.map(c=>c.back_color),current.lastResult.cards.map(c=>c.back_color));
+    assert.ok(E.dealRounds(E.cutDeck(current.baseCards,36)).filter(r=>r.hand).every(r=>['RRRB','BBBR'].includes(r.cards.slice(0,4).map(c=>c.back_color).join(''))));
+    assert.ok(!h.node('violations').innerHTML.includes('卡色'));
+    assert.equal(h.node('safeTotal').textContent,total);
+    const saved = JSON.stringify(current.lastResult), fn = B.reassignColors;
+    try {
+      B.reassignColors = () => ({ok:false}); h.node('btnColor').listeners.click();
+      assert.match(h.node('progress').textContent,/已保留原牌/);
+      assert.equal(JSON.stringify(h.api.get().lastResult),saved);
+    } finally { B.reassignColors = fn; }
+  });
   await check('切點不計卡色，但主頁與導出共用的卡色違規仍保留', () => {
     const h = uiHarness(), original = resultOf(1139), changed = clone(original);
     changed.cards.forEach(c => { c.back_color = 'R'; });

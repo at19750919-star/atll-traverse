@@ -437,6 +437,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <div class="field field-inline"><label for="cutPos">切牌張數</label><input class="numbox" id="cutPos" type="number" min="0" max="415" value="0" disabled title="0＝原序"></div>
       <button id="btnCut" class="btn tool-btn" disabled>切牌</button>
       <button id="btnSwap" class="btn tool-btn" disabled>換牌</button>
+      <button id="btnColor" class="btn tool-btn" disabled title="依目前切牌位置重新分配紅藍牌背，保留牌面順序">卡色</button>
       <button id="btnOptimize" class="btn tool-btn" disabled>局內優化</button>
       <button id="btnOptOpen" class="btn tool-btn" disabled>查看優化比較</button>
       <button id="btnOptimizeDemo" class="btn tool-btn">看一副示範</button>
@@ -511,7 +512,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=13"></script>
+<script src="traverse_builder.js?v=14"></script>
 <script src="traverse_export.js?v=6"></script>
 <script src="traverse_optimizer.js?v=2"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
@@ -938,6 +939,28 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     });
   }
 
+  $('btnColor').addEventListener('click', () => {
+    if (!lastResult || optimizationBusy || $('btnColor').disabled) return;
+    try {
+      const current = TraverseExport.cutDeck(baseCards, cutPos);
+      const assigned = TraverseBuilder.reassignColors(current);
+      if (!assigned.ok) {
+        $('progress').textContent = '這次找不到合格卡色配置，已保留原牌；可再按「卡色」重試。';
+        return;
+      }
+      assigned.cards.forEach((card, i) => {
+        const index = (i + cutPos) % baseCards.length;
+        baseCards[index] = { ...baseCards[index], back_color: card.back_color };
+        lastResult.cards[index] = { ...lastResult.cards[index], back_color: card.back_color };
+      });
+      lastResult.colorOk = colorViolations(TraverseExport.dealRounds(baseCards)).length === 0;
+      clearOptimization();
+      swapState.on = false; swapState.first = swapState.second = null;
+      render(lastResult); updateSwapHighlights();
+      $('progress').textContent = `卡色已重新分配：${assigned.changed} 張牌背調整，依目前第 ${cutPos + 1} 張起發，每局前四張符合紅紅紅藍／藍藍藍紅。牌面順序與安全切點不變。`;
+    } catch (e) { $('progress').textContent = `卡色分配失敗：${e.message || e}`; }
+  });
+
   $('roundsBody').addEventListener('click', (e) => {
     if (!swapState.on) return;
     const el = e.target.closest('.card-label[data-p]');
@@ -1230,7 +1253,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   }
 
   function setReady(ready) {
-    ['cutPos', 'btnCut', 'btnSwap', 'btnExport', 'btnOptimize'].forEach((id) => { $(id).disabled = !ready; });
+    ['cutPos', 'btnCut', 'btnSwap', 'btnColor', 'btnExport', 'btnOptimize'].forEach((id) => { $(id).disabled = !ready; });
   }
 
   $('btnRun').addEventListener('click', async () => {
