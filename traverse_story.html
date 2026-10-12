@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>穿越排牌・一步一步看</title>
+  <link rel="icon" href="suit/at-spade-logo-current.png">
+  <link rel="stylesheet" href="traverse_story.css">
+  <script defer src="traverse_builder.js"></script>
+  <script defer src="traverse_process_engine.js"></script>
+  <script defer src="traverse_story.js"></script>
+</head>
+<body>
+  <header><img src="suit/at-spade-logo-current.png" alt="ATLL"><div><small>ATLL / STORY TABLE</small><h1>穿越排牌・一步一步看</h1></div><a href="traverse_builder.html">返回排牌頁 ↗</a></header>
+  <div class="controls" aria-label="動畫播放控制">
+    <button id="play" class="primary">開始播放</button><button id="step">下一步</button><button id="reset">重新開始</button>
+    <label>速度 <select id="speed"><option value="4200">更慢 · 4.2 秒</option><option value="2200" selected>慢速 · 2.2 秒</option><option value="700">正常 · 0.7 秒</option><option value="16">快速瀏覽</option></select></label>
+    <label><input id="inspect" type="checkbox" checked>逐一看候選</label>
+    <span id="playState">已暫停</span>
+  </div>
+  <p class="hint">每階段先讀目的，再看實際動作。逐一看候選會很長；取消勾選可略過洗牌失敗候選，補排每 100 次顯示最近一組。</p>
+  <nav id="phases" aria-label="排牌階段"></nav>
+  <main>
+    <section id="intro" class="intro" aria-live="polite"><small id="introLabel"></small><h2 id="introTitle"></h2><p id="introText"></p><p class="hint">按「下一步」進入；播放中會稍停，讓你讀完。</p></section>
+    <div class="status"><span id="event">準備</span><strong id="totals"></strong></div>
+    <section class="workbench">
+      <div class="action"><small id="actionLabel">目前牌序</small><h2 id="actionTitle">等待第一步</h2><div id="candidate" class="cards"></div><p id="cardHint" class="hint"></p></div>
+      <aside aria-live="polite"><small>這一步在做什麼</small><p id="explanation"></p><p id="reason"></p></aside>
+    </section>
+    <section class="collection"><h2 id="segmentsTitle">已撿出的短段</h2><div id="segments" class="segments"></div></section>
+    <details class="inventory"><summary id="deckTitle">剩餘牌堆</summary><p class="hint">金框是這一步的候選牌；小字是固定編號。牌面花色僅供辨識。</p><div id="deck" class="cards compact"></div></details>
+    <details class="rules"><summary>本頁的三項點數條件</summary><ol><li>每個需檢查的起點，都要剛好發完段尾；距段尾剩 1、2、3、7 張的起點依共用判定豁免。</li><li>從段頭發出的每局都敏感：前兩張對調後莊閒互換，或和仍是和，而且張數不變。</li><li>任一局單獨對調前兩張後，整段仍穿越。</li></ol><p>洗牌撿段沿用引擎的 0 點比例篩選。種子 416、段長 8～12 張、連續 100 輪撿不到轉補排、補排連續失敗上限 20000 次、接段 3 次。未排入牌放尾端，各長段之間及尾牌不保證穿越。</p></details>
+    <p id="error" role="alert"></p>
+  </main>
+  <noscript>請啟用 JavaScript 才能播放排牌過程。</noscript>
+</body>
+</html>
