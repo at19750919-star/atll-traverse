@@ -8,7 +8,7 @@
 //      （剩 1、2、3、7 張時豁免，與 traverse_segment.js 一致）
 //   2. 每局敏感：從段頭發出的每一局，對調前兩張後莊↔閒互換，或和局對調後仍是和，
 //      且用牌張數不變
-//   3. 對調後仍穿越：任一局單獨對調前兩張後，整段仍符合條件 1
+//   3. 對調後仍穿越：任一局單獨對調前兩張後，整段仍符合條件 1（A.2 關閉時不檢查）
 //
 // 流程：
 //   階段 1  洗牌 → 撿出所有合格段 → 剩下的重洗再撿，直到連續 N 次撿不到
@@ -120,7 +120,7 @@
 
     // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
     // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
-    const rules = { tripleTie: true, strong: false, secondStart: false };
+    const rules = { tripleTie: true, signalRule: true, strong: false, secondStart: false };
     // 使用者暫停訊號失敗的重接與整副重跑；保留兩類重試程式供日後明確要求時恢復。
     const SIGNAL_RETRY_ENABLED = false;
     function tripleRuleOk(arr, rounds) {
@@ -200,6 +200,8 @@
         if (rules.secondStart && !(single ? secondStartOk(arr) : segmentsSecondStart(arr))) return false;
         const rounds = actualChainRounds(arr);
         if (!rounds) return false;
+        // 單局對調後仍穿越只為 A.2 訊號對調預留；A.2 關閉時不會對調，跳過（否則前兩張同點的和局會被大量撿入）
+        if (!rules.signalRule) return true;
         for (const r of rounds) {
             const sw = arr.slice();
             [sw[r.start], sw[r.start + 1]] = [sw[r.start + 1], sw[r.start]];
@@ -650,6 +652,7 @@
         };
         opts.computeQuota = opts.secondStart && opts.zeroPolicy === 'quota';
         rules.tripleTie = opts.tripleTie;
+        rules.signalRule = opts.signalRule;
         rules.strong = opts.strong;
         rules.secondStart = opts.secondStart;
         opts.scanLengths = [];

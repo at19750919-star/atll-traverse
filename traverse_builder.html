@@ -513,7 +513,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=16"></script>
+<script src="traverse_builder.js?v=17"></script>
 <script src="traverse_export.js?v=6"></script>
 <script src="traverse_optimizer.js?v=4"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
@@ -629,6 +629,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   ['tripleTie','signalRule','strongMode','secondStart','endingNine'].forEach(id => $(id).addEventListener('change', () => {
     clearOptimization(); TraverseBuilder.rules.tripleTie = $('tripleTie').checked; TraverseBuilder.rules.strong = $('strongMode').checked;
     TraverseBuilder.rules.secondStart = $('secondStart').checked;
+    TraverseBuilder.rules.signalRule = $('signalRule').checked;
     if (lastResult) computeSafeCuts();
   }));
   $('btnOptimizeDemo').addEventListener('click', async () => {
