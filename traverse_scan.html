@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>看懂穿越排牌 · 掃、撿、再拼接</title>
+  <link rel="stylesheet" href="traverse_scan.css">
+  <script defer src="traverse_builder.js"></script>
+  <script defer src="traverse_process_engine.js"></script>
+  <script defer src="traverse_scan.js"></script>
+</head>
+<body>
+  <header>
+    <div><span class="eyebrow">416 張牌的旅程</span><h1>掃出好段，再拼成長段</h1></div>
+    <div class="controls" aria-label="動畫控制">
+      <button id="play" class="primary" disabled>暫停</button>
+      <button id="next" disabled>下一個關鍵點 →</button>
+      <button id="restart" disabled>重來</button>
+      <label>速度 <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+    </div>
+  </header>
+  <section class="reality">
+    <strong>實際做法與直覺不同處</strong>
+    <span>撿走後從同一位置繼續掃；連續 100 輪撿不到，或剩不到 8 張才停。補排是組合點數，不是再洗牌。</span>
+    <details><summary>查看已核對的規則</summary>
+      <p>每個位置依序試 12 → 8 張；三項點數條件合格，而且 0 點比例不低於當時剩牌，才列入候選。取 0 點比例最高者，同率保留先試的較長段。</p>
+      <p>「穿越」有例外：起點到段尾只剩 1、2、3、7 張，整個起點豁免；其他起點必須剛好發完。從段頭發的每局要敏感（對調前兩張後莊閒互換，和仍為和，張數不變），每局單獨對調後整段仍須穿越。</p>
+      <p>補排從庫存可供應的敏感局中，每次隨機抽 3 個，偏向 0 點比例最高的，湊成 8～12 張再完整檢查。本頁重用的過程引擎在補排沒有 0 點比例硬門檻；連續 20,000 次失敗、牌不足或無可用敏感局就停止。</p>
+      <p>好段打亂後貪婪拼接，每次接上後從待接區開頭再試；總共做 3 次。先選最長段最長者，同長時選長段數較少者。最後把長段依長度由長到短排列，剩牌放末尾；長段之間與剩牌接縫不保證穿越。</p>
+    </details>
+  </section>
+  <nav class="phases" aria-label="排牌階段"><span>01 洗牌・掃描・撿段</span><span>02 計算補排</span><span>03 試接長段</span><span>04 完整牌靴</span></nav>
+  <main id="stage" aria-busy="true">
+    <section class="scoreboard" aria-label="目前數量">
+      <div><strong id="round">0</strong><span>輪洗牌</span></div>
+      <div><strong id="remaining">416</strong><span>張剩牌</span></div>
+      <div><strong id="good">0</strong><span>個好段</span></div>
+      <div><strong id="long">0</strong><span>條已接長段</span></div>
+      <p id="pace">正在離線計算完整過程…</p>
+    </section>
+    <section class="narration" aria-live="polite">
+      <div class="narrative"><span id="key-label" class="eyebrow">準備中</span><h2 id="headline">先把整副牌的實際過程算好</h2><p id="explanation">算完後自動播放，關鍵處會放慢停留；一般嘗試快速帶過。</p></div>
+      <div id="detail" class="detail"></div>
+    </section>
+    <section class="shelf-section">
+      <div class="section-title"><h3 id="shelf-title">好段區</h3><span id="shelf-note">檢查通過的整段，從下方拉到這裡</span></div>
+      <div id="shelf" class="shelf"><span class="empty">還沒撿到，先看下方怎麼掃。</span></div>
+    </section>
+    <section class="table-section">
+      <div class="section-title"><h3 id="board-title">待掃的牌 · 416 張</h3><span id="board-note">淺色＝1～9 點　金色＝0 點</span></div>
+      <div id="board-wrap"><div id="board" class="board"></div><div id="scanner" aria-hidden="true"></div><div id="shuffle-label" aria-hidden="true">剩牌收攏 · 重新洗亂</div></div>
+      <div id="seam-note"></div>
+    </section>
+  </main>
+  <footer><span id="play-state">離線準備中</span><progress id="progress" max="1" value="0" aria-label="播放進度"></progress><label>跳到 <select id="keys" disabled><option>關鍵點</option></select></label><span>固定種子 416 · 預設約 3 分鐘</span></footer>
+  <p id="error" role="alert" hidden></p>
+</body>
+</html>
