@@ -513,7 +513,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=17"></script>
+<script src="traverse_builder.js?v=18"></script>
 <script src="traverse_export.js?v=6"></script>
 <script src="traverse_optimizer.js?v=4"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
@@ -1069,7 +1069,8 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       ['全部驗證', allOk ? '通過' : '有問題'],
       ['總耗時（含重跑）', `${((result.totalMs ?? s.ms) / 1000).toFixed(1)} 秒`],
       ['重跑次數', result.reruns || 0],
-      ['訊號牌對調局數', result.signal ? result.signal.flips : '未開啟'],
+      result.signal ? ['訊號牌對調局數', result.signal.flips]
+        : ['莊閒平衡對調局數', result.balance ? result.balance.flips : '未開啟'],
     ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
 
     const mark = (b) => (b ? '<span class="ok">✓</span>' : '<span class="ng">✗</span>');

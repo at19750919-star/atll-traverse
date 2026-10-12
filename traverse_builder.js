@@ -8,7 +8,8 @@
 //      （剩 1、2、3、7 張時豁免，與 traverse_segment.js 一致）
 //   2. 每局敏感：從段頭發出的每一局，對調前兩張後莊↔閒互換，或和局對調後仍是和，
 //      且用牌張數不變
-//   3. 對調後仍穿越：任一局單獨對調前兩張後，整段仍符合條件 1（A.2 關閉時不檢查）
+//   3. 對調後仍穿越：任一局單獨對調前兩張後，整段仍符合條件 1
+//      （A.2 關閉時不檢查，改在排好後對調前兩張平衡莊閒）
 //
 // 流程：
 //   階段 1  洗牌 → 撿出所有合格段 → 剩下的重洗再撿，直到連續 N 次撿不到
@@ -635,6 +636,34 @@
         return { ok, flips, conflicts: travConflicts, issues };
     }
 
+    // A.2 關閉時不檢查對調後穿越，挑出的段偏莊；排好後把多出來那一方的局對調前兩張，
+    // 整條長段仍須通過最終驗收才保留，直到莊閒相差不超過 1 局或沒有可對調的局。
+    function balanceSides(chains, rng) {
+        const hands = [];
+        let diff = 0;
+        for (const ch of chains) {
+            for (const r of roundsFromStart(ch) || []) {
+                if (r.result === '和') continue;
+                hands.push({ ch, start: r.start, result: r.result });
+                diff += r.result === '莊' ? 1 : -1;
+            }
+        }
+        shuffleInPlace(hands, rng);
+        let flips = 0;
+        for (const { ch, start, result } of hands) {
+            if (Math.abs(diff) <= 1) break;
+            if ((diff > 0) !== (result === '莊')) continue;
+            [ch[start], ch[start + 1]] = [ch[start + 1], ch[start]];
+            if (qualifiesFinal(ch)) {
+                flips++;
+                diff += result === '莊' ? -2 : 2;
+            } else {
+                [ch[start], ch[start + 1]] = [ch[start + 1], ch[start]];
+            }
+        }
+        return { flips, diff };
+    }
+
     async function build(options = {}) {
         const opts = {
             idleLimit: options.idleLimit ?? 1000,
@@ -702,6 +731,7 @@
             leftover = shuffleInPlace(restCards.slice(), opts.rng);
             signal = applySignalRule(chains, leftover);
         }
+        const balance = opts.signalRule ? null : balanceSides(chains, opts.rng);
         const points = chains.flat().concat(leftover);
         const { cards, colorOk } = assignCards(points, opts.rng);
 
@@ -729,6 +759,7 @@
             leftoverCount: leftover.length,
             colorOk,
             signal,
+            balance,
             stats: {
                 shuffles: p1.shuffles,
                 phase1Segments: p1.segs.length,
