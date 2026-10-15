@@ -227,7 +227,11 @@ async function main() {
     const banker = done.filter((r) => r.result === '莊').length;
     const player = done.filter((r) => r.result === '閒').length;
     const tie = done.length - banker - player;
-    say(`${tagNo} 排好：${done.length} 局（莊 ${banker}／閒 ${player}／和 ${tie}）｜切牌 ${cut} 張｜重跑 ${reruns} 次｜${((Date.now() - t0) / 1000).toFixed(1)} 秒`);
+    const c4 = done.filter((r) => r.cards.length === 4).length;
+    const c5 = done.filter((r) => r.cards.length === 5).length;
+    const c6 = done.filter((r) => r.cards.length === 6).length;
+    const pct = (k) => (done.length ? ((k / done.length) * 100).toFixed(1) : '0.0');
+    say(`${tagNo} 排好：${done.length} 局（莊 ${banker}／閒 ${player}／和 ${tie}｜4張 ${c4} (${pct(c4)}%)／5張 ${c5} (${pct(c5)}%)／6張 ${c6} (${pct(c6)}%)）｜切牌 ${cut} 張｜重跑 ${reruns} 次｜${((Date.now() - t0) / 1000).toFixed(1)} 秒`);
     if (res.signal && !res.signal.ok) {
       say(`${tagNo} 訊號調整檢查未通過（訊號重跑已停用，保留結果）：`);
       for (const issue of res.signal.issues || []) say(`${issue.chain ? `第 ${issue.chain} 長段：` : ''}${issue.message}`);

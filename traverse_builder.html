@@ -242,6 +242,7 @@ button:focus-visible,.toggle:has(input:focus-visible),a:focus-visible { outline:
 .stat .k { font-size:12px; color:var(--txt-dim); }
 .stat .v { font:700 18px var(--disp); color:var(--gold-1); margin-top:3px; overflow-wrap:anywhere; }
 .bpt { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; margin-bottom:12px; }
+.card-counts { margin-top:-4px; padding-top:8px; border-top:1px dashed #26322f; }
 .bpt:empty,.cut-stats:empty { display:none; }
 .bpt-item { display:inline-flex; align-items:center; gap:6px; }
 .bpt-num { font:700 20px var(--disp); }
@@ -303,6 +304,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 .outcome-banker { background:linear-gradient(180deg,#e0685a,#a03328); }
 .outcome-player { background:linear-gradient(180deg,#5aa8dc,#28648f); }
 .outcome-tie { background:linear-gradient(180deg,#5fc38f,#2b7a52); }
+.outcome-size { background:linear-gradient(180deg,#24322d,#131c19); border:1px solid #3c4f48; color:#f4dfa4; }
 .row-tag { display:inline-flex; padding:3px 6px; border-radius:4px; font:500 11px var(--sans); }
 .tag-warn-red { color:#ff9d92; background:rgba(224,92,79,.16); border:1px solid #733d35; }
 @media (max-width:1560px) {
@@ -490,6 +492,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <section class="card gframe">
         <h2>結果</h2>
         <div id="bpt" class="bpt"></div>
+        <div id="cardCounts" class="bpt card-counts"></div>
         <div id="stats" class="stats"><div class="empty">尚未排牌</div></div>
       </section>
       <section class="card gframe" id="signalDiagnosticPanel" hidden>
@@ -1028,16 +1031,27 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     $('progress').textContent = `已交換 ${cardText(ca)} 與 ${cardText(cb)}（原序第 ${a + 1} 張 ↔ 第 ${b + 1} 張）`;
   });
 
-  // 莊閒和統計：跟著目前牌表（切牌後會重算）
+  // 莊閒和與局長度統計：跟著目前牌表（切牌後會重算）
   function renderBpt() {
     const n = { '莊': 0, '閒': 0, '和': 0 };
-    shownRounds.forEach((r) => { if (r.hand) n[r.result]++; });
+    const sizes = { 4: 0, 5: 0, 6: 0 };
+    shownRounds.forEach((r) => {
+      if (r.hand) {
+        n[r.result]++;
+        const len = r.cards.length;
+        if (sizes[len] !== undefined) sizes[len]++;
+      }
+    });
     const total = n['莊'] + n['閒'] + n['和'];
     const pct = (k) => (total ? ((k / total) * 100).toFixed(1) : '0.0');
     $('bpt').innerHTML = [['莊', 'banker'], ['閒', 'player'], ['和', 'tie']].map(([k, cls]) => `
       <div class="bpt-item"><span class="outcome outcome-${cls}">${k}</span>
       <span class="bpt-num">${n[k]}</span><span class="bpt-pct">${pct(n[k])}%</span></div>`).join('')
       + `<div class="bpt-item bpt-total">共 <span class="bpt-num">${total}</span> 局</div>`;
+
+    $('cardCounts').innerHTML = total ? [4, 5, 6].map((s) => `
+      <div class="bpt-item"><span class="outcome outcome-size">${s}張</span>
+      <span class="bpt-num">${sizes[s]}</span><span class="bpt-pct">${pct(sizes[s])}%</span></div>`).join('') : '';
   }
 
   function renderSignalDiagnostics(result) {
