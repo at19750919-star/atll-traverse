@@ -3,7 +3,7 @@
     'use strict';
     const B = global.TraverseBuilder, E = global.TraverseExport;
     const clone = x => JSON.parse(JSON.stringify(x));
-    const settings = o => ({ tripleTie: o.tripleTie !== false, signalRule: o.signalRule !== false,
+    const settings = o => ({ tripleTie: o.tripleTie !== false, signalRule: o.signalRule !== false, signalConfig: B.normalizeSignal(o.signalConfig || B.rules.signalConfig),
         strong: o.strong === true, secondStart: o.secondStart === true });
 
     function prepare(result) {
@@ -11,13 +11,13 @@
         for (const ch of result.chains) for (let j = 0; j < ch.length; j++) cards[(ch.start - 1 + j) % cards.length].traverse = true;
         return cards;
     }
-    function handInfo(cards, start) {
+    function handInfo(cards, start, opts) {
         const cs = Array.from({ length: 6 }, (_, k) => cards[(start + k) % cards.length]);
         const ps = cs.map(c => c.point), h = B.simulateHand(ps, 0, 6);
         const pts = ps.slice(0, h.size), swp = pts.slice();
         [swp[0], swp[1]] = [swp[1], swp[0]];
         const sw = B.simulateHand(swp, 0, h.size);
-        return { ...h, start, trip: B.isTriple(pts), signal: B.isSignalHand(pts), sw,
+        return { ...h, start, trip: B.isTriple(pts), signal: B.isSignalHand(cs.slice(0, h.size), opts.signalConfig), sw,
             trav: cs.slice(0, h.size).every(c => c.traverse),
             noSwap: !sw || sw.size !== h.size,
             same: !!sw && sw.size === h.size && (h.result === '和' ? sw.result !== '和' : sw.result === '和' || sw.result === h.result) };
@@ -40,7 +40,7 @@
     // 與主頁 cutLastViolation(false) 同一規則：只檢查穿越區，第一局略過訊號、仍計三條。
     function analyze(cards, options = {}) {
         const opts = settings(options), n = cards.length;
-        const hands = cards.map((_, i) => handInfo(cards, i));
+        const hands = cards.map((_, i) => handInfo(cards, i, opts));
         const safe = [], depths = [];
         for (let cut = 0; cut < n; cut++) {
             const rounds = [];
@@ -62,7 +62,7 @@
     function traceCut(cards, cut, options = {}) {
         const opts = settings(options);
         const rs = E.dealRounds(E.cutDeck(cards, cut)).filter(r => r.hand);
-        const hs = rs.map(r => handInfo(cards, (r.start + cut) % cards.length));
+        const hs = rs.map(r => handInfo(cards, (r.start + cut) % cards.length, opts));
         return rs.map((r, i) => ({ no: i + 1, start: (r.start + cut) % cards.length, cards: r.cards,
             result: r.result, issues: issues(hs[i], hs.length > 1 ? hs[(i + hs.length - 1) % hs.length] : null, i, opts) }));
     }
@@ -100,8 +100,8 @@
         const originalRounds = E.dealRounds(base).filter(r => r.hand);
         if (opts.signalRule && originalRounds.some((r, i) => {
             if (r.segment !== 'A' || originalRounds.length < 2) return false;
-            const p = originalRounds[(i + originalRounds.length - 1) % originalRounds.length].cards.map(c => c.point);
-            const need = opts.tripleTie && B.isTriple(p) ? '和' : B.isSignalHand(p) ? '莊' : '閒';
+            const p = originalRounds[(i + originalRounds.length - 1) % originalRounds.length].cards;
+            const need = opts.tripleTie && B.isTriple(p.map(c => c.point)) ? '和' : B.isSignalHand(p, opts.signalConfig) ? '莊' : '閒';
             return r.result !== need;
         })) throw new Error('原牌的訊號結果尚未符合，局內優化會保留原結果，請先釐清原牌的訊號問題');
         const owners = new Array(base.length).fill(null);

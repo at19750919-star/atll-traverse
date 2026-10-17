@@ -422,7 +422,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <h2 class="frame-title">規則條件</h2>
       <div class="fields rules">
       <label class="btn tool-btn toggle"><input id="tripleTie" type="checkbox" checked>三條</label>
-      <label class="btn tool-btn toggle"><input id="signalRule" type="checkbox" checked>A.2</label>
+      <label class="btn tool-btn toggle"><input id="signalRule" type="checkbox" checked>訊號牌</label>
       <label class="btn tool-btn toggle"><input id="strongMode" type="checkbox">強</label>
       <label class="btn tool-btn toggle" title="每個短段從第二張開始發，完整局都須敏感；段尾不足一局不檢查。排不下的牌改用原條件續排"><input id="secondStart" type="checkbox">第二張敏感</label>
       <label class="btn tool-btn toggle"><input id="endingNine" type="checkbox" checked>末張9</label>
@@ -430,6 +430,11 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <label class="btn tool-btn toggle"><input id="sideRule" type="checkbox" checked>莊閒</label>
       <div class="field field-inline"><label for="sideLimit">差距上限</label><input class="numbox" id="sideLimit" type="number" min="0" max="100" value="8"></div>
     </div>
+<details id="signalSettings"><summary>設定訊號牌 <span id="signalSummary">全花色 A、2</span></summary>
+      <div id="signalChoices" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px 0">
+<div style="display:flex;flex-wrap:wrap;gap:6px;width:100%"><label class="btn tool-btn toggle"><input id="sigSuit0" type="checkbox" value="♠" checked>♠</label><label class="btn tool-btn toggle"><input id="sigSuit1" type="checkbox" value="♥" checked>♥</label><label class="btn tool-btn toggle"><input id="sigSuit2" type="checkbox" value="♦" checked>♦</label><label class="btn tool-btn toggle"><input id="sigSuit3" type="checkbox" value="♣" checked>♣</label></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;width:100%"><label class="btn tool-btn toggle"><input id="sigRank0" type="checkbox" value="A" checked>A</label><label class="btn tool-btn toggle"><input id="sigRank1" type="checkbox" value="2" checked>2</label><label class="btn tool-btn toggle"><input id="sigRank2" type="checkbox" value="3">3</label><label class="btn tool-btn toggle"><input id="sigRank3" type="checkbox" value="4">4</label><label class="btn tool-btn toggle"><input id="sigRank4" type="checkbox" value="5">5</label><label class="btn tool-btn toggle"><input id="sigRank5" type="checkbox" value="6">6</label><label class="btn tool-btn toggle"><input id="sigRank6" type="checkbox" value="7">7</label><label class="btn tool-btn toggle"><input id="sigRank7" type="checkbox" value="8">8</label><label class="btn tool-btn toggle"><input id="sigRank8" type="checkbox" value="9">9</label><label class="btn tool-btn toggle"><input id="sigRank9" type="checkbox" value="10">10</label><label class="btn tool-btn toggle"><input id="sigRank10" type="checkbox" value="J">J</label><label class="btn tool-btn toggle"><input id="sigRank11" type="checkbox" value="Q">Q</label><label class="btn tool-btn toggle"><input id="sigRank12" type="checkbox" value="K">K</label></div>
+</div><button id="signalDefault" type="button" class="btn tool-btn">恢復全花色 A、2</button><p>所選花色 × 點數為訊號牌；有訊號下一局莊，沒有則閒，三條優先。設定會自動保存；改設定後請重新排牌。</p></details>
     </section>
     <div class="chip-col">
       <button id="btnRun" class="chip gen"><span class="lbl">開始<br>排牌</span></button>
@@ -516,9 +521,9 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=18"></script>
+<script src="traverse_builder.js?v=19"></script>
 <script src="traverse_export.js?v=6"></script>
-<script src="traverse_optimizer.js?v=4"></script>
+<script src="traverse_optimizer.js?v=5"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
 <script>
 (function () {
@@ -532,7 +537,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   // 牌面文字沿用主表格：10 顯示成 T，點數在前、花色在後
   const cardText = (c) => `${c.rank === '10' ? 'T' : c.rank}${c.suit}`;
   // 訊號牌（A、2）亮紅字，跟百家3.0 的 .s-signal-card 一樣
-  const sigCls = (c) => ((c.point === 1 || c.point === 2) ? ' s-signal-card' : '')
+  const sigCls = (c) => (TraverseBuilder.isSignalCard(c) ? ' s-signal-card' : '')
     + (c.back_color === 'R' ? ' card-back-red' : c.back_color === 'B' ? ' card-back-blue' : '');
   const label = (c) => `<span class="card-label${sigCls(c)}">${esc(cardText(c))}</span>`;
 
@@ -543,7 +548,21 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   let cutPos = 0;
   let shownRounds = [];   // 目前牌表上的局（切牌後重新發）
   let optimization = null, optimizationView = 'after', optimizationBusy = false;
-  const optimizerOptions = () => ({ tripleTie: $('tripleTie').checked, signalRule: $('signalRule').checked,
+  const signalIds = [...Array.from({length:4}, (_,i) => 'sigSuit'+i), ...Array.from({length:13}, (_,i) => 'sigRank'+i)];
+  const signalConfig = () => ({ suits: signalIds.slice(0,4).filter(id => $(id).checked).map(id => $(id).value), ranks: signalIds.slice(4).filter(id => $(id).checked).map(id => $(id).value) });
+  function updateSignal(save = true) {
+    const config = signalConfig(); TraverseBuilder.rules.signalConfig = config;
+    $('signalSummary').textContent = config.suits.length && config.ranks.length ? `${config.suits.join('')} ${config.ranks.join('、')}（${config.suits.length * config.ranks.length * 8} 張）` : '未選訊號牌（0 張）';
+    if (save) { try { localStorage.setItem('traverseSignalConfig', JSON.stringify(config)); } catch (_) {} }
+    clearOptimization();
+    if (lastResult) { render(lastResult); computeSafeCuts(); $('progress').textContent = '訊號設定已變更，請重新排牌套用。'; }
+  }
+  try { const saved = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (saved) { const c = TraverseBuilder.normalizeSignal(saved); signalIds.forEach((id,i) => { $(id).checked = (i<4 ? c.suits : c.ranks).includes($(id).value); }); } } catch (_) {}
+  signalIds.forEach(id => $(id).addEventListener('change', () => updateSignal()));
+  $('signalDefault').addEventListener('click', () => { signalIds.forEach((id,i) => { $(id).checked = i<6; }); updateSignal(); });
+  // 初始化時尚未建立優化彈窗，僅同步規則與摘要。
+  TraverseBuilder.rules.signalConfig = signalConfig();
+  const optimizerOptions = () => ({ tripleTie: $('tripleTie').checked, signalRule: $('signalRule').checked, signalConfig: signalConfig(),
     strong: $('strongMode').checked, secondStart: $('secondStart').checked, preserveLastNine: $('endingNine').checked });
   function clearOptimization() { optimization = null; OptimizerDialog.reset(); }
 
@@ -597,7 +616,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     optimizationBusy = busy;
     $('btnRun').disabled = busy; $('btnStop').disabled = !busy; $('btnOptimizeDemo').disabled = busy;
     setReady(!busy && !!lastResult);
-    ['tripleTie','signalRule','strongMode','secondStart','endingNine','sideRule','sideLimit','minLen','maxLen','idleLimit','computeTries','chainAttempts','maxLeftover'].forEach(id => { $(id).disabled = busy; });
+    [...signalIds,'signalDefault','tripleTie','signalRule','strongMode','secondStart','endingNine','sideRule','sideLimit','minLen','maxLen','idleLimit','computeTries','chainAttempts','maxLeftover'].forEach(id => { $(id).disabled = busy; });
     ['btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id => { $(id).disabled = busy; });
   }
   $('btnOptimize').addEventListener('click', async () => {
@@ -641,6 +660,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     try {
       $('tripleTie').checked = $('signalRule').checked = $('endingNine').checked = $('sideRule').checked = true;
       $('strongMode').checked = $('secondStart').checked = false; $('sideLimit').value = 8;
+      signalIds.forEach((id,i) => { $(id).checked = i<6; }); updateSignal();
       let seed = 1139;
       const rng = () => { let t = seed += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
       const demo = await TraverseBuilder.build({ rng, onProgress: m => { $('progress').textContent = `示範牌：${m}`; }, isCancelled: () => cancelled });
@@ -752,7 +772,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       const a = rounds[i], b = rounds[j];
       const pts = a.cards.map((c) => c.point);
       if ($('tripleTie').checked && TraverseBuilder.isTriple(pts)) continue; // 歸三條規則
-      const need = TraverseBuilder.isSignalHand(pts) ? '莊' : '閒';
+      const need = TraverseBuilder.isSignalHand(a.cards) ? '莊' : '閒';
       if (b.result !== '和' && b.result !== need) out.push(j + 1);
       else if (b.result === '和' && !$('tripleTie').checked) out.push(j + 1);
     }
@@ -793,7 +813,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     // 只有「對調前兩張也調不出要的結果」才算（三條要和、A、2 要莊、沒有則閒）。
     const fixable = (n) => {
       const r = rounds[n - 1], p = rounds[prevNo(n) - 1];
-      const need = TraverseBuilder.neededAfter(p.cards.map((c) => c.point));
+      const need = TraverseBuilder.neededAfter(p.cards);
       if (r.result === need) return true;
       const sw = TraverseExport.swappedTotals(r);
       return !!sw && sw.size === r.hand.size && sw.result === need;
@@ -1291,6 +1311,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     clearOptimization(); $('btnOptimizeDemo').disabled = true;
     swapState.on = false;
     swapState.first = swapState.second = null;
+    signalIds.concat('signalDefault').forEach(id => { $(id).disabled = true; });
     $('btnRun').disabled = true;
     $('btnStop').disabled = false;
     setReady(false);
@@ -1311,7 +1332,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
           computeTries: num('computeTries'),
           chainAttempts: num('chainAttempts'),
           tripleTie: $('tripleTie').checked,
-          signalRule: $('signalRule').checked,
+          signalRule: $('signalRule').checked, signalConfig: signalConfig(),
           strong: $('strongMode').checked,
           secondStart: $('secondStart').checked,
           onProgress: (m) => { $('progress').textContent = tag + m; },
@@ -1378,6 +1399,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       console.error(e);
       $('progress').textContent = `排牌失敗：${e.message || e}`;
     } finally {
+      signalIds.concat('signalDefault').forEach(id => { $(id).disabled = false; });
       $('btnRun').disabled = false;
       $('btnStop').disabled = true;
       $('btnOptimizeDemo').disabled = false;
@@ -1398,6 +1420,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     if (optimization) $('optimizerView').textContent = `下方牌表：${optimizationView === 'before' ? '調整前' : '調整後'}｜從第 ${v + 1} 張開始`;
   });
   $('btnExport').addEventListener('click', exportExcel);
+  updateSignal(false);
 })();
 </script>
 </body>

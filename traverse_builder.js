@@ -557,17 +557,27 @@
         return { ok: true, cards: assigned, changed: assigned.filter((c, i) => c.back_color !== cards[i].back_color).length };
     }
 
-    // 訊號牌：全花色 A、2（百家3.0 預設 A.2 模式）
-    const isSignalHand = (hand) => hand.some(p => p === 1 || p === 2);
+    // 訊號牌依花色 × 牌面選取；未設定時維持全花色 A、2。
+    const defaultSignal = () => ({ suits: SUITS.slice(), ranks: ['A', '2'] });
+    function normalizeSignal(config) {
+        if (!config) return defaultSignal();
+        return { suits: SUITS.filter(s => config.suits?.includes(s)), ranks: RANKS.filter(r => config.ranks?.includes(r)) };
+    }
+    const isSignalCard = (card, config = rules.signalConfig) => {
+        const c = normalizeSignal(config);
+        return c.suits.includes(card.suit) && c.ranks.includes(card.rank);
+    };
+    const isSignalHand = (hand, config = rules.signalConfig) => hand.some(c => typeof c === 'number'
+        ? normalizeSignal(config).ranks.some(r => rankPoint(r) === c) : isSignalCard(c, config));
     const neededAfter = (prevHand) =>
-        (rules.tripleTie && isTriple(prevHand)) ? '和' : (isSignalHand(prevHand) ? '莊' : '閒');
+        (rules.tripleTie && isTriple(prevHand.map(c => typeof c === 'number' ? c : c.point))) ? '和' : (isSignalHand(prevHand) ? '莊' : '閒');
 
     // 訊號牌規則（照百家3.0）：上一局是三條 → 這局和（三條優先，含三條 A／2）；
-    // 上一局有 A 或 2 → 這局莊；都沒有 → 這局閒。第 1 局的上一局是最後一局（完整局）。
+    // 上一局有訊號牌 → 這局莊；沒有 → 這局閒。第 1 局的上一局是最後一局（完整局）。
     // 做法：排好後由前往後，把不符合的局對調前兩張（敏感局對調必定莊閒互換、張數不變），
     // 對調後只驗證實際牌序（任一張當起點都穿越、每局敏感、三條規則），不再假設另一次反向。
     // 直接改 chains / leftover 內的點數；回傳 { ok, flips, conflicts }
-    function applySignalRule(chains, leftover) {
+    function applySignalRule(chains, leftover, physicalCards = null) {
         const seq = chains.flat().concat(leftover);
         // 從頭發到不足一局為止（排不進去的牌最後可能剩殘牌）
         const rounds = [];
@@ -585,15 +595,17 @@
         if (n > 1) order.push(0);
         for (const k of order) {
             const prev = rounds[(k - 1 + n) % n], cur = rounds[k];
-            const need = neededAfter(seq.slice(prev.start, prev.start + prev.size));
+            const need = neededAfter((physicalCards || seq).slice(prev.start, prev.start + prev.size));
             const h = simulateHand(seq, cur.start, cur.start + cur.size);
             if (!h || h.result === need) continue;
             if (need === '和' || h.result === '和') { conflicts++; continue; }
             [seq[cur.start], seq[cur.start + 1]] = [seq[cur.start + 1], seq[cur.start]];
+            if (physicalCards) [physicalCards[cur.start], physicalCards[cur.start + 1]] = [physicalCards[cur.start + 1], physicalCards[cur.start]];
             const after = simulateHand(seq, cur.start, cur.start + cur.size);
             if (!after || after.size !== cur.size || after.result !== need) {
                 // 對調不成就換回來，記為衝突
                 [seq[cur.start], seq[cur.start + 1]] = [seq[cur.start + 1], seq[cur.start]];
+                if (physicalCards) [physicalCards[cur.start], physicalCards[cur.start + 1]] = [physicalCards[cur.start + 1], physicalCards[cur.start]];
                 conflicts++;
                 continue;
             }
@@ -612,12 +624,13 @@
             if (k === 0 && n < 2) continue;
             const prev = rounds[(k - 1 + n) % n];
             const prevPoints = seq.slice(prev.start, prev.start + prev.size);
-            const need = neededAfter(prevPoints);
+            const prevCards = (physicalCards || seq).slice(prev.start, prev.start + prev.size);
+            const need = neededAfter(prevCards);
             const actual = simulateHand(seq, rounds[k].start, rounds[k].start + rounds[k].size).result;
             if (actual !== need) {
                 travConflicts++;
                 const why = rules.tripleTie && isTriple(prevPoints) ? '上一局是三條，依三條優先應開和'
-                    : isSignalHand(prevPoints) ? '上一局有 A／2，應開莊' : '上一局沒有 A／2，應開閒';
+                    : isSignalHand(prevCards) ? '上一局有訊號牌，應開莊' : '上一局沒有訊號牌，應開閒';
                 issues.push({ kind: 'signal', round: k + 1, start: rounds[k].start + 1, need, actual,
                     message: `原排牌第 ${k + 1} 局：${k === 0 ? '以最後一個完整局為上一局；' : ''}${why}，調整後仍是${actual}` });
             }
@@ -682,6 +695,7 @@
         opts.computeQuota = opts.secondStart && opts.zeroPolicy === 'quota';
         rules.tripleTie = opts.tripleTie;
         rules.signalRule = opts.signalRule;
+        rules.signalConfig = normalizeSignal(options.signalConfig);
         rules.strong = opts.strong;
         rules.secondStart = opts.secondStart;
         opts.scanLengths = [];
@@ -724,16 +738,24 @@
         let chains = await phaseChain(segs, opts, ctx);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
 
-        let signal = opts.signalRule ? applySignalRule(chains, leftover) : null;
+        const customSignal = opts.signalRule && JSON.stringify(rules.signalConfig) !== JSON.stringify(defaultSignal());
+        let physicalCards = customSignal ? assignCards(chains.flat().concat(leftover), opts.rng).cards : null;
+        let signal = opts.signalRule ? applySignalRule(chains, leftover, physicalCards) : null;
         // 訊號牌對調後長段不合格：段不變，只換接段順序再試，省掉整副重排
         for (let t = 0; SIGNAL_RETRY_ENABLED && signal && !signal.ok && t < 30 && !ctx.cancelled(); t++) {
             chains = await phaseChain(segs, { ...opts, chainAttempts: 1 }, ctx);
             leftover = shuffleInPlace(restCards.slice(), opts.rng);
-            signal = applySignalRule(chains, leftover);
+            physicalCards = customSignal ? assignCards(chains.flat().concat(leftover), opts.rng).cards : null;
+            signal = applySignalRule(chains, leftover, physicalCards);
         }
         const balance = opts.signalRule ? null : balanceSides(chains, opts.rng);
         const points = chains.flat().concat(leftover);
-        const { cards, colorOk } = assignCards(points, opts.rng);
+        let { cards, colorOk } = physicalCards ? { cards: physicalCards, colorOk: false } : assignCards(points, opts.rng);
+        if (physicalCards && opts.signalRule) {
+            const colored = reassignColors(physicalCards, opts.rng);
+            cards = colored.ok ? colored.cards : physicalCards;
+            colorOk = colored.ok;
+        }
 
         // 每條長段的驗證結果
         let offset = 0;
@@ -755,6 +777,7 @@
 
         return {
             cards,
+            signalConfig: normalizeSignal(rules.signalConfig),
             chains: chainReports,
             leftoverCount: leftover.length,
             colorOk,
@@ -773,6 +796,6 @@
         };
     }
 
-    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);
