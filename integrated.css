@@ -65,14 +65,45 @@ body[data-mode="traverse"] .expanders{height:auto;min-width:0}
 body[data-mode="traverse"] .exp-tabs{display:none}
 body[data-mode="traverse"] #traverseControls{display:block;flex:1;min-width:0;max-width:none;margin:0;padding:16px 20px 12px}
 body[data-mode="traverse"] #traverseControls .frame-title{margin:0 0 10px;padding:0 4px;background:none}
-body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 18px}
-body[data-mode="traverse"] #traverseControls .mode-fields label{min-width:0;gap:10px;font-size:14px;white-space:nowrap}
-body[data-mode="traverse"] #traverseControls .numbox{width:92px;max-width:45%;flex:none;text-align:center}
-body[data-mode="traverse"] #traverseControls .mode-actions{margin:12px 0 6px;gap:7px}
-body[data-mode="traverse"] #traverseControls .mode-actions .tool-btn{min-height:36px;padding:6px 12px;letter-spacing:.08em}
-body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]{accent-color:var(--gold-2)}
-body[data-mode="traverse"] #traverseControls .mode-actions>label:last-child{font-size:13px;color:var(--gold-2);margin-left:auto}
+body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px}
+body[data-mode="traverse"] #traverseControls .mode-fields label{
+  display:grid;grid-template-columns:86px minmax(0,1fr);align-items:center;
+  width:100%;box-sizing:border-box;min-width:0;gap:10px;padding:7px 10px;border:1px solid #2c3634;border-radius:7px;
+  background:rgba(10,16,15,.45);color:var(--txt);font-size:13px;white-space:nowrap;letter-spacing:.04em
+}
+body[data-mode="traverse"] #traverseControls .numbox{width:100%;min-width:0;max-width:none;box-sizing:border-box;height:32px;text-align:left;padding:0 12px}
+body[data-mode="traverse"] #traverseControls input[type="number"]::-webkit-outer-spin-button,
+body[data-mode="traverse"] #traverseControls input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;margin:0}
+body[data-mode="traverse"] #traverseControls input[type="number"]{-moz-appearance:textfield;appearance:textfield}
+body[data-mode="traverse"] #traverseControls .mode-actions{margin:10px 0 6px;gap:7px}
+body[data-mode="traverse"] #traverseControls .mode-actions .tool-btn{
+  display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
+  min-width:0;min-height:36px;height:36px;padding:0 12px;letter-spacing:.08em;text-indent:0
+}
+body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;position:relative;width:16px;height:16px;flex:none;margin:0;
+  border:1px solid #6b5a3a;border-radius:3px;background:#0a100f;cursor:pointer
+}
+body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]:checked{
+  background:linear-gradient(180deg,#f4dfa4,#c9a25a);border-color:#d9b568
+}
+body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]:checked::after{
+  content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
+  border:solid #19160e;border-width:0 2px 2px 0;transform:rotate(45deg)
+}
+body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]:focus-visible{outline:2px solid var(--gold-1);outline-offset:2px}
 body[data-mode="traverse"] #traverseControls .mode-note{margin:6px 0 0}
+body[data-mode="traverse"] #traverseTools{
+  display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"actions safe" "status diagnostics" "summary diagnostics";
+  align-items:start;gap:8px 22px;max-width:none;margin:14px 0 0;padding:18px 20px
+}
+body[data-mode="traverse"] #traverseTools>.mode-actions{grid-area:actions;display:flex;flex-wrap:wrap;margin:0;gap:8px}
+body[data-mode="traverse"] #traverseTools .mode-actions .tool-btn{height:40px}
+body[data-mode="traverse"] #traverseTools #tvProgress{grid-area:status;margin:4px 0}
+body[data-mode="traverse"] #traverseTools #tvSummary{grid-area:summary}
+body[data-mode="traverse"] #traverseTools #tvSafePanel{grid-area:safe}
+body[data-mode="traverse"] #traverseTools>details:last-child{grid-area:diagnostics}
+body[data-mode="traverse"] #traverseTools details{padding:6px 0;border-bottom:1px solid rgba(138,106,47,.25)}
 body[data-mode="traverse"] .expanders:has(#pSet.open) #traverseControls{display:none}
 body[data-mode="traverse"] .expanders #pSet.open{flex:1;justify-content:center;margin:0;padding:16px}
 body[data-mode="traverse"].running .expanders,body[data-mode="traverse"].finished .expanders{display:flex;grid-column:1/-1;grid-row:2}
@@ -81,6 +112,7 @@ body[data-mode="traverse"].running .stats,body[data-mode="traverse"].finished .s
 body[data-mode="traverse"].running .vio-live-card,body[data-mode="traverse"].finished .vio-live-card{grid-column:1/-1;grid-row:3}
 body[data-mode="traverse"].running .chip-col,body[data-mode="traverse"].finished .chip-col{grid-column:3;grid-row:1}
 @media(max-width:1080px){
+  body[data-mode="traverse"] #traverseTools{grid-template-columns:1fr;grid-template-areas:"actions" "status" "summary" "safe" "diagnostics"}
   body[data-mode="traverse"] .deck,body[data-mode="traverse"].running .deck,body[data-mode="traverse"].finished .deck{grid-template-columns:minmax(0,1fr) 100px;grid-template-rows:auto}
   body[data-mode="traverse"] .signal{grid-column:1;grid-row:1}
   body[data-mode="traverse"] .expanders,body[data-mode="traverse"].running .expanders,body[data-mode="traverse"].finished .expanders{grid-column:1/-1;grid-row:auto}
@@ -93,8 +125,8 @@ body[data-mode="traverse"].running .chip-col,body[data-mode="traverse"].finished
   .mode-switch .tool-btn{flex:1 1 auto;padding:7px;font-size:12px;letter-spacing:.05em}
   #modeStatus{display:none}
   body[data-mode="traverse"] #traverseControls{padding:15px 12px}
-  body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  body[data-mode="traverse"] #traverseControls .mode-fields label{font-size:12px;white-space:normal}
-  body[data-mode="traverse"] #traverseControls .numbox{width:64px;max-width:53%;font-size:16px}
-  body[data-mode="traverse"] #traverseControls .mode-actions>label:last-child{margin-left:0}
+  body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  body[data-mode="traverse"] #traverseControls .mode-fields label{grid-template-columns:minmax(0,1fr) 58px;gap:5px;padding:6px;font-size:12px;white-space:normal}
+  body[data-mode="traverse"] #traverseControls .numbox{font-size:16px;padding:0 5px;text-align:center}
+  body[data-mode="traverse"] #traverseTools{margin:12px 0;padding:14px 12px}
 }

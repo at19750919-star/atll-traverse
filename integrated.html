@@ -1237,9 +1237,8 @@ body.running .deck,body.finished .deck{
     <label class="tool-btn" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><input type="checkbox" id="tvSecond">第二張敏感</label>
     <label class="tool-btn"><input type="checkbox" id="tvNine" checked>末張9</label>
     <label class="tool-btn"><input type="checkbox" id="tvSide" checked>莊閒</label>
-    <label>差距上限 <input id="tvSideLimit" class="numbox" type="number" min="0" value="8"></label>
   </div>
-  <p class="mode-note">訊號牌共用上方「設定」的花色與點數。剩牌上限留白不重跑；0 表示一張都不能剩。</p>
+  <input id="tvSideLimit" type="hidden" value="8">
 </section>
 <section id="traverseTools" class="gframe mode-panel" hidden>
   <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
