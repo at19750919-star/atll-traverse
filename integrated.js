@@ -105,7 +105,10 @@
     $('tvSummary').textContent=`穿越段 ${416-result.leftoverCount} 張｜剩牌 ${result.leftoverCount} 張｜長段 ${result.chains.length} 段｜長段驗證 ${result.chains.every(c=>c.qualified)?'通過':'有問題'}｜重跑 ${result.reruns||0} 次｜卡色違規 ${g.color.length} 局｜敏感局違規 ${g.noSwap.length+g.same.length} 局｜三條 ${g.triple.length} 局｜訊號 ${g.signal.length} 局｜${((result.totalMs??s.ms)/1000).toFixed(1)} 秒`;
     $('tvSafeCount').textContent=`${t.analysis.count}／416`;
     const buckets=new Map();t.analysis.depths.forEach(d=>buckets.set(d,(buckets.get(d)||0)+1));
-    $('tvCutBuckets').textContent=[...buckets].sort((a,b)=>a[0]-b[0]).map(([d,n])=>d?`違規到第 ${d} 局：${n} 點`:`安全：${n} 點`).join('｜');
+    const sortedBuckets=[...buckets].sort((a,b)=>a[0]-b[0]);
+    const deepest=sortedBuckets.at(-1)?.[0]||0;
+    $('tvBucketSummary').textContent=`安全 ${t.analysis.count} 點／其餘 ${416-t.analysis.count} 點${deepest?`；違規最深至第 ${deepest} 局`:''}。`;
+    $('tvCutBuckets').innerHTML=sortedBuckets.map(([d,n])=>`<div class="cut-bucket"><span>${d?`第 ${d} 局`:'安全'}</span><strong>${n} 點</strong></div>`).join('');
     $('tvSafeCuts').innerHTML=t.analysis.safe.map(c=>`<button class="tool-btn" data-tv-cut="${c}">${c+1}</button>`).join('')||'沒有安全切點';
     $('tvChains').querySelector('tbody').innerHTML=result.chains.map((c,i)=>`<tr><td>${i+1}</td><td>${c.start}</td><td>${c.length}</td><td>${c.rounds}</td><td>${c.traverse?'✓':'✗'}</td><td>${c.allSensitive?'✓':'✗'}</td><td>${c.qualified?'✓':'✗'}</td></tr>`).join('');
     const issues=result.signal?.issues||[];

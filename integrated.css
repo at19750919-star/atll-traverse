@@ -60,59 +60,56 @@ body[data-mode="traverse"] [data-tp="tpVerify"],body[data-mode="traverse"] #tpVe
 .mode-switch{max-width:none;margin:0 0 14px;min-height:54px}
 .mode-switch .tool-btn{min-height:40px}
 .mode-switch .tool-btn.active{border-color:var(--gold-2);background:linear-gradient(135deg,#f3d98d,#b8893d);color:#17130b;box-shadow:0 3px 14px #c9a25a55}
-body[data-mode="traverse"] .deck{grid-template-columns:minmax(300px,360px) minmax(0,1fr) 100px;grid-template-rows:auto;align-items:stretch}
+body[data-mode="traverse"] .deck{grid-template-columns:minmax(300px,360px) minmax(0,1fr) 100px;grid-template-rows:auto;align-items:stretch;max-width:1560px;margin-left:auto;margin-right:auto}
+body[data-mode="traverse"] .mode-switch,body[data-mode="traverse"] .toolbar,body[data-mode="traverse"] .tool-panels{max-width:1560px;margin-left:auto;margin-right:auto}
 body[data-mode="traverse"] .expanders{height:auto;min-width:0}
 body[data-mode="traverse"] .exp-tabs{display:none}
 body[data-mode="traverse"] #traverseControls{display:block;flex:1;min-width:0;max-width:none;margin:0;padding:16px 20px 12px}
 body[data-mode="traverse"] #traverseControls .frame-title{margin:0 0 10px;padding:0 4px;background:none}
-body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px}
+body[data-mode="traverse"] #traverseControls .traverse-control-groups{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px;align-items:start}
+body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 body[data-mode="traverse"] #traverseControls .mode-fields label{
-  display:grid;grid-template-columns:86px minmax(0,1fr);align-items:center;
-  width:100%;box-sizing:border-box;min-width:0;gap:10px;padding:7px 10px;border:1px solid #2c3634;border-radius:7px;
+  display:flex;justify-content:flex-start;align-items:center;
+  width:100%;box-sizing:border-box;min-width:0;gap:8px;padding:7px 10px;border:1px solid #2c3634;border-radius:7px;
   background:rgba(10,16,15,.45);color:var(--txt);font-size:13px;white-space:nowrap;letter-spacing:.04em
 }
-body[data-mode="traverse"] #traverseControls .numbox{width:100%;min-width:0;max-width:none;box-sizing:border-box;height:32px;text-align:left;padding:0 12px}
+body[data-mode="traverse"] #traverseControls .numbox{width:86px;min-width:0;max-width:none;box-sizing:border-box;height:32px;text-align:center;padding:0 4px}
 body[data-mode="traverse"] #traverseControls input[type="number"]::-webkit-outer-spin-button,
 body[data-mode="traverse"] #traverseControls input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;margin:0}
 body[data-mode="traverse"] #traverseControls input[type="number"]{-moz-appearance:textfield;appearance:textfield}
-body[data-mode="traverse"] #traverseControls .mode-actions{margin:10px 0 6px;gap:7px}
-body[data-mode="traverse"] #traverseControls .mode-actions .tool-btn{
-  display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
-  min-width:0;min-height:36px;height:36px;padding:0 12px;letter-spacing:.08em;text-indent:0
-}
-body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]{
-  appearance:none;-webkit-appearance:none;position:relative;width:16px;height:16px;flex:none;margin:0;
-  border:1px solid #6b5a3a;border-radius:3px;background:#0a100f;cursor:pointer
-}
-body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]:checked{
-  background:linear-gradient(180deg,#f4dfa4,#c9a25a);border-color:#d9b568
-}
-body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]:checked::after{
-  content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
-  border:solid #19160e;border-width:0 2px 2px 0;transform:rotate(45deg)
-}
-body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]:focus-visible{outline:2px solid var(--gold-1);outline-offset:2px}
+body[data-mode="traverse"] #traverseControls .traverse-rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+body[data-mode="traverse"] #traverseControls .rule-control{position:relative;min-width:0;min-height:42px;box-sizing:border-box;padding:7px 10px;cursor:pointer;letter-spacing:.02em}
+body[data-mode="traverse"] #traverseControls .rule-control .name{font-size:12px;white-space:nowrap}
+body[data-mode="traverse"] #traverseControls .rule-control input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:1}
+body[data-mode="traverse"] #traverseControls .rule-control .switch{width:44px;height:23px;pointer-events:none}
+body[data-mode="traverse"] #traverseControls .rule-control .switch::after{width:17px;height:17px}
+body[data-mode="traverse"] #traverseControls .rule-control input:checked + .switch{background:linear-gradient(180deg,#3a2f14,#6b4c1d);border-color:#c9a25a;box-shadow:inset 0 0 8px rgba(0,0,0,.5),0 0 10px rgba(212,176,106,.25)}
+body[data-mode="traverse"] #traverseControls .rule-control input:checked + .switch::after{left:23px;background:radial-gradient(circle at 35% 30%,#fbeec7,#d9b568);box-shadow:0 0 8px rgba(244,223,164,.6)}
+body[data-mode="traverse"] #traverseControls .rule-control input:focus-visible + .switch{outline:2px solid var(--gold-1);outline-offset:2px}
 body[data-mode="traverse"] #traverseControls .mode-note{margin:6px 0 0}
 body[data-mode="traverse"] #traverseTools{
-  display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"actions safe" "status diagnostics" "summary diagnostics";
-  align-items:start;gap:8px 22px;max-width:none;margin:14px 0 0;padding:18px 20px
+  display:flex;flex-direction:column;align-items:stretch;gap:8px;max-width:1560px;margin:14px auto 0;padding:18px 20px
 }
-body[data-mode="traverse"] #traverseTools>.mode-actions{grid-area:actions;display:flex;flex-wrap:wrap;margin:0;gap:8px}
+body[data-mode="traverse"] #traverseTools>.mode-actions{display:flex;flex-wrap:wrap;margin:0;gap:8px}
 body[data-mode="traverse"] #traverseTools .mode-actions .tool-btn{height:40px}
-body[data-mode="traverse"] #traverseTools #tvProgress{grid-area:status;margin:4px 0}
-body[data-mode="traverse"] #traverseTools #tvSummary{grid-area:summary}
-body[data-mode="traverse"] #traverseTools #tvSafePanel{grid-area:safe}
-body[data-mode="traverse"] #traverseTools>details:last-child{grid-area:diagnostics}
+body[data-mode="traverse"] #traverseTools #tvProgress{margin:4px 0}
+body[data-mode="traverse"] #traverseTools #tvSummary{padding:0}
 body[data-mode="traverse"] #traverseTools details{padding:6px 0;border-bottom:1px solid rgba(138,106,47,.25)}
+body[data-mode="traverse"] #tvBucketsDetail{margin:7px 0 10px;padding-left:12px!important;border-left:1px solid rgba(138,106,47,.4);border-bottom:0!important}
+body[data-mode="traverse"] #tvCutBuckets{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:6px;max-height:300px;overflow-y:auto;margin:8px 0;scrollbar-color:#8a6a2f #0c1a14}
+body[data-mode="traverse"] #tvCutBuckets .cut-bucket{display:flex;justify-content:space-between;gap:8px;padding:6px 9px;border:1px solid #2c3634;border-radius:6px;background:rgba(10,16,15,.5);font-size:12px}
+body[data-mode="traverse"] #tvCutBuckets .cut-bucket strong{color:var(--gold-1)}
+body[data-mode="traverse"] #tvSafeCuts{max-height:180px;overflow-y:auto;scrollbar-color:#8a6a2f #0c1a14}
+body[data-mode="traverse"] #traverseTools .mode-scroll{max-height:360px;overflow:auto;scrollbar-color:#8a6a2f #0c1a14}
 body[data-mode="traverse"] .expanders:has(#pSet.open) #traverseControls{display:none}
 body[data-mode="traverse"] .expanders #pSet.open{flex:1;justify-content:center;margin:0;padding:16px}
 body[data-mode="traverse"].running .expanders,body[data-mode="traverse"].finished .expanders{display:flex;grid-column:1/-1;grid-row:2}
 body[data-mode="traverse"].running .deck,body[data-mode="traverse"].finished .deck{grid-template-columns:minmax(220px,260px) minmax(0,1fr) 100px;grid-template-rows:auto auto}
-body[data-mode="traverse"].running .stats,body[data-mode="traverse"].finished .stats{grid-column:2;grid-row:1;min-width:0;overflow:auto}
+body[data-mode="traverse"].running .stats,body[data-mode="traverse"].finished .stats{grid-column:2;grid-row:1;min-width:0;overflow:visible}
 body[data-mode="traverse"].running .vio-live-card,body[data-mode="traverse"].finished .vio-live-card{grid-column:1/-1;grid-row:3}
 body[data-mode="traverse"].running .chip-col,body[data-mode="traverse"].finished .chip-col{grid-column:3;grid-row:1}
 @media(max-width:1080px){
-  body[data-mode="traverse"] #traverseTools{grid-template-columns:1fr;grid-template-areas:"actions" "status" "summary" "safe" "diagnostics"}
+  body[data-mode="traverse"] #traverseControls .traverse-control-groups{grid-template-columns:1fr}
   body[data-mode="traverse"] .deck,body[data-mode="traverse"].running .deck,body[data-mode="traverse"].finished .deck{grid-template-columns:minmax(0,1fr) 100px;grid-template-rows:auto}
   body[data-mode="traverse"] .signal{grid-column:1;grid-row:1}
   body[data-mode="traverse"] .expanders,body[data-mode="traverse"].running .expanders,body[data-mode="traverse"].finished .expanders{grid-column:1/-1;grid-row:auto}
@@ -126,7 +123,7 @@ body[data-mode="traverse"].running .chip-col,body[data-mode="traverse"].finished
   #modeStatus{display:none}
   body[data-mode="traverse"] #traverseControls{padding:15px 12px}
   body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  body[data-mode="traverse"] #traverseControls .mode-fields label{grid-template-columns:minmax(0,1fr) 58px;gap:5px;padding:6px;font-size:12px;white-space:normal}
-  body[data-mode="traverse"] #traverseControls .numbox{font-size:16px;padding:0 5px;text-align:center}
+  body[data-mode="traverse"] #traverseControls .mode-fields label{gap:5px;padding:6px;font-size:12px;white-space:normal}
+  body[data-mode="traverse"] #traverseControls .numbox{width:58px;font-size:16px;padding:0 5px;text-align:center}
   body[data-mode="traverse"] #traverseTools{margin:12px 0;padding:14px 12px}
 }

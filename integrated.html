@@ -1222,6 +1222,7 @@ body.running .deck,body.finished .deck{
 </section>
 <section id="traverseControls" class="gframe mode-panel" hidden>
   <h2 class="frame-title">穿越排牌設定</h2>
+  <div class="traverse-control-groups">
   <div class="mode-fields">
     <label>最少張數 <input id="tvMin" class="numbox" type="number" min="4" max="416" value="8"></label>
     <label>最多張數 <input id="tvMax" class="numbox" type="number" min="4" max="416" value="12"></label>
@@ -1230,20 +1231,21 @@ body.running .deck,body.finished .deck{
     <label>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
     <label>剩牌上限 <input id="tvLeft" class="numbox" type="number" min="0" max="416" value="0" placeholder="不限"></label>
   </div>
-  <div class="mode-actions">
-    <label class="tool-btn"><input type="checkbox" id="tvTriple" checked>三條</label>
-    <label class="tool-btn"><input type="checkbox" id="tvSignal" checked>訊號牌</label>
-    <label class="tool-btn"><input type="checkbox" id="tvStrong">強</label>
-    <label class="tool-btn" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><input type="checkbox" id="tvSecond">第二張敏感</label>
-    <label class="tool-btn"><input type="checkbox" id="tvNine" checked>末張9</label>
-    <label class="tool-btn"><input type="checkbox" id="tvSide" checked>莊閒</label>
+  <div class="mode-actions traverse-rules">
+    <label class="cond rule-control"><span class="name">三條</span><input type="checkbox" id="tvTriple" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control"><span class="name">強</span><input type="checkbox" id="tvStrong"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><span class="name">第二張敏感</span><input type="checkbox" id="tvSecond"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control"><span class="name">末張9</span><input type="checkbox" id="tvNine" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control"><span class="name">莊閒</span><input type="checkbox" id="tvSide" checked><span class="switch" aria-hidden="true"></span></label>
+  </div>
   </div>
   <input id="tvSideLimit" type="hidden" value="8">
 </section>
 <section id="traverseTools" class="gframe mode-panel" hidden>
   <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
   <p id="tvProgress" role="status">尚未排牌</p><div id="tvSummary"></div>
-  <details id="tvSafePanel"><summary>安全切牌點 <span id="tvSafeCount">尚未排牌</span>（不計卡色）</summary><div id="tvCutBuckets"></div><div id="tvSafeCuts" class="mode-actions"></div></details>
+  <details id="tvSafePanel"><summary>安全切牌點 <span id="tvSafeCount">尚未排牌</span>（不計卡色）</summary><p id="tvBucketSummary" class="mode-note"></p><details id="tvBucketsDetail"><summary>查看全部違規深度分布</summary><div id="tvCutBuckets"></div></details><div id="tvSafeCuts" class="mode-actions"></div></details>
   <details><summary>長段驗證與訊號檢查</summary><div id="tvDiagnostics"></div><div class="mode-scroll"><table id="tvChains"><thead><tr><th>段</th><th>起始</th><th>張數</th><th>局數</th><th>穿越</th><th>敏感</th><th>合格</th></tr></thead><tbody></tbody></table></div></details>
 </section>
 <section class="tool-panels">
