@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Signals XLSX 驗算器</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; margin: 20px; line-height: 1.5; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom: 16px; }
+    .box { padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-top: 12px; }
+    .ok { color: #0a7; font-weight: 700; }
+    .bad { color: #d33; font-weight: 700; }
+    table { width:100%; border-collapse:collapse; margin-top: 8px; }
+    th, td { border:1px solid #ddd; padding:8px; font-size: 13px; vertical-align: top; }
+    th { background:#f6f6f6; text-align:left; }
+    .muted { color:#666; font-size: 13px; }
+    code { background:#f3f3f3; padding:2px 6px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <h2>Signals 匯出 XLSX 驗算器</h2>
+  <p class="muted">完整驗證：補牌規則 + 結果計算 + 敏感局 + 用牌張數 + 莊家6點 + 三條/和局配對</p>
+
+  <div class="row">
+    <label><input type="radio" name="source" value="file" checked /> 本地檔案</label>
+    <label><input type="radio" name="source" value="drive" /> Google 雲端硬碟</label>
+  </div>
+
+  <div class="row" id="fileInput">
+    <input id="file" type="file" accept=".xlsx" multiple />
+    <button id="run">開始驗算</button>
+  </div>
+
+  <div class="row" id="driveInput" style="display:none;">
+    <button id="loadDrive">載入雲端檔案清單</button>
+    <select id="driveFolders" style="min-width:200px;"><option value="">根目錄</option></select>
+    <select id="driveFiles" style="min-width:300px;" multiple size="8"></select>
+    <button id="runDrive">驗算選取檔案（可多選，Ctrl/Shift 點選）</button>
+  </div>
+
+  <div class="box" id="batchBox" style="display:none;">
+    <div><b>批次結果總覽</b></div>
+    <table id="batchTable">
+      <thead><tr><th>檔案</th><th>狀態</th><th>錯誤數</th><th>警告</th><th></th></tr></thead>
+      <tbody id="batchTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="box">
+    <div id="summary" class="muted">請選擇 xlsx 檔案（可多選）</div>
+  </div>
+
+  <div class="box">
+    <div><b>問題清單</b></div>
+    <div id="issues" class="muted">尚未驗算</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script>
+    const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypt3_PnEL5TgdDPaBwg1M5bWAjQMR9dD5Jslicn3eZCtuNSTtqO35RafhQpuX-l9_m/exec';
+
+    const $file = document.getElementById('file');
+    const $run = document.getElementById('run');
+    const $summary = document.getElementById('summary');
+    const $issues = document.getElementById('issues');
+    const $loadDrive = document.getElementById('loadDrive');
+    const $driveFolders = document.getElementById('driveFolders');
+    const $driveFiles = document.getElementById('driveFiles');
+    const $runDrive = document.getElementById('runDrive');
+    const $fileInput = document.getElementById('fileInput');
+    const $driveInput = document.getElementById('driveInput');
+
+    // 切換輸入來源
+    document.querySelectorAll('input[name="source"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.value === 'file') {
+          $fileInput.style.display = 'flex';
+          $driveInput.style.display = 'none';
+        } else {
+          $fileInput.style.display = 'none';
+          $driveInput.style.display = 'flex';
+        }
+      });
+    });
+
+    // 安全取得儲存格文字值（處理富文本物件）
+    function getCellText(cell) {
+      if (cell == null || cell.value == null) return '';
+      const val = cell.value;
+
+      // 處理富文本物件 { richText: [...] }
+      if (typeof val === 'object' && val.richText && Array.isArray(val.richText)) {
+        return val.richText.map(t => t.text || '').join('');
+      }
+
+      // 處理一般文字
+      return String(val).trim();
+    }
+
+    function parseCard(label) {
+      if (!label) return null;
+      const s = String(label).trim();
+      if (!s) return null;
+
+      // 支援：A♣ / 2-9♣ / T♣ / J♣ / Q♣ / K♣ / 10♣
+      const m = s.match(/^(\d+|[AJQKT])([♠♥♦♣])$/);
+      if (!m) return { raw:s, rank:null, suit:null, point:null, ok:false };
+
+      const rank = m[1];
+      const suit = m[2];
+      let point;
+
+      if (rank === 'A') point = 1;
+      else if (['T','J','Q','K','10'].includes(rank)) point = 0;
+      else point = parseInt(rank, 10);
+
+      return { raw:s, rank, suit, point, ok:true };
+    }
+
+    function calcPoint(cards) {
+      return cards.reduce((sum, c) => sum + c.point, 0) % 10;
+    }
+
+    // 檢查是否為三條（至少3張相同點數，且點數為1-9）
+    function hasFullHouse(cards) {
+      if (cards.length < 3) return false;
+      const pointCounts = {};
+      for (const c of cards) {
+        if (c.point >= 1 && c.point <= 9) {
+          pointCounts[c.point] = (pointCounts[c.point] || 0) + 1;
+        }
+      }
+      return Object.values(pointCounts).some(count => count >= 3);
+    }
+
+    function validateRound(cardLabels) {
+      const cards = cardLabels.map(parseCard).filter(c => c && c.ok);
+      const bad = cardLabels.map(parseCard).filter(c => c && !c.ok);
+
+      if (bad.length) return { error: '卡片格式錯誤: ' + bad.map(b => b.raw).join(', ') };
+      if (cards.length < 4) return { error: '卡片少於4張' };
+
+      const [p1, b1, p2, b2] = cards;
+      let idx = 4;
+
+      const playerCards = [p1, p2];
+      const bankerCards = [b1, b2];
+
+      let pTotal = calcPoint(playerCards);
+      let bTotal = calcPoint(bankerCards);
+      const playerInitial = pTotal;
+      const bankerInitial = bTotal;
+
+      const natural = (pTotal >= 8 || bTotal >= 8);
+
+      if (!natural) {
+        // 閒家補牌
+        if (pTotal <= 5) {
+          if (idx >= cards.length) return { error: '缺少閒家補牌' };
+          const p3 = cards[idx++];
+          playerCards.push(p3);
+          pTotal = calcPoint(playerCards);
+
+          // 莊家補牌判斷
+          const p3Val = p3.point;
+          let bankerDraws = false;
+
+          if (bTotal <= 2) bankerDraws = true;
+          else if (bTotal === 3 && p3Val !== 8) bankerDraws = true;
+          else if (bTotal === 4 && [2,3,4,5,6,7].includes(p3Val)) bankerDraws = true;
+          else if (bTotal === 5 && [4,5,6,7].includes(p3Val)) bankerDraws = true;
+          else if (bTotal === 6 && [6,7].includes(p3Val)) bankerDraws = true;
+
+          if (bankerDraws) {
+            if (idx >= cards.length) return { error: '缺少莊家補牌' };
+            const b3 = cards[idx++];
+            bankerCards.push(b3);
+            bTotal = calcPoint(bankerCards);
+          }
+        } else {
+          // 閒家不補，莊家 ≤5 補牌
+          if (bTotal <= 5) {
+            if (idx >= cards.length) return { error: '缺少莊家補牌' };
+            const b3 = cards[idx++];
+            bankerCards.push(b3);
+            bTotal = calcPoint(bankerCards);
+          }
+        }
+      }
+
+      let result;
+      if (pTotal === bTotal) result = '和';
+      else if (pTotal > bTotal) result = '閒';
+      else result = '莊';
+
+      // 檢查用牌張數是否正確
+      const usedCardCount = idx;
+      if (usedCardCount !== cards.length) {
+        return {
+          error: `用牌張數錯誤：應用 ${usedCardCount} 張，實際有 ${cards.length} 張`,
+          result, pTotal, bTotal, usedCardCount
+        };
+      }
+
+      // 莊家6點（只標示，不當作錯誤）
+      const banker6Flag = (result === '莊' && bTotal === 6 && pTotal <= 5);
+
+      // 檢查敏感局（前兩張對調）
+      const swappedCards = [b1, p1, p2, b2, ...cards.slice(4)];
+      const swapValidation = validateSwappedRound(swappedCards);
+
+      let sensitive = false;
+      let swappedResult = null;
+
+      if (!swapValidation.error && swapValidation.usedCardCount === usedCardCount) {
+        swappedResult = swapValidation.result;
+
+        // 敏感局規則：
+        // - 和→和：敏感
+        // - 莊→閒 或 閒→莊：敏感
+        // - 莊/閒→和：不敏感
+        if (result === '和') {
+          sensitive = (swappedResult === '和');
+        } else {
+          sensitive = (swappedResult !== null && swappedResult !== result && swappedResult !== '和');
+        }
+      }
+
+      // 檢查是否為三條局
+      const isFullHouse = hasFullHouse(cards);
+
+      return {
+        result,
+        pTotal,
+        bTotal,
+        playerInitial,
+        bankerInitial,
+        natural,
+        usedCardCount,
+        sensitive,
+        swappedResult,
+        isFullHouse,
+        banker6Flag
+      };
+    }
+
+    // 驗證對調後的牌（簡化版，不回傳錯誤訊息）
+    function validateSwappedRound(cards) {
+      if (cards.length < 4) return { usedCardCount: 0 };
+
+      const [p1, b1, p2, b2] = cards;
+      let idx = 4;
+
+      const playerCards = [p1, p2];
+      const bankerCards = [b1, b2];
+
+      let pTotal = calcPoint(playerCards);
+      let bTotal = calcPoint(bankerCards);
+
+      const natural = (pTotal >= 8 || bTotal >= 8);
+
+      if (!natural) {
+        if (pTotal <= 5) {
+          if (idx >= cards.length) return { usedCardCount: idx };
+          const p3 = cards[idx++];
+          playerCards.push(p3);
+          pTotal = calcPoint(playerCards);
+
+          const p3Val = p3.point;
+          let bankerDraws = false;
+
+          if (bTotal <= 2) bankerDraws = true;
+          else if (bTotal === 3 && p3Val !== 8) bankerDraws = true;
+          else if (bTotal === 4 && [2,3,4,5,6,7].includes(p3Val)) bankerDraws = true;
+          else if (bTotal === 5 && [4,5,6,7].includes(p3Val)) bankerDraws = true;
+          else if (bTotal === 6 && [6,7].includes(p3Val)) bankerDraws = true;
+
+          if (bankerDraws) {
+            if (idx >= cards.length) return { usedCardCount: idx };
+            const b3 = cards[idx++];
+            bankerCards.push(b3);
+            bTotal = calcPoint(bankerCards);
+          }
+        } else {
+          if (bTotal <= 5) {
+            if (idx >= cards.length) return { usedCardCount: idx };
+            const b3 = cards[idx++];
+            bankerCards.push(b3);
+            bTotal = calcPoint(bankerCards);
+          }
+        }
+      }
+
+      let result;
+      if (pTotal === bTotal) result = '和';
+      else if (pTotal > bTotal) result = '閒';
+      else result = '莊';
+
+      return { result, pTotal, bTotal, usedCardCount: idx };
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // 牌靴回復分析（以主程式 signals.js 的切牌點回復算法為準）
+    // 定義：對每一個「切牌點(0..totalCards-1)」模擬發牌，直到回到某個原始局起點(roundStarts)為止。
+    function analyzeShoeRecovery(rounds) {
+      if (!Array.isArray(rounds) || rounds.length === 0) return null;
+
+      // 1) 建立原始局起點索引
+      const roundStarts = [];
+      let totalCards = 0;
+      for (let i = 0; i < rounds.length; i++) {
+        roundStarts.push(totalCards);
+        totalCards += rounds[i].cards.length;
+      }
+      if (totalCards <= 0) return null;
+
+      // 2) 建立完整牌組（只需要點數）
+      const fullDeck = [];
+      for (const round of rounds) {
+        for (const card of round.cards) {
+          fullDeck.push(card);
+        }
+      }
+
+      function createRotatedDeck(startIdx) {
+        const rotated = [];
+        for (let i = 0; i < totalCards; i++) {
+          rotated.push(fullDeck[(startIdx + i) % totalCards]);
+        }
+        return rotated;
+      }
+
+      // 3) 從牌組模擬一局（no_swap 模式，只回傳用牌數）
+      function simulateRoundNoSwap(deck, startIndex) {
+        const pointAt = (i) => deck[i]?.point ?? 0;
+        let idx = startIndex;
+        if (idx + 3 >= deck.length) return null;
+
+        const p1 = pointAt(idx++);
+        const b1 = pointAt(idx++);
+        const p2 = pointAt(idx++);
+        const b2 = pointAt(idx++);
+
+        let pTotal = (p1 + p2) % 10;
+        let bTotal = (b1 + b2) % 10;
+        const natural = (pTotal >= 8 || bTotal >= 8);
+
+        if (!natural) {
+          if (pTotal <= 5) {
+            if (idx >= deck.length) return null;
+            const p3Val = pointAt(idx++);
+            pTotal = (pTotal + p3Val) % 10;
+
+            let bankerDraws = false;
+            if (bTotal <= 2) bankerDraws = true;
+            else if (bTotal === 3 && p3Val !== 8) bankerDraws = true;
+            else if (bTotal === 4 && [2,3,4,5,6,7].includes(p3Val)) bankerDraws = true;
+            else if (bTotal === 5 && [4,5,6,7].includes(p3Val)) bankerDraws = true;
+            else if (bTotal === 6 && [6,7].includes(p3Val)) bankerDraws = true;
+
+            if (bankerDraws) {
+              if (idx >= deck.length) return null;
+              const b3Val = pointAt(idx++);
+              bTotal = (bTotal + b3Val) % 10;
+            }
+          } else if (bTotal <= 5) {
+            if (idx >= deck.length) return null;
+            const b3Val = pointAt(idx++);
+            bTotal = (bTotal + b3Val) % 10;
+          }
+        }
+
+        return { used: idx - startIndex };
+      }
+
+      // 4) 模擬每個切牌點
+      let sumCards = 0;
+      let sumRounds = 0;
+      let maxCards = 0;
+      let maxRounds = 0;
+      let maxCardIdx = -1;
+      let immediateRecovery = 0;
+      const maxSimRounds = rounds.length * 2;
+
+      const distribution = {
+        immediate: 0,      // 0局
+        range1to5: 0,      // 1~5局
+        range6to10: 0,     // 6~10局
+        range11to15: 0,    // 11~15局
+        range16plus: 0     // 16局以上（含無法回復）
+      };
+
+      for (let cutPoint = 0; cutPoint < totalCards; cutPoint++) {
+        if (roundStarts.includes(cutPoint)) {
+          immediateRecovery++;
+          distribution.immediate++;
+          continue;
+        }
+
+        const rotatedDeck = createRotatedDeck(cutPoint);
+        let currentIdx = 0;
+        let cardsUsed = 0;
+        let roundsUsed = 0;
+        let recovered = false;
+
+        while (currentIdx < totalCards && roundsUsed < maxSimRounds) {
+          const sim = simulateRoundNoSwap(rotatedDeck, currentIdx);
+          if (!sim) break;
+
+          cardsUsed += sim.used;
+          roundsUsed++;
+          currentIdx += sim.used;
+
+          const originalIdx = (cutPoint + currentIdx) % totalCards;
+          if (roundStarts.includes(originalIdx)) {
+            recovered = true;
+            sumCards += cardsUsed;
+            sumRounds += roundsUsed;
+
+            if (cardsUsed > maxCards) {
+              maxCards = cardsUsed;
+              maxCardIdx = cutPoint;
+            }
+            if (roundsUsed > maxRounds) {
+              maxRounds = roundsUsed;
+            }
+
+            if (roundsUsed <= 5) distribution.range1to5++;
+            else if (roundsUsed <= 10) distribution.range6to10++;
+            else if (roundsUsed <= 15) distribution.range11to15++;
+            else distribution.range16plus++;
+            break;
+          }
+        }
+
+        if (!recovered) {
+          sumCards += cardsUsed;
+          sumRounds += roundsUsed;
+          distribution.range16plus++;
+        }
+      }
+
+      const avgCards = (sumCards / totalCards).toFixed(1);
+      const avgRounds = (sumRounds / totalCards).toFixed(1);
+      const immediatePercent = ((immediateRecovery / totalCards) * 100).toFixed(1);
+
+      return { totalCards, avgCards, avgRounds, maxCards, maxRounds, maxCardIdx, immediateRecovery, immediatePercent, distribution };
+    }
+
+    async function runValidation(arrayBuffer) {
+      try {
+        const wb = new ExcelJS.Workbook();
+        await wb.xlsx.load(arrayBuffer);
+
+        const ws = wb.getWorksheet('原始數據');
+        if (!ws) {
+          $summary.innerHTML = `<span class="bad">找不到「原始數據」工作表</span>`;
+          $issues.textContent = '無法驗算';
+          return;
+        }
+
+        // 讀取標題列
+        const headerRow = ws.getRow(1);
+        const headers = {};
+        headerRow.eachCell((cell, col) => {
+          const key = getCellText(cell);
+          if (key) headers[key] = col;
+        });
+
+        console.log('找到的欄位:', Object.keys(headers));
+
+        // 只需要這些欄位
+        const needed = ['局號', '卡片1', '卡片2', '卡片3', '卡片4', '結果'];
+        const missing = needed.filter(k => !headers[k]);
+
+        if (missing.length) {
+          $summary.innerHTML = `<span class="bad">缺少欄位：${esc(missing.join('、'))}</span>`;
+          $issues.innerHTML = `<div class="muted">找到的欄位：${esc(Object.keys(headers).join('、'))}</div>`;
+          return;
+        }
+
+        // 驗算每一局
+        const issues = [];
+        const warnings = [];
+        let total = 0;
+        let tieCount = 0;
+        let sensitiveCount = 0;
+        let fullHouseCount = 0;
+        let notSensitiveButSwappable = 0; // 可對調但對調後變和局（不算敏感局）
+        let banker6Count = 0;
+        const banker6Rounds = [];
+        let fileBankerCount = 0;
+        let filePlayerCount = 0;
+        let fileTieCount = 0;
+        let totalUsedCards = 0;
+        const suitCounts = { '♠': 0, '♥': 0, '♦': 0, '♣': 0 };
+        const rankOrder = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const suitOrder = ['♠','♥','♦','♣'];
+        const rankSuitCounts = {};
+        for (const rank of rankOrder) {
+          rankSuitCounts[rank] = { '♠': 0, '♥': 0, '♦': 0, '♣': 0 };
+        }
+        let suitCountSkipped = 0;
+        let rankSuitSkipped = 0;
+
+        const roundResults = []; // 儲存所有局的驗證結果
+        const roundsForRecovery = []; // 依檔案內容重建牌靴（供回復分析）
+        const sevenPtResults = []; // 7點逆轉分析
+
+        for (let r = 2; r <= ws.rowCount; r++) {
+          const row = ws.getRow(r);
+
+          const roundNo = getCellText(row.getCell(headers['局號']));
+          if (!roundNo) continue;
+
+          total++;
+
+          const cardLabels = [
+            getCellText(row.getCell(headers['卡片1'])),
+            getCellText(row.getCell(headers['卡片2'])),
+            getCellText(row.getCell(headers['卡片3'])),
+            getCellText(row.getCell(headers['卡片4'])),
+            headers['卡片5'] ? getCellText(row.getCell(headers['卡片5'])) : '',
+            headers['卡片6'] ? getCellText(row.getCell(headers['卡片6'])) : ''
+          ].filter(c => c);
+
+          totalUsedCards += cardLabels.length;
+          const parsedCards = cardLabels.map(parseCard);
+          for (const card of parsedCards) {
+            if (card && card.ok && suitCounts[card.suit] !== undefined) {
+              suitCounts[card.suit] += 1;
+            } else if (card) {
+              suitCountSkipped += 1;
+            }
+
+            if (card && card.ok) {
+              const rankKey = card.rank === 'T' ? '10' : card.rank;
+              if (rankSuitCounts[rankKey] && rankSuitCounts[rankKey][card.suit] !== undefined) {
+                rankSuitCounts[rankKey][card.suit] += 1;
+              } else {
+                rankSuitSkipped += 1;
+              }
+            }
+          }
+
+          const expectedResult = getCellText(row.getCell(headers['結果']));
+          const validation = validateRound(cardLabels);
+
+          if (expectedResult === '莊') fileBankerCount++;
+          else if (expectedResult === '閒') filePlayerCount++;
+          else if (expectedResult === '和') fileTieCount++;
+
+          if (validation.error) {
+            issues.push({ roundNo, msg: validation.error, cards: cardLabels.join(' ') });
+          } else if (validation.result !== expectedResult) {
+            issues.push({
+              roundNo,
+              msg: `結果錯誤：檔案=${expectedResult}，計算=${validation.result}（閒${validation.pTotal} / 莊${validation.bTotal}）`,
+              cards: cardLabels.join(' ')
+            });
+          }
+
+          // 統計敏感局、三條、和局
+          if (!validation.error) {
+            if (validation.result === '和') tieCount++;
+
+            if (validation.sensitive) sensitiveCount++;
+            if (validation.isFullHouse) fullHouseCount++;
+
+            if (validation.banker6Flag) {
+              banker6Count++;
+              banker6Rounds.push(roundNo);
+            }
+
+            // 檢查「可對調但對調後變和」的情況 - 這是問題！
+            if (!validation.sensitive && validation.swappedResult === '和' && validation.result !== '和') {
+              notSensitiveButSwappable++;
+              issues.push({
+                roundNo,
+                msg: `對調後變和局：${validation.result}→和（不符合敏感局條件）`,
+                cards: cardLabels.join(' ')
+              });
+            }
+
+            roundResults.push({
+              roundNo,
+              result: validation.result,
+              sensitive: validation.sensitive,
+              isFullHouse: validation.isFullHouse,
+              swappedResult: validation.swappedResult,
+              cardCount: cardLabels.length
+            });
+
+            // 7點逆轉分析
+            if (!validation.natural && validation.result !== '和' && cardLabels.length >= 5) {
+              const pi = validation.playerInitial;
+              const bi = validation.bankerInitial;
+              if (pi === 7 || bi === 7) {
+                const who7 = pi === 7 ? '閒' : '莊';
+                const rev = (who7 === '閒' && validation.result === '莊') || (who7 === '莊' && validation.result === '閒');
+                sevenPtResults.push({
+                  roundNo, who7, rev,
+                  pi, bi,
+                  pf: validation.pTotal, bf: validation.bTotal,
+                  result: validation.result
+                });
+              }
+            }
+
+            // 回復分析以檔案內的牌序/分局為準
+            const parsed = parsedCards.filter(c => c && c.ok);
+            if (parsed.length === cardLabels.length) {
+              roundsForRecovery.push({ cards: parsed });
+            }
+          }
+        }
+
+        // 檢查三條局與和局的配對
+        if (fullHouseCount !== tieCount) {
+          warnings.push(`三條局(${fullHouseCount})與和局(${tieCount})數量不匹配`);
+        }
+
+        // 莊家6點只標示（不算違規）
+        if (banker6Count > 0) {
+          const sample = banker6Rounds.slice(0, 20).join('、');
+          const tail = banker6Rounds.length > 20 ? `…等共 ${banker6Rounds.length} 局` : `共 ${banker6Rounds.length} 局`;
+          warnings.push(`莊家6點（莊6且閒≤5）：${sample}${sample ? '，' : ''}${tail}（僅標示）`);
+        }
+
+        // 計算回復分析（以檔案導出牌序為準）
+        const recoveryAnalysis = (issues.length === 0 && roundsForRecovery.length > 0)
+          ? analyzeShoeRecovery(roundsForRecovery)
+          : null;
+
+        // 顯示結果
+        let summaryText = '';
+        if (issues.length === 0) {
+          summaryText = `<span class="ok">✓ 驗證通過</span>：共 ${total} 局`;
+          summaryText += `<br>莊 ${fileBankerCount} 局 / 閒 ${filePlayerCount} 局 / 和 ${fileTieCount} 局`;
+        } else {
+          summaryText = `<span class="bad">✗ 發現問題</span>：共 ${total} 局`;
+          summaryText += `<br>莊 ${fileBankerCount} 局 / 閒 ${filePlayerCount} 局 / 和 ${fileTieCount} 局`;
+        }
+
+        summaryText += `<br>總用牌 ${totalUsedCards} 張 / ♠ ${suitCounts['♠']} / ♥ ${suitCounts['♥']} / ♦ ${suitCounts['♦']} / ♣ ${suitCounts['♣']}`;
+        if (suitCountSkipped > 0) {
+          summaryText += `<br><span class="muted">花色統計略過 ${suitCountSkipped} 張（格式錯誤）</span>`;
+        }
+        if (rankSuitSkipped > 0) {
+          summaryText += `<br><span class="muted">點數花色統計略過 ${rankSuitSkipped} 張（格式錯誤）</span>`;
+        }
+
+        let rankSuitTable = `<table><thead><tr><th>點數</th>`;
+        for (const suit of suitOrder) {
+          rankSuitTable += `<th>${suit}</th>`;
+        }
+        rankSuitTable += `</tr></thead><tbody>`;
+        for (const rank of rankOrder) {
+          rankSuitTable += `<tr><td>${rank}</td>`;
+          for (const suit of suitOrder) {
+            rankSuitTable += `<td>${rankSuitCounts[rank][suit]}</td>`;
+          }
+          rankSuitTable += `</tr>`;
+        }
+        rankSuitTable += `</tbody></table>`;
+        summaryText += `<br><br><b>點數花色統計：</b>${rankSuitTable}`;
+
+        if (notSensitiveButSwappable > 0) {
+          summaryText += `<br><span class="muted">對調後變和 ${notSensitiveButSwappable} 局（不算敏感）</span>`;
+        }
+
+        if (recoveryAnalysis) {
+          const dist = recoveryAnalysis.distribution || {};
+          const zeroTo5 = (dist.immediate || 0) + (dist.range1to5 || 0);
+          summaryText += `<br><br><b>回復分析：</b>`;
+          summaryText += `<br>平均消耗：${recoveryAnalysis.avgCards} 張 / ${recoveryAnalysis.avgRounds} 局`;
+          summaryText += `<br>立即回復：${recoveryAnalysis.immediateRecovery} 點 (${recoveryAnalysis.immediatePercent}%)`;
+          summaryText += `<br>最大消耗：${recoveryAnalysis.maxCards} 張 / ${recoveryAnalysis.maxRounds} 局`;
+          summaryText += `<br>最大消耗點：第 ${recoveryAnalysis.maxCardIdx + 1} 張`;
+          summaryText += `<br>分佈：0~5局 ${zeroTo5} 張 / 6~10局 ${dist.range6to10 || 0} 張 / 11~15局 ${dist.range11to15 || 0} 張 / 16局以上 ${dist.range16plus || 0} 張`;
+        } else {
+          summaryText += `<br><br><b>回復分析：</b><br><span class="muted">略過（有錯誤或資料不足）</span>`;
+        }
+
+        // 7點逆轉分析
+        if (sevenPtResults.length > 0) {
+          const totalSeven = sevenPtResults.length;
+          const revCount = sevenPtResults.filter(r => r.rev).length;
+          const p7 = sevenPtResults.filter(r => r.who7 === '閒');
+          const b7 = sevenPtResults.filter(r => r.who7 === '莊');
+          const p7r = p7.filter(r => r.rev).length;
+          const b7r = b7.filter(r => r.rev).length;
+          const rate = (revCount / totalSeven * 100).toFixed(1);
+
+          summaryText += `<br><br><b>7點逆轉分析：</b>`;
+          summaryText += `<br>7點局數：${totalSeven}　逆轉：${revCount}　逆轉率：${rate}%`;
+          if (p7.length > 0) summaryText += `<br>閒7：${p7r}/${p7.length} (${(p7r / p7.length * 100).toFixed(1)}%)`;
+          if (b7.length > 0) summaryText += `<br>莊7：${b7r}/${b7.length} (${(b7r / b7.length * 100).toFixed(1)}%)`;
+
+          summaryText += `<table><thead><tr>
+            <th>局號</th><th>7點方</th><th>閒初</th><th>莊初</th><th>閒終</th><th>莊終</th><th>結果</th><th>狀態</th>
+          </tr></thead><tbody>`;
+          for (const r of sevenPtResults) {
+            const mark = r.rev ? '<span class="bad">逆轉</span>' : '<span class="ok">守住</span>';
+            summaryText += `<tr>
+              <td>${esc(r.roundNo)}</td><td>${r.who7}7</td>
+              <td>${r.pi}</td><td>${r.bi}</td>
+              <td>${r.pf}</td><td>${r.bf}</td>
+              <td>${r.result}</td><td>${mark}</td>
+            </tr>`;
+          }
+          summaryText += `</tbody></table>`;
+        } else {
+          summaryText += `<br><br><b>7點逆轉分析：</b><br><span class="muted">無符合條件的7點局</span>`;
+        }
+
+        // 顯示問題清單（錯誤/警告）
+        let html = '';
+        if (issues.length === 0 && warnings.length === 0) {
+          html = `<span class="ok">沒有問題</span>`;
+        } else {
+          if (issues.length > 0) {
+            html += `<div><b>錯誤清單 (${issues.length})</b></div>`;
+            html += `<table><thead><tr>
+              <th style="width:70px">局號</th>
+              <th>問題</th>
+              <th>卡片</th>
+            </tr></thead><tbody>`;
+
+            for (const it of issues) {
+              html += `<tr>
+                <td>${esc(it.roundNo)}</td>
+                <td>${esc(it.msg)}</td>
+                <td>${esc(it.cards)}</td>
+              </tr>`;
+            }
+            html += `</tbody></table>`;
+          }
+
+          if (warnings.length > 0) {
+            html += `<div style="margin-top:12px;"><b>警告 (${warnings.length})</b></div>`;
+            html += `<ul style="margin:4px 0; padding-left:20px;">`;
+            for (const w of warnings) {
+              html += `<li>${esc(w)}</li>`;
+            }
+            html += `</ul>`;
+          }
+        }
+
+        $issues.innerHTML = html;
+
+        $summary.innerHTML = summaryText;
+      } catch (e) {
+        $summary.innerHTML = `<span class="bad">執行失敗：${esc(e.message)}</span>`;
+        $issues.textContent = '';
+        console.error(e);
+      }
+    }
+
+    // 批次跑多個檔案：每個檔案各自呼叫 runValidation，抓取結果彙整成總覽表
+    const $batchBox = document.getElementById('batchBox');
+    const $batchTableBody = document.getElementById('batchTableBody');
+
+    async function runBatch(items) {
+      // items: [{ name, getBuffer: async () => ArrayBuffer }]
+      $batchBox.style.display = items.length > 1 ? 'block' : 'none';
+      $batchTableBody.innerHTML = '';
+      const batchResults = [];
+
+      for (const item of items) {
+        $summary.textContent = `驗算中：${item.name} (${batchResults.length + 1}/${items.length})`;
+        $issues.textContent = '';
+        try {
+          const buf = await item.getBuffer();
+          await runValidation(buf);
+          batchResults.push({
+            name: item.name,
+            summaryHtml: $summary.innerHTML,
+            issuesHtml: $issues.innerHTML,
+            passed: $summary.innerHTML.includes('驗證通過'),
+            issueCountMatch: $issues.innerHTML.match(/錯誤清單\s*\((\d+)\)/),
+            hasWarning: $issues.innerHTML.includes('警告')
+          });
+        } catch (e) {
+          batchResults.push({
+            name: item.name,
+            summaryHtml: `<span class="bad">執行失敗：${esc(e.message)}</span>`,
+            issuesHtml: '',
+            passed: false,
+            issueCountMatch: null,
+            hasWarning: false
+          });
+          console.error(e);
+        }
+      }
+
+      if (items.length === 1) {
+        // 單檔：維持原本行為，直接顯示在下方
+        const r = batchResults[0];
+        $summary.innerHTML = r.summaryHtml;
+        $issues.innerHTML = r.issuesHtml;
+        return;
+      }
+
+      // 多檔：畫總覽表，點列可切換下方詳細內容
+      $batchTableBody.innerHTML = batchResults.map((r, i) => {
+        const issueCount = r.issueCountMatch ? r.issueCountMatch[1] : '0';
+        const statusHtml = r.passed
+          ? '<span class="ok">✓ 通過</span>'
+          : '<span class="bad">✗ 有問題</span>';
+        return `<tr>
+          <td>${esc(r.name)}</td>
+          <td>${statusHtml}</td>
+          <td>${issueCount}</td>
+          <td>${r.hasWarning ? '有' : '—'}</td>
+          <td><button data-idx="${i}" class="viewDetail">查看詳細</button></td>
+        </tr>`;
+      }).join('');
+
+      $batchTableBody.querySelectorAll('.viewDetail').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const r = batchResults[parseInt(btn.dataset.idx, 10)];
+          $summary.innerHTML = `<b>${esc(r.name)}</b><br>${r.summaryHtml}`;
+          $issues.innerHTML = r.issuesHtml;
+        });
+      });
+
+      const passCount = batchResults.filter(r => r.passed).length;
+      $summary.innerHTML = `批次驗算完成：共 ${batchResults.length} 個檔案，<span class="ok">${passCount} 個通過</span>` +
+        (passCount < batchResults.length ? `，<span class="bad">${batchResults.length - passCount} 個有問題</span>` : '');
+      $issues.innerHTML = '<span class="muted">請點上方總覽表「查看詳細」或往下捲動看批次結果總覽</span>';
+    }
+
+    // === 本地檔案 ===
+    $run.addEventListener('click', async () => {
+      const files = $file.files ? Array.from($file.files) : [];
+      if (!files.length) {
+        alert('請先選擇 xlsx 檔（可多選）');
+        return;
+      }
+
+      const items = files.map(f => ({ name: f.name, getBuffer: () => f.arrayBuffer() }));
+      await runBatch(items);
+    });
+
+    // === 雲端硬碟功能 ===
+    async function loadDriveFiles(folderId) {
+      try {
+        $summary.textContent = '載入雲端檔案清單...';
+        const url = folderId
+          ? `${GOOGLE_APPS_SCRIPT_URL}?folderId=${folderId}`
+          : GOOGLE_APPS_SCRIPT_URL;
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || '載入失敗');
+        }
+
+        const files = result.files || [];
+        $driveFiles.innerHTML = '<option value="">請選擇檔案</option>';
+
+        files.forEach(file => {
+          const date = new Date(file.lastModified).toLocaleString('zh-TW');
+          const option = document.createElement('option');
+          option.value = file.id;
+          option.textContent = `${file.name} (${date})`;
+          $driveFiles.appendChild(option);
+        });
+
+        $summary.innerHTML = `<span class="ok">找到 ${files.length} 個檔案</span>`;
+      } catch (e) {
+        $summary.innerHTML = `<span class="bad">載入失敗：${esc(e.message)}</span>`;
+        console.error(e);
+      }
+    }
+
+    $loadDrive.addEventListener('click', async () => {
+      try {
+        // 載入子資料夾清單
+        $summary.textContent = '載入雲端資料夾...';
+        const folderRes = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=listFolders`);
+        const folderResult = await folderRes.json();
+
+        if (folderResult.success && folderResult.folders) {
+          $driveFolders.innerHTML = '<option value="">根目錄</option>';
+          folderResult.folders.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.name;
+            $driveFolders.appendChild(opt);
+          });
+        }
+
+        // 載入根目錄檔案
+        await loadDriveFiles('');
+      } catch (e) {
+        $summary.innerHTML = `<span class="bad">載入失敗：${esc(e.message)}</span>`;
+        console.error(e);
+      }
+    });
+
+    // 切換資料夾時重新載入檔案
+    $driveFolders.addEventListener('change', () => {
+      loadDriveFiles($driveFolders.value);
+    });
+
+    async function downloadDriveFileBuffer(fileId) {
+      // 使用與 assistant.html 相同的參數格式
+      const downloadUrl = `${GOOGLE_APPS_SCRIPT_URL}?fileId=${fileId}`;
+      const response = await fetch(downloadUrl);
+      const base64Data = await response.text();
+
+      // 將 base64 轉換為 ArrayBuffer
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    $runDrive.addEventListener('click', async () => {
+      const selectedOptions = Array.from($driveFiles.selectedOptions || []);
+      if (!selectedOptions.length) {
+        alert('請先選擇檔案（可 Ctrl/Shift 多選）');
+        return;
+      }
+
+      const items = selectedOptions.map(opt => ({
+        name: opt.textContent,
+        getBuffer: () => downloadDriveFileBuffer(opt.value)
+      }));
+      await runBatch(items);
+    });
+  </script>
+</body>
+</html>

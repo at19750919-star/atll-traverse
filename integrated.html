@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>百家 3.0／穿越排牌 · SHOE MASTER</title>
+
+<!-- 主題初始化（沿用 at-theme key，防止閃爍） -->
+<script>
+(function(){
+    var t = localStorage.getItem('at-theme');
+    if(t !== 'dark') document.documentElement.setAttribute('data-theme','light');
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   設計稿原始 CSS（牌靴主頁-黑金重設計.html）— 不更動
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  --ink:#07090b;
+  --pit:#0b1210;
+  --panel:#10171a;
+  --panel-2:#0d1417;
+  --felt-1:#123a2c;
+  --felt-2:#0a241b;
+  --gold-1:#f4dfa4;
+  --gold-2:#d9b568;
+  --gold-3:#a67c35;
+  --gold-4:#6b4c1d;
+  --gold-line:linear-gradient(135deg,#6b4c1d 0%,#e8c97a 25%,#8a6a2f 50%,#f4dfa4 75%,#6b4c1d 100%);
+  --txt:#e8e4d8;
+  --txt-dim:#9a9584;
+  --banker:#e05c4f;
+  --player:#4fa3d8;
+  --tie:#5cbf8a;
+  --danger:#ff6b5e;
+  --ok:#67c98f;
+  --serif:"Noto Serif TC","Cinzel",serif;
+  --sans:"Noto Sans TC",sans-serif;
+  --disp:"Cinzel","Noto Serif TC",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:var(--ink)}
+body{
+  font-family:var(--sans);
+  color:var(--txt);
+  min-height:100vh;
+  background:
+    radial-gradient(1200px 500px at 50% -8%, rgba(38,84,68,.45), transparent 60%),
+    radial-gradient(900px 700px at 88% 110%, rgba(26,54,66,.35), transparent 60%),
+    linear-gradient(180deg,#0a0e10 0%, #07090b 100%);
+  background-attachment:fixed;
+  padding:0 clamp(12px,2.2vw,34px) 30px;
+  overflow-x:hidden;
+}
+/* film grain */
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+}
+/* ============ header ============ */
+header{
+  display:flex;align-items:center;gap:18px;
+  padding:16px 4px 12px;
+  border-bottom:1px solid transparent;
+  border-image:linear-gradient(90deg,transparent,#8a6a2f 20%,#f4dfa4 50%,#8a6a2f 80%,transparent) 1;
+}
+.crest{
+  width:52px;height:52px;border-radius:50%;flex:none;position:relative;
+  background:#080908 url("suit/at-spade-logo-current.png") center/cover no-repeat;
+  box-shadow:0 0 0 1px #8a6a2f, 0 0 0 4px #0c1110, 0 0 0 5px #5d431c, 0 6px 18px rgba(0,0,0,.6), inset 0 0 14px rgba(232,201,122,.15);
+  display:grid;place-items:center;
+  font-size:0;color:transparent;
+  text-shadow:0 0 10px rgba(244,223,164,.6);
+}
+.crest::before{
+  display:none;
+}
+@keyframes orbit{to{transform:rotate(360deg)}}
+h1{
+  font-family:var(--disp);
+  font-size:clamp(20px,2.4vw,28px);
+  font-weight:900;letter-spacing:.14em;
+  background:linear-gradient(180deg,#fbeec7 10%,#e2bd72 45%,#9c7434 70%,#f0d491 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.8));
+}
+h1 small{
+  display:block;font-family:var(--sans);font-weight:400;font-size:11px;
+  letter-spacing:.5em;color:var(--txt-dim);-webkit-text-fill-color:var(--txt-dim);
+  margin-top:2px;
+}
+.shoe-state{
+  margin-left:auto;display:flex;align-items:center;gap:10px;
+  font-size:12px;color:var(--txt-dim);letter-spacing:.15em;
+  padding:7px 16px;border:1px solid #2a3230;border-radius:999px;
+  background:rgba(13,20,23,.7);
+}
+.shoe-state .dot{width:8px;height:8px;border-radius:50%;background:#4a554f;box-shadow:0 0 8px transparent;transition:.4s}
+body.running .shoe-state .dot{background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.4}}
+body.running .shoe-state .st-idle{display:none}
+.shoe-state .st-run{display:none;color:var(--ok)}
+body.running .shoe-state .st-run{display:inline}
+
+/* ============ gold frame utility ============ */
+.gframe{
+  position:relative;
+  background:linear-gradient(160deg, rgba(24,32,33,.92), rgba(11,17,19,.94));
+  border:1px solid;
+  border-image:var(--gold-line) 1;
+  box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.35);
+}
+.gframe::before,.gframe::after{
+  content:"";position:absolute;width:14px;height:14px;pointer-events:none;
+  border-color:var(--gold-1);border-style:solid;
+}
+.gframe::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.gframe::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.frame-title{
+  position:absolute;top:-9px;left:18px;
+  font-family:var(--serif);font-size:11px;font-weight:600;letter-spacing:.4em;
+  color:var(--gold-2);background:#0d1315;padding:0 10px;
+  text-transform:uppercase;
+}
+
+/* ============ control deck ============ */
+.deck{
+  display:grid;
+  grid-template-columns:minmax(300px,360px) 1fr 128px;
+  gap:18px;
+  margin-top:22px;
+  align-items:stretch;
+}
+
+/* ---- signal display ---- */
+.signal{padding:20px 18px 14px;min-height:230px;display:flex;flex-direction:column}
+.suit-coins{display:flex;gap:10px;margin-bottom:6px}
+.coin{
+  width:36px;height:36px;border-radius:50%;
+  display:grid;place-items:center;font-size:17px;
+  background:radial-gradient(circle at 35% 28%, #232d2c, #0b1211 72%);
+  box-shadow:0 0 0 1px #3a4340, inset 0 2px 4px rgba(255,255,255,.05), 0 3px 8px rgba(0,0,0,.5);
+  color:#4d5450;transition:.35s;position:relative;
+}
+.coin.on{
+  color:var(--gold-1);
+  box-shadow:0 0 0 1px #c9a25a, 0 0 0 3px #10100a, 0 0 0 4px #6b4c1d, 0 0 14px rgba(228,193,110,.4), inset 0 0 8px rgba(244,223,164,.25);
+  text-shadow:0 0 8px rgba(244,223,164,.8);
+}
+.coin.on.red{color:#ff8a7a;text-shadow:0 0 8px rgba(255,120,100,.8)}
+.fan-stage{
+  flex:1;position:relative;min-height:128px;margin:4px 0 2px;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.mini-card{
+  position:absolute;bottom:6px;left:50%;
+  width:58px;height:82px;border-radius:7px;
+  background:linear-gradient(165deg,#f7f2e4 0%,#e9e0c8 100%);
+  box-shadow:0 4px 10px rgba(0,0,0,.55), 0 0 0 1px rgba(107,76,29,.8), inset 0 0 0 2px rgba(166,124,53,.35);
+  transform-origin:50% 120%;
+  color:#1c2420;
+  padding:5px 6px;
+  transition:transform .45s cubic-bezier(.2,.9,.3,1.2), opacity .3s;
+  animation:deal .45s cubic-bezier(.2,.9,.3,1.2) backwards;
+}
+@keyframes deal{from{transform:translate(-50%,30px) rotate(0) scale(.6);opacity:0}}
+.mini-card .rk{font-family:var(--disp);font-weight:900;font-size:19px;line-height:1}
+.mini-card .pips{
+  position:absolute;inset:auto 5px 5px auto;left:5px;top:32px;
+  display:grid;grid-template-columns:1fr 1fr;gap:2px;justify-items:center;font-size:14px;line-height:1.15;
+}
+.mini-card .pips span.red{color:#c0392b}
+.mini-card.back{
+  background:
+    repeating-linear-gradient(45deg, rgba(212,176,106,.18) 0 3px, transparent 3px 9px),
+    repeating-linear-gradient(-45deg, rgba(212,176,106,.18) 0 3px, transparent 3px 9px),
+    linear-gradient(160deg,#17231f,#0b1411);
+  box-shadow:0 4px 10px rgba(0,0,0,.55), 0 0 0 1px #8a6a2f, inset 0 0 0 3px #0b1411, inset 0 0 0 4px rgba(212,176,106,.45);
+  display:grid;place-items:center;color:var(--gold-2);font-size:22px;
+}
+.empty-hint{position:absolute;bottom:-4px;width:100%;text-align:center;font-size:11px;color:var(--txt-dim);letter-spacing:.2em}
+.formula{
+  text-align:center;font-size:12px;color:var(--txt-dim);letter-spacing:.08em;
+  border-top:1px solid rgba(138,106,47,.35);padding-top:9px;
+}
+.formula b{
+  font-family:var(--disp);font-size:17px;color:var(--gold-1);
+  padding:0 3px;text-shadow:0 0 10px rgba(244,223,164,.35);
+}
+.formula .x{color:var(--gold-3);font-size:13px}
+
+/* ---- expanders ---- */
+.expanders{display:flex;flex-direction:column;gap:0;min-width:0}
+.exp-tabs{display:flex;gap:10px}
+.exp-tab{
+  flex:1;position:relative;cursor:pointer;user-select:none;
+  font-family:var(--serif);font-weight:600;font-size:14px;letter-spacing:.3em;text-indent:.3em;
+  color:var(--gold-2);
+  padding:13px 4px 11px;
+  background:linear-gradient(180deg,#1a2325 0%,#0e1517 100%);
+  border:1px solid #33402f00;
+  border-image:linear-gradient(180deg,#8a6a2f,#3a2f14) 1;
+  box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(244,223,164,.12);
+  text-align:center;transition:.25s;
+}
+.exp-tab .glyph{display:block;font-size:16px;margin-bottom:3px;opacity:.8;text-indent:0;letter-spacing:0}
+.exp-tab:hover{color:var(--gold-1);transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.5), 0 0 12px rgba(212,176,106,.15)}
+.exp-tab.active{
+  color:#120e04;
+  background:linear-gradient(180deg,#f4dfa4 0%,#d9b568 55%,#b28b41 100%);
+  border-image:linear-gradient(180deg,#fff3cf,#8a6a2f) 1;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 6px 16px rgba(212,176,106,.25), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.exp-tab.active::after{
+  content:"";position:absolute;left:50%;bottom:-9px;transform:translateX(-50%) rotate(45deg);
+  width:10px;height:10px;background:#b28b41;
+}
+.exp-tab .flag{
+  position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;
+  background:var(--danger);color:#fff;font-size:11px;font-family:var(--sans);letter-spacing:0;text-indent:0;
+  display:none;place-items:center;padding:0 4px;box-shadow:0 0 8px rgba(255,107,94,.6);
+}
+.exp-tab .flag.show{display:grid}
+.exp-panel{
+  display:none;margin-top:14px;padding:20px 20px 18px;
+  animation:reveal .35s ease backwards;
+}
+@keyframes reveal{from{opacity:0;transform:translateY(-8px)}}
+.exp-panel.open{display:block}
+.p-label{font-size:11px;letter-spacing:.3em;color:var(--txt-dim);margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.p-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(138,106,47,.5),transparent)}
+
+/* pick buttons (suits / ranks) */
+.pick-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.pick{
+  cursor:pointer;user-select:none;
+  min-width:40px;height:40px;padding:0 10px;border-radius:8px;
+  display:grid;place-items:center;
+  font-family:var(--disp);font-weight:700;font-size:15px;
+  color:#8d897b;background:linear-gradient(180deg,#161f21,#0d1315);
+  border:1px solid #2c3634;
+  transition:.2s;
+}
+.pick:hover{border-color:#8a6a2f;color:var(--gold-2)}
+.pick.on{
+  color:var(--gold-1);border-color:#c9a25a;
+  background:linear-gradient(180deg,#26301f10,#101008), radial-gradient(circle at 50% 120%, rgba(212,176,106,.25), transparent 70%);
+  box-shadow:0 0 10px rgba(212,176,106,.25), inset 0 0 8px rgba(212,176,106,.12);
+  text-shadow:0 0 8px rgba(244,223,164,.5);
+}
+.pick.suit{font-size:19px;width:44px}
+.pick.suit.red.on{color:#ff8a7a;border-color:#c05a4a;box-shadow:0 0 10px rgba(255,120,100,.25);text-shadow:0 0 8px rgba(255,120,100,.5)}
+.pick.quick{font-family:var(--sans);font-size:12px;letter-spacing:.1em;border-radius:999px;height:32px;color:var(--gold-2);border-style:dashed}
+.pick.quick:hover{background:rgba(212,176,106,.08)}
+
+/* condition rows */
+.cond-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 22px}
+.cond{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 14px;border:1px solid #26302e;border-radius:6px;
+  background:rgba(10,16,15,.6);font-size:13px;letter-spacing:.08em;
+}
+.cond .name{color:var(--txt)}
+.switch{
+  position:relative;width:52px;height:26px;border-radius:13px;cursor:pointer;flex:none;
+  background:#1a2422;border:1px solid #33403d;transition:.3s;
+}
+.switch::after{
+  content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#6e6a5c,#3c3a32);
+  box-shadow:0 2px 4px rgba(0,0,0,.6);transition:.3s;
+}
+.switch.on{background:linear-gradient(180deg,#3a2f14,#6b4c1d);border-color:#c9a25a;box-shadow:inset 0 0 8px rgba(0,0,0,.5), 0 0 10px rgba(212,176,106,.25)}
+.switch.on::after{left:28px;background:radial-gradient(circle at 35% 30%,#fbeec7,#d9b568);box-shadow:0 0 8px rgba(244,223,164,.6)}
+.numbox{
+  width:86px;height:34px;flex:none;
+  background:#0a100f;border:1px solid #33403d;border-radius:6px;
+  color:var(--gold-1);font-family:var(--disp);font-size:16px;text-align:center;
+  outline:none;transition:.2s;
+}
+.numbox:focus{border-color:#c9a25a;box-shadow:0 0 10px rgba(212,176,106,.25)}
+.numbox::-webkit-inner-spin-button{opacity:1}
+.big-num-row{display:flex;align-items:center;gap:18px}
+.big-num-row .numbox{width:130px;height:44px;font-size:22px}
+.hint{font-size:12px;color:var(--txt-dim);letter-spacing:.05em}
+
+/* violations */
+.vio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.vio{
+  display:flex;align-items:center;gap:12px;padding:11px 14px;
+  border:1px solid #26302e;border-radius:6px;background:rgba(10,16,15,.6);
+  font-size:13px;
+}
+.vio .lamp{
+  width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;
+  background:radial-gradient(circle at 35% 30%,#232d2c,#0b1211 75%);
+  box-shadow:0 0 0 1px #3a4340;color:#57605c;
+}
+.vio.ok .lamp{color:var(--ok);box-shadow:0 0 0 1px #3f7a58, 0 0 10px rgba(103,201,143,.35)}
+.vio.bad .lamp{color:var(--danger);box-shadow:0 0 0 1px #a04a40, 0 0 10px rgba(255,107,94,.4);animation:pulse 1s infinite}
+.vio .v-name{flex:1}
+.vio .v-val{font-family:var(--disp);color:var(--txt-dim);font-size:14px}
+.vio.bad .v-val{color:var(--danger)}
+.vio.ok .v-val{color:var(--ok)}
+
+/* ---- chip actions ---- */
+.chip-col{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center}
+.chip{
+  --c1:#d9b568;--c2:#8a6a2f;--face:#171207;
+  width:96px;height:96px;border-radius:50%;cursor:pointer;user-select:none;position:relative;
+  border:none;outline:none;
+  background:
+    radial-gradient(circle at 50% 50%, var(--face) 0 62%, transparent 63%),
+    repeating-conic-gradient(var(--c1) 0deg 14deg, #0a0a0a 14deg 45deg),
+    #050505;
+  box-shadow:0 8px 16px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.06) inset, 0 0 0 2px rgba(0,0,0,.6) inset;
+  display:grid;place-items:center;
+  transition:transform .18s, box-shadow .25s, filter .25s;
+}
+.chip::before{
+  content:"";position:absolute;inset:11px;border-radius:50%;
+  border:2px dashed var(--c2);
+  background:radial-gradient(circle at 38% 30%, rgba(255,255,255,.08), transparent 55%);
+}
+.chip .lbl{
+  position:relative;z-index:1;
+  font-family:var(--serif);font-weight:900;font-size:17px;letter-spacing:.2em;text-indent:.2em;
+  color:var(--c1);text-shadow:0 0 10px rgba(0,0,0,.8), 0 1px 2px #000;
+}
+.chip .sub{position:relative;z-index:1;display:block;font-family:var(--disp);font-size:8.5px;letter-spacing:.28em;color:var(--c2);text-align:center;margin-top:2px}
+.chip:hover{transform:translateY(-4px) rotate(-4deg);box-shadow:0 14px 26px rgba(0,0,0,.7), 0 0 18px color-mix(in srgb, var(--c1) 40%, transparent)}
+.chip:active{transform:translateY(1px) scale(.96)}
+.chip.gen{--c1:#f4dfa4;--c2:#c9a25a;--face:#241c08}
+.chip.stop{--c1:#ff9d92;--c2:#a04a40;--face:#230d0a}
+.chip.clear{--c1:#bfc8c4;--c2:#5d6a66;--face:#101716}
+.chip[disabled]{filter:grayscale(.7) brightness(.5);pointer-events:none}
+body:not(.running) .chip.stop{filter:grayscale(.6) brightness(.55);pointer-events:none}
+
+/* ============ stats strip ============ */
+.stats{
+  display:none;padding:20px 24px;
+  grid-template-columns:auto auto 1fr;gap:30px;align-items:center;
+}
+body.running .stats,body.finished .stats{display:grid}
+body.running .expanders,
+body.finished .expanders{display:none}
+/* 牌生成出來後：訊號牌卡片本身留著（卡扇＋張數），只收起四花色圓標 */
+body.running .suit-coins,
+body.finished .suit-coins{display:none}
+.vio-live-card{display:none}
+body.running .vio-live-card,body.finished .vio-live-card{display:flex}
+.donut-wrap{display:flex;gap:14px;align-items:center}
+.donut{width:120px;height:120px;transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:14;stroke-linecap:butt;transition:stroke-dasharray .6s ease}
+.donut .track{stroke:#1b2422}
+.legend{font-size:12px;letter-spacing:.08em;display:flex;flex-direction:column;gap:7px;color:var(--txt-dim)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px}
+.legend b{color:var(--txt);font-family:var(--disp);font-size:15px;margin-left:5px}
+.counters{display:grid;grid-template-columns:repeat(4,minmax(90px,1fr));gap:12px;justify-self:end;width:100%;max-width:560px}
+.counter{
+  text-align:center;padding:14px 6px 12px;position:relative;
+  border:1px solid #2a3330;border-radius:8px;
+  background:linear-gradient(180deg,rgba(20,28,27,.8),rgba(9,14,13,.9));
+}
+.counter::before{content:"";position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,#c9a25a,transparent)}
+.counter .k{font-size:11px;letter-spacing:.25em;color:var(--txt-dim);margin-bottom:6px}
+.counter .v{font-family:var(--disp);font-weight:700;font-size:28px;line-height:1;color:var(--gold-1);text-shadow:0 0 14px rgba(244,223,164,.3)}
+.counter.b .v{color:var(--banker)}
+.counter.p .v{color:var(--player)}
+.counter.t .v{color:var(--tie)}
+
+/* ============ toolbar ============ */
+.toolbar{display:flex;gap:14px;margin-top:20px;flex-wrap:wrap}
+.tool{
+  flex:1;min-width:150px;cursor:pointer;user-select:none;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:13px 10px;
+  font-family:var(--serif);font-weight:600;font-size:15px;letter-spacing:.35em;text-indent:.35em;
+  color:var(--txt);
+  background:linear-gradient(180deg,#151d1f,#0c1214);
+  border:1px solid;border-image:linear-gradient(135deg,#3a4340,#8a6a2f,#3a4340) 1;
+  transition:.25s;position:relative;overflow:hidden;
+}
+.tool .t-coin{
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-size:15px;text-indent:0;letter-spacing:0;
+  background:radial-gradient(circle at 35% 30%,#242e2c,#0b1211 75%);
+  box-shadow:0 0 0 1px #8a6a2f, inset 0 0 6px rgba(212,176,106,.2);
+  color:var(--gold-2);
+}
+.tool .t-coin.red{color:#ff8a7a}
+.tool::after{
+  content:"";position:absolute;top:0;left:-80%;width:60%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(244,223,164,.13),transparent);
+  transition:left .5s;
+}
+.tool:hover{color:var(--gold-1);border-image:var(--gold-line) 1;transform:translateY(-2px)}
+.tool:hover::after{left:120%}
+
+/* ============ the table ============ */
+.pit{
+  margin-top:22px;position:relative;
+  padding:34px 16px 34px;                 /* 上緣加厚，與下緣同厚度 */
+  border-radius:190px 190px 190px 190px / 120px 120px 120px 120px;  /* 上緣弧度比照下緣 */
+  background:
+    linear-gradient(180deg,#0c0803 0%,#2b1e08 20%,#241905 46%,#0e0a04 100%);
+  box-shadow:0 24px 50px rgba(0,0,0,.6), inset 0 1px 0 rgba(244,223,164,.12);
+}
+.felt{
+  position:relative;
+  border-radius:150px 150px 170px 170px / 92px 92px 104px 104px;
+  background:
+    radial-gradient(ellipse 120% 100% at 50% 0%, rgba(255,255,255,.06), transparent 40%),
+    radial-gradient(ellipse 90% 130% at 50% 110%, var(--felt-1), var(--felt-2) 75%);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.55), inset 0 0 4px rgba(0,0,0,.8);
+  padding:30px clamp(20px,3.4vw,52px) 52px;   /* 上緣弧度變大，內容往內縮避免被裁 */
+  overflow:clip;   /* 用 clip 不用 hidden：一樣裁圓角，但不會變成捲動容器而讓表頭 sticky 失效 */
+}
+.felt::after{ /* felt texture */
+  content:"";position:absolute;inset:0;opacity:.25;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+.felt-head{
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  margin-bottom:14px;position:relative;z-index:1;
+}
+.felt-head .arc-text{
+  font-family:var(--disp);font-weight:700;font-size:14px;letter-spacing:.55em;text-indent:.55em;
+  color:rgba(244,223,164,.75);
+  text-shadow:0 1px 2px rgba(0,0,0,.7);
+}
+.felt-head .rule{flex:1;max-width:180px;height:1px;background:linear-gradient(90deg,transparent,rgba(244,223,164,.5),transparent)}
+/* 表格不做內部捲動：整頁滾動，表頭沿用 sticky 貼在視窗頂 */
+.table-scroll{position:relative;z-index:1;overflow:visible;max-height:none;border-radius:8px}
+table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:15px;min-width:760px}
+thead th{
+  position:sticky;top:0;z-index:2;
+  font-family:var(--serif);font-weight:600;font-size:12px;letter-spacing:.3em;text-indent:.3em;
+  color:var(--gold-1);text-align:center;
+  padding:10px 8px;
+  background:var(--felt-1);   /* 跟牌桌氈布同色的實心綠，sticky 捲動時才不會跟底下資料列疊字 */
+  border-bottom:1px solid #c9a25a;
+  /* 不對每個 th 個別加 box-shadow：border-collapse:separate 底下每格會各自投影，
+     看起來像一格一格的方塊；拿掉後靠統一底色+一條金線收邊，整排表頭才連成一體 */
+}
+tbody td{
+  text-align:center;padding:9px 8px;color:var(--txt);
+  border-bottom:1px solid rgba(244,223,164,.09);
+  background:transparent;   /* 不疊自己的底色，直接透出 .felt 的牌桌綠 */
+  font-variant-numeric:tabular-nums;
+}
+tbody tr{animation:rowIn .4s ease backwards}
+@keyframes rowIn{from{opacity:0;transform:translateY(-6px)}}
+tbody tr:hover td{background:rgba(212,176,106,.09)}
+td.rd{color:var(--gold-2);font-family:var(--disp);font-weight:700}
+.cards-cell{letter-spacing:.05em;white-space:nowrap;font-size:14px}
+.cards-cell .r{color:#ff9d8f}
+.cards-cell .b{color:#cfd8d4}
+td.pt{font-family:var(--disp);font-weight:700;font-size:16px}
+.res{
+  display:inline-block;min-width:34px;padding:3px 10px;border-radius:999px;
+  font-weight:700;font-size:12.5px;letter-spacing:.2em;text-indent:.2em;
+  box-shadow:0 0 0 1px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2);
+}
+.res.B{background:linear-gradient(180deg,#e0685a,#a03328);color:#fff}
+.res.P{background:linear-gradient(180deg,#5aa8dc,#28648f);color:#fff}
+.res.T{background:linear-gradient(180deg,#5fc38f,#2b7a52);color:#fff}
+.sig-mark{color:var(--gold-1);text-shadow:0 0 8px rgba(244,223,164,.6);font-size:15px}
+.tbl-empty{padding:40px 0;text-align:center;color:rgba(232,228,216,.4);letter-spacing:.3em;font-size:13px}
+
+/* ============ log ============ */
+.logbox{margin-top:20px;overflow:hidden}
+.log-head{
+  display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;
+  padding:12px 18px;
+}
+.log-head .frame-title{position:static;padding:0}
+.log-head .caret{
+  margin-left:auto;color:var(--gold-2);font-size:12px;transition:transform .3s;
+}
+.logbox.closed .caret{transform:rotate(-90deg)}
+.log-count{font-size:11px;color:var(--txt-dim);letter-spacing:.1em}
+.log-body{
+  max-height:170px;overflow-y:auto;padding:4px 18px 14px;
+  font-family:"Consolas","Courier New",monospace;font-size:12.5px;line-height:1.85;
+  color:#b8b4a4;transition:max-height .35s ease, padding .35s ease;
+  scrollbar-width:thin;scrollbar-color:#8a6a2f #0c1214;
+}
+.logbox.closed .log-body{max-height:0;padding-top:0;padding-bottom:0}
+.log-body .t{color:#5f6a66;margin-right:10px}
+.log-body .tag{color:var(--gold-2);margin-right:8px}
+.log-body .tag.warn{color:var(--danger)}
+.log-body .tag.ok{color:var(--ok)}
+
+@media (max-width:1080px){
+  .deck{grid-template-columns:1fr 120px}
+  .signal{grid-column:1/2}
+  .expanders{grid-column:1/2}
+  .chip-col{grid-row:1/3;grid-column:2/3;flex-direction:column}
+  .stats{grid-column:1/2;grid-template-columns:1fr;justify-items:center}
+  .counters{justify-self:center}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   整合層 CSS — 真實邏輯(signals_ui)輸出的 class 以設計語言呈現
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 相容層：舊 id 元素全部隱藏，僅供邏輯讀寫 */
+.compat-hidden{display:none !important}
+
+/* --- 真實 log 條目（log() 輸出 div.className = info/success/warn/error） --- */
+.log-body .info{color:#b8b4a4}
+.log-body .success{color:var(--ok)}
+.log-body .warn{color:#e8a33d}
+.log-body .error{color:var(--danger)}
+
+/* --- 真實表格：renderRoundsTable 輸出 --- */
+.table-scroll thead th{white-space:nowrap}
+tbody td.minor-column{width:44px;color:var(--gold-2);font-family:var(--disp);font-weight:700}
+tbody td.cards-column{text-align:left;padding:3px}
+tbody td.color-column{white-space:nowrap}
+tbody td.hand-card-cell{white-space:nowrap;text-align:left}
+tbody td.hand-point-cell{font-family:var(--disp);font-weight:700;font-size:16px}
+tbody td.compare-cell{font-size:12.5px;color:var(--txt-dim)}
+.card-strip,.hand-chip-strip{display:inline-flex;flex-wrap:wrap;gap:3px;vertical-align:middle}
+.card-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;padding:0;border-radius:5px;box-sizing:border-box;
+  font-size:12.5px;letter-spacing:.01em;cursor:pointer;
+  background:rgba(6,12,10,.7);border:1px solid #2c3634;color:var(--txt);
+  transition:.15s;
+}
+.card-label:hover{border-color:#c9a25a}
+/* 紅背／藍背改用「亮 vs 暗」對比，不靠色相分辨（色盲也看得出來）：
+   紅背＝亮米白底＋深字；藍背＝維持深底＋亮字＋銀邊。s-signal-card 規則在後面，
+   訊號牌仍會整張蓋成金色，不受這裡影響（只留一條底邊線透出背色）。 */
+.card-label.card-back-red{
+  background:#e9e2ce;color:#1c2420;border-color:#b8ac86;
+  box-shadow:inset 0 -3px 0 rgba(28,36,32,.35);
+}
+.card-label.card-back-blue{
+  background:#0a0f0e;color:#e3edf1;border-color:#5b6f77;
+  box-shadow:inset 0 -3px 0 rgba(227,237,241,.35);
+}
+.card-label.card-back-unknown{border-style:dashed}
+/* 訊號牌只讓點數花色文字發光，不整格填色——底下紅背/藍背的亮暗對比才不會被蓋掉。
+   改用亮青色而不是金色：金字在紅背的亮米白底上對比太低幾乎看不見，青色跟紅/藍背、
+   金色系其他 UI 元素都不撞色，在亮底暗底上都夠跳。 */
+.card-label.s-signal-card{
+  color:#ff3b3b;
+  font-weight:700;
+}
+.card-label.selected-first{outline:2px solid var(--gold-1);outline-offset:1px;background:rgba(244,223,164,.25);color:#fff}
+.card-label.selected-second{outline:2px solid var(--player);outline-offset:1px;background:rgba(79,163,216,.25);color:#fff}
+.card-label.highlighted-card-pos{outline:2px solid var(--gold-1);background:rgba(244,223,164,.35);color:#120e04;font-weight:700;text-shadow:none}
+/* 卡色小點 */
+.color-chips{display:inline-flex;gap:5px;vertical-align:middle}
+.color-chip{width:16px;height:16px;border-radius:50%;display:inline-block;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.color-chip.red{background:radial-gradient(circle at 35% 30%,#ff8a7a,#a03328)}
+.color-chip.blue{background:radial-gradient(circle at 35% 30%,#7cc0ea,#28648f)}
+.color-chip.unknown{background:#3a4340}
+/* 結果欄（終 / 調） */
+td.result-cell,td.compare-cell{font-weight:700;letter-spacing:.15em}
+td.outcome-banker{color:#ff9d8f;text-shadow:0 0 8px rgba(224,92,79,.35)}
+td.outcome-player{color:#7cc0ea;text-shadow:0 0 8px rgba(79,163,216,.35)}
+td.outcome-tie{color:#7fd8a8;text-shadow:0 0 8px rgba(92,191,138,.35)}
+td.banker-six-point{color:var(--gold-1);text-shadow:0 0 10px rgba(244,223,164,.7)}
+td.swap-banker-six-result{color:#0559ea !important;text-shadow:0 0 10px rgba(5,89,234,.8)}
+/* 列狀態 */
+tbody tr.round-row{animation:none}
+tbody tr.full-house-round td{background:rgba(122,92,190,.10)}
+tbody tr.violation-row td{background:rgba(224,92,79,.13);box-shadow:inset 0 0 0 .5px rgba(224,92,79,.25)}
+tbody tr.card-color-violation-row td{background:rgba(232,163,61,.12)}
+tbody tr.banker-six-win-row td{background:rgba(212,176,106,.10)}
+tbody tr.card-count-mismatch td{border-bottom:1px dashed rgba(255,107,94,.6)}
+tbody tr.selected-first td{background:rgba(244,223,164,.16);box-shadow:inset 0 0 0 1px rgba(244,223,164,.5)}
+tbody tr.selected-second td{background:rgba(79,163,216,.16);box-shadow:inset 0 0 0 1px rgba(79,163,216,.5)}
+tbody tr.highlighted-row td{background:rgba(244,223,164,.2)}
+tbody tr.shoe-map-focus td{background:rgba(244,223,164,.22)}
+
+/* --- 違規面板：真實 .violation-card 狀態 → 設計燈號 --- */
+.vio.violation-card .v-val{font-family:var(--sans);font-size:12.5px;text-align:right;max-width:220px;word-break:break-all}
+.vio.violation-card.no-violation .lamp{color:var(--ok);box-shadow:0 0 0 1px #3f7a58, 0 0 10px rgba(103,201,143,.35)}
+.vio.violation-card.no-violation .v-val{color:var(--ok)}
+.vio.violation-card.has-violation .lamp{color:var(--danger);box-shadow:0 0 0 1px #a04a40, 0 0 10px rgba(255,107,94,.4);animation:pulse 1s infinite}
+.vio.violation-card.has-violation .v-val{color:var(--danger)}
+
+/* --- 生成中遮罩（generatingOverlay，樣式重作成黑金風） --- */
+.generating-overlay{
+  position:fixed;inset:0;z-index:900;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:18px;
+  background:rgba(4,6,7,.72);backdrop-filter:blur(2px);
+  pointer-events:none;
+}
+.generating-overlay.active{display:flex}
+.generating-spinner{
+  width:64px;height:64px;border-radius:50%;
+  border:3px solid rgba(212,176,106,.2);border-top-color:var(--gold-1);
+  animation:orbit 1s linear infinite;
+  box-shadow:0 0 24px rgba(212,176,106,.25);
+}
+.generating-text{
+  font-family:var(--serif);font-size:15px;letter-spacing:.3em;text-indent:.3em;
+  color:var(--gold-1);text-shadow:0 0 12px rgba(244,223,164,.5);
+}
+/* 生成中：生成籌碼熄滅 */
+body.running .chip.gen{filter:grayscale(.6) brightness(.55);pointer-events:none}
+/* 籌碼欄浮在生成遮罩之上：生成中「停止」必須可點、不被壓暗 */
+.chip-col{position:relative;z-index:950}
+body.running .chip.stop{pointer-events:auto}
+/* 編輯模式 body.table-zoom：微亮牌桌提示編輯中 */
+body.table-zoom .felt{box-shadow:inset 0 0 60px rgba(0,0,0,.55), inset 0 0 4px rgba(0,0,0,.8), 0 0 0 1px rgba(244,223,164,.35)}
+
+/* --- 訊號牌卡面規則（花色組合決定整張牌的面貌） --- */
+.mini-card .rk{position:relative;z-index:1}
+/* 單一花色：一顆大 pip 置中 */
+.mini-card .cpip{position:absolute;inset:0;display:grid;place-items:center;font-size:36px;line-height:1}
+.mini-card .cpip.red{color:#c0392b;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+.mini-card .cpip.blu{color:#2d4a68;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+/* 兩花色同色：pips 置中一排 */
+.mini-card .cpips{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:5px;font-size:23px;line-height:1}
+.mini-card .cpips .red{color:#c0392b}
+.mini-card .cpips .blu{color:#2d4a68}
+/* 色面卡（紅/藍/金）：不放花色圖案，點數大字置中 */
+.mini-card .rk-center{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-family:var(--disp);font-weight:900;font-size:34px;line-height:1;
+  text-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.mini-card.face-red .rk-center{color:#f7e9da}
+.mini-card.face-blue .rk-center{color:#e8eef5}
+.mini-card.face-gold .rk-center{color:#241c08;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+/* 紅對（♥♦）：整張牌變紅 */
+.mini-card.face-red{background:linear-gradient(165deg,#a63a2d 0%,#6e211a 100%);box-shadow:0 4px 10px rgba(0,0,0,.55), 0 0 0 1px rgba(107,76,29,.9), inset 0 0 0 2px rgba(244,223,164,.35)}
+.mini-card.face-red .rk{color:#f7e9da}
+.mini-card.face-red .cpips{color:#f7e9da}
+.mini-card.face-red .cpips .red,.mini-card.face-red .cpips .blu{color:#f7e9da}
+/* 黑對（♠♣）：整張牌變藍 */
+.mini-card.face-blue{background:linear-gradient(165deg,#2e4d6d 0%,#182b41 100%);box-shadow:0 4px 10px rgba(0,0,0,.55), 0 0 0 1px rgba(107,76,29,.9), inset 0 0 0 2px rgba(244,223,164,.3)}
+.mini-card.face-blue .rk{color:#e8eef5}
+.mini-card.face-blue .cpips{color:#e8eef5}
+.mini-card.face-blue .cpips .red,.mini-card.face-blue .cpips .blu{color:#e8eef5}
+/* 全花色：金面 + 2×2 四 pip 置中 */
+.mini-card.face-gold{background:linear-gradient(160deg,#f6e6b8 0%,#dcb96e 65%,#c9a25a 100%);box-shadow:0 4px 12px rgba(0,0,0,.55), 0 0 0 1px #8a6a2f, inset 0 1px 0 rgba(255,255,255,.55), 0 0 12px rgba(212,176,106,.35)}
+.mini-card.face-gold .rk{color:#241c08}
+.mini-card.ace-image{width:54px;height:81px;padding:0;overflow:hidden;background:#090a09;box-shadow:0 5px 13px rgba(0,0,0,.62),0 0 0 1px #8a6a2f}
+.mini-card.ace-image img{display:block;width:100%;height:100%;object-fit:cover}
+.mini-card.ace-logo-card{background:#070807;box-shadow:0 5px 13px rgba(0,0,0,.65),0 0 0 1px #8a6a2f,inset 0 0 0 2px rgba(217,181,104,.28)}
+.mini-card.ace-logo-card::after{content:"";position:absolute;inset:3px;border:1px solid rgba(244,223,164,.7);border-radius:3px;pointer-events:none}
+.mini-card.ace-logo-card .ace-logo-mark{position:absolute;z-index:0;left:50%;top:50%;width:50px;height:50px;object-fit:cover;transform:translate(-50%,-50%)}
+.mini-card .ace-corner{position:absolute;z-index:2;display:flex;flex-direction:column;align-items:center;font-family:Georgia,serif;font-weight:700;font-size:8px;line-height:.8;color:#e7c46f;text-shadow:0 1px 2px #000}
+.mini-card .ace-corner small{font-size:6px;line-height:.9}
+.mini-card .ace-corner.top{top:5px;left:5px}
+.mini-card .ace-corner.bottom{right:5px;bottom:5px;transform:rotate(180deg)}
+.mini-card .cgrid{position:absolute;inset:0;display:grid;grid-template-columns:auto auto;place-content:center;justify-items:center;gap:3px 9px;font-size:17px;line-height:1}
+.mini-card .cgrid .red{color:#a52e22}
+.mini-card .cgrid .blu{color:#1d3a5f}
+
+/* --- 工具列：類別 active 態 + 細項面板 --- */
+.tool.active{
+  color:#120e04;
+  background:linear-gradient(180deg,#f4dfa4 0%,#d9b568 55%,#b28b41 100%);
+  border-image:linear-gradient(180deg,#fff3cf,#8a6a2f) 1;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 6px 16px rgba(212,176,106,.25), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.tool.active .t-coin{color:#120e04;box-shadow:0 0 0 1px #6b4c1d, inset 0 0 6px rgba(0,0,0,.2)}
+.tool-panels{position:relative}
+.tool-panel{
+  display:none;margin-top:14px;padding:18px 20px;
+  flex-wrap:wrap;gap:10px;align-items:center;
+  animation:reveal .35s ease backwards;
+}
+.tool-panel.open{display:flex}
+.tool-btn{
+  cursor:pointer;user-select:none;
+  min-width:88px;height:40px;padding:0 18px;border-radius:8px;
+  font-family:var(--serif);font-weight:600;font-size:13.5px;letter-spacing:.25em;text-indent:.25em;
+  color:var(--txt);
+  background:linear-gradient(180deg,#161f21,#0d1315);
+  border:1px solid #2c3634;
+  transition:.2s;
+}
+.tool-btn:hover{border-color:#c9a25a;color:var(--gold-1);transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.5), 0 0 10px rgba(212,176,106,.2)}
+.tool-btn:active{transform:translateY(0) scale(.97)}
+.tool-btn[disabled]{opacity:.35;pointer-events:none;filter:grayscale(.5)}
+.tool-btn.active{
+  color:#120e04;border-color:#8a6a2f;
+  background:linear-gradient(180deg,#f4dfa4,#c9a25a);
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 0 12px rgba(212,176,106,.35), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.swap-preview-toggle{
+  display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;
+  height:40px;padding:0 14px;border-radius:999px;
+  font-size:12px;letter-spacing:.1em;color:var(--gold-2);
+  border:1px dashed #2c3634;transition:.2s;
+}
+.swap-preview-toggle:hover{border-color:#8a6a2f}
+.swap-preview-toggle input{accent-color:#d9b568;width:15px;height:15px}
+
+/* 檢視面板：切牌／定位（從頂部展開鈕移入，改成 tool-btn 語彙的內嵌數字組） */
+.view-sep{width:1px;height:28px;background:rgba(138,106,47,.4);flex:none;margin:0 2px}
+.view-num-group{
+  position:relative;display:inline-flex;align-items:center;gap:8px;
+  height:40px;padding:0 12px;border-radius:8px;cursor:default;
+  background:linear-gradient(180deg,#161f21,#0d1315);border:1px solid #2c3634;
+}
+.view-num-group .name{font-size:12.5px;letter-spacing:.15em;color:var(--gold-2)}
+.view-num-group .numbox{width:76px;height:30px;font-size:14px}
+.view-num-group .tool-btn{min-width:auto;height:30px;padding:0 14px;font-size:12px}
+.view-num-group:hover::after{
+  content:attr(data-tip);display:block;position:absolute;z-index:40;
+  top:calc(100% + 7px);left:0;white-space:nowrap;
+  background:linear-gradient(160deg,#182124,#0d1315);
+  border:1px solid #8a6a2f;border-radius:6px;padding:6px 11px;
+  color:var(--gold-1);font-size:11.5px;letter-spacing:.05em;
+  box-shadow:0 10px 22px rgba(0,0,0,.65);
+}
+
+/* --- 控制區壓縮（主表格優先，上方高度減半；2026-08-06 使用者核可方案） --- */
+/* 控制帶固定 165px（＋header 85 = 最上面 250px）；面板吃滿剩餘高度 */
+.deck{
+  grid-template-columns:minmax(300px,360px) 1fr 100px;
+  grid-template-rows:160px;      /* 列高鎖死，面板才會被壓進來（auto 列會被內容撐開） */
+  gap:14px;margin-top:8px;
+}
+.exp-tab{padding:7px 4px 6px}
+/* 訊號卡橫排版（使用者示意圖）：標題置中，左卡扇(內凹底) / 中「64 張」 / 右花色獎章2×2 */
+.signal{padding:10px 16px;min-height:0;justify-content:center}
+.signal .frame-title{left:50%;transform:translateX(-50%);white-space:nowrap}
+.signal-row{display:flex;align-items:center;justify-content:center;gap:10px;flex:none}
+.suit-coins{display:grid;grid-template-columns:auto auto;gap:7px;margin-bottom:0;flex:none}
+.coin{width:38px;height:38px;font-size:17px}
+.fan-stage{
+  flex:none;width:132px;min-height:106px;margin:0;
+  background:transparent;border-radius:0;
+  box-shadow:none;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+/* 展開面板吃滿控制帶剩餘高度，內容垂直置中 */
+.expanders{height:100%}
+.exp-panel.open{flex:1;min-height:0;overflow:auto}
+#pCond.open{display:flex;flex-direction:column;justify-content:center}
+.mini-card{width:56px;height:78px;border-radius:6px;padding:5px 6px;bottom:10px}
+.mini-card .rk{font-size:17px}
+.mini-card .cpip{font-size:26px}
+.mini-card .cpips{font-size:16px;gap:4px}
+.formula{flex:none;padding-top:0;border-top:none;font-size:13px;color:var(--txt);text-align:center;white-space:nowrap}
+.formula b{font-size:24px}
+.exp-tab{padding:8px 4px 6px;font-size:13px}
+.exp-tab .glyph{font-size:13px;margin-bottom:1px}
+.exp-panel{margin-top:10px;padding:8px 16px}
+#pCond .p-label{margin-bottom:6px}
+/* 設定面板：花色｜點數｜快選 單排（吃滿面板高度，按鈕放大、垂直置中） */
+#pSet.open{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#pSet .pick-row{margin-bottom:0;gap:7px}
+#pSet .pick{min-width:38px;height:38px;font-size:14.5px;padding:0 9px;border-radius:7px}
+#pSet .pick.suit{width:40px;font-size:18px}
+#pSet .pick.quick{height:34px;font-size:12.5px;padding:0 16px}
+.set-sep{width:1px;height:34px;background:rgba(138,106,47,.45);flex:none}
+/* 條件面板：六項單排 */
+#pCond .cond-grid{display:flex;gap:9px}
+#pCond .cond{flex:1;min-width:0;padding:5px 10px;gap:8px;font-size:12.5px}
+#pCond .p-label{margin-bottom:3px}
+#pCond .cond .name{white-space:nowrap}
+/* 數字框：跟著格子收縮 + 拿掉原生上下箭頭（固定寬會撐爆格子壓到隔壁文字） */
+#pCond .cond{overflow:hidden}
+#pCond .numbox{flex:1 1 auto;width:auto;min-width:0;height:32px;font-size:15px;padding:0 4px}
+#pCond .numbox::placeholder{color:rgba(154,149,132,.6);font-size:13px}
+#pCond .numbox::-webkit-outer-spin-button,
+#pCond .numbox::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;margin:0}
+#pCond .numbox[type=number]{-moz-appearance:textfield;appearance:textfield}
+/* 兩字標籤 + hover 才出現的說明浮窗 */
+#pCond .cond .name{font-size:13px;letter-spacing:.1em;flex:none}
+#pCond .cond{position:relative;cursor:default}
+#pCond .cond::after{
+  content:attr(data-tip);display:none;position:absolute;z-index:40;
+  top:calc(100% + 6px);left:0;white-space:nowrap;
+  background:linear-gradient(160deg,#182124,#0d1315);
+  border:1px solid #8a6a2f;border-radius:6px;padding:6px 11px;
+  color:var(--gold-1);font-size:11.5px;letter-spacing:.05em;
+  box-shadow:0 10px 22px rgba(0,0,0,.65);
+}
+#pCond .cond:hover{overflow:visible}
+#pCond .cond:hover::after{display:block}
+#pCond .switch{width:44px;height:23px}
+#pCond .switch::after{width:17px;height:17px}
+#pCond .switch.on::after{left:23px}
+/* 籌碼：生成主鈕在上，停止/清除小籌碼並排 */
+.chip-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;place-content:center;justify-items:center}
+.chip{width:44px;height:44px}
+.chip::before{inset:6px;border-width:1.5px}
+.chip .lbl{font-size:11px;letter-spacing:.1em;text-indent:.1em}
+.chip .sub{display:none}
+.chip.gen{grid-column:1 / 3;width:66px;height:66px}
+.chip.gen::before{inset:8px;border-width:2px}
+.chip.gen .lbl{font-size:14px;letter-spacing:.18em;text-indent:.18em}
+.chip.gen .sub{display:block;font-size:7px;letter-spacing:.2em}
+
+/* 統計態不受固定列高限制（雙卡需要圓餅高度）；.deck 這時是 4 欄：
+   訊號牌(卡扇+張數，花色圓標收起) / 即時統計(590px 定寬) / 違規 / 籌碼
+   （設定態仍是 3 欄：訊號牌 / 展開面板 / 籌碼，統計與違規卡此時 display:none） */
+body.running .deck,body.finished .deck{
+  grid-template-rows:160px;
+  grid-template-columns:minmax(200px,260px) 590px 1fr 100px;
+}
+/* 窄螢幕：單排排不下時放行換行、列高自動，不長捲軸（1920 維持 250px 定案） */
+@media (max-width:1560px){
+  .deck{grid-template-rows:auto}
+  .exp-panel.open{overflow:visible}
+  #pSet .pick{min-width:32px;height:32px;font-size:13px}
+  #pSet .pick.suit{width:34px;font-size:16px}
+  #pSet .pick.quick{height:30px;font-size:12px;padding:0 12px}
+}
+
+/* --- 統計雙卡（卡片A 回復分析+消耗 / 卡片B 組合圓餅）--- */
+:root{
+  --rec-1:#f4dfa4;   /* 立即（金 淺→深） */
+  --rec-2:#d9b568;   /* 1-5 局 */
+  --rec-3:#a67c35;   /* 6-10 局 */
+  --rec-5:#6b4c1d;   /* 11 局以上 */
+  --ring-c4:#cfe8d6; /* 4張（綠 淺→深，使用者指定參考圖色系） */
+  --ring-c5:#62a683; /* 5張 */
+  --ring-c6:#2f6e51; /* 6張 */
+  --pie-banker:#e05c4f;
+  --pie-player:#4fa3d8;
+  --pie-tie:#5cbf8a;
+}
+.stats{grid-template-columns:auto auto;justify-content:start;gap:34px;padding-top:10px;padding-bottom:10px}
+.stat-card{display:flex;align-items:center;gap:20px}
+/* 違規：獨立面板（訊號牌／即時統計 同級），金框自帶 frame-title + 右上角紅色計數徽章 */
+.vio-live-card{
+  position:relative;flex-direction:column;align-items:stretch;
+  padding:20px 16px 16px;gap:8px;min-width:190px;justify-content:center;
+}
+.vio-live-card .badge{
+  position:absolute;top:-11px;right:16px;
+  display:none;min-width:20px;height:20px;border-radius:10px;place-items:center;padding:0 6px;
+  background:var(--danger);color:#fff;font-size:11px;font-family:var(--sans);letter-spacing:0;
+  box-shadow:0 0 8px rgba(255,107,94,.6);
+}
+.vio-live-card .badge.show{display:grid}
+/* 卡片C 內容可能很長（例如卡色違規列出幾十個局號）：值換行到名稱下方 + 清單本身限高可捲動，
+   不然一個超長違規值會撐爆整張卡、把旁邊的圓餅卡推走 */
+#statsVioCard .vio-grid{
+  display:flex;flex-direction:column;gap:6px;
+  max-height:172px;overflow-y:auto;padding-right:4px;
+  scrollbar-width:thin;scrollbar-color:#8a6a2f #0c1a14;
+}
+#statsVioCard .vio{padding:5px 10px;gap:6px 8px;font-size:11.5px;flex-wrap:wrap;align-items:center}
+#statsVioCard .vio .lamp{width:20px;height:20px;font-size:9px}
+#statsVioCard .v-val{
+  flex:1 1 100%;font-size:11px;text-align:left;
+  white-space:normal;word-break:break-word;max-width:none;
+  padding-left:28px;line-height:1.5;
+}
+/* 只顯示真的有問題的項目；全部正常時用一行「目前無違規」取代整份清單 */
+#statsVioCard .vio.no-violation{display:none}
+.vio-empty{
+  display:none;text-align:center;padding:22px 0;
+  font-size:12px;letter-spacing:.15em;color:var(--ok);
+}
+#statsVioCard.all-clear .vio-empty{display:block}
+#statsVioCard.all-clear .vio-grid{display:none}
+/* 局號連結：點了跳到主表格對應那列（focusRoundFromShoeMap） */
+.round-link{
+  color:var(--gold-1);text-decoration:none;font-weight:700;
+  border-bottom:1px dashed rgba(244,223,164,.5);cursor:pointer;padding:0 1px;
+}
+.round-link:hover{color:#fff;border-bottom-style:solid;text-shadow:0 0 8px rgba(244,223,164,.6)}
+/* 卡片A：回復甜甜圈 */
+.rec-chart,.combo-chart{position:relative;width:136px;height:136px;flex:none}
+.rec-ring{position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(138,106,47,.4), 0 6px 16px rgba(0,0,0,.5)}
+.rec-hole{position:absolute;inset:24%;border-radius:50%;background:#10171a;box-shadow:inset 0 0 12px rgba(0,0,0,.7), 0 0 0 1px rgba(138,106,47,.35)}
+.rec-center{
+  position:absolute;inset:24%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-family:var(--disp);font-weight:700;font-size:14px;color:var(--gold-1);text-shadow:0 0 10px rgba(244,223,164,.3);
+}
+.rec-center span:last-child{font-size:11px;color:var(--txt-dim)}
+/* 圖上百分比 / 張數標籤（renderPieLabels 產出） */
+.pie-labels{position:absolute;inset:0;pointer-events:none}
+.pie-label{
+  position:absolute;transform:translate(-50%,-50%);
+  font-family:var(--disp);font-weight:700;font-size:10px;line-height:1.2;text-align:center;
+  color:#120e04;text-shadow:0 0 3px rgba(255,255,255,.4);white-space:pre-line;
+}
+/* 卡片A：右側文字區 */
+.rec-info{display:flex;flex-direction:column;gap:9px;min-width:220px}
+.info-k{font-size:11px;letter-spacing:.25em;color:var(--txt-dim)}
+/* 最大消耗：左標籤 + 右側兩行大數字（71張(312) / 15局(67) 式排列） */
+.cost-max{display:flex;align-items:center;gap:14px}
+.cost-max .info-k{flex:none;font-size:12.5px;color:var(--txt)}
+.cost-vals{display:flex;flex-direction:column;gap:1px}
+.info-block .cost-value{font-size:13px;color:var(--txt);line-height:1.25}
+.info-block .cost-value b{font-family:var(--disp);font-size:25px;color:var(--gold-1);text-shadow:0 0 10px rgba(244,223,164,.3);padding-right:5px}
+.info-block .cost-value i{font-style:normal;font-size:11.5px;color:var(--gold-2);opacity:.85;margin-left:3px}
+.cost-bpt{display:flex;gap:14px;padding:7px 0;border-top:1px solid rgba(138,106,47,.3);border-bottom:1px solid rgba(138,106,47,.3)}
+.bpt{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;letter-spacing:.08em;color:var(--txt)}
+.bpt b{font-family:var(--disp);font-size:16px}
+.bpt-dot{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 6px currentColor}
+.bpt-b .bpt-dot{background:var(--pie-banker);color:var(--pie-banker)}
+.bpt-p .bpt-dot{background:var(--pie-player);color:var(--pie-player)}
+.bpt-t .bpt-dot{background:var(--gold-2);color:var(--gold-2)}
+.bpt-b b{color:var(--pie-banker)}
+.bpt-p b{color:var(--pie-player)}
+.bpt-t b{color:var(--gold-1)}
+/* 對調莊6 / 莊6點贏：水平並排；局號平常隱藏，hover 該項時浮出 */
+.b6-meta{display:flex;flex-direction:row;gap:24px}
+.b6-row{position:relative;display:flex;align-items:baseline;gap:8px;font-size:12px;cursor:default}
+.b6-row b{font-family:var(--disp);font-size:14px;color:var(--gold-1);flex:none}
+.b6-row:hover .info-k{color:var(--gold-2)}
+.b6-rounds{
+  display:none;position:absolute;top:calc(100% + 7px);left:0;z-index:30;
+  background:linear-gradient(160deg,#182124,#0d1315);
+  border:1px solid #8a6a2f;border-radius:6px;padding:7px 12px;
+  color:var(--gold-1);font-size:11.5px;letter-spacing:.06em;
+  min-width:150px;max-width:280px;word-break:break-all;
+  box-shadow:0 10px 22px rgba(0,0,0,.65);
+}
+.b6-rounds::before{
+  content:"";position:absolute;top:-5px;left:16px;width:8px;height:8px;
+  background:#161f22;border-left:1px solid #8a6a2f;border-top:1px solid #8a6a2f;
+  transform:rotate(45deg);
+}
+.b6-row:hover .b6-rounds{display:block}
+/* 卡片B：同心組合圓餅 */
+.card-ring{position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(138,106,47,.4), 0 6px 16px rgba(0,0,0,.5)}
+/* 內圈凸起：不用黑邊，改用下沉陰影＋頂部高光做浮出效果 */
+.outcome-donut{
+  position:absolute;inset:24%;border-radius:50%;background:rgba(255,255,255,.06);
+  box-shadow:
+    0 5px 12px rgba(0,0,0,.5),
+    0 2px 4px rgba(0,0,0,.4),
+    inset 0 2px 5px rgba(255,255,255,.3),
+    inset 0 -4px 8px rgba(0,0,0,.28);
+}
+/* 中心不挖洞：總局數用半透明大字直接疊在內圈實心餅上 */
+.chart-total{
+  position:absolute;inset:0;pointer-events:none;
+  display:grid;place-items:center;
+}
+.chart-total span{
+  font-family:var(--disp);font-weight:900;font-size:40px;line-height:1;
+  color:rgba(238,232,216,.55);
+  text-shadow:0 1px 4px rgba(0,0,0,.45);
+}
+.outcome-card{flex-direction:column;gap:10px;align-items:center}
+.combo-caption{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:10.5px;letter-spacing:.08em;color:var(--txt-dim)}
+.combo-caption i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.cap-sep{width:1px;background:rgba(138,106,47,.4);align-self:stretch}
+#recoveryDisplay.is-empty{opacity:.4}
+
+/* --- 路單 / 牌靴體檢圖（renderShoeMap 產出的 class） --- */
+:root{--red-alert:#e05c4f;--cyan:#4fa3d8;--phosphor:#5cbf8a}
+#shoeMap{display:none;margin-top:20px;padding:18px 20px}
+#shoeMap.has-data{display:block}
+.shoe-map-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.shoe-map-title{font-family:var(--serif);font-weight:600;font-size:13px;letter-spacing:.3em;color:var(--gold-2)}
+.shoe-map-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--txt-dim);letter-spacing:.08em}
+.shoe-map-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.bigroad{overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:thin;scrollbar-color:#8a6a2f #0c1214}
+.bigroad-grid{display:grid;grid-auto-rows:17px;gap:2px;width:max-content}
+.bigroad-cell{
+  width:17px;height:17px;border-radius:50%;box-sizing:border-box;
+  display:grid;place-items:center;font-size:9px;color:var(--tie);cursor:pointer;
+  border:2px solid transparent;
+}
+.bigroad-cell.side-b{border-color:var(--red-alert)}
+.bigroad-cell.side-p{border-color:var(--cyan)}
+.bigroad-cell.side-t{border-color:var(--phosphor)}
+.bigroad-cell.has-tie{background:rgba(92,191,138,.25)}
+.bigroad-cell.in-violation{box-shadow:0 0 0 2px rgba(232,163,61,.7)}
+.bigroad-cell:hover{filter:brightness(1.5)}
+.map-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.map-row-label{flex:none;width:34px;font-size:11px;letter-spacing:.2em;color:var(--txt-dim);text-align:right}
+.map-track{display:grid;gap:1px;flex:1;min-width:0}
+.map-cell{height:13px;background:#152019;border-radius:2px;cursor:pointer}
+.map-cell:hover{filter:brightness(1.6)}
+.bar-cell{height:32px;display:flex;align-items:flex-end;cursor:pointer}
+.bar-cell i{display:block;width:100%;border-radius:1px 1px 0 0}
+.bar-cell.bar-c4 i{background:#f4dfa4}
+.bar-cell.bar-c5 i{background:#d9b568}
+.bar-cell.bar-c6 i{background:#8a6a2f}
+.bar-cell.bar-cx i{background:#3a4340}
+.bar-cell:hover i{filter:brightness(1.3)}
+.map-ticks{display:grid;gap:1px;flex:1;min-width:0}
+.map-tick{font-size:9px;color:var(--txt-dim);text-align:center;overflow:visible;white-space:nowrap}
+
+/* --- 浮動計算小工具（ensureFloatingWidget 注入；預設隱藏，按「計算」顯示） --- */
+.floating-widget{
+  display:none;position:fixed;right:26px;bottom:26px;z-index:960;width:236px;
+  background:linear-gradient(160deg,rgba(24,32,33,.97),rgba(11,17,19,.98));
+  border:1px solid;border-image:var(--gold-line) 1;
+  box-shadow:0 16px 40px rgba(0,0,0,.7);
+  padding:14px;cursor:grab;
+}
+.widget-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
+.widget-action{
+  cursor:pointer;height:26px;padding:0 12px;border-radius:999px;
+  font-size:11px;letter-spacing:.15em;color:var(--gold-2);
+  background:#0d1315;border:1px dashed #2c3634;transition:.2s;
+}
+.widget-action:hover{border-color:#c9a25a;color:var(--gold-1)}
+.card-inputs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.card-input{
+  height:32px;background:#0a100f;border:1px solid #33403d;border-radius:6px;
+  color:var(--gold-1);font-family:var(--disp);font-size:15px;text-align:center;outline:none;
+}
+.card-input:focus{border-color:#c9a25a}
+.card-input.disabled{opacity:.5}
+.results{display:flex;flex-direction:column;gap:6px}
+.result-strip{
+  display:flex;justify-content:space-around;gap:6px;padding:6px 8px;
+  border:1px solid #26302e;border-radius:6px;background:rgba(10,16,15,.6);
+}
+.result-value{font-family:var(--disp);font-weight:700;font-size:15px}
+.result-player{color:var(--player)}
+.result-banker{color:var(--banker)}
+.result-outcome{color:var(--gold-1)}
+
+/* ══════ 手機版（必須放樣式表最後，否則會被前面的桌機單排規則蓋掉）══════ */
+@media (max-width:700px){
+  .deck{grid-template-rows:auto;grid-template-columns:1fr 88px;height:auto}
+  /* 統計態現在有 4 個可見項目（訊號牌/統計/違規/籌碼），窄螢幕全部改單欄堆疊，
+     不然 88px 的舊 2 欄版型會把統計卡硬塞進 88px 寬 */
+  body.running .deck,body.finished .deck{grid-template-columns:1fr}
+  body.running .chip-col,body.finished .chip-col{justify-self:center}
+  .signal-row{flex-wrap:wrap;justify-content:center;gap:10px}
+  .exp-tabs{flex-wrap:wrap;gap:6px}
+  .exp-tab{flex:1 1 28%;font-size:13px}
+  .exp-panel.open{overflow:visible}
+  /* 條件／違規改兩欄，數字框保留可點寬度＋16px 字級（iOS 才不會自動放大頁面） */
+  #pCond .cond-grid{flex-wrap:wrap}
+  #pCond .cond{flex:1 1 100%;padding:8px 12px}   /* 每項獨佔一行，標籤左、控制項右 */
+  .stats{grid-template-columns:1fr}
+  .vio-live-card{min-width:0}
+  #pCond .numbox{flex:0 0 auto;width:72px;min-width:72px;height:36px;font-size:16px;text-align:center}
+  .view-num-group{flex:1 1 100%;justify-content:space-between}
+  .view-num-group .numbox{width:90px;height:36px;font-size:16px}
+  #pSet.open{gap:10px}
+  #pSet .pick{min-width:34px;height:34px;font-size:13px}
+  #pSet .pick.suit{width:36px}
+  .set-sep{display:none}
+  .tool{min-width:44%;letter-spacing:.2em;text-indent:.2em}
+  .chip-col{gap:6px}
+  .chip.gen{width:58px;height:58px}
+  .chip{width:38px;height:38px}
+  .chip .lbl{font-size:10px}
+  .chip.gen .lbl{font-size:12px}
+  .stats{grid-template-columns:1fr;gap:16px}
+  .stat-card{flex-direction:column;gap:12px}
+  .rec-info{min-width:0;width:100%}
+}
+</style>
+<link rel="stylesheet" href="integrated.css?v=1">
+</head>
+<body>
+
+<header>
+  <div class="crest">♠</div>
+  <h1>SHOE MASTER<small>百家樂牌靴管理</small></h1>
+  <div class="shoe-state">
+    <span class="dot"></span>
+    <span class="st-idle">待命 STANDBY</span>
+    <span class="st-run">生成中 DEALING</span>
+    <span id="shoeRoundTotal" style="color:var(--gold-2)">SHOE · 0 局</span>
+  </div>
+</header>
+
+<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeStandard" aria-pressed="true">百家 3.0</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越排牌</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><span id="modeStatus" role="status">百家 3.0 模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
+<!-- ═══════════ 控制甲板 ═══════════ -->
+<section class="deck">
+
+  <!-- 訊號牌顯示（即時反映 SIGNAL_CONFIG） -->
+  <div class="signal gframe">
+    <span class="frame-title">訊號牌 Signal</span>
+    <div class="signal-row">
+      <div class="fan-stage" id="fanStage"></div>
+      <div class="formula" id="formula"></div>
+      <div class="suit-coins" id="suitCoins">
+        <div class="coin" data-suit="♠">♠</div>
+        <div class="coin red" data-suit="♥">♥</div>
+        <div class="coin red" data-suit="♦">♦</div>
+        <div class="coin" data-suit="♣">♣</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 五大展開鈕 -->
+  <div class="expanders">
+    <div class="exp-tabs" id="expTabs">
+      <div class="exp-tab" data-panel="pSet"><span class="glyph">♠</span>設定</div>
+      <div class="exp-tab" data-panel="pCond"><span class="glyph">♦</span>條件</div>
+    </div>
+
+    <!-- 設定：花色 × 點數（.suit-button / .rank-button 供 signals_ui 讀取） -->
+    <div class="exp-panel gframe" id="pSet">
+      <div class="pick-row" id="suitPicks">
+        <div class="pick suit suit-button" data-value="♠">♠</div>
+        <div class="pick suit red suit-button" data-value="♥">♥</div>
+        <div class="pick suit red suit-button" data-value="♦">♦</div>
+        <div class="pick suit suit-button" data-value="♣">♣</div>
+      </div>
+      <span class="set-sep"></span>
+      <div class="pick-row" id="rankPicks">
+        <div class="pick rank-button" data-value="A">A</div>
+        <div class="pick rank-button" data-value="2">2</div>
+        <div class="pick rank-button" data-value="3">3</div>
+        <div class="pick rank-button" data-value="4">4</div>
+        <div class="pick rank-button" data-value="5">5</div>
+        <div class="pick rank-button" data-value="6">6</div>
+        <div class="pick rank-button" data-value="7">7</div>
+        <div class="pick rank-button" data-value="8">8</div>
+        <div class="pick rank-button" data-value="9">9</div>
+        <div class="pick rank-button" data-value="10">10</div>
+        <div class="pick rank-button" data-value="J">J</div>
+        <div class="pick rank-button" data-value="Q">Q</div>
+        <div class="pick rank-button" data-value="K">K</div>
+      </div>
+      <span class="set-sep"></span>
+      <div class="pick-row">
+        <div class="pick quick" data-q="a2">A2</div>
+        <div class="pick quick" data-q="red0">紅0</div>
+      </div>
+    </div>
+
+    <!-- 條件（掛真實舊 id） -->
+    <div class="exp-panel gframe" id="pCond">
+      <p class="p-label">生成條件 CONDITIONS</p>
+      <div class="cond-grid">
+        <div class="cond" data-tip="避開莊 6 點贏"><span class="name">莊6</span><div class="switch" id="swB6"></div></div>
+        <div class="cond" data-tip="生成完成後調整牌序，讓整副牌靴第 416 張是 9"><span class="name">末張9</span><div class="switch" id="swLastNine"></div></div>
+        <div class="cond" data-tip="平均回復局數上限（0 = 關閉檢查）"><span class="name">回復</span><input class="numbox" type="number" inputmode="decimal" id="avgRecoveryLimit" step="0.1" min="0" value="0" placeholder="0"></div>
+        <div class="cond" data-tip="和局數上限（留空 = 不檢查）"><span class="name">和局</span><input class="numbox" type="number" inputmode="numeric" id="maxTieLimit" min="0" value="3" placeholder="—"></div>
+        <div class="cond" data-tip="4 張局比例上限 %（留空 = 不檢查）"><span class="name">四張</span><input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="—"></div>
+        <div class="cond" data-tip="莊 與 閒+和 的局數差距上限（留空 = 不檢查）"><span class="name">莊閒</span><input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="—"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 即時統計（真實結構：卡片A 回復分析+消耗 / 卡片B 組合圓餅；id 全部沿用 signals_ui 既有寫入，不另行計算） -->
+  <div class="stats gframe" id="stats">
+    <span class="frame-title">即時統計 Live</span>
+
+    <!-- 卡片A：回復分析（recRing 甜甜圈）＋ 回復消耗（右側文字區） -->
+    <div class="stat-card" id="recoveryDisplay">
+      <div class="rec-chart" title="回復間距分布：立即 / 1-5局 / 6-10局 / 11局以上">
+        <div class="rec-ring" id="recRing"></div>
+        <div class="rec-hole"></div>
+        <div class="rec-center">
+          <span id="recoveryAvg">-- 局</span>
+          <span id="recoveryAvgCards">-- 張</span>
+        </div>
+        <div class="pie-labels" id="recLabels"></div>
+      </div>
+      <div class="rec-info">
+        <div class="info-block cost-max">
+          <span class="info-k">最大消耗</span>
+          <div class="cost-vals">
+            <div class="cost-value"><b id="recoveryMaxCardsLeft">--</b>張<i>(<span id="recoveryMaxIdxCards">--</span>)</i></div>
+            <div class="cost-value"><b id="recoveryMaxRoundsLeft">--</b>局<i>(<span id="recoveryMaxIdxRounds">--</span>)</i></div>
+          </div>
+        </div>
+        <div class="cost-bpt">
+          <span class="bpt bpt-b"><i class="bpt-dot"></i>莊 <b id="costBankerCount">--</b></span>
+          <span class="bpt bpt-p"><i class="bpt-dot"></i>閒 <b id="costPlayerCount">--</b></span>
+          <span class="bpt bpt-t"><i class="bpt-dot"></i>和 <b id="costTieCount">--</b></span>
+        </div>
+        <div class="b6-meta">
+          <div class="b6-row"><span class="info-k">對調莊6</span><b id="recoverySwapB6Count">--</b><span class="b6-rounds" id="recoverySwapB6Rounds">--</span></div>
+          <div class="b6-row"><span class="info-k">莊6點贏</span><b id="recoveryBanker6Count">--</b><span class="b6-rounds" id="recoveryBanker6Rounds">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片B：組合圓餅（外環 cardRing = 4/5/6張，內圈 outcomeDonut = 莊閒和，中心總局數） -->
+    <div class="stat-card outcome-card">
+      <div class="combo-chart">
+        <div class="card-ring" id="cardRing"></div>
+        <div class="outcome-donut" id="outcomeDonut"></div>
+        <div class="chart-total"><span id="circleTotal">0</span></div>
+        <div class="pie-labels" id="pieLabels"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 違規：獨立一張卡（真實 calculateViolationStats 結果，由 updateViolationUI 寫入，id 沿用不變），
+       坐在「即時統計」與籌碼欄中間，不掛在 .stats 裡面 -->
+  <div class="vio-live-card gframe" id="statsVioCard">
+    <span class="frame-title">違規 VIOLATIONS</span>
+    <span class="badge" id="vioFlag">0</span>
+    <div class="vio-grid" id="vioGrid">
+      <div class="vio violation-card no-violation"><div class="lamp">◈</div><span class="v-name">訊號牌違規</span><span class="v-val violation-detail" id="signalViolationDetail">無</span></div>
+      <div class="vio violation-card no-violation"><div class="lamp">◈</div><span class="v-name">連續5局4張</span><span class="v-val violation-detail" id="fourCardViolationDetail">無</span></div>
+      <div class="vio violation-card no-violation"><div class="lamp">◈</div><span class="v-name">連續莊閒</span><span class="v-val violation-detail" id="streakViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">◈</div><span class="v-name">無法對調</span><span class="v-val violation-detail" id="cannotSwapViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">◈</div><span class="v-name">其他違規</span><span class="v-val violation-detail" id="otherViolationDetail">無</span></div>
+      </div>
+    <div class="vio-empty" id="vioEmpty">目前無違規</div>
+  </div>
+
+  <!-- 籌碼三鈕（常駐；轉發到隱藏的真實按鈕） -->
+  <div class="chip-col">
+    <button class="chip gen" id="chipGen"><span><span class="lbl">生成</span><span class="sub">DEAL</span></span></button>
+    <button class="chip stop" id="chipStop"><span><span class="lbl">停止</span><span class="sub">STOP</span></span></button>
+    <button class="chip clear" id="chipClear"><span><span class="lbl">清除</span><span class="sub">CLEAR</span></span></button>
+  </div>
+</section>
+
+<!-- ═══════════ 工具列（4 大類，點擊展開細項；細項掛舊 id 沿用 signals_ui 綁定） ═══════════ -->
+<section class="toolbar" id="toolCats">
+  <div class="tool" data-tp="tpEdit"><span class="t-coin">✎</span>編輯</div>
+  <div class="tool" data-tp="tpData"><span class="t-coin red">♦</span>資料</div>
+  <div class="tool" data-tp="tpVerify"><span class="t-coin">♣</span>驗證</div>
+  <div class="tool" data-tp="tpView"><span class="t-coin red">♥</span>檢視</div>
+</section>
+<section id="traverseControls" class="gframe mode-panel" hidden>
+  <h2 class="frame-title">穿越排牌設定</h2>
+  <div class="mode-fields">
+    <label>最少張數 <input id="tvMin" class="numbox" type="number" min="4" max="416" value="8"></label>
+    <label>最多張數 <input id="tvMax" class="numbox" type="number" min="4" max="416" value="12"></label>
+    <label>撿不到輪次 <input id="tvIdle" class="numbox" type="number" min="1" value="1000"></label>
+    <label>補排次數 <input id="tvTries" class="numbox" type="number" min="1" value="20000"></label>
+    <label>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
+    <label>剩牌上限 <input id="tvLeft" class="numbox" type="number" min="0" max="416" value="0" placeholder="不限"></label>
+  </div>
+  <div class="mode-actions">
+    <label class="tool-btn"><input type="checkbox" id="tvTriple" checked>三條</label>
+    <label class="tool-btn"><input type="checkbox" id="tvSignal" checked>訊號牌</label>
+    <label class="tool-btn"><input type="checkbox" id="tvStrong">強</label>
+    <label class="tool-btn" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><input type="checkbox" id="tvSecond">第二張敏感</label>
+    <label class="tool-btn"><input type="checkbox" id="tvNine" checked>末張9</label>
+    <label class="tool-btn"><input type="checkbox" id="tvSide" checked>莊閒</label>
+    <label>差距上限 <input id="tvSideLimit" class="numbox" type="number" min="0" value="8"></label>
+  </div>
+  <p class="mode-note">訊號牌共用上方「設定」的花色與點數。剩牌上限留白不重跑；0 表示一張都不能剩。</p>
+</section>
+<section id="traverseTools" class="gframe mode-panel" hidden>
+  <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
+  <p id="tvProgress" role="status">尚未排牌</p><div id="tvSummary"></div>
+  <details id="tvSafePanel"><summary>安全切牌點 <span id="tvSafeCount">尚未排牌</span>（不計卡色）</summary><div id="tvCutBuckets"></div><div id="tvSafeCuts" class="mode-actions"></div></details>
+  <details><summary>長段驗證與訊號檢查</summary><div id="tvDiagnostics"></div><div class="mode-scroll"><table id="tvChains"><thead><tr><th>段</th><th>起始</th><th>張數</th><th>局數</th><th>穿越</th><th>敏感</th><th>合格</th></tr></thead><tbody></tbody></table></div></details>
+</section>
+<section class="tool-panels">
+  <!-- 編輯（前6顆預設 disabled，由 updateEditUI 依選取狀態啟用；auto_fix_plugin 會把「一鍵修正」插在換色後面） -->
+  <div class="tool-panel gframe tool-sidebar" id="tpEdit">
+    <button class="tool-btn" id="btnSwap" disabled>換牌</button>
+    <button class="tool-btn" id="btnRound" disabled>換局</button>
+    <button class="tool-btn" id="btnAutoReorder" disabled>自動重排</button>
+    <button class="tool-btn" id="btnAutoColor" disabled>換色</button>
+    <button class="tool-btn" id="btnCancelEdit" disabled>取消</button>
+    <button class="tool-btn" id="btnApplyChanges" disabled>套用</button>
+    <label class="swap-preview-toggle" title="換牌時先預覽對調結果">
+      <input type="checkbox" id="toggleSwapPreview"><span>啟用換牌預覽</span>
+    </label>
+  </div>
+  <!-- 資料 -->
+  <div class="tool-panel gframe" id="tpData">
+    <button class="tool-btn" id="btnImport">匯入</button>
+    <input type="file" id="importFileInput" accept=".xlsx" style="display:none">
+    <button class="tool-btn" id="btnExportCombined">導出</button>
+    <button class="tool-btn" id="clearBtn">清空</button>
+  </div>
+  <!-- 驗證 -->
+  <div class="tool-panel gframe" id="tpVerify">
+    <button class="tool-btn" id="btnValidate">驗證</button>
+  </div>
+  <!-- 檢視（切牌／定位從頂部展開鈕移入：同屬「查看/定位牌靴」性質） -->
+  <div class="tool-panel gframe" id="tpView">
+    <button class="tool-btn" id="btnShoeMap" onclick="toggleShoeMap()">路單</button>
+    <button class="tool-btn" id="btnPointStats" onclick="window.open('standard/point_stats.html','_blank')">點數統計</button>
+    <button class="tool-btn" id="btnManualInput" onclick="window.open('standard/manual_input.html','_blank')">手動輸入</button>
+    <button class="tool-btn" id="btnDealer">發牌</button>
+    <button class="tool-btn" id="btnSpeech">語音</button>
+    <button class="tool-btn" id="btnApplyTools">計算</button>
+    <span class="view-sep"></span>
+    <button class="tool-btn" id="btnRecordDeckOrder" title="生成後按此記錄牌序，之後才能切牌" disabled>套用</button>
+    <div class="view-num-group" data-tip="需先生成並按過「套用」記錄牌序">
+      <span class="name">切牌</span>
+      <input class="numbox" type="number" inputmode="numeric" id="cutPos" min="0" placeholder="張數">
+      <button class="tool-btn" id="btnCut">執行</button>
+    </div>
+    <div class="view-num-group" data-tip="輸入 1~416 的全靴牌序">
+      <span class="name">定位</span>
+      <input class="numbox" type="number" inputmode="numeric" id="highlightCardPos" min="1" placeholder="第幾張">
+      <button class="tool-btn" id="btnHighlightCard">高亮</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 牌桌主表格（renderRoundsTable 渲染 currentRounds） ═══════════ -->
+<section class="pit">
+  <div class="felt">
+    <div class="felt-head">
+      <span class="rule"></span>
+      <span class="arc-text">BACCARAT · SHOE RECORD</span>
+      <span class="rule"></span>
+    </div>
+    <div class="table-scroll">
+      <table id="roundsTable" style="display:none">
+        <colgroup>
+          <col style="width:4%">   <!-- 局 -->
+          <col style="width:23%">  <!-- 卡牌 -->
+          <col style="width:14%">  <!-- 卡色 -->
+          <col style="width:7%">   <!-- 終 -->
+          <col style="width:15%">  <!-- 閒家牌 -->
+          <col style="width:15%">  <!-- 莊家牌 -->
+          <col style="width:7%">   <!-- 閒 -->
+          <col style="width:7%">   <!-- 莊 -->
+          <col style="width:8%">   <!-- 調 -->
+        </colgroup>
+        <thead id="roundsHead"></thead>
+        <tbody id="roundsBody"></tbody>
+      </table>
+      <div class="tbl-empty" id="tblEmpty">— 尚無牌靴資料，按下「生成」開始 —</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 路單 / 牌靴體檢圖（renderShoeMap 渲染；按「檢視→路單」切換） ═══════════ -->
+<div id="shoeMap" class="gframe"></div>
+
+<!-- ═══════════ LOG（真實 log() 輸出至 #logArea） ═══════════ -->
+<section class="logbox gframe">
+  <div class="log-head" id="logHead">
+    <span class="frame-title">操作紀錄 LOG</span>
+    <span class="log-count" id="logCount">0 則</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="log-body" id="logArea"></div>
+</section>
+
+<!-- 生成中遮罩（真實邏輯切換 .active；pointer-events:none 不擋停止籌碼） -->
+<div class="generating-overlay" id="generatingOverlay">
+  <div class="generating-spinner"></div>
+  <div class="generating-text" id="generatingText">生成中...</div>
+</div>
+
+<!-- ═══════════ 相容層：signals.js / signals_ui.js 需要的舊 id（全部隱藏） ═══════════ -->
+<div class="compat-hidden" id="compatLayer" aria-hidden="true">
+
+  <!-- 真實生成/停止鈕（generateShoe 內部直接操作這些 id 的 disabled / textContent；清空鈕已移至「資料」面板） -->
+  <button id="generateBtn">生成</button>
+  <button id="stopGenerateBtn" onclick="stopGenerateShoe()" disabled>停止</button>
+
+  <!-- 訊號牌 rank 來源（applySignalConfig 只讀 .rank-checkbox:checked；10 存 "10"） -->
+  <div class="rank-checkboxes">
+    <input type="checkbox" value="A" class="rank-checkbox">
+    <input type="checkbox" value="2" class="rank-checkbox">
+    <input type="checkbox" value="3" class="rank-checkbox">
+    <input type="checkbox" value="4" class="rank-checkbox">
+    <input type="checkbox" value="5" class="rank-checkbox">
+    <input type="checkbox" value="6" class="rank-checkbox">
+    <input type="checkbox" value="7" class="rank-checkbox">
+    <input type="checkbox" value="8" class="rank-checkbox">
+    <input type="checkbox" value="9" class="rank-checkbox">
+    <input type="checkbox" value="10" class="rank-checkbox">
+    <input type="checkbox" value="J" class="rank-checkbox">
+    <input type="checkbox" value="Q" class="rank-checkbox">
+    <input type="checkbox" value="K" class="rank-checkbox">
+  </div>
+  <span id="signalConfigDisplay"></span>
+  <span id="signalCardCount">0</span>
+
+  <!-- 設計稿未曝光的生成條件（沿用原始版預設；at-settings 會還原上次值） -->
+  <input type="number" id="max7PtReversal" min="0" value="2">
+  <input type="number" id="swapBanker6Target" min="0" value="9">
+  <input type="checkbox" id="skipBanker6">
+  <input type="checkbox" id="lastCardNine">
+
+  <!-- 工具細項已全部移至可見的 4 大類面板（.tool-panels） -->
+
+  <!-- 回復分析隱藏欄位（updateRecoveryDisplay 仍寫入；可視部分已移至統計卡片A/B） -->
+  <span id="recoveryImmediateDetail">--</span>
+  <span id="recoveryRange1to5">--</span><span id="rangeBar1to5"></span>
+  <span id="recoveryRange6to10">--</span><span id="rangeBar6to10"></span>
+  <span id="recoveryRange11to15">--</span><span id="rangeBar11to15"></span>
+  <span id="recoveryRange16plus">--</span><span id="rangeBar16plus"></span>
+  <span id="recoveryAvgDetail">--</span><span id="ccBarAvg"></span>
+  <span id="recoveryMaxDetail">--</span><span id="ccBarMax"></span>
+  <span id="recoveryMaxIndexDetail">--</span>
+  <span id="circleBankerLabel">0</span><span id="circleBankerPct">0%</span>
+  <span id="circlePlayerLabel">0</span><span id="circlePlayerPct">0%</span>
+  <span id="circleTieLabel">0</span><span id="circleTiePct">0%</span>
+  <span id="ringFourCount">0</span><span id="ringFourPct">0%</span>
+  <span id="ringFiveCount">0</span><span id="ringFivePct">0%</span>
+  <span id="ringSixCount">0</span><span id="ringSixPct">0%</span>
+  <div id="hudBankerBar"></div><div id="hudPlayerBar"></div><div id="hudTieBar"></div>
+  <div id="barFourCards"></div><div id="barFiveCards"></div><div id="barSixCards"></div>
+  <div id="recoveryFourCardRate"></div><div id="recoveryFiveCardRate"></div><div id="recoverySixCardRate"></div>
+
+  <!-- 其他統計 / 摘要容器 -->
+  <span id="totalRounds">0</span><span id="bankerCount">0</span><span id="playerCount">0</span><span id="tieCount">0</span>
+  <span id="sSignalCards">0</span><span id="tSignalCards">0</span><span id="fullHouseCount">0</span>
+  <span id="totalSensitive">0</span>
+  <div id="signalSummary"></div>
+  <div class="grid-preview mini" id="statsGridPreview"></div>
+  <!-- shoeMap 已移至牌桌下方可見區；floatingAssistant 改由 ensureFloatingWidget 注入（CSS 預設隱藏，按「計算」顯示） -->
+</div>
+
+<!-- ═══════════ JavaScript ═══════════ -->
+<!-- Excel 匯出套件（導出功能用） -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+
+<!-- 核心邏輯（順序沿用原始版；traverse.js 未在整合包內且無被引用，略） -->
+<link rel="stylesheet" href="standard/import_feedback.css?v=5">
+<script src="standard/import_feedback.js?v=2"></script>
+<script>
+try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
+</script>
+<script src="standard/signals.js?v=18"></script>
+<script src="standard/shoe_cut.js?v=3"></script>
+<script src="standard/signals_ui.js?v=39"></script>
+<script src="standard/smart_reorder_dialog.js?v=2"></script>
+<script src="standard/swap_preview.js?v=2"></script>
+<script src="standard/auto_fix_plugin.js?v=3"></script>
+
+<!-- 設定持久化：沿用 at-settings key（原始版邏輯原樣） -->
+<script>
+(function(){
+    var STORAGE_KEY = 'at-settings';
+    var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'];
+    var CHECK_IDS = ['skipBanker6','lastCardNine'];
+    try {
+        var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        INPUT_IDS.forEach(function(id){
+            var el = document.getElementById(id);
+            if (el && saved[id] !== undefined && saved[id] !== null) el.value = saved[id];
+        });
+        CHECK_IDS.forEach(function(id){
+            var el = document.getElementById(id);
+            if (el && saved[id] !== undefined) el.checked = !!saved[id];
+        });
+    } catch(e){}
+    function saveAll(){
+        var obj = {};
+        INPUT_IDS.forEach(function(id){
+            var el = document.getElementById(id);
+            if (el) obj[id] = el.value;
+        });
+        CHECK_IDS.forEach(function(id){
+            var el = document.getElementById(id);
+            if (el) obj[id] = el.checked;
+        });
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch(e){}
+    }
+    INPUT_IDS.concat(CHECK_IDS).forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('change', saveAll);
+        if (el && el.type === 'number') el.addEventListener('input', saveAll);
+    });
+})();
+</script>
+
+<!-- ═══════════ 整合層 adapter：設計稿視覺 ⇄ 真實邏輯 ═══════════ -->
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const SUIT_META = { '♠':{red:false}, '♥':{red:true}, '♦':{red:true}, '♣':{red:false} };
+const RANK_ORDER = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+/* ───────── 訊號牌顯示：以 SIGNAL_CONFIG 為唯一資料源 ───────── */
+function syncDesignSignal(){
+    const suits = Array.isArray(SIGNAL_CONFIG.suits) ? SIGNAL_CONFIG.suits : [];
+    const ranks = Array.isArray(SIGNAL_CONFIG.ranks) ? SIGNAL_CONFIG.ranks : [];
+    const suitSet = new Set(suits), rankSet = new Set(ranks);
+
+    document.querySelectorAll('#suitCoins .coin').forEach(c =>
+        c.classList.toggle('on', suitSet.has(c.dataset.suit)));
+    document.querySelectorAll('#suitPicks .suit-button').forEach(b => {
+        b.classList.toggle('on', suitSet.has(b.dataset.value));
+        b.classList.toggle('selected', suitSet.has(b.dataset.value));
+    });
+    document.querySelectorAll('#rankPicks .rank-button').forEach(b => {
+        b.classList.toggle('on', rankSet.has(b.dataset.value));
+        b.classList.toggle('selected', rankSet.has(b.dataset.value));
+    });
+    document.querySelectorAll('.rank-checkbox').forEach(cb => { cb.checked = rankSet.has(cb.value); });
+
+    const fan = $('fanStage');
+    fan.innerHTML = '';
+    const ordered = RANK_ORDER.filter(r => rankSet.has(r));
+    const nS = suits.length, nR = ordered.length;
+    if (!nR || !nS) {
+        const back = document.createElement('div');
+        back.className = 'mini-card back'; back.textContent = '?';
+        back.style.transform = 'translate(-50%,0)';
+        fan.appendChild(back);
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint'; hint.textContent = '未設定訊號牌';
+        fan.appendChild(hint);
+    } else {
+        /* 花色組合 → 卡面規則：
+           1 花色 = 一顆大 pip 置中；♥♦ = 整張紅；♠♣ = 整張藍；
+           全 4 花色 = 金面 + 2×2 pips（不會有 3 花色的情況，混色雙花為保底顯示） */
+        const SUIT_ORDER = ['♠','♥','♦','♣'];
+        const sorted = SUIT_ORDER.filter(s => suitSet.has(s));
+        const redCnt = sorted.filter(s => SUIT_META[s].red).length;
+        let faceClass = '', centerHTML = '';
+        if (nS === 4) {
+            faceClass = 'face-gold';          /* 金面即「全花色」，不放花色圖案 */
+        } else if (nS === 1) {
+            const s = sorted[0];
+            centerHTML = `<div class="cpip ${SUIT_META[s].red ? 'red' : 'blu'}">${s}</div>`;
+        } else if (nS === 2 && redCnt === 2) {
+            faceClass = 'face-red';           /* 紅面即 ♥♦，不放花色圖案 */
+        } else if (nS === 2 && redCnt === 0) {
+            faceClass = 'face-blue';          /* 藍面即 ♠♣，不放花色圖案 */
+        } else {
+            centerHTML = `<div class="cpips">${sorted.map(s =>
+                `<span class="${SUIT_META[s].red ? 'red' : 'blu'}">${s}</span>`).join('')}</div>`;
+        }
+        const spread = Math.min(22, 120/nR);
+        const start = -spread*(nR-1)/2;
+        ordered.forEach((r,i) => {
+            const card = document.createElement('div');
+            const isAce = r === 'A';
+            const imageSrc = r === '2' ? 'suit/two-of-spades-art-deco.png' : '';
+            const offset = i - (nR - 1) / 2;
+            const xOffset = offset * 26;
+            const yOffset = isAce ? -6 : Math.abs(offset) * 6;
+            card.className = isAce
+                ? 'mini-card ace-image ace-logo-card'
+                : (imageSrc ? 'mini-card ace-image' : 'mini-card' + (faceClass ? ' ' + faceClass : ''));
+            card.style.transform = `translateX(calc(-50% + ${xOffset}px)) translateY(${yOffset}px) rotate(${start+spread*i}deg)`;
+            card.style.animationDelay = (i*0.04)+'s';
+            card.style.zIndex = isAce ? nR + 1 : i;
+            /* 點數一律放角落（扇形疊牌時每張都看得到）；色面卡不放花色圖案 */
+            card.innerHTML = imageSrc
+                ? `<img src="${imageSrc}" alt="${isAce ? '黑桃 A' : '黑桃 2'}">`
+                : `<div class="rk">${r}</div>` + centerHTML;
+            if (isAce) {
+                card.innerHTML = '<span class="ace-corner top">A<small>♠</small></span><img class="ace-logo-mark" src="suit/at-spade-logo-current.png" alt="AT 黑桃"><span class="ace-corner bottom">A<small>♠</small></span>';
+            }
+            fan.appendChild(card);
+        });
+    }
+    $('formula').innerHTML = (nR && nS)
+        ? `<b>${nR*nS*8}</b> 張`
+        : `<span style="opacity:.6">未設定</span>`;
+}
+
+/* 花色 / 點數 / 快選 → 走真實 applySignalConfig / updateSignalConfig 寫入 SIGNAL_CONFIG */
+$('suitPicks').addEventListener('click', e => {
+    const b = e.target.closest('.suit-button'); if (!b) return;
+    b.classList.toggle('selected');
+    window.applySignalConfig();
+});
+$('rankPicks').addEventListener('click', e => {
+    const b = e.target.closest('.rank-button'); if (!b) return;
+    const cb = document.querySelector(`.rank-checkbox[value="${b.dataset.value}"]`);
+    if (cb) cb.checked = !cb.checked;
+    window.applySignalConfig();
+});
+document.querySelectorAll('.pick.quick[data-q]').forEach(q => q.addEventListener('click', () => {
+    const mode = q.dataset.q;
+    if (mode === 'a2')   updateSignalConfig({ suits:['♠','♥','♦','♣'], ranks:['A','2'] });
+    if (mode === 'red0') updateSignalConfig({ suits:['♥','♦'], ranks:['10','J','Q','K'] });
+    if (mode === 'all')  updateSignalConfig({ suits:['♠','♥','♦','♣'], ranks:RANK_ORDER.slice() });
+    if (mode === 'none') window.clearSignalConfig();
+}));
+
+/* 掛鉤：任何流程更新訊號設定顯示時，同步設計稿卡扇 */
+const _updDisplay = window.updateSignalConfigDisplay;
+window.updateSignalConfigDisplay = function(){
+    if (typeof _updDisplay === 'function') _updDisplay();
+    syncDesignSignal();
+};
+
+/* ───────── 五大展開鈕（accordion，維持設計稿行為） ───────── */
+$('expTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.exp-tab'); if (!tab) return;
+    const id = tab.dataset.panel;
+    const wasOpen = tab.classList.contains('active');
+    document.querySelectorAll('.exp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.exp-panel').forEach(p => p.classList.remove('open'));
+    if (!wasOpen) { tab.classList.add('active'); $(id).classList.add('open'); }
+});
+
+/* ───────── 條件開關 → 隱藏 checkbox（沿用真實邏輯讀取點） ───────── */
+function bindSwitch(swId, cbId, onChange){
+    const sw = $(swId), cb = $(cbId);
+    sw.classList.toggle('on', cb.checked);
+    sw.addEventListener('click', () => {
+        cb.checked = !cb.checked;
+        sw.classList.toggle('on', cb.checked);
+        cb.dispatchEvent(new Event('change', { bubbles:true }));
+        if (onChange) onChange(cb.checked);
+    });
+}
+/* 混合卡色開關已移除：一律強制標準模式（只允許 BBBR / RRRB），
+   不再讀 localStorage 的舊值，避免舊裝置殘留的 '1' 讓生成邏輯偷跑混和組合 */
+if (typeof persistCardColorMixedMode === 'function') persistCardColorMixedMode(false);
+/* 避開莊6點贏（at-settings 已先還原 checked） */
+bindSwitch('swB6', 'skipBanker6');
+bindSwitch('swLastNine', 'lastCardNine');
+
+/* ───────── 籌碼三鈕 → 真實按鈕 ───────── */
+$('chipGen').addEventListener('click', () => {
+    $('generateBtn').click();
+    /* generateShoe 同步就會把 __isGeneratingShoe 設 true；不等 observer，立即進入生成狀態 */
+    if (window.__isGeneratingShoe) {
+        document.body.classList.add('running');
+        document.body.classList.remove('finished');
+    }
+});
+$('chipStop').addEventListener('click', () => {
+    if (typeof stopGenerateShoe === 'function') stopGenerateShoe();
+    const t = $('generatingText');
+    if (t) t.textContent = '停止中…';
+});
+$('chipClear').addEventListener('click', () => {
+    $('clearBtn').click();
+    document.body.classList.remove('running','finished');
+    syncDesignStats();
+});
+/* 生成狀態鏡射：generateShoe 會切 #generateBtn.disabled */
+new MutationObserver(() => {
+    const running = $('generateBtn').disabled;
+    document.body.classList.toggle('running', running);
+    if (!running) syncDesignStats();
+}).observe($('generateBtn'), { attributes:true, attributeFilter:['disabled'] });
+
+/* ───────── 統計區狀態同步（雙卡數值由 signals_ui 既有函式直接寫入，這裡不重算） ───────── */
+function syncDesignStats(){
+    const rounds = (typeof currentRounds !== 'undefined' && Array.isArray(currentRounds)) ? currentRounds : [];
+    const has = rounds.length > 0;
+    $('shoeRoundTotal').textContent = `SHOE · ${rounds.length} 局`;
+    $('tblEmpty').style.display = has ? 'none' : 'block';
+    document.body.classList.toggle('has-rounds', has);
+    if (!document.body.classList.contains('running')) {
+        document.body.classList.toggle('finished', has);
+    }
+    if (!has) resetStatsCards();
+}
+/* 清空後把雙卡歸零顯示（僅重置畫面文字與底色，不做任何計算） */
+function resetStatsCards(){
+    const set = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+    set('recoveryAvg','-- 局'); set('recoveryAvgCards','-- 張');
+    ['recoveryMaxCardsLeft','recoveryMaxRoundsLeft','recoveryMaxIdxCards','recoveryMaxIdxRounds',
+     'costBankerCount','costPlayerCount','costTieCount',
+     'recoverySwapB6Count','recoverySwapB6Rounds','recoveryBanker6Count','recoveryBanker6Rounds'
+    ].forEach(id => set(id,'--'));
+    ['recRing','cardRing','outcomeDonut'].forEach(id => {
+        const el = $(id); if (el) el.style.background = 'rgba(255,255,255,.06)';
+    });
+    ['recLabels','pieLabels'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
+    const rd = $('recoveryDisplay'); if (rd) rd.classList.add('is-empty');
+}
+
+/* 掛鉤真實刷新管線：refreshAnalysisAndRender 後同步設計統計 */
+const _refresh = window.refreshAnalysisAndRender;
+window.refreshAnalysisAndRender = function(...args){
+    const r = _refresh.apply(this, args);
+    syncDesignStats();
+    return r;
+};
+
+/* 把違規文字裡「真的是局號」的數字包成可點連結（點了跳到主表格對應那列並閃一下）。
+   只用 stats 物件裡明確的局號陣列去比對取代，不對整串文字做無腦數字替換——
+   避免把「3 處」這種計數字（沒有局號清單時的退回顯示）誤包成連結。 */
+function linkifyRounds(el, list){
+    if (!el || !Array.isArray(list) || !list.length) return;
+    const nums = [...new Set(list.map(n => String(n)))].sort((a,b) => b.length - a.length);
+    if (!nums.length) return;
+    const re = new RegExp(`(?<!\\d)(${nums.join('|')})(?!\\d)`, 'g');
+    el.innerHTML = el.innerHTML.replace(re, '<a href="#" class="round-link" data-round="$1">$1</a>');
+}
+
+/* ───────── 違規徽章 + 局號連結：掛鉤 updateViolationUI ───────── */
+const _updVio = window.updateViolationUI;
+window.updateViolationUI = function(stats){
+    _updVio(stats);
+    const s = stats || {};
+    let n = 0;
+    if ((s.signalViolations|0) > 0) n++;
+    if ((s.fourCardViolations|0) > 0) n++;
+    if ((s.streakViolations|0) > 0) n++;
+    if ((s.cannotSwapViolations|0) > 0) n++;
+    if ((s.cardCountMismatchViolations|0) > 0 || (s.cardColorChecked && (s.cardColorViolations|0) > 0)) n++;
+    const flag = $('vioFlag');
+    flag.textContent = n;
+    flag.classList.toggle('show', n > 0);
+    /* 全部正常時只顯示「目前無違規」，有問題的項目才留在清單裡（CSS 已隱藏 .no-violation 列） */
+    $('statsVioCard').classList.toggle('all-clear', n === 0);
+
+    /* 局號連結：直接用 stats 裡的真實陣列，不猜文字 */
+    linkifyRounds($('signalViolationDetail'), s.signalViolationRounds);
+    linkifyRounds($('cannotSwapViolationDetail'), s.cannotSwapRounds);
+    linkifyRounds($('fourCardViolationDetail'),
+        Array.isArray(s.fourCardBlocks) ? s.fourCardBlocks.flatMap(b => [b.startIdx+1, b.endIdx+1]) : null);
+    linkifyRounds($('streakViolationDetail'),
+        Array.isArray(s.streakBlocks) ? s.streakBlocks.flatMap(b => [b.startIdx+1, b.endIdx+1]) : null);
+    linkifyRounds($('otherViolationDetail'),
+        [].concat(s.cardCountMismatchRounds || [], s.cardColorRounds || []));
+};
+/* 點局號連結 → 跳到主表格對應那列（沿用真實的路單跳轉函式 focusRoundFromShoeMap，不另寫捲動邏輯） */
+$('statsVioCard').addEventListener('click', e => {
+    const a = e.target.closest('.round-link');
+    if (!a) return;
+    e.preventDefault();
+    const n = parseInt(a.dataset.round, 10);
+    if (Number.isInteger(n) && n >= 1 && typeof focusRoundFromShoeMap === 'function') {
+        focusRoundFromShoeMap(n - 1);
+    }
+});
+
+/* ───────── 工具列 4 大類：點擊展開細項（手風琴） ───────── */
+$('toolCats').addEventListener('click', e => {
+    const cat = e.target.closest('.tool'); if (!cat) return;
+    const id = cat.dataset.tp;
+    const wasOpen = cat.classList.contains('active');
+    document.querySelectorAll('#toolCats .tool').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('open'));
+    if (!wasOpen) { cat.classList.add('active'); $(id).classList.add('open'); }
+});
+
+/* ───────── LOG 收合 + 計數 ───────── */
+$('logHead').addEventListener('click', () =>
+    document.querySelector('.logbox').classList.toggle('closed'));
+new MutationObserver(() => {
+    $('logCount').textContent = $('logArea').children.length + ' 則';
+}).observe($('logArea'), { childList:true });
+
+/* ───────── 初始同步 ───────── */
+syncDesignSignal();
+syncDesignStats();
+window.updateViolationUI(null);
+})();
+</script>
+  <section id="optimizerPanel" class="optimizer-panel gframe" hidden role="dialog" aria-labelledby="optimizerTitle">
+    <div id="optimizerHandle" class="optimizer-head" tabindex="0" aria-label="拖曳移動比較視窗，也可用方向鍵移動">
+      <div><h2 id="optimizerTitle">同一副牌・局內優化前後比較</h2><p class="optimizer-note">拖曳標題列移動・Esc 關閉</p></div>
+      <button id="btnOptClose" class="btn tool-btn" aria-label="關閉優化比較">關閉</button>
+    </div>
+    <div class="optimizer-body">
+    <p class="optimizer-note">把同一局內的牌換個順序，讓能安全切牌的位置變多。原本開莊仍開莊、用幾張仍用幾張，敏感局與穿越條件也要保留，不跨局換牌。安全切點只按點數規則計算；卡色違規另外檢查。</p>
+    <p class="optimizer-note">金框標出移動的牌，下方數字是它原本在這局的位置。下列按鈕會切換主頁牌表；可移開或關閉視窗查看，再按「查看優化比較」開回來。</p>
+    <div id="optimizerSummary" class="optimizer-summary"></div>
+    <div id="optimizerChecks" class="optimizer-checks"></div>
+    <div class="optimizer-actions">
+      <button id="btnOptBefore" class="btn tool-btn">看調整前牌表</button>
+      <button id="btnOptAfter" class="btn tool-btn">看調整後牌表</button>
+      <button id="btnOptOriginalCut" class="btn tool-btn">回到第 1 張發牌</button>
+      <span id="optimizerView" class="optimizer-note"></span>
+    </div>
+    <div class="optimizer-content">
+      <div id="optimizerChanges" class="optimizer-rows"></div>
+      <div id="optimizerExample" class="optimizer-example"></div>
+    </div>
+    </div>
+  </section>
+<script src="traverse_builder.js?v=19"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=1"></script>
+</body>
+</html>

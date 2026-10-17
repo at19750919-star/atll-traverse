@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>百家樂手動輸入</title>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { font-family: 'Microsoft JhengHei', sans-serif; background: #1a1a2e; color: #eee; margin: 0; padding: 16px; }
+h1 { color: #4fc3f7; margin: 0 0 12px; font-size: 20px; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.controls input { padding: 6px; background: #2a2a4a; color: #eee; border: 1px solid #555; border-radius: 4px; }
+.btn { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 14px; }
+.btn-add { background: #555; color: #fff; }
+.btn-export { background: #34a853; color: #fff; font-weight: bold; }
+.btn-paste { background: #4fc3f7; color: #000; }
+.btn-clear { background: #777; color: #fff; }
+.hint { color: #aaa; font-size: 12px; margin-bottom: 8px; }
+table { border-collapse: collapse; background: #16213e; font-size: 13px; }
+th { background: #0f3460; padding: 4px 6px; font-weight: bold; white-space: nowrap; }
+td { border: 1px solid #2a3a5a; padding: 0; text-align: center; }
+td input { width: 100%; box-sizing: border-box; padding: 5px 4px; background: transparent; color: #eee; border: 0; text-align: center; font-size: 14px; font-family: inherit; }
+td input:focus { background: #2a3a5a; outline: 2px solid #4fc3f7; }
+.cell-card input { width: 36px; }
+.cell-result input { width: 38px; font-weight: bold; }
+.cell-section input { width: 50px; }
+.cell-color input { width: 90px; }
+.cell-signal input { width: 50px; }
+.derived { color: #9ad; background: #0f1828; padding: 5px 4px; min-width: 32px; }
+.tag-ok { background: #2e7d32; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+.tag-err { background: #c62828; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+.del-btn { background: #b34141; color: #fff; border: 0; padding: 4px 8px; cursor: pointer; border-radius: 3px; font-size: 12px; }
+.row-empty { opacity: 0.6; }
+.row-err { background: rgba(255,80,80,0.06); }
+details { margin-bottom: 12px; }
+summary { cursor: pointer; color: #4fc3f7; padding: 4px 0; }
+textarea { width: 100%; max-width: 600px; height: 100px; background: #2a2a4a; color: #eee; border: 1px solid #555; padding: 6px; font-family: 'Consolas', monospace; }
+.summary-bar { background: #16213e; padding: 8px 12px; border-radius: 4px; margin-top: 12px; font-size: 14px; }
+.summary-bar b { color: #4fc3f7; }
+.kbd { display: inline-block; padding: 1px 6px; background: #2a3a5a; border: 1px solid #555; border-radius: 3px; font-size: 11px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<h1>百家樂牌局手動輸入</h1>
+
+<div class="hint">
+卡片格直接打 0~9,自動跳下一格;沒這張牌按 <span class="kbd">空白</span> 或 <span class="kbd">Tab</span> 跳過;
+按 <span class="kbd">Enter</span> 加下一列;<span class="kbd">Backspace</span> 退到上一格。結果(莊/閒/和)自動算,不用輸入。
+</div>
+
+<div class="controls">
+  <label>檔名: <input id="filename" value="黑桃1.xlsx" style="width:160px"></label>
+  <label>預設段標: <input id="defSection" value="" style="width:60px"></label>
+  <label>預設色序: <input id="defColor" value="" style="width:120px"></label>
+  <button class="btn btn-add" id="add1">+ 1 列</button>
+  <button class="btn btn-add" id="add10">+ 10 列</button>
+  <button class="btn btn-export" id="export">⬇ 匯出 xlsx</button>
+  <button class="btn btn-clear" id="clear">清空</button>
+</div>
+
+<details>
+<summary>📋 快速貼上(從文字一次匯入多局)</summary>
+<div style="margin-top:6px;">
+<textarea id="paste" placeholder="一行一局,每行格式:結果 + 數字(空白分隔)。例如:
+X 1 3 7 7
+0 5 6 0 0 0
+和 6 6 0 0"></textarea>
+<div style="margin-top:6px;">
+  <button class="btn btn-paste" id="pasteImport">匯入到表格</button>
+</div>
+</div>
+</details>
+
+<div style="overflow-x:auto;">
+<table id="tbl">
+<thead>
+<tr>
+  <th>#</th>
+  <th>段標</th>
+  <th>色序</th>
+  <th>卡1<br><small style="color:#9ad">閒1</small></th>
+  <th>卡2<br><small style="color:#9ad">莊1</small></th>
+  <th>卡3<br><small style="color:#9ad">閒2</small></th>
+  <th>卡4<br><small style="color:#9ad">莊2</small></th>
+  <th>卡5<br><small style="color:#9ad">補</small></th>
+  <th>卡6<br><small style="color:#9ad">補</small></th>
+  <th>莊</th>
+  <th>閒</th>
+  <th>結果</th>
+  <th>訊號</th>
+  <th>對調莊</th>
+  <th>對調閒</th>
+  <th></th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+
+<div class="summary-bar" id="summary"></div>
+
+<script>
+console.log('[manual_input] version=2026-04-28-with-suit-color');
+
+// ============ 百家樂計算邏輯 ============
+function bankerDraws(b, p) {
+    if (p === null) return b <= 5;
+    if (b <= 2) return true;
+    if (b === 3) return p !== 8;
+    if (b === 4) return p >= 2 && p <= 7;
+    if (b === 5) return p >= 4 && p <= 7;
+    if (b === 6) return p === 6 || p === 7;
+    return false;
+}
+
+// 從 6 個點數(可能含 null)算出莊閒最終點數
+function computeFinals(cards) {
+    const v = cards.slice(0, 6);
+    while (v.length < 6) v.push(null);
+    if (v[0] === null || v[1] === null || v[2] === null || v[3] === null) {
+        return { player: null, banker: null };
+    }
+    const p_init = (v[0] + v[2]) % 10;
+    const b_init = (v[1] + v[3]) % 10;
+    if (p_init >= 8 || b_init >= 8) return { player: p_init, banker: b_init };
+    if (p_init >= 6) {
+        if (bankerDraws(b_init, null) && v[4] !== null) {
+            return { player: p_init, banker: (b_init + v[4]) % 10 };
+        }
+        return { player: p_init, banker: b_init };
+    }
+    if (v[4] === null) return { player: p_init, banker: b_init };
+    const p_final = (p_init + v[4]) % 10;
+    if (bankerDraws(b_init, v[4]) && v[5] !== null) {
+        return { player: p_final, banker: (b_init + v[5]) % 10 };
+    }
+    return { player: p_final, banker: b_init };
+}
+
+function calcWinner(p, b) {
+    if (p === null || b === null) return null;
+    if (p > b) return '閒';
+    if (b > p) return '莊';
+    return '和';
+}
+
+function parseDigit(s) {
+    if (s === null || s === undefined || s === '') return null;
+    const n = parseInt(String(s).trim(), 10);
+    if (isNaN(n) || n < 0 || n > 9) return null;
+    return n;
+}
+
+// ============ 表格 UI ============
+const tbody = document.getElementById('rows');
+const summaryEl = document.getElementById('summary');
+
+function makeRow(initial = {}) {
+    const tr = document.createElement('tr');
+    const defSec = document.getElementById('defSection').value;
+    const defCol = document.getElementById('defColor').value;
+    tr.innerHTML = `
+        <td class="rownum">1</td>
+        <td class="cell-section"><input class="section" value="${initial.section ?? defSec}"></td>
+        <td class="cell-color"><input class="color" value="${initial.color ?? defCol}"></td>
+        ${[0,1,2,3,4,5].map(i => `<td class="cell-card"><input class="card card${i}" maxlength="1" inputmode="numeric"></td>`).join('')}
+        <td class="derived banker-pts"></td>
+        <td class="derived player-pts"></td>
+        <td class="derived result-calc"></td>
+        <td class="cell-signal"><input class="signal" value="${initial.signal ?? ''}"></td>
+        <td class="derived swap-banker"></td>
+        <td class="derived swap-player"></td>
+        <td><button class="del-btn" title="刪除這一列">×</button></td>
+    `;
+    if (initial.cards) {
+        for (let i = 0; i < 6; i++) {
+            tr.querySelector(`.card${i}`).value = initial.cards[i] ?? '';
+        }
+    }
+    tr.querySelector('.del-btn').onclick = () => { tr.remove(); renumber(); recomputeAll(); };
+    bindRowEvents(tr);
+    tbody.appendChild(tr);
+    renumber();
+    recompute(tr);
+    return tr;
+}
+
+function bindRowEvents(tr) {
+    // 卡片欄:用 keydown 自己控制寫入,避免「按一次出現兩個」的瀏覽器/IME 重複問題
+    [0,1,2,3,4,5].forEach(i => {
+        const el = tr.querySelector(`.card${i}`);
+        el.addEventListener('keydown', e => {
+            if (e.isComposing || e.keyCode === 229) return;  // 中文輸入法 composition,不攔
+            const k = e.key;
+            if (/^[0-9]$/.test(k)) {
+                e.preventDefault();
+                el.value = k;
+                recompute(tr);
+                focusNext(tr, i);
+            } else if (k === ' ') {
+                e.preventDefault();
+                focusNext(tr, i);
+            } else if (k === 'Enter') {
+                e.preventDefault();
+                if (i === 5 || isLastFilled(tr, i)) addAndFocus();
+                else focusNext(tr, i);
+            } else if (k === 'Backspace') {
+                if (el.value !== '') {
+                    e.preventDefault();
+                    el.value = '';
+                    recompute(tr);
+                } else if (i > 0) {
+                    e.preventDefault();
+                    tr.querySelector(`.card${i-1}`).focus();
+                }
+            } else if (k === 'Delete') {
+                e.preventDefault();
+                el.value = '';
+                recompute(tr);
+            } else if (k === 'ArrowLeft' && i > 0 && el.selectionStart === 0) {
+                e.preventDefault();
+                tr.querySelector(`.card${i-1}`).focus();
+            } else if (k === 'ArrowRight' && i < 5 && el.selectionStart === el.value.length) {
+                e.preventDefault();
+                tr.querySelector(`.card${i+1}`).focus();
+            }
+            // 其他鍵(Tab, F-keys, 上下方向…)讓瀏覽器預設處理
+        });
+        // 防止輸入法或貼上塞入非數字
+        el.addEventListener('input', () => {
+            const cleaned = el.value.replace(/[^0-9]/g, '').slice(0, 1);
+            if (cleaned !== el.value) el.value = cleaned;
+            recompute(tr);
+        });
+    });
+
+    tr.querySelector('.section').addEventListener('input', () => recompute(tr));
+    tr.querySelector('.color').addEventListener('input', () => recompute(tr));
+    tr.querySelector('.signal').addEventListener('input', () => recompute(tr));
+}
+
+function isLastFilled(tr, i) {
+    // 檢查 i 之後的卡片是否都空(代表 i 是這局最後一張牌)
+    for (let j = i + 1; j < 6; j++) {
+        if (tr.querySelector(`.card${j}`).value !== '') return false;
+    }
+    return true;
+}
+
+function focusNext(tr, i) {
+    if (i < 5) {
+        tr.querySelector(`.card${i+1}`).focus();
+    } else {
+        // 最後一格 → 跳到下一列的卡 1
+        const next = tr.nextElementSibling;
+        if (next) next.querySelector('.card0').focus();
+    }
+}
+
+function addAndFocus() {
+    const tr = makeRow();
+    tr.querySelector('.card0').focus();
+}
+
+function recompute(tr) {
+    const cards = [];
+    for (let i = 0; i < 6; i++) {
+        cards.push(parseDigit(tr.querySelector(`.card${i}`).value));
+    }
+    // 原始
+    const r1 = computeFinals(cards);
+    tr.querySelector('.banker-pts').textContent = r1.banker ?? '';
+    tr.querySelector('.player-pts').textContent = r1.player ?? '';
+    // 對調前兩張
+    const sw = [...cards];
+    [sw[0], sw[1]] = [sw[1], sw[0]];
+    const r2 = computeFinals(sw);
+    tr.querySelector('.swap-banker').textContent = r2.banker ?? '';
+    tr.querySelector('.swap-player').textContent = r2.player ?? '';
+    // 結果:全部從卡片自動算
+    const calc = calcWinner(r1.player, r1.banker);
+    tr.querySelector('.result-calc').textContent = calc ?? '';
+    tr.classList.remove('row-empty');
+    if (cards.every(c => c === null)) tr.classList.add('row-empty');
+    updateSummary();
+}
+
+function recomputeAll() {
+    [...tbody.children].forEach(tr => recompute(tr));
+}
+
+function renumber() {
+    [...tbody.children].forEach((tr, i) => {
+        tr.querySelector('.rownum').textContent = i + 1;
+    });
+}
+
+function updateSummary() {
+    const rows = [...tbody.children];
+    let total = 0, empty = 0;
+    let cnt = { '莊': 0, '閒': 0, '和': 0 };
+    for (const tr of rows) {
+        if (tr.classList.contains('row-empty')) { empty++; continue; }
+        total++;
+        const r = tr.querySelector('.result-calc').textContent;
+        if (cnt[r] !== undefined) cnt[r]++;
+    }
+    summaryEl.innerHTML = `共 <b>${rows.length}</b> 列(空白 ${empty}、有效 <b>${total}</b>) — 莊 <b>${cnt['莊']}</b> / 閒 <b>${cnt['閒']}</b> / 和 <b>${cnt['和']}</b>`;
+}
+
+document.getElementById('add1').onclick = addAndFocus;
+document.getElementById('add10').onclick = () => { for (let i = 0; i < 10; i++) makeRow(); };
+document.getElementById('clear').onclick = () => {
+    if (confirm('確定清空所有列?')) {
+        tbody.innerHTML = '';
+        for (let i = 0; i < 5; i++) makeRow();
+    }
+};
+
+// 快速貼上(只取數字,結果從卡片自己算)
+document.getElementById('pasteImport').onclick = () => {
+    const text = document.getElementById('paste').value;
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length === 0) return;
+    [...tbody.children].forEach(tr => {
+        if (tr.classList.contains('row-empty')) tr.remove();
+    });
+    for (const line of lines) {
+        const tokens = line.split(/\s+/);
+        // 抓出所有 0-9 數字 token,前面的 X/0/和/B/H 都當結果標記略過
+        const cards = [];
+        for (const t of tokens) {
+            const d = parseDigit(t);
+            if (d !== null) cards.push(d);
+        }
+        while (cards.length < 6) cards.push(null);
+        makeRow({ cards: cards.slice(0, 6) });
+    }
+    document.getElementById('paste').value = '';
+    renumber();
+};
+
+// 把點數(0~9)轉成主網頁能讀的卡片字串,例如「5♥」「10♣」「A♠」。
+// 花色按全域位置循環 ♠♥♦♣(隨便配,只為了讓主網頁的「匯入」能成功解析)。
+const SUITS = ['♠','♥','♦','♣'];
+function pointToCardLabel(point, globalPos) {
+    if (point === '' || point === null || point === undefined) return '';
+    const p = Number(point);
+    let rank;
+    if (p === 0) rank = '10';
+    else if (p === 1) rank = 'A';
+    else rank = String(p);
+    const suit = SUITS[globalPos % 4];
+    return rank + suit;
+}
+
+// 匯出 xlsx(15 欄,跟 F##.xlsx「原始數據」分頁一致;主網頁可以直接「匯入」)
+document.getElementById('export').onclick = async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('原始數據');
+    ws.addRow(['局號','段標','色序','卡片1','卡片2','卡片3','卡片4','卡片5','卡片6','結果','莊','閒','訊號','對調莊','對調閒']);
+    const headerRow = ws.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFE6F3FF' } };
+
+    // 色序也隨便配:預設 RRRBRR(前 4 張符合 RRRB 規則,第 5/6 張任意)
+    const DEFAULT_COLOR_SEQ = 'RRRBRR';
+
+    let n = 0;
+    let globalPos = 0;
+    [...tbody.children].forEach(tr => {
+        if (tr.classList.contains('row-empty')) return;
+        n++;
+        const cardLabels = [];
+        for (let i = 0; i < 6; i++) {
+            const v = parseDigit(tr.querySelector(`.card${i}`).value);
+            if (v === null) {
+                cardLabels.push('');
+            } else {
+                cardLabels.push(pointToCardLabel(v, globalPos));
+                globalPos++;
+            }
+        }
+        const banker = tr.querySelector('.banker-pts').textContent;
+        const player = tr.querySelector('.player-pts').textContent;
+        const swapB = tr.querySelector('.swap-banker').textContent;
+        const swapP = tr.querySelector('.swap-player').textContent;
+        const result = tr.querySelector('.result-calc').textContent;
+        // 段標空白給 'A',色序空白給 RRRBRR
+        const section = tr.querySelector('.section').value || 'A';
+        const colorSeq = tr.querySelector('.color').value || DEFAULT_COLOR_SEQ;
+        ws.addRow([
+            n,
+            section,
+            colorSeq,
+            cardLabels[0], cardLabels[1], cardLabels[2], cardLabels[3], cardLabels[4], cardLabels[5],
+            result,
+            banker === '' ? '' : Number(banker),
+            player === '' ? '' : Number(player),
+            tr.querySelector('.signal').value,
+            swapB === '' ? '' : Number(swapB),
+            swapP === '' ? '' : Number(swapP),
+        ]);
+    });
+
+    ws.getColumn(1).width = 6;
+    [2,3,13].forEach(c => ws.getColumn(c).width = 12);
+    [4,5,6,7,8,9].forEach(c => ws.getColumn(c).width = 8);
+    [10,11,12,14,15].forEach(c => ws.getColumn(c).width = 8);
+    for (let r = 2; r <= ws.rowCount; r++) {
+        for (let c = 4; c <= 15; c++) {
+            ws.getCell(r, c).alignment = { horizontal: 'center' };
+        }
+    }
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = document.getElementById('filename').value || '原始數據.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+};
+
+// 初始給 5 列空白
+for (let i = 0; i < 5; i++) makeRow();
+</script>
+
+</body>
+</html>

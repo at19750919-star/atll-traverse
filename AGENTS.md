@@ -1,6 +1,7 @@
 # ATLL-穿越排牌
 
 ## 已定案
+- [2026-10-18｜Codex] 百家3.0 與穿越排牌整合為同頁雙模式，共用訊號設定與牌表，各模式保留算法、專用按鈕及導出目的地（使用者要求整合，取代先前僅獨立頁的限制）。
 - [2026-10-17｜Codex] 訊號牌改為可自訂花色與 A～K 牌面組合，預設維持全花色 A、2（三條優先及原訊號規則保留，使用者要求比照百家3.0）。
 - [2026-10-15｜Gemini] 主頁結果欄與批次腳本輸出增加 4／5／6 張局數與百分比（使用者要求統計各局長度分佈）。
 - [2026-10-12｜Claude] A.2 關閉時排好後把多出來那一方的局對調前兩張，整條長段仍須通過最終驗收，使莊閒相差不超過 1 局（拿掉對調後穿越檢查後莊約 55%、閒約 33%；使用者同意）。
@@ -34,7 +35,10 @@
 - [2026-10-08｜Claude] 末張 9 的切點直接當成新的第 1 張（切牌張數歸 0），牌表與導出牌序一致（使用者要求兩邊起點相同）
 
 ## 專案說明
-- 線上入口：https://at19750919-star.github.io/atll-traverse/；GitHub：https://github.com/at19750919-star/atll-traverse。Pages 從 master 根目錄發布，後續推送 master 自動更新；index.html 導向 traverse_builder.html。
+- 整合入口：integrated.html（index.html 轉入），integrated.js／integrated.css 管理「百家3.0／穿越排牌」切換；兩模式共用 SIGNAL_CONFIG、Card 牌面、牌表、統計、換牌與切牌操作，模式內各自保存牌靴，生成／優化／導出期間禁止切換。
+- 百家3.0 原始功能快照放 standard/（來源為相鄰百家3.0 專案，來源 HEAD f6b4137）；來源專案未改。後續來源更新依 standard/README.md 比對同步並重跑 scripts/test-integrated.cjs。切換回百家模式只渲染，不執行可能移牌的分析函式。
+- 穿越模式仍用 traverse_builder.js／traverse_export.js／traverse_optimizer.js；三條、訊號、強、第二張敏感、剩牌及莊閒政策保留。共用導出按鈕依模式走 F 編號／原雲端，或 TR 編號／穿越牌資料夾；獨立 traverse_builder.html 保留並提供整合版連結。
+- 線上入口：https://at19750919-star.github.io/atll-traverse/；GitHub：https://github.com/at19750919-star/atll-traverse。Pages 從 master 根目錄發布，後續推送 master 自動更新；index.html 導向 integrated.html（本機已整合；線上需推送後才更新）。
 - 過程頁：traverse_process.html，搭配 traverse_process_engine.js／traverse_process.js／traverse_process.css；每張牌固定 ID，支援單步、暫停、回看最近 500 步及 CSV。只讀共用的百家樂判定與敏感局表，不套原排牌頁額外規則；測試：node scripts/test-traverse-process.cjs。
 - 從 ATLL（暫停中，commit 5c2fa1c）複製出的百家樂實驗版，專做「穿越排牌」：反覆洗牌撿合格短段（8～12 張）、計算補排、接成長段，再套三條與 A、2 規則。
 - 主要檔案：traverse_builder.html（頁面）、traverse_builder.js（排牌演算法）、traverse_export.js（發牌、切牌、Excel 導出）；scripts/batch-traverse.mjs 為批次排牌腳本（3D 工作室百家樂面板以 node 執行，cwd 為本資料夾）；suit/at-spade-logo-current.png 為頁面背景 logo。
