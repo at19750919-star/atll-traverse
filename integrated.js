@@ -3,8 +3,9 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  $('sharedSignalHost').appendChild($('pSet'));
-  $('sharedSignalSettings').addEventListener('click',()=>{ if(!busy&&!window.__isGeneratingShoe){$('pSet').classList.toggle('open');$('sharedSignalHost').classList.toggle('gframe',$('pSet').classList.contains('open'));} });
+  // Keep both modes' settings in the original black-and-gold control deck.
+  document.querySelector('.expanders').appendChild($('traverseControls'));
+  $('sharedSignalSettings').addEventListener('click',()=>{ if(!busy&&!window.__isGeneratingShoe)document.querySelector('[data-panel="pSet"]').click(); });
   const B = TraverseBuilder, E = TraverseExport, O = TraverseOptimizer;
   const copy = x => JSON.parse(JSON.stringify(x));
   const esc = x => String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -125,6 +126,7 @@
     $('modeStatus').textContent=mode==='standard'?'百家 3.0 模式':'穿越排牌模式';
     $('btnAutoColor').textContent=mode==='traverse'?'卡色':'換色';
     $('pCond').classList.remove('open');document.querySelector('[data-panel="pCond"]').classList.remove('active');
+    $('pSet').classList.remove('open');document.querySelector('[data-panel="pSet"]').classList.remove('active');
     if(mode==='standard'){
       const st=states.standard;
       currentRounds=st?.rounds||null;currentAnalysis=st?.analysis||null;originalDeckOrder=st?.deck||null;originalRounds=st?.originalRounds||null;editEnabled=!!st?.editEnabled;window.__importedShoeMode=!!st?.imported;

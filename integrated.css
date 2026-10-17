@@ -48,10 +48,53 @@ body[data-mode="traverse"] .vio-live-card{display:none!important}
 .optimizer-cut-list { display:flex; flex-wrap:wrap; gap:5px; margin:10px 0; }
 .optimizer-cut-list .tool-btn { height:30px; min-width:44px; padding:0 9px; letter-spacing:0; text-indent:0; }
 .optimizer-panel details summary { cursor:pointer; color:var(--gold-2); padding:12px 0; }
-#sharedSignalHost{padding:0;margin:0 auto 16px}#sharedSignalHost:empty{display:none}#sharedSignalHost.gframe{padding:14px}#sharedSignalHost #pSet{margin:0;border:0;box-shadow:none;padding:8px;flex-wrap:wrap}#sharedSignalHost #pSet:not(.open){display:none}#sharedSignalHost #pSet.open{display:flex}
+#sharedSignalHost{display:none}
 body[data-mode="traverse"] .b6-meta{display:none}
 @media(max-width:700px){.optimizer-content,.optimizer-pair{grid-template-columns:1fr}.optimizer-head{padding:12px}.optimizer-body{padding:0 12px 12px}}
 
 body[data-mode="traverse"] [data-tp="tpVerify"],body[data-mode="traverse"] #tpVerify{display:none!important}
 #sharedCardCounts{margin-left:auto;letter-spacing:0;font-size:12px}
 @media(max-width:600px){#sharedCardCounts{flex-basis:100%;margin:0;line-height:1.7}}
+
+/* Both generators use the original control deck, with a dedicated settings panel per mode. */
+.mode-switch{max-width:none;margin:0 0 14px;min-height:54px}
+.mode-switch .tool-btn{min-height:40px}
+.mode-switch .tool-btn.active{border-color:var(--gold-2);background:linear-gradient(135deg,#f3d98d,#b8893d);color:#17130b;box-shadow:0 3px 14px #c9a25a55}
+body[data-mode="traverse"] .deck{grid-template-columns:minmax(300px,360px) minmax(0,1fr) 100px;grid-template-rows:auto;align-items:stretch}
+body[data-mode="traverse"] .expanders{height:auto;min-width:0}
+body[data-mode="traverse"] .exp-tabs{display:none}
+body[data-mode="traverse"] #traverseControls{display:block;flex:1;min-width:0;max-width:none;margin:0;padding:16px 20px 12px}
+body[data-mode="traverse"] #traverseControls .frame-title{margin:0 0 10px;padding:0 4px;background:none}
+body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 18px}
+body[data-mode="traverse"] #traverseControls .mode-fields label{min-width:0;gap:10px;font-size:14px;white-space:nowrap}
+body[data-mode="traverse"] #traverseControls .numbox{width:92px;max-width:45%;flex:none;text-align:center}
+body[data-mode="traverse"] #traverseControls .mode-actions{margin:12px 0 6px;gap:7px}
+body[data-mode="traverse"] #traverseControls .mode-actions .tool-btn{min-height:36px;padding:6px 12px;letter-spacing:.08em}
+body[data-mode="traverse"] #traverseControls .mode-actions input[type="checkbox"]{accent-color:var(--gold-2)}
+body[data-mode="traverse"] #traverseControls .mode-actions>label:last-child{font-size:13px;color:var(--gold-2);margin-left:auto}
+body[data-mode="traverse"] #traverseControls .mode-note{margin:6px 0 0}
+body[data-mode="traverse"] .expanders:has(#pSet.open) #traverseControls{display:none}
+body[data-mode="traverse"] .expanders #pSet.open{flex:1;justify-content:center;margin:0;padding:16px}
+body[data-mode="traverse"].running .expanders,body[data-mode="traverse"].finished .expanders{display:flex;grid-column:1/-1;grid-row:2}
+body[data-mode="traverse"].running .deck,body[data-mode="traverse"].finished .deck{grid-template-columns:minmax(220px,260px) minmax(0,1fr) 100px;grid-template-rows:auto auto}
+body[data-mode="traverse"].running .stats,body[data-mode="traverse"].finished .stats{grid-column:2;grid-row:1;min-width:0;overflow:auto}
+body[data-mode="traverse"].running .vio-live-card,body[data-mode="traverse"].finished .vio-live-card{grid-column:1/-1;grid-row:3}
+body[data-mode="traverse"].running .chip-col,body[data-mode="traverse"].finished .chip-col{grid-column:3;grid-row:1}
+@media(max-width:1080px){
+  body[data-mode="traverse"] .deck,body[data-mode="traverse"].running .deck,body[data-mode="traverse"].finished .deck{grid-template-columns:minmax(0,1fr) 100px;grid-template-rows:auto}
+  body[data-mode="traverse"] .signal{grid-column:1;grid-row:1}
+  body[data-mode="traverse"] .expanders,body[data-mode="traverse"].running .expanders,body[data-mode="traverse"].finished .expanders{grid-column:1/-1;grid-row:auto}
+  body[data-mode="traverse"] .chip-col,body[data-mode="traverse"].running .chip-col,body[data-mode="traverse"].finished .chip-col{grid-column:2;grid-row:1}
+  body[data-mode="traverse"].running .stats,body[data-mode="traverse"].finished .stats,body[data-mode="traverse"].running .vio-live-card,body[data-mode="traverse"].finished .vio-live-card{grid-column:1/-1;grid-row:auto}
+}
+@media(max-width:600px){
+  .mode-switch{margin:0 8px 12px;gap:7px;padding:10px}
+  .mode-switch .mode-label{width:100%}
+  .mode-switch .tool-btn{flex:1 1 auto;padding:7px;font-size:12px;letter-spacing:.05em}
+  #modeStatus{display:none}
+  body[data-mode="traverse"] #traverseControls{padding:15px 12px}
+  body[data-mode="traverse"] #traverseControls .mode-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  body[data-mode="traverse"] #traverseControls .mode-fields label{font-size:12px;white-space:normal}
+  body[data-mode="traverse"] #traverseControls .numbox{width:64px;max-width:53%;font-size:16px}
+  body[data-mode="traverse"] #traverseControls .mode-actions>label:last-child{margin-left:0}
+}
