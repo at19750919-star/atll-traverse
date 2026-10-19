@@ -14,7 +14,7 @@
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', busy = false, stopped = false, optimization = null;
   const states = { standard: null, traverse: { result: null, cut: 0, analysis: null, view: 'after' } };
-  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit'];
+  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const num = id => Number($(id).value);
   const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
   function rules() { return { tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
@@ -156,6 +156,25 @@
   }
   function status(message) { $('tvProgress').textContent=message;$('generatingText').textContent=message; }
   function rotateResult(result,k) { if(!k)return;result.cards=E.cutDeck(result.cards,k);result.chains.forEach(c=>c.start=(c.start-1-k+416)%416+1); }
+  // 4／5／6 張局上下限：留白＝不限；回傳 { limits } 或 { error }
+  function sizeLimits() {
+    const out={};let any=false;
+    for(const k of [4,5,6]){
+      const read=id=>{const raw=$(id).value.trim();if(raw==='')return null;const v=Number(raw);return Number.isInteger(v)&&v>=0&&v<=104?v:NaN;};
+      const min=read(`tv${k}Min`),max=read(`tv${k}Max`);
+      if(Number.isNaN(min)||Number.isNaN(max))return {error:`${k}張局上下限須為 0～104 的整數或留白`,focus:Number.isNaN(min)?`tv${k}Min`:`tv${k}Max`};
+      if(min!==null&&max!==null&&min>max)return {error:`${k}張局下限不能大於上限`,focus:`tv${k}Min`};
+      out[k]={min,max};if(min!==null||max!==null)any=true;
+    }
+    return {limits:any?out:null};
+  }
+  // 整副（依實際發牌起點）不符合上下限時回傳說明，符合回傳空字串
+  function sizeMiss(cards,cut,limits){
+    if(!limits)return '';
+    const rs=E.dealRounds(E.cutDeck(cards,cut)).filter(r=>r.hand),c={4:0,5:0,6:0};rs.forEach(r=>{if(c[r.cards.length]!==undefined)c[r.cards.length]++;});
+    for(const k of [4,5,6]){const {min,max}=limits[k];if(min!==null&&c[k]<min)return `${k}張局 ${c[k]} 局，低於下限 ${min}`;if(max!==null&&c[k]>max)return `${k}張局 ${c[k]} 局，超過上限 ${max}`;}
+    return '';
+  }
   function sideDiff(cards,cut=0){const rs=E.dealRounds(E.cutDeck(cards,cut)).filter(r=>r.hand);return Math.abs(rs.filter(r=>r.result==='莊').length-rs.filter(r=>r.result!=='莊').length);}
   function nineCut(result) {
     const cs=O.prepare(result), a=O.analyze(cs,rules());
@@ -171,12 +190,15 @@
     applySignalConfig();stopped=false;clearOptimization();lock(true);const started=Date.now();let reruns=0,result,cut=null;
     const limit=$('tvLeft').value.trim()===''?null:num('tvLeft');
     if(limit!==null&&(!Number.isInteger(limit)||limit<0||limit>416)){status('剩牌上限須為 0～416 的整數或留白');lock(false);return;}
+    const sizes=demo?{limits:null}:sizeLimits();
+    if(sizes.error){status(sizes.error);$(sizes.focus).focus();lock(false);return;}
+    let lastMiss='';
     try {
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
       if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=false;}
       for(;;){
-        const opts={...rules(),minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),
-          onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次］`:''}${m}`),isCancelled:()=>stopped};
+        const opts={...rules(),minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,
+          onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次${lastMiss?`｜上一副${lastMiss}`:''}］`:''}${m}`),isCancelled:()=>stopped};
         if(demo)opts.rng=rng;else if(limit!==null&&!opts.strong)opts.rejectAbove=limit;
         result=await B.build(opts);
         if(result.rejected){if(stopped){delete opts.rejectAbove;result=await B.build({...opts,idleLimit:50});break;}reruns++;continue;}
@@ -185,6 +207,7 @@
         if(B.SIGNAL_RETRY_ENABLED&&result.signal&&!result.signal.ok&&!demo){reruns++;continue;}
         cut=$('tvNine').checked?nineCut(result):null;
         if(!demo&&$('tvSide').checked&&sideDiff(result.cards,cut||0)>num('tvSideLimit')){reruns++;continue;}
+        if(!demo){const miss=sizeMiss(result.cards,cut||0,sizes.limits);if(miss){lastMiss=miss;reruns++;continue;}}
         break;
       }
       result.reruns=reruns;result.totalMs=Date.now()-started;rotateResult(result,cut||0);

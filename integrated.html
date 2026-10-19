@@ -1058,7 +1058,7 @@ body.running .deck,body.finished .deck{
   .rec-info{min-width:0;width:100%}
 }
 </style>
-<link rel="stylesheet" href="integrated.css?v=1">
+<link rel="stylesheet" href="integrated.css?v=2">
 </head>
 <body>
 
@@ -1223,6 +1223,7 @@ body.running .deck,body.finished .deck{
 <section id="traverseControls" class="gframe mode-panel" hidden>
   <h2 class="frame-title">穿越排牌設定</h2>
   <div class="traverse-control-groups">
+  <div class="traverse-field-stack">
   <div class="mode-fields">
     <label>最少張數 <input id="tvMin" class="numbox" type="number" min="4" max="416" value="8"></label>
     <label>最多張數 <input id="tvMax" class="numbox" type="number" min="4" max="416" value="12"></label>
@@ -1230,6 +1231,15 @@ body.running .deck,body.finished .deck{
     <label>補排次數 <input id="tvTries" class="numbox" type="number" min="1" value="20000"></label>
     <label>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
     <label>剩牌上限 <input id="tvLeft" class="numbox" type="number" min="0" max="416" value="0" placeholder="不限"></label>
+  </div>
+  <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。撿段時計數，整副不符合就重跑">
+    <label>4張局下限 <input id="tv4Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>5張局下限 <input id="tv5Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>6張局下限 <input id="tv6Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>4張局上限 <input id="tv4Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>5張局上限 <input id="tv5Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>6張局上限 <input id="tv6Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+  </div>
   </div>
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control"><span class="name">三條</span><input type="checkbox" id="tvTriple" checked><span class="switch" aria-hidden="true"></span></label>
@@ -1758,6 +1768,6 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=19"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=1"></script>
+<script src="traverse_builder.js?v=20"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=2"></script>
 </body>
 </html>

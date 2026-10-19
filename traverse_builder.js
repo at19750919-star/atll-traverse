@@ -18,6 +18,8 @@
 //           開啟第二張敏感時，補排也照 0 點比例；排不下的牌關掉第二張條件，重做階段 1、2
 //   階段 3  把合格段接成長段（接縫處重新完整檢查）
 //   剩下撿不進去的牌放在整條牌最後面
+//   可選 4／5／6 張局上下限（sizeLimits）：撿段與補排時計數，超過上限不收、
+//   下限進度落後時不收沒有該張數局的段
 //
 // 對外 API：
 //   TraverseBuilder.build(options) → Promise<result>
@@ -275,6 +277,50 @@
         await yieldNow();
     }
 
+    // ===== 4／5／6 張局上下限（撿段時計數） =====
+    // 上限：收下後會超過就不收。下限：進度落後（已撿局數 < 下限 × 已用張數 / 416）時，
+    // 不收沒有該張數局的段。剩牌不在撿段範圍，最終整副是否達標由頁面判斷重跑。
+    const SIZE_KEYS = [4, 5, 6];
+    function normalizeSizeLimits(limits) {
+        if (!limits) return null;
+        const out = {};
+        let any = false;
+        for (const k of SIZE_KEYS) {
+            const v = limits[k] || {};
+            const min = Number.isInteger(v.min) && v.min >= 0 ? v.min : null;
+            const max = Number.isInteger(v.max) && v.max >= 0 ? v.max : null;
+            out[k] = { min, max };
+            if (min !== null || max !== null) any = true;
+        }
+        return any ? out : null;
+    }
+    function roundSizeCounts(points) {
+        const c = { 4: 0, 5: 0, 6: 0 };
+        for (let cur = 0; cur < points.length;) {
+            const h = simulateHand(points, cur, points.length);
+            if (!h) break;
+            c[h.size]++;
+            cur += h.size;
+        }
+        return c;
+    }
+    function sizeLimitOk(seg, opts) {
+        if (!opts.sizeLimits) return true;
+        const c = roundSizeCounts(seg), t = opts.sizeTally;
+        for (const k of SIZE_KEYS) {
+            const { min, max } = opts.sizeLimits[k];
+            if (max !== null && t[k] + c[k] > max) return false;
+            if (min !== null && c[k] === 0 && t[k] < min * opts.sizeUsedCards / 416) return false;
+        }
+        return true;
+    }
+    function sizeLimitAdd(seg, opts) {
+        if (!opts.sizeLimits) return;
+        const c = roundSizeCounts(seg);
+        for (const k of SIZE_KEYS) opts.sizeTally[k] += c[k];
+        opts.sizeUsedCards += seg.length;
+    }
+
     // ===== 階段 1：洗牌撿段 =====
     async function phaseShuffle(rest, opts, ctx) {
         const segs = [];
@@ -299,11 +345,13 @@
                     if (!qualifies(a, true)) continue;
                     const z = a.filter(p => p === 0).length;
                     if (opts.zeroPolicy === 'quota' && z < Math.floor(zeroShare * L * opts.quotaFactor)) continue;
+                    if (!sizeLimitOk(a, opts)) continue;
                     if (opts.zeroPolicy === 'none') { pick = { L, a }; break; }
                     const score = z / L;
                     if (!pick || score > pick.score) pick = { L, a, score };
                 }
                 if (pick) {
+                    sizeLimitAdd(pick.a, opts);
                     segs.push(pick.a);
                     for (let k = s; k < s + pick.L; k++) used[k] = 1;
                     got++;
@@ -402,12 +450,14 @@
                     if (seq.length >= opts.minLen && qualifies(seq, true)) {
                         // 第二張敏感開啟時補排也照 0 點比例，否則 0 點會堆到最後排不進去
                         if (opts.computeQuota && seq.filter(p => p === 0).length < Math.floor(counts[0] / rest.length * seq.length * opts.quotaFactor)) continue;
+                        if (!sizeLimitOk(seq, opts)) continue;
                         found = seq;
                         break;
                     }
                 }
             }
             if (found) {
+                sizeLimitAdd(found, opts);
                 segs.push(found);
                 const c = countsOf(found);
                 rest = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
@@ -691,6 +741,9 @@
             secondStart: options.secondStart === true,
             zeroPolicy: options.zeroPolicy || 'quota',
             quotaFactor: options.quotaFactor ?? 1,
+            sizeLimits: normalizeSizeLimits(options.sizeLimits),
+            sizeTally: { 4: 0, 5: 0, 6: 0 },
+            sizeUsedCards: 0,
         };
         opts.computeQuota = opts.secondStart && opts.zeroPolicy === 'quota';
         rules.tripleTie = opts.tripleTie;
@@ -790,12 +843,13 @@
                 phase2Segments: p2.segs.length,
                 fallbackSegments: fallbackSegs.length,
                 fallbackCards: fallbackSegs.reduce((n, s) => n + s.length, 0),
+                sizeTally: opts.sizeLimits ? { ...opts.sizeTally } : null,
                 totalCards: points.length,
                 ms: Date.now() - t0,
             },
         };
     }
 
-    global.TraverseBuilder = { allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { roundSizeCounts, normalizeSizeLimits, allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);
