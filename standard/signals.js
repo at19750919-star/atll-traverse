@@ -3685,7 +3685,100 @@ let $ROUNDS = [];
  * 【新增】卡色邏輯的啟動函式
  */
 // 針對卡色邏輯抽換備援牌
+// 卡色（比照穿越排牌）：牌面與位置不動，先決定每局前 4 張用 RRRB 或 BBBR，
+// 再在同牌面（同點數同花色）的紅背／藍背張數內重新分配牌背。做不到才退回舊的換牌做法。
 function runAutoColorSwap_Signal(rounds) {
+    const planned = planBackColorsKeepFaces(rounds);
+    if (planned.ok) {
+        log(`卡色：已依 RRRB／BBBR 重新分配牌背（變動 ${planned.changed} 張，牌面不動）`, 'success');
+        return rounds;
+    }
+    log('⚠️ 卡色：牌背張數不足以重新分配，改用舊的換牌方式', 'warn');
+    return runAutoColorSwap_Legacy(rounds);
+}
+
+function planBackColorsKeepFaces(rounds, rng = Math.random) {
+    if (!Array.isArray(rounds)) return { ok: false, changed: 0 };
+    const cards = [];
+    const starts = [];
+    for (const round of rounds) {
+        if (!round || !Array.isArray(round.cards)) continue;
+        if (round.cards.length >= 4) starts.push(cards.length);
+        cards.push(...round.cards);
+    }
+    if (!cards.length || cards.some(c => !c || (c.back_color !== 'R' && c.back_color !== 'B'))) {
+        return { ok: false, changed: 0 };
+    }
+
+    // 同牌面為一組，記下每組現有的紅背、藍背張數（總張數不變）
+    const ids = new Map();
+    const groups = cards.map(c => {
+        const key = `${c.rank}|${c.suit}`;
+        if (!ids.has(key)) ids.set(key, ids.size);
+        return ids.get(key);
+    });
+    const limits = { R: new Array(ids.size).fill(0), B: new Array(ids.size).fill(0) };
+    cards.forEach((c, i) => limits[c.back_color][groups[i]]++);
+
+    const patterns = getCardColorPatterns();
+    let need = null;
+    for (let attempt = 0; attempt < 50 && !need; attempt++) {
+        const pick = starts.map(() => Math.floor(rng() * patterns.length));
+        const demand = { R: new Array(ids.size).fill(0), B: new Array(ids.size).fill(0) };
+        const apply = (i, sign) => patterns[pick[i]].forEach((c, k) => { demand[c][groups[starts[i] + k]] += sign; });
+        const over = (c, g) => Math.max(0, demand[c][g] - limits[c][g]);
+        starts.forEach((_, i) => apply(i, 1));
+        let overflow = 0;
+        for (let g = 0; g < ids.size; g++) overflow += over('R', g) + over('B', g);
+
+        for (let step = 0; step < 4000 && overflow > 0; step++) {
+            const i = Math.floor(rng() * starts.length);
+            const touched = [...new Set(groups.slice(starts[i], starts[i] + 4))];
+            const before = touched.reduce((t, g) => t + over('R', g) + over('B', g), 0);
+            const prev = pick[i];
+            apply(i, -1);
+            pick[i] = (prev + 1 + Math.floor(rng() * (patterns.length - 1))) % patterns.length;
+            apply(i, 1);
+            const after = touched.reduce((t, g) => t + over('R', g) + over('B', g), 0);
+            if (after <= before) {
+                overflow += after - before;
+            } else {
+                apply(i, -1);
+                pick[i] = prev;
+                apply(i, 1);
+            }
+        }
+        if (overflow === 0) {
+            need = new Array(cards.length).fill(null);
+            starts.forEach((st, i) => patterns[pick[i]].forEach((c, k) => { need[st + k] = c; }));
+        }
+    }
+    if (!need) return { ok: false, changed: 0 };
+
+    // 指定顏色的位置先扣張數，其餘位置用剩下的紅／藍背隨機補上
+    const remaining = { R: limits.R.slice(), B: limits.B.slice() };
+    need.forEach((c, i) => { if (c) remaining[c][groups[i]]--; });
+    const free = [];
+    need.forEach((c, i) => { if (!c) free.push(i); });
+    for (let i = free.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [free[i], free[j]] = [free[j], free[i]];
+    }
+    for (const i of free) {
+        const g = groups[i];
+        need[i] = remaining.R[g] > 0 ? 'R' : 'B';
+        remaining[need[i]][g]--;
+    }
+
+    let changed = 0;
+    cards.forEach((c, i) => {
+        if (c.back_color !== need[i]) changed++;
+        c.back_color = need[i];
+    });
+    return { ok: true, changed };
+}
+
+function runAutoColorSwap_Legacy(rounds) {
     log('SIG: 啟動「紅0/三條」專用的卡色邏輯...', 'info');
     $ROUNDS = rounds; // 儲存牌局資料
 
