@@ -1058,9 +1058,9 @@ body.running .deck,body.finished .deck{
   .rec-info{min-width:0;width:100%}
 }
 </style>
-<link rel="stylesheet" href="integrated.css?v=4">
+<link rel="stylesheet" href="integrated.css?v=5">
 </head>
-<body>
+<body data-mode="standard">
 
 <header>
   <div class="crest">♠</div>
@@ -1131,17 +1131,8 @@ body.running .deck,body.finished .deck{
     </div>
 
     <!-- 條件（掛真實舊 id） -->
-    <div class="exp-panel gframe" id="pCond">
-      <p class="p-label">生成條件 CONDITIONS</p>
-      <div class="cond-grid">
-        <div class="cond" data-tip="避開莊 6 點贏"><span class="name">莊6</span><div class="switch" id="swB6"></div></div>
-        <div class="cond" data-tip="生成完成後調整牌序，讓整副牌靴第 416 張是 9"><span class="name">末張9</span><div class="switch" id="swLastNine"></div></div>
-        <div class="cond" data-tip="平均回復局數上限（0 = 關閉檢查）"><span class="name">回復</span><input class="numbox" type="number" inputmode="decimal" id="avgRecoveryLimit" step="0.1" min="0" value="0" placeholder="0"></div>
-        <div class="cond" data-tip="和局數上限（留空 = 不檢查）"><span class="name">和局</span><input class="numbox" type="number" inputmode="numeric" id="maxTieLimit" min="0" value="3" placeholder="—"></div>
-        <div class="cond" data-tip="4 張局比例上限 %（留空 = 不檢查）"><span class="name">四張</span><input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="—"></div>
-        <div class="cond" data-tip="莊 與 閒+和 的局數差距上限（留空 = 不檢查）"><span class="name">莊閒</span><input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="—"></div>
-      </div>
-    </div>
+    <!-- 條件已移到與穿越模式相同的設定區 #standardControls；保留空殼供舊程式引用 -->
+    <div class="exp-panel gframe" id="pCond"></div>
   </div>
 
   <!-- 即時統計（真實結構：卡片A 回復分析+消耗 / 卡片B 組合圓餅；id 全部沿用 signals_ui 既有寫入，不另行計算） -->
@@ -1229,9 +1220,9 @@ body.running .deck,body.finished .deck{
   <div class="mode-fields">
     <label>最少張數 <input id="tvMin" class="numbox" type="number" min="4" max="416" value="8"></label>
     <label>最多張數 <input id="tvMax" class="numbox" type="number" min="4" max="416" value="12"></label>
-    <label>撿不到輪次 <input id="tvIdle" class="numbox" type="number" min="1" value="1000"></label>
-    <label>補排次數 <input id="tvTries" class="numbox" type="number" min="1" value="20000"></label>
-    <label>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
+    <label hidden>撿不到輪次 <input id="tvIdle" class="numbox" type="number" min="1" value="1000"></label>
+    <label hidden>補排次數 <input id="tvTries" class="numbox" type="number" min="1" value="20000"></label>
+    <label hidden>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
     <label>剩牌上限 <input id="tvLeft" class="numbox" type="number" min="0" max="416" value="0" placeholder="不限"></label>
   </div>
   <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。撿段時計數，整副不符合就重跑">
@@ -1245,14 +1236,36 @@ body.running .deck,body.finished .deck{
   </div>
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control"><span class="name">三條</span><input type="checkbox" id="tvTriple" checked><span class="switch" aria-hidden="true"></span></label>
-    <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
-    <label class="cond rule-control"><span class="name">強</span><input type="checkbox" id="tvStrong"><span class="switch" aria-hidden="true"></span></label>
-    <label class="cond rule-control" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><span class="name">第二張敏感</span><input type="checkbox" id="tvSecond"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="撿段時排除 5／6 張的莊 6 點贏（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="tvB6"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="撿段時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="tvP7"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">末張9</span><input type="checkbox" id="tvNine" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" hidden><span class="name">強</span><input type="checkbox" id="tvStrong"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><span class="name">第二張敏感</span><input type="checkbox" id="tvSecond"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">莊閒</span><input type="checkbox" id="tvSide" checked><span class="switch" aria-hidden="true"></span></label>
   </div>
   </div>
   <input id="tvSideLimit" type="hidden" value="8">
+</section>
+<section id="standardControls" class="gframe mode-panel">
+  <h2 class="frame-title">百家 3.0 設定</h2>
+  <div class="tv-settings-bar"><span id="stSettingsSummary" aria-live="polite"></span><button type="button" id="stSettingsToggle" class="tool-btn" aria-expanded="true" aria-controls="stControlGroups">收合設定</button></div>
+  <div class="traverse-control-groups" id="stControlGroups">
+  <div class="traverse-field-stack">
+  <div class="mode-fields">
+    <label title="平均回復局數上限；0＝不檢查">回復上限 <input class="numbox" type="number" inputmode="decimal" id="avgRecoveryLimit" step="0.1" min="0" value="0" placeholder="不限"></label>
+    <label title="和局數上限；留白＝不檢查">和局上限 <input class="numbox" type="number" inputmode="numeric" id="maxTieLimit" min="0" value="3" placeholder="不限"></label>
+    <label title="4 張局比例上限 %；留白＝不檢查">四張比例% <input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="不限"></label>
+    <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="不限"></label>
+  </div>
+  </div>
+  <div class="mode-actions traverse-rules">
+    <label class="cond rule-control" title="三條局的下一局開和；關閉後三條當一般局"><span class="name">三條</span><input type="checkbox" id="tripleTieRule" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="挑敏感局時排除 5／6 張的莊 6 點贏（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="skipBanker6"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="挑敏感局時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="skipPlayer7Banker6"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="生成完成後調整牌序，讓整副牌靴第 416 張是 9"><span class="name">末張9</span><input type="checkbox" id="lastCardNine"><span class="switch" aria-hidden="true"></span></label>
+  </div>
+  </div>
 </section>
 <section id="traverseTools" class="gframe mode-panel tool-panel" hidden>
   <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
@@ -1384,8 +1397,6 @@ body.running .deck,body.finished .deck{
   <!-- 設計稿未曝光的生成條件（沿用原始版預設；at-settings 會還原上次值） -->
   <input type="number" id="max7PtReversal" min="0" value="2">
   <input type="number" id="swapBanker6Target" min="0" value="9">
-  <input type="checkbox" id="skipBanker6">
-  <input type="checkbox" id="lastCardNine">
 
   <!-- 工具細項已全部移至可見的 4 大類面板（.tool-panels） -->
 
@@ -1427,7 +1438,7 @@ body.running .deck,body.finished .deck{
 <script>
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
 </script>
-<script src="standard/signals.js?v=19"></script>
+<script src="standard/signals.js?v=20"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
 <script src="standard/signals_ui.js?v=39"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
@@ -1439,7 +1450,7 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 (function(){
     var STORAGE_KEY = 'at-settings';
     var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'];
-    var CHECK_IDS = ['skipBanker6','lastCardNine'];
+    var CHECK_IDS = ['skipBanker6','skipPlayer7Banker6','tripleTieRule','lastCardNine'];
     try {
         var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         INPUT_IDS.forEach(function(id){
@@ -1611,9 +1622,7 @@ function bindSwitch(swId, cbId, onChange){
 /* 混合卡色開關已移除：一律強制標準模式（只允許 BBBR / RRRB），
    不再讀 localStorage 的舊值，避免舊裝置殘留的 '1' 讓生成邏輯偷跑混和組合 */
 if (typeof persistCardColorMixedMode === 'function') persistCardColorMixedMode(false);
-/* 避開莊6點贏（at-settings 已先還原 checked） */
-bindSwitch('swB6', 'skipBanker6');
-bindSwitch('swLastNine', 'lastCardNine');
+/* 莊6／閒7／三條／末張9 已改成設定區內的勾選開關（#standardControls），不再需要 bindSwitch */
 
 /* ───────── 籌碼三鈕 → 真實按鈕 ───────── */
 $('chipGen').addEventListener('click', () => {
@@ -1770,6 +1779,6 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=20"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=3"></script>
+<script src="traverse_builder.js?v=21"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=4"></script>
 </body>
 </html>

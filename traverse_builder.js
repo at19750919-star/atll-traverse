@@ -71,7 +71,7 @@
             }
         }
         const result = pp > bb ? '閒' : (bb > pp ? '莊' : '和');
-        return { result, size };
+        return { result, size, player: pp, banker: bb };
     }
 
     function isTraverse(arr) {
@@ -123,7 +123,20 @@
 
     // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
     // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
-    const rules = { tripleTie: true, signalRule: true, strong: false, secondStart: false };
+    const rules = { tripleTie: true, signalRule: true, strong: false, secondStart: false, skipBanker6: false, skipPlayer7: false };
+    // 莊6／閒7（比照百家3.0）：原牌或前兩張對調後，5／6 張的莊 6 點贏、或閒 7 點贏莊 6 點的局不撿
+    function excludedHand(hand) {
+        if (!rules.skipBanker6 && !rules.skipPlayer7) return false;
+        const bad = (a) => {
+            const h = simulateHand(a, 0, a.length);
+            if (!h) return false;
+            if (rules.skipBanker6 && h.banker === 6 && h.player <= 5 && h.size >= 5) return true;
+            return rules.skipPlayer7 && h.player === 7 && h.banker === 6;
+        };
+        const sw = hand.slice();
+        [sw[0], sw[1]] = [sw[1], sw[0]];
+        return bad(hand) || bad(sw);
+    }
     // 使用者暫停訊號失敗的重接與整副重跑；保留兩類重試程式供日後明確要求時恢復。
     const SIGNAL_RETRY_ENABLED = false;
     function tripleRuleOk(arr, rounds) {
@@ -190,7 +203,8 @@
         const rounds = roundsFromStart(arr);
         if (!rounds) return null;
         for (const r of rounds) {
-            if (!handSensitive(arr.slice(r.start, r.start + r.size))) return null;
+            const hand = arr.slice(r.start, r.start + r.size);
+            if (!handSensitive(hand) || excludedHand(hand)) return null;
         }
         if (rules.tripleTie && !tripleRuleOk(arr, rounds)) return null;
         return rounds;
@@ -244,6 +258,10 @@
             if (!handSensitive(arr.slice(r.start, r.start + r.size))) {
                 return { kind: 'sensitive', round: i + 1, message: `段內第 ${i + 1} 局對調前兩張後，不符合敏感局條件` };
             }
+        }
+        for (let i = 0; i < rounds.length; i++) {
+            const r = rounds[i];
+            if (excludedHand(arr.slice(r.start, r.start + r.size))) return { kind: 'banker6', round: i + 1, message: `段內第 ${i + 1} 局原牌或對調後是莊6點贏／閒7贏莊6` };
         }
         if (rules.tripleTie && !tripleRuleOk(arr, rounds)) return { kind: 'triple', message: '段內三條與下一局結果不符，或段頭為和／段尾為三條' };
         if (rules.strong && !segmentsStrong(arr)) return { kind: 'strong', message: '短段內有起點不符合強條件' };
@@ -751,6 +769,8 @@
         rules.signalConfig = normalizeSignal(options.signalConfig);
         rules.strong = opts.strong;
         rules.secondStart = opts.secondStart;
+        rules.skipBanker6 = options.skipBanker6 === true;
+        rules.skipPlayer7 = options.skipPlayer7 === true;
         opts.scanLengths = [];
         for (let L = opts.maxLen; L >= opts.minLen; L--) opts.scanLengths.push(L);
         const ctx = {

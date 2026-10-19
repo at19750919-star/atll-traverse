@@ -684,14 +684,32 @@ function shouldSkipSensitiveRound(round) {
         }
     }
 
-    // 「避開莊6點贏」勾選時，連 B6 局（對調後莊6贏）也一併排除
+    // 「避開莊6點贏」勾選時，不論對不對調，只要 5/6 張局會莊6點贏就排除（4 張局豁免）
     const skipBanker6El = document.getElementById('skipBanker6');
     const skipBanker6 = skipBanker6El ? skipBanker6El.checked : false;
     if (skipBanker6 && Array.isArray(round.cards) && round.cards.length >= 4) {
+        const isBanker6Win = (cards) => {
+            const hi = computeRoundHands(cards);
+            return !!hi && hi.bankerTotal === 6 && hi.playerTotal <= 5
+                && hi.playerCards.length + hi.bankerCards.length >= 5;
+        };
         const tmp = round.cards.map(c => c.clone());
         [tmp[0], tmp[1]] = [tmp[1], tmp[0]];
-        const swappedInfo = computeRoundHands(tmp);
-        if (swappedInfo && swappedInfo.bankerTotal === 6 && swappedInfo.playerTotal <= 5) {
+        if (isBanker6Win(round.cards) || isBanker6Win(tmp)) {
+            return true;
+        }
+    }
+
+    // 「避開閒7贏莊6」勾選時，不論對不對調，只要閒 7 點贏莊 6 點就排除
+    const skipP7El = document.getElementById('skipPlayer7Banker6');
+    if (skipP7El && skipP7El.checked && Array.isArray(round.cards) && round.cards.length >= 4) {
+        const isP7OverB6 = (cards) => {
+            const hi = computeRoundHands(cards);
+            return !!hi && hi.playerTotal === 7 && hi.bankerTotal === 6;
+        };
+        const tmp = round.cards.map(c => c.clone());
+        [tmp[0], tmp[1]] = [tmp[1], tmp[0]];
+        if (isP7OverB6(round.cards) || isP7OverB6(tmp)) {
             return true;
         }
     }
@@ -1060,7 +1078,14 @@ function normalizeTripleRank(rank) {
 }
 
 // 檢查是否為三條（僅限 1~9 / A~9，且至少三張相同點數）
+// 「三條」開關（整合頁百家模式）：關閉時三條當一般局，不再要求下一局開和
+function isTripleRuleOn() {
+    const el = typeof document !== 'undefined' ? document.getElementById('tripleTieRule') : null;
+    return el ? el.checked : true;
+}
+
 function hasFullHouse(round) {
+    if (!isTripleRuleOn()) return false;
     if (!round?.cards || round.cards.length < 3) return false;
 
     const rankCounts = {};
@@ -1074,6 +1099,7 @@ function hasFullHouse(round) {
 }
 
 function hasFullHouseInRanks(ranks) {
+    if (!isTripleRuleOn()) return false;
     if (!Array.isArray(ranks) || ranks.length < 3) return false;
     const rankCounts = {};
     for (const rank of ranks) {

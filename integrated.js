@@ -5,6 +5,7 @@
   const $ = id => document.getElementById(id);
   // Keep both modes' settings in the original black-and-gold control deck.
   document.querySelector('.expanders').appendChild($('traverseControls'));
+  document.querySelector('.expanders').appendChild($('standardControls'));
   $('sharedSignalSettings').addEventListener('click',()=>{ if(!busy&&!window.__isGeneratingShoe)document.querySelector('[data-panel="pSet"]').click(); });
   const B = TraverseBuilder, E = TraverseExport, O = TraverseOptimizer;
   const copy = x => JSON.parse(JSON.stringify(x));
@@ -14,11 +15,11 @@
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', busy = false, stopped = false, optimization = null;
   const states = { standard: null, traverse: { result: null, cut: 0, analysis: null, view: 'after' } };
-  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const num = id => Number($(id).value);
   const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
   function rules() { return { tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
-    strong: $('tvStrong').checked, secondStart: $('tvSecond').checked, signalConfig: config(), preserveLastNine: $('tvNine').checked }; }
+    strong: $('tvStrong').checked, secondStart: $('tvSecond').checked, skipBanker6: $('tvB6').checked, skipPlayer7: $('tvP7').checked, signalConfig: config(), preserveLastNine: $('tvNine').checked }; }
   function setRules() { Object.assign(B.rules, rules()); }
   function plain(card) { return { rank: card.rank, suit: card.suit, point: typeof card.point === 'function' ? card.point() : card.point,
     back_color: card.back_color, traverse: !!card.traverse }; }
@@ -125,7 +126,7 @@
     mode=next;document.body.dataset.mode=mode;
     $('modeStandard').classList.toggle('active',mode==='standard');$('modeTraverse').classList.toggle('active',mode==='traverse');
     $('modeStandard').setAttribute('aria-pressed',mode==='standard');$('modeTraverse').setAttribute('aria-pressed',mode==='traverse');
-    $('traverseControls').hidden=$('traverseTools').hidden=mode!=='traverse';
+    $('traverseControls').hidden=$('traverseTools').hidden=mode!=='traverse';$('standardControls').hidden=mode==='traverse';
     $('modeStatus').textContent=mode==='standard'?'百家 3.0 模式':'穿越排牌模式';
     $('btnAutoColor').textContent=mode==='traverse'?'卡色':'換色';
     document.querySelectorAll('#toolCats .tool').forEach(t=>t.classList.remove('active'));
@@ -181,7 +182,7 @@
   function settingsSummary() {
     const parts=[`${$('tvMin').value}～${$('tvMax').value}張`,`剩牌${$('tvLeft').value.trim()===''?'不限':'≤'+$('tvLeft').value}`];
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
-    const on=[['tvTriple','三條'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9'],['tvSide','莊閒']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    const on=[['tvTriple','三條'],['tvB6','莊6'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9'],['tvSide','莊閒']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
   function setSettingsCollapsed(value) {
@@ -431,7 +432,24 @@
   document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>el.addEventListener('click',()=>{
     setTimeout(()=>{clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('訊號設定已變更，請重新排牌套用。');}},0);
   }));
-  new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeStandard','modeTraverse','sharedSignalSettings'].forEach(id=>$(id).disabled=running);}).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
+  // 百家 3.0 設定區：與穿越設定相同的收合列；生成完成後自動收成一行摘要
+  function standardSummary() {
+    const v=id=>$(id).value.trim();
+    const parts=[`回復${Number(v('avgRecoveryLimit'))>0?'≤'+v('avgRecoveryLimit'):'不限'}`,`和局${v('maxTieLimit')===''?'不限':'≤'+v('maxTieLimit')}`];
+    if(v('maxFourCardRate')!=='')parts.push(`四張≤${v('maxFourCardRate')}%`);
+    if(v('maxSideLimit')!=='')parts.push(`莊閒差距≤${v('maxSideLimit')}`);
+    const on=[['tripleTieRule','三條'],['skipBanker6','莊6'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
+  }
+  function setStandardCollapsed(value) {
+    $('standardControls').classList.toggle('collapsed',value);$('stSettingsSummary').textContent=value?standardSummary():'';
+    $('stSettingsToggle').textContent=value?'展開設定':'收合設定';$('stSettingsToggle').setAttribute('aria-expanded',String(!value));
+  }
+  $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
+  let standardWasRunning=false;
+  new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeStandard','modeTraverse','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
+    if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length)setStandardCollapsed(true);}}
+  }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';
   if(new URLSearchParams(location.search).get('mode')==='traverse')switchMode('traverse');
   window.IntegratedModes={get mode(){return mode;},get busy(){return busy;},get traversal(){return states.traverse;},switchMode,generateTraverse,cutTraverse,recolor,exportTraverse};
