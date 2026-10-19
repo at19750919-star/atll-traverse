@@ -1058,7 +1058,7 @@ body.running .deck,body.finished .deck{
   .rec-info{min-width:0;width:100%}
 }
 </style>
-<link rel="stylesheet" href="integrated.css?v=2">
+<link rel="stylesheet" href="integrated.css?v=3">
 </head>
 <body>
 
@@ -1222,7 +1222,8 @@ body.running .deck,body.finished .deck{
 </section>
 <section id="traverseControls" class="gframe mode-panel" hidden>
   <h2 class="frame-title">穿越排牌設定</h2>
-  <div class="traverse-control-groups">
+  <div class="tv-settings-bar"><span id="tvSettingsSummary" aria-live="polite"></span><button type="button" id="tvSettingsToggle" class="tool-btn" aria-expanded="true" aria-controls="tvControlGroups">收合設定</button></div>
+  <div class="traverse-control-groups" id="tvControlGroups">
   <div class="traverse-field-stack">
   <div class="mode-fields">
     <label>最少張數 <input id="tvMin" class="numbox" type="number" min="4" max="416" value="8"></label>
@@ -1768,6 +1769,6 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=20"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=2"></script>
+<script src="traverse_builder.js?v=20"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=3"></script>
 </body>
 </html>

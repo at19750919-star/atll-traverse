@@ -175,6 +175,17 @@
     for(const k of [4,5,6]){const {min,max}=limits[k];if(min!==null&&c[k]<min)return `${k}張局 ${c[k]} 局，低於下限 ${min}`;if(max!==null&&c[k]>max)return `${k}張局 ${c[k]} 局，超過上限 ${max}`;}
     return '';
   }
+  // 排好牌後把設定收成一行摘要，主表格往上移；點「展開設定」可再展開
+  function settingsSummary() {
+    const parts=[`${$('tvMin').value}～${$('tvMax').value}張`,`剩牌${$('tvLeft').value.trim()===''?'不限':'≤'+$('tvLeft').value}`];
+    for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
+    const on=[['tvTriple','三條'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9'],['tvSide','莊閒']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
+  }
+  function setSettingsCollapsed(value) {
+    $('traverseControls').classList.toggle('collapsed',value);$('tvSettingsSummary').textContent=value?settingsSummary():'';
+    $('tvSettingsToggle').textContent=value?'展開設定':'收合設定';$('tvSettingsToggle').setAttribute('aria-expanded',String(!value));
+  }
   function sideDiff(cards,cut=0){const rs=E.dealRounds(E.cutDeck(cards,cut)).filter(r=>r.hand);return Math.abs(rs.filter(r=>r.result==='莊').length-rs.filter(r=>r.result!=='莊').length);}
   function nineCut(result) {
     const cs=O.prepare(result), a=O.analyze(cs,rules());
@@ -183,6 +194,8 @@
   }
   async function generateTraverse(demo=false) {
     if(busy||window.__isGeneratingShoe)return;
+    // 先送出正在輸入的設定，避免排完收合設定時才觸發「條件已變更」蓋掉結果訊息
+    if($('traverseControls').contains(document.activeElement))document.activeElement.blur();
     const min=num('tvMin'),max=num('tvMax');
     if(!Number.isInteger(min)||!Number.isInteger(max)||min<4||max>416||min>max){status('張數範圍須為 4～416 的整數，最少不能大於最多');return;}
     for(const id of ['tvIdle','tvTries','tvChain'])if(!Number.isInteger(num(id))||num(id)<1){status('撿段、補排與接段次數須為正整數');$(id).focus();return;}
@@ -212,6 +225,7 @@
       }
       result.reruns=reruns;result.totalMs=Date.now()-started;rotateResult(result,cut||0);
       states.traverse.result=result;states.traverse.cut=0;$('cutPos').value=0;
+      setSettingsCollapsed(true);document.querySelectorAll('#traverseTools details').forEach(d=>{d.open=false;});
       renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}`);
       log($('tvProgress').textContent,'success');
     }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{lock(false);}
@@ -391,10 +405,11 @@
     const handlers={chipStop:()=>{if(busy){stopped=true;status('停止中，整理目前結果…');}},generateBtn:()=>generateTraverse(),stopGenerateBtn:()=>{stopped=true;status('停止中，整理目前結果…');},btnCut:()=>cutTraverse(Number($('cutPos').value)),btnAutoColor:recolor,
       btnExportCombined:exportTraverse,btnRecordDeckOrder:()=>{absorbEdits();rotateResult(states.traverse.result,states.traverse.cut);states.traverse.cut=0;$('cutPos').value=0;clearOptimization();renderTraverse();status('已套用目前牌序，切牌起點歸零');},
       btnApplyChanges:()=>{absorbEdits();clearOptimization();renderTraverse();status('已套用編輯並重新檢查目前牌序');},
-      clearBtn:()=>{clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;status('已清空穿越牌靴');}};
+      clearBtn:()=>{clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;setSettingsCollapsed(false);status('已清空穿越牌靴');}};
     if(handlers[id]){event.preventDefault();event.stopImmediatePropagation();if(!busy||id==='stopGenerateBtn'||id==='chipStop')handlers[id]();}
   },true);
   $('modeStandard').addEventListener('click',()=>switchMode('standard'));$('modeTraverse').addEventListener('click',()=>switchMode('traverse'));
+  $('tvSettingsToggle').addEventListener('click',()=>setSettingsCollapsed(!$('traverseControls').classList.contains('collapsed')));
   $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',optimize);
   $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));});
   $('btnOptBefore').addEventListener('click',()=>showVersion('before'));$('btnOptAfter').addEventListener('click',()=>showVersion('after'));$('btnOptOriginalCut').addEventListener('click',()=>cutTraverse(0));

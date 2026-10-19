@@ -12,7 +12,6 @@
 #tvSummary{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;padding:10px 0}
 #tvDiagnostics{font-size:13px;line-height:1.8;overflow-wrap:anywhere}
 body[data-mode="traverse"] #pCond,body[data-mode="traverse"] [data-panel="pCond"],body[data-mode="traverse"] #btnRound,body[data-mode="traverse"] #btnAutoReorder,body[data-mode="traverse"] #btnAutoFix,body[data-mode="traverse"] #btnImport,body[data-mode="traverse"] #btnValidate{display:none!important}
-body[data-mode="traverse"] .vio-live-card{display:none!important}
 @media(max-width:600px){.mode-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mode-fields label{flex-wrap:wrap}.mode-panel{padding:12px;margin:12px 8px}.mode-switch{margin:0 8px 12px;padding:10px}.mode-actions .tool-btn{font-size:12px;letter-spacing:0}.mode-scroll table{min-width:500px}}
 .card-label.s-signal-card { color:#ff3b3b; font-weight:700; }
 .optimizer-panel { position:fixed; z-index:100; left:16px; top:16px; width:min(1060px, calc(100vw - 32px)); max-height:calc(100dvh - 32px); display:flex; flex-direction:column; padding:0; background:#101a17; box-shadow:0 20px 70px #000b; }
@@ -73,6 +72,18 @@ body[data-mode="traverse"] #traverseControls .mode-fields label{
   width:100%;box-sizing:border-box;min-width:0;gap:8px;padding:7px 10px;border:1px solid #2c3634;border-radius:7px;
   background:rgba(10,16,15,.45);color:var(--txt);font-size:13px;white-space:nowrap;letter-spacing:.04em
 }
+/* 穿越模式違規卡占整列寬：違規項目橫向並排、無違規只留一行，避免把主表格往下推 */
+body[data-mode="traverse"] #statsVioCard{padding:14px 16px 12px}
+body[data-mode="traverse"] #statsVioCard .vio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));max-height:120px}
+body[data-mode="traverse"] #statsVioCard .vio-empty{padding:4px 0}
+body[data-mode="traverse"] #traverseControls .tv-settings-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-height:32px;margin:-4px 0 8px}
+body[data-mode="traverse"] #traverseControls .tv-settings-bar .tool-btn{height:32px;padding:0 14px;font-size:12px;letter-spacing:.08em;white-space:nowrap}
+body[data-mode="traverse"] #tvSettingsSummary{flex:1;min-width:0;display:none;color:var(--gold-1);font-size:13px;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-mode="traverse"] #traverseControls.collapsed{display:flex;align-items:center;gap:16px;padding-top:10px;padding-bottom:10px}
+body[data-mode="traverse"] #traverseControls.collapsed .frame-title{margin:0;flex:none}
+body[data-mode="traverse"] #traverseControls.collapsed .tv-settings-bar{flex:1;min-width:0;margin:0}
+body[data-mode="traverse"] #traverseControls.collapsed #tvSettingsSummary{display:block}
+body[data-mode="traverse"] #traverseControls.collapsed .traverse-control-groups{display:none}
 body[data-mode="traverse"] #traverseControls .traverse-field-stack{display:grid;gap:8px;min-width:0}
 body[data-mode="traverse"] #traverseControls .numbox::placeholder{color:rgba(244,223,164,.38)}
 body[data-mode="traverse"] #traverseControls .numbox{width:86px;min-width:0;max-width:none;box-sizing:border-box;height:32px;text-align:center;padding:0 4px}
@@ -119,6 +130,7 @@ body[data-mode="traverse"].running .chip-col,body[data-mode="traverse"].finished
   body[data-mode="traverse"].running .stats,body[data-mode="traverse"].finished .stats,body[data-mode="traverse"].running .vio-live-card,body[data-mode="traverse"].finished .vio-live-card{grid-column:1/-1;grid-row:auto}
 }
 @media(max-width:600px){
+  body[data-mode="traverse"] #tvSettingsSummary{white-space:normal;line-height:1.5;font-size:12px}
   .mode-switch{margin:0 8px 12px;gap:7px;padding:10px}
   .mode-switch .mode-label{width:100%}
   .mode-switch .tool-btn{flex:1 1 auto;padding:7px;font-size:12px;letter-spacing:.05em}
