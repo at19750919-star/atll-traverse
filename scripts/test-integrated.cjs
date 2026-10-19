@@ -37,7 +37,11 @@ async function inventory(page){
     await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
     await page.route('https://script.google.com/**',route=>{
       const req=route.request();if(req.method()==='POST')posts.push(JSON.parse(req.postData()));
-      return route.fulfill({json:req.method()==='POST'?{success:true,fileName:posts.at(-1).filename}:{success:true,files:req.url().includes('folderId=')?[{name:'TR007.xlsx'}]:[{name:'F501.xlsx'}]}});
+      const url=req.url();
+      let files=[{name:'F635.xlsx'}];
+      if(url.includes('1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb')) files=[{name:'F635.xlsx'}];
+      else if(url.includes('17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx')) files=[{name:'TR007.xlsx'}];
+      return route.fulfill({json:req.method()==='POST'?{success:true,fileName:posts.at(-1).filename}:{success:true,files}});
     });
     const dist=path.resolve(ROOT,'../百家3.0/node_modules/exceljs/dist/exceljs.min.js');
     if(fs.existsSync(dist))await page.route('https://cdn.jsdelivr.net/npm/exceljs@*/dist/exceljs.min.js',r=>r.fulfill({path:dist,contentType:'text/javascript'}));
@@ -52,12 +56,12 @@ async function inventory(page){
       await inventory(page);standard=await page.evaluate(signature);
       assert(await page.locator('#traverseControls').isHidden());
     });
-    await check('百家3.0 導出保留F編號與原雲端路徑',async()=>{
+    await check('百家3.0 導出改為F系列雲端資料夾並從F636開始',async()=>{
       const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
-      const file=await download;assert.match(file.suggestedFilename(),/^F502\.xlsx$/);
+      const file=await download;assert.match(file.suggestedFilename(),/^F636\.xlsx$/);
       const wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());assert(wb.getWorksheet('直立式牌靴'));
       await page.waitForFunction(()=>!IntegratedModes.busy);
-      assert(posts.some(p=>p.filename==='F502.xlsx'&&!p.folderId));
+      assert(posts.some(p=>p.filename==='F636.xlsx'&&p.folderId==='1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb'));
     });
     await check('穿越示範共用同一牌表，預設訊號與94個安全點保持',async()=>{
       await page.locator('#modeTraverse').click();assert(await page.locator('#traverseControls').isVisible());

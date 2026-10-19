@@ -4912,6 +4912,7 @@ function recalculateRoundsAfterDistribution(rounds) {
 
 // Google Apps Script Web App URL
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypt3_PnEL5TgdDPaBwg1M5bWAjQMR9dD5Jslicn3eZCtuNSTtqO35RafhQpuX-l9_m/exec';
+const F_SERIES_FOLDER_ID = '1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb';
 
 /**
  * 讀取 Google Drive 檔案清單。Apps Script 偶發回 404 HTML，唯讀操作可安全重試。
@@ -4921,7 +4922,7 @@ async function fetchDriveFileList() {
     let lastError = null;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         try {
-            const res = await fetch(GOOGLE_APPS_SCRIPT_URL);
+            const res = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?folderId=${encodeURIComponent(F_SERIES_FOLDER_ID)}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             if (data && data.success && Array.isArray(data.files)) return data.files;
@@ -4935,13 +4936,13 @@ async function fetchDriveFileList() {
 }
 
 /**
- * 產生下一個導出檔名：從 F501.xlsx 起，並接續現有最大編號
+ * 產生下一個導出檔名：從 F636.xlsx 起，並接續現有最大編號
  * 編號以「雲端 Drive 現有最大 F 編號 +1」為準（跨瀏覽器/port/裝置一致），
  * 雲端清單讀不到時直接中止導出，不再退回本機計數器。
  */
 async function getNextExportFilename() {
     const key = 'at-export-counter';
-    const START = 500; // 從 F501 開始（START + 1）
+    const START = 635; // 從 F636 開始（START + 1）
 
     // 取得雲端現有最大 F 編號；讀不到就停止導出，避免退回本機計數器造成跳號或重號
     const files = await fetchDriveFileList();
@@ -4973,7 +4974,8 @@ async function uploadToGoogleDrive(blob, filename) {
     const base64Data = await blobToBase64(blob);
     const uploadData = {
         filename: filename,
-        base64Data: base64Data.split(',')[1]
+        base64Data: base64Data.split(',')[1],
+        folderId: F_SERIES_FOLDER_ID
     };
 
     const countSameName = async () =>
