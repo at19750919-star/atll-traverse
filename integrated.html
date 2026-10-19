@@ -1058,7 +1058,7 @@ body.running .deck,body.finished .deck{
   .rec-info{min-width:0;width:100%}
 }
 </style>
-<link rel="stylesheet" href="integrated.css?v=3">
+<link rel="stylesheet" href="integrated.css?v=4">
 </head>
 <body>
 
@@ -1219,6 +1219,7 @@ body.running .deck,body.finished .deck{
   <div class="tool" data-tp="tpData"><span class="t-coin red">♦</span>資料</div>
   <div class="tool" data-tp="tpVerify"><span class="t-coin">♣</span>驗證</div>
   <div class="tool" data-tp="tpView"><span class="t-coin red">♥</span>檢視</div>
+  <div class="tool" data-tp="traverseTools" id="toolTraverse"><span class="t-coin">♠</span>穿越資料</div>
 </section>
 <section id="traverseControls" class="gframe mode-panel" hidden>
   <h2 class="frame-title">穿越排牌設定</h2>
@@ -1253,7 +1254,7 @@ body.running .deck,body.finished .deck{
   </div>
   <input id="tvSideLimit" type="hidden" value="8">
 </section>
-<section id="traverseTools" class="gframe mode-panel" hidden>
+<section id="traverseTools" class="gframe mode-panel tool-panel" hidden>
   <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
   <p id="tvProgress" role="status">尚未排牌</p><div id="tvSummary"></div>
   <details id="tvSafePanel"><summary>安全切牌點 <span id="tvSafeCount">尚未排牌</span>（不計卡色）</summary><p id="tvBucketSummary" class="mode-note"></p><details id="tvBucketsDetail"><summary>查看全部違規深度分布</summary><div id="tvCutBuckets"></div></details><div id="tvSafeCuts" class="mode-actions"></div></details>

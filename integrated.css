@@ -52,6 +52,7 @@ body[data-mode="traverse"] .b6-meta{display:none}
 @media(max-width:700px){.optimizer-content,.optimizer-pair{grid-template-columns:1fr}.optimizer-head{padding:12px}.optimizer-body{padding:0 12px 12px}}
 
 body[data-mode="traverse"] [data-tp="tpVerify"],body[data-mode="traverse"] #tpVerify{display:none!important}
+body:not([data-mode="traverse"]) [data-tp="traverseTools"],body:not([data-mode="traverse"]) #toolTraverse{display:none!important}
 #sharedCardCounts{margin-left:auto;letter-spacing:0;font-size:12px}
 @media(max-width:600px){#sharedCardCounts{flex-basis:100%;margin:0;line-height:1.7}}
 
@@ -101,7 +102,10 @@ body[data-mode="traverse"] #traverseControls .rule-control input:checked + .swit
 body[data-mode="traverse"] #traverseControls .rule-control input:focus-visible + .switch{outline:2px solid var(--gold-1);outline-offset:2px}
 body[data-mode="traverse"] #traverseControls .mode-note{margin:6px 0 0}
 body[data-mode="traverse"] #traverseTools{
-  display:flex;flex-direction:column;align-items:stretch;gap:8px;max-width:1560px;margin:14px auto 0;padding:18px 20px
+  display:none;flex-direction:column;align-items:stretch;gap:8px;max-width:1560px;margin:14px auto 0;padding:18px 20px
+}
+body[data-mode="traverse"] #traverseTools.open{
+  display:flex;
 }
 body[data-mode="traverse"] #traverseTools>.mode-actions{display:flex;flex-wrap:wrap;margin:0;gap:8px}
 body[data-mode="traverse"] #traverseTools .mode-actions .tool-btn{height:40px}

@@ -128,6 +128,8 @@
     $('traverseControls').hidden=$('traverseTools').hidden=mode!=='traverse';
     $('modeStatus').textContent=mode==='standard'?'百家 3.0 模式':'穿越排牌模式';
     $('btnAutoColor').textContent=mode==='traverse'?'卡色':'換色';
+    document.querySelectorAll('#toolCats .tool').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('open'));
     $('pCond').classList.remove('open');document.querySelector('[data-panel="pCond"]').classList.remove('active');
     $('pSet').classList.remove('open');document.querySelector('[data-panel="pSet"]').classList.remove('active');
     if(mode==='standard'){

@@ -61,6 +61,10 @@ async function inventory(page){
     });
     await check('穿越示範共用同一牌表，預設訊號與94個安全點保持',async()=>{
       await page.locator('#modeTraverse').click();assert(await page.locator('#traverseControls').isVisible());
+      assert(await page.locator('#traverseTools').isHidden());
+      assert(await page.locator('#toolTraverse').isVisible());
+      await page.locator('#toolTraverse').click();
+      assert(await page.locator('#traverseTools').isVisible());
       await page.locator('#tvDemo').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
       await inventory(page);before=await page.evaluate(signature);
       assert.equal(await page.evaluate(()=>IntegratedModes.traversal.analysis.count),94);
@@ -69,11 +73,14 @@ async function inventory(page){
     });
     await check('模式切換保留兩副不同牌靴，訊號使用同一份設定',async()=>{
       await page.locator('#modeStandard').click();assert.equal(await page.evaluate(signature),standard);
+      assert(await page.locator('#toolTraverse').isHidden());
       await page.locator('#modeTraverse').click();assert.equal(await page.evaluate(signature),before);
+      assert(await page.locator('#toolTraverse').isVisible());
       await page.locator('#sharedSignalSettings').click();assert(await page.locator('#pSet').isVisible());
       await page.locator('#sharedSignalSettings').click();
     });
     await check('局內優化、可拖曳比較與前後牌表切換',async()=>{
+      if(await page.locator('#traverseTools').isHidden())await page.locator('#toolTraverse').click();
       await page.locator('#tvOptimize').click();await page.waitForFunction(()=>!IntegratedModes.busy,{},{timeout:60000});
       assert(await page.locator('#optimizerPanel').isVisible());
       assert((await page.evaluate(()=>IntegratedModes.traversal.analysis.count))>94);
