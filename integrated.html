@@ -1073,7 +1073,7 @@ body.running .deck,body.finished .deck{
   </div>
 </header>
 
-<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeRed0" aria-pressed="true">紅0模式</button><button class="tool-btn" id="modeA2" aria-pressed="false">A2模式</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越排牌</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><span id="modeStatus" role="status">紅0模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
+<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeRed0" aria-pressed="true">紅0模式</button><button class="tool-btn" id="modeA2" aria-pressed="false">A2模式</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越紅0</button><button class="tool-btn" id="modeTraverseA2" aria-pressed="false">穿越A2</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><span id="modeStatus" role="status">紅0模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
 <!-- ═══════════ 控制甲板 ═══════════ -->
 <section class="deck">
 
@@ -1213,7 +1213,7 @@ body.running .deck,body.finished .deck{
   <div class="tool" data-tp="traverseTools" id="toolTraverse"><span class="t-coin">♠</span>穿越資料</div>
 </section>
 <section id="traverseControls" class="gframe mode-panel" hidden>
-  <h2 class="frame-title">穿越排牌設定</h2>
+  <h2 class="frame-title" id="tvTitle">穿越紅0設定</h2>
   <div class="tv-settings-bar"><span id="tvSettingsSummary" aria-live="polite"></span><button type="button" id="tvSettingsToggle" class="tool-btn" aria-expanded="true" aria-controls="tvControlGroups">收合設定</button></div>
   <div class="traverse-control-groups" id="tvControlGroups">
   <div class="traverse-field-stack">
@@ -1805,6 +1805,6 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=22"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=6"></script>
+<script src="traverse_builder.js?v=22"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=7"></script>
 </body>
 </html>

@@ -14,8 +14,35 @@
     cannotSwap: calculateCannotSwapViolations, verify: verifyShoeRules, clear: clearAll, export: exportRoundsAsExcelWithDrive, stats: updateStats };
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null;
-  const states = { red0: null, a2: null, traverse: { result: null, cut: 0, analysis: null, view: 'after' } };
   const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  // 穿越紅0／穿越A2：同一個穿越引擎，各自保存設定、訊號牌與牌靴；states.traverse 永遠指向目前的穿越牌靴
+  const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
+  const TV_KEY = { red0:'integrated-traverse-red0', a2:'integrated-traverse-a2' }, TV_SUB_KEY = 'integrated-traverse-sub';
+  const TV_RULES = {
+    red0: { tvTriple:false, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'4', tvSignal:true, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
+    a2:   { tvTriple:true, tvB6:false, tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'5', tvSignal:true, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
+  };
+  const tvBase = (() => {   // 非規則欄位起始值：HTML 預設，再套用舊的 integrated-traverse-settings（只讀，不搬移）
+    const o = {}; controlIds.forEach(id => { const el = $(id); o[id] = el.type === 'checkbox' ? el.checked : el.value; });
+    try { const old = JSON.parse(localStorage.getItem('integrated-traverse-settings') || '{}'); controlIds.forEach(id => { if (old[id] !== undefined) o[id] = old[id]; }); } catch (_) {}
+    return o;
+  })();
+  let tsub = (() => { try { const v = localStorage.getItem(TV_SUB_KEY); if (v === 'red0' || v === 'a2') return v; } catch (_) {} return 'red0'; })();
+  const fresh = () => ({ result: null, cut: 0, analysis: null, view: 'after', optimization: null });
+  const tstates = { red0: fresh(), a2: fresh() };
+  const states = { red0: null, a2: null };
+  Object.defineProperty(states, 'traverse', { get: () => tstates[tsub], enumerable: true });
+  function tvLoad(t) {
+    const p = Object.assign({}, tvBase, TV_RULES[t]); p.signal = copy(TV_RULES[t].signal);
+    try { const raw = localStorage.getItem(TV_KEY[t]); if (raw) { const s = JSON.parse(raw); Object.keys(s).forEach(k => { if (s[k] !== undefined && s[k] !== null) p[k] = s[k]; }); } } catch (_) {}
+    return p;
+  }
+  function tvCollect(signal) { const p = {}; controlIds.forEach(id => { const el = $(id); p[id] = el.type === 'checkbox' ? el.checked : el.value; }); p.signal = copy(signal); return p; }
+  function tvSave(t, signal) {
+    const p = tvLoad(t); controlIds.forEach(id => { const el = $(id); p[id] = el.type === 'checkbox' ? el.checked : el.value; });
+    if (signal) p.signal = copy(signal);
+    try { localStorage.setItem(TV_KEY[t], JSON.stringify(p)); } catch (_) {}
+  }
   const num = id => Number($(id).value);
   const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
   function rules() { return { tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
@@ -97,7 +124,7 @@
   function renderTraverse() {
     const t=states.traverse, result=t.result;
     setRules();
-    if(!result){original.clear();$('roundsBody').innerHTML='';$('tblEmpty').style.display='';return;}
+    if(!result){original.clear();$('roundsBody').innerHTML='';$('tblEmpty').style.display='';$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvBucketSummary').textContent='';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvProgress').textContent='尚未排牌';return;}
     recheckChains();
     currentRounds=toRounds(displayedCards());
     refreshSharedTable();
@@ -131,18 +158,34 @@
     document.body.dataset.sub = name;
     setStandardCollapsed($('standardControls').classList.contains('collapsed'));
   }
+  function applyTraverseProfile(t) {
+    const p = tstates[t].live || tvLoad(t);   // 離開時的即時狀態（含示範改過的值）優先，確保回來時與牌靴一致
+    controlIds.forEach(id => { const el = $(id); el[el.type === 'checkbox' ? 'checked' : 'value'] = p[id]; });
+    tsub = t; try { localStorage.setItem(TV_SUB_KEY, t); } catch (_) {}
+    updateSignalConfig({ suits:p.signal.suits.slice(), ranks:p.signal.ranks.slice() });
+    $('tvTitle').textContent = TV_NAME[t] + '設定';
+    document.body.dataset.tsub = t;
+    setSettingsCollapsed(!!tstates[t].result);
+  }
+  function refreshModeButtons() {
+    [['modeRed0','standard','red0'],['modeA2','standard','a2'],['modeTraverse','traverse','red0'],['modeTraverseA2','traverse','a2']].forEach(([id,m,s]) => {
+      const on = mode === m && (m === 'standard' ? sub : tsub) === s;
+      $(id).classList.toggle('active', on); $(id).setAttribute('aria-pressed', on);
+    });
+  }
   function switchMode(next) {
     if(next==='standard')next=sub;
-    const nextMode=next==='traverse'?'traverse':'standard';
-    if(busy||window.__isGeneratingShoe||(next==='traverse'?mode==='traverse':(mode==='standard'&&next===sub)))return;
-    if(mode==='standard'){states[sub]=snapshot();StandardProfiles.save(sub,currentSignal());}else{absorbEdits();OptimizerDialog.reset();states.traverse.signal=currentSignal();}
-    mode=nextMode;document.body.dataset.mode=mode;
-    if(mode==='standard'){sub=next;applyProfile(sub);}
-    else if(states.traverse.signal)updateSignalConfig(states.traverse.signal);
-    $('modeRed0').classList.toggle('active',mode==='standard'&&sub==='red0');$('modeA2').classList.toggle('active',mode==='standard'&&sub==='a2');$('modeTraverse').classList.toggle('active',mode==='traverse');
-    $('modeRed0').setAttribute('aria-pressed',mode==='standard'&&sub==='red0');$('modeA2').setAttribute('aria-pressed',mode==='standard'&&sub==='a2');$('modeTraverse').setAttribute('aria-pressed',mode==='traverse');
+    if(next==='traverse')next='traverse-'+tsub;
+    if(next==='traverse-red0'||next==='traverse-a2'){} else if(next!=='red0'&&next!=='a2')return;
+    const isTr=next.startsWith('traverse-'), nextSub=isTr?next.slice(9):next;
+    if(busy||window.__isGeneratingShoe||(isTr?(mode==='traverse'&&nextSub===tsub):(mode==='standard'&&nextSub===sub)))return;
+    if(mode==='standard'){states[sub]=snapshot();StandardProfiles.save(sub,currentSignal());}else{absorbEdits();OptimizerDialog.reset();tstates[tsub].optimization=optimization;optimization=null;tstates[tsub].live=tvCollect(currentSignal());}
+    mode=isTr?'traverse':'standard';document.body.dataset.mode=mode;
+    if(isTr){tsub=nextSub;applyTraverseProfile(tsub);optimization=tstates[tsub].optimization||null;$('tvOptimize').disabled=!tstates[tsub].result;$('btnOptOpen').disabled=!optimization;}
+    else{sub=nextSub;applyProfile(sub);}
+    refreshModeButtons();
     $('traverseControls').hidden=$('traverseTools').hidden=mode!=='traverse';$('standardControls').hidden=mode==='traverse';
-    $('modeStatus').textContent=mode==='standard'?SUB_NAME[sub]:'穿越排牌模式';
+    $('modeStatus').textContent=mode==='standard'?SUB_NAME[sub]:TV_NAME[tsub]+'模式';
     $('btnAutoColor').textContent=mode==='traverse'?'卡色':'換色';
     document.querySelectorAll('#toolCats .tool').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('open'));
@@ -161,13 +204,13 @@
       if(currentRounds)runRecoveryAnalysis();
     }else{if($('frozenGridContainer'))$('frozenGridContainer').style.display='none';frozenGridHTML=null;window.__importedShoeMode=false;originalDeckOrder=null;originalRounds=null;$('cutPos').value=states.traverse.cut;renderTraverse();if(optimization)$('btnOptOpen').disabled=false;}
     document.body.classList.toggle('finished',!!currentRounds?.length);
-    log(`已切換${mode==='standard'?SUB_NAME[sub]:'穿越排牌'}；各模式保留各自牌靴。`,'info');
+    log(`已切換${mode==='standard'?SUB_NAME[sub]:TV_NAME[tsub]}；各模式保留各自牌靴。`,'info');
   }
   function lock(value) {
     busy=value;window.__isGeneratingShoe=value;window.__stopGenerateRequested=false;
     $('generateBtn').disabled=value;$('stopGenerateBtn').disabled=!value;
     $('generatingOverlay').classList.toggle('active',value);document.body.classList.toggle('running',value);
-    ['modeRed0','modeA2','modeTraverse','sharedSignalSettings',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
+    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
     document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>{el.style.pointerEvents=value?'none':'';el.setAttribute('aria-disabled',value);});
     document.querySelectorAll('.suit-checkbox,.rank-checkbox').forEach(el=>el.disabled=value);
     if(!value)$('tvOptimize').disabled=!states.traverse.result;
@@ -232,7 +275,7 @@
     let lastMiss='';
     try {
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
-      if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=false;}
+      if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvB6').checked=$('tvP7').checked=false;}
       for(;;){
         const opts={...rules(),minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,
           onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次${lastMiss?`｜上一副${lastMiss}`:''}］`:''}${m}`),isCancelled:()=>stopped};
@@ -433,7 +476,7 @@
       clearBtn:()=>{clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;setSettingsCollapsed(false);status('已清空穿越牌靴');}};
     if(handlers[id]){event.preventDefault();event.stopImmediatePropagation();if(!busy||id==='stopGenerateBtn'||id==='chipStop')handlers[id]();}
   },true);
-  $('modeRed0').addEventListener('click',()=>switchMode('red0'));$('modeA2').addEventListener('click',()=>switchMode('a2'));$('modeTraverse').addEventListener('click',()=>switchMode('traverse'));
+  $('modeRed0').addEventListener('click',()=>switchMode('red0'));$('modeA2').addEventListener('click',()=>switchMode('a2'));$('modeTraverse').addEventListener('click',()=>switchMode('traverse-red0'));$('modeTraverseA2').addEventListener('click',()=>switchMode('traverse-a2'));
   $('tvSettingsToggle').addEventListener('click',()=>setSettingsCollapsed(!$('traverseControls').classList.contains('collapsed')));
   $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',optimize);
   $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));});
@@ -445,14 +488,13 @@
     $('tvCutExample').innerHTML=`<h3>第 ${c+1} 張起發</h3><p>調整前：${bad?`第 ${bad.no} 局 ${esc(bad.issues.join('；'))}`:'安全'}</p><div>${bad?bad.cards.map(cardLabel).join(''):''}</div><p>調整後：${after.every(r=>!r.issues.length)?'安全':'仍有問題'}</p><div>${bad?after[bad.no-1].cards.map(cardLabel).join(''):''}</div><button class="tool-btn" id="tvExampleCut">牌表查看此切點</button>`;
     $('tvExampleCut').onclick=()=>cutTraverse(c);
   });
-  try{const saved=JSON.parse(localStorage.getItem('integrated-traverse-settings')||'{}');controlIds.forEach(id=>{if(saved[id]!==undefined)$(id)[$(id).type==='checkbox'?'checked':'value']=saved[id];});}catch(_){}
   controlIds.forEach(id=>$(id).addEventListener('change',()=>{
-    const saved={};controlIds.forEach(k=>saved[k]=$(k)[$(k).type==='checkbox'?'checked':'value']);try{localStorage.setItem('integrated-traverse-settings',JSON.stringify(saved));}catch(_){}
+    if(mode==='traverse')tvSave(tsub,currentSignal());
     clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('條件已變更，請重新排牌套用。');}
   }));
   // Signal controls run their existing handlers first, then refresh the current mode.
   document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>el.addEventListener('click',()=>{
-    setTimeout(()=>{if(mode==='standard')StandardProfiles.save(sub,currentSignal());clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('訊號設定已變更，請重新排牌套用。');}},0);
+    setTimeout(()=>{if(mode==='standard')StandardProfiles.save(sub,currentSignal());else tvSave(tsub,currentSignal());clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('訊號設定已變更，請重新排牌套用。');}},0);
   }));
   // 百家 3.0 設定區：與穿越設定相同的收合列；生成完成後自動收成一行摘要
   function standardSummary() {
@@ -469,15 +511,13 @@
   }
   $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
   let standardWasRunning=false;
-  new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
+  new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
     if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length)setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';
   {const q=new URLSearchParams(location.search).get('mode');if(q==='red0'||q==='a2')sub=q;
-   applyProfile(sub);
-   $('modeRed0').classList.toggle('active',sub==='red0');$('modeA2').classList.toggle('active',sub==='a2');
-   $('modeRed0').setAttribute('aria-pressed',sub==='red0');$('modeA2').setAttribute('aria-pressed',sub==='a2');
+   applyProfile(sub);refreshModeButtons();
    $('modeStatus').textContent=SUB_NAME[sub];
-   if(q==='traverse')switchMode('traverse');}
-  window.IntegratedModes={get mode(){return mode;},get sub(){return sub;},get busy(){return busy;},get traversal(){return states.traverse;},switchMode,generateTraverse,cutTraverse,recolor,exportTraverse};
+   if(q==='traverse')switchMode('traverse-'+tsub);else if(q==='traverse-red0'||q==='traverse-a2')switchMode(q);}
+  window.IntegratedModes={get mode(){return mode;},get sub(){return sub;},get tsub(){return tsub;},get busy(){return busy;},get traversal(){return states.traverse;},switchMode,generateTraverse,cutTraverse,recolor,exportTraverse};
 })();
