@@ -1,5 +1,5 @@
 /* Keep the existing black/gold surfaces, type, controls and green card table. */
-body.dashboard{height:auto;min-height:100dvh;overflow-x:hidden;overflow-y:visible;display:block;padding:0 16px 10px;font-size:14px;line-height:1.4}
+body.dashboard{height:auto;min-height:100dvh;overflow:visible;display:block;padding:0 16px 10px;font-size:14px;line-height:1.4}
 body.dashboard>header{flex:none;padding:6px 2px;min-height:50px;gap:14px}
 body.dashboard>header .crest{width:34px;height:34px}
 body.dashboard>header h1{font-size:22px;line-height:1.15}
@@ -141,14 +141,13 @@ body.dashboard #sharedCardCounts{min-width:0;margin-right:auto;margin-left:0;fon
 #btnTableWindow{border-color:#8a6a2f;color:var(--gold-1)}
 .table-window-status{font-size:12px;color:var(--gold-1);line-height:1.6;flex:none}
 body.dashboard #shoeMap{flex:none;max-height:240px;overflow:auto;margin:0;padding:12px;background:#101918;box-shadow:0 10px 30px #000b}
-body.dashboard .pit,body.table-window .pit{display:flex;flex:1;min-width:0;min-height:0;margin:0;padding:4px;border-radius:8px;background:linear-gradient(135deg,#5a421c,#211908 36%,#3c2d11);box-shadow:0 8px 30px #0006}
-body.dashboard .pit{flex:none;height:70dvh;min-height:480px}
-body.dashboard .felt,body.table-window .felt{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;padding:6px 8px;border-radius:4px;overflow:hidden}
+body.dashboard .pit,body.table-window .pit{display:flex;flex:none;min-width:min-content;min-height:0;height:auto;margin:0;padding:4px;border-radius:8px;background:linear-gradient(135deg,#5a421c,#211908 36%,#3c2d11);box-shadow:0 8px 30px #0006}
+body.dashboard .felt,body.table-window .felt{display:flex;flex-direction:column;flex:1;min-width:min-content;min-height:0;padding:6px 8px;border-radius:4px;overflow:clip}
 body.dashboard .felt-head,body.table-window .felt-head{flex:none;margin-bottom:4px;gap:12px;height:24px}
 body.dashboard .felt-head{display:none}
 body.dashboard .felt-head .arc-text,body.table-window .felt-head .arc-text{font-size:10px;letter-spacing:.2em;white-space:nowrap}
 .density-control{border:1px solid #8a6a2f77;border-radius:4px;background:#101c16;color:var(--gold-2);padding:4px 7px;font:11px var(--sans);cursor:pointer}
-body.dashboard .pit .table-scroll,body.table-window .table-scroll{flex:1;min-height:0;overflow:auto;max-height:none;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8a6a2f #0c1a14}
+body.dashboard .pit .table-scroll,body.table-window .table-scroll{flex:none;min-height:0;height:auto;overflow:visible;max-height:none}
 body.dashboard #roundsTable,body.table-window #roundsTable{min-width:1000px}
 body.dashboard #roundsTable :is(.card-strip,.hand-chip-strip),body.table-window #roundsTable :is(.card-strip,.hand-chip-strip){flex-wrap:nowrap}
 body.dashboard #roundsTable th,body.table-window #roundsTable th{padding:6px 5px;font-size:11px;line-height:16px;letter-spacing:.1em;text-indent:0}
@@ -167,7 +166,7 @@ body.dashboard .logbox.closed .frozen-grid-wrapper{display:none}
 .dashboard-dialog-head .tool-btn{height:30px;min-width:60px;padding:0 10px;font-size:11px}
 .dashboard-dialog-body{overflow:auto;min-height:0}
 body.dashboard :is(button,select,summary):focus-visible,body.table-window :is(button,select):focus-visible{outline:2px solid var(--gold-1);outline-offset:2px}
-body.table-window{height:100dvh;min-height:0;padding:10px;display:flex;overflow:hidden}
+body.table-window{height:auto;min-height:100dvh;padding:10px;display:block;overflow:visible}
 body.table-window .pit{width:100%}
 body:not([data-mode=traverse]) :is(#tvOptimize,#btnOptOpen,#tvDemo,a[href="traverse_process.html"],a[href="traverse_scan.html"]){display:none!important}
 @media(min-width:2100px){.dashboard-layout{grid-template-columns:340px minmax(0,1fr)}.dashboard-sidebar-scroll{padding:14px 12px}}
@@ -196,7 +195,6 @@ body:not([data-mode=traverse]) :is(#tvOptimize,#btnOptOpen,#tvDemo,a[href="trave
   body.dashboard .signal{max-width:340px;margin:0 auto 10px}
   body.dashboard :is(#standardControls,#traverseControls) .mode-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
   body.dashboard #sharedSignalSettings{height:34px}
-  body.dashboard .dashboard-workspace>.pit{flex:none;height:70dvh;min-height:320px}
   body.dashboard #stats{gap:12px;padding:14px}.dash-stat+.dash-stat{padding-left:12px}
   .dashboard-table-bar{flex-wrap:wrap}.dashboard-table-bar .tool-btn{margin-left:auto}
   body.dashboard #sharedCardCounts{flex:1}

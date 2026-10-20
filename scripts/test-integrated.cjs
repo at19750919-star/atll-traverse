@@ -148,14 +148,20 @@ async function toolGroup(page,key){
       assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
       await page.waitForFunction(()=>!IntegratedModes.busy);await page.locator('#modeTraverse').click();
     });
-    await check('手機與桌面模式選項可操作，無整頁水平溢出',async()=>{
+    await check('手機與桌面模式可操作，窄螢幕用整頁捲動查看完整主表',async()=>{
       for(const width of [390,1440]){
         await page.setViewportSize({width,height:900});
         await page.locator('#dashboardSettingsTab').click();
         await page.evaluate(()=>window.scrollTo(0,0));
-        assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width}`);
+        assert(await page.locator('.pit .table-scroll').evaluate(e=>getComputedStyle(e).overflow==='visible'&&e.scrollHeight<=e.clientHeight+1&&e.scrollWidth<=e.clientWidth+1),`inner scroll ${width}`);
+        if(width===1440)assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'desktop width');
+        else {
+          await page.evaluate(()=>scrollTo(document.documentElement.scrollWidth,0));
+          assert(await page.locator('#roundsHead th').last().evaluate(e=>e.getBoundingClientRect().right<=innerWidth+1),'last column must be reachable by document scrolling');
+          await page.evaluate(()=>scrollTo(0,0));
+        }
         await page.locator('#sharedSignalSettings').click();assert(await page.locator('#pSet').isVisible());
-        assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`signal overflow ${width}`);
+        assert(await page.locator('#pSet').evaluate(e=>e.getBoundingClientRect().right<=innerWidth),`signal overflow ${width}`);
         await page.locator('#sharedSignalSettings').click();
       }
     });

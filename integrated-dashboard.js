@@ -226,8 +226,8 @@
       target.body.className = 'table-window' + (document.body.classList.contains('table-zoom') ? ' table-zoom' : ''); Object.assign(target.body.dataset,document.body.dataset);
       target.body.dataset.density = tableDensity; target.querySelector('.density-control').value = tableDensity;
       const theme = document.documentElement.getAttribute('data-theme'); if (theme) target.documentElement.setAttribute('data-theme',theme); else target.documentElement.removeAttribute('data-theme');
-      const scroll = target.querySelector('.table-scroll'), x = scroll.scrollLeft, y = scroll.scrollTop;
-      scroll.replaceChildren(...Array.from(pit.querySelector('.table-scroll').children,child=>target.importNode(child,true))); scroll.scrollLeft = x; scroll.scrollTop = y;
+      const scroll = target.querySelector('.table-scroll'), x = tableWindow.scrollX, y = tableWindow.scrollY;
+      scroll.replaceChildren(...Array.from(pit.querySelector('.table-scroll').children,child=>target.importNode(child,true))); tableWindow.scrollTo(x,y);
     }
     function createTableWindow() {
       if (liveWindow()) { syncTableWindow(); tableWindow.focus(); return; }
@@ -252,14 +252,14 @@
         return selector + '{' + properties.map(p=>p+':'+css.getPropertyValue(p)).join(';') + '}';
       }
       windowLayout.textContent = [
-        'body.table-window{height:100dvh;min-height:0;padding:10px;display:flex;overflow:hidden;font-size:14px;line-height:1.4}',
-        'body.table-window .pit{display:flex;flex:1;min-width:0;min-height:0;margin:0;width:100%}',
+        'body.table-window{height:auto;min-height:100dvh;padding:10px;display:block;overflow:visible;font-size:14px;line-height:1.4}',
+        'body.table-window .pit{display:flex;flex:none;min-width:min-content;min-height:0;height:auto;margin:0;width:100%}',
         visual('body.table-window .pit',pit,['padding','border-radius','background','box-shadow']),
-        'body.table-window .felt{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;overflow:hidden}',
+        'body.table-window .felt{display:flex;flex-direction:column;flex:1;min-width:min-content;min-height:0;overflow:clip}',
         visual('body.table-window .felt',pit.querySelector('.felt'),['padding','border-radius']),
         'body.table-window .felt-head{flex:none;margin-bottom:4px;gap:12px;height:24px}',
         'body.table-window .felt-head .arc-text{font-size:10px;letter-spacing:.2em;white-space:nowrap}',
-        'body.table-window .table-scroll{flex:1;min-height:0;overflow:auto;max-height:none;overscroll-behavior:contain}',
+        'body.table-window .table-scroll{flex:none;min-height:0;height:auto;overflow:visible;max-height:none}',
         visual('body.table-window #roundsTable', $('roundsTable'), ['min-width']),
         'body.table-window #roundsTable th{padding:6px 5px;font-size:11px;line-height:16px;letter-spacing:.1em;text-indent:0}',
         'body.table-window #roundsTable td{padding:4px 5px;font-size:13px}',

@@ -57,7 +57,7 @@ async function toolGroup(page, name) {
       })),'left column must grow naturally without its own scroll containers');
       assert(await page.locator('#standardControls').isVisible());
       assert(await page.locator('#btnTableWindow').isVisible());
-      assert(await page.evaluate(() => getComputedStyle(document.body).overflowY !== 'hidden' && document.querySelector('.pit').clientHeight >= 480));
+      assert(await page.evaluate(() => getComputedStyle(document.body).overflowY === 'visible' && getComputedStyle(document.querySelector('.table-scroll')).overflow === 'visible'));
     });
     await check('左欄兩分頁、五組工具及原有模式適用範圍', async () => {
       await toolGroup(page, 'edit');
@@ -75,7 +75,7 @@ async function toolGroup(page, name) {
       const opened = context.waitForEvent('page');
       await page.locator('#btnTableWindow').click(); popup = await opened;
       await popup.waitForSelector('#tblEmpty');
-      await popup.waitForFunction(() => getComputedStyle(document.body).display === 'flex');
+      await popup.waitForFunction(() => getComputedStyle(document.body).display === 'block');
       assert.equal(await popup.evaluate(() => document.compatMode), 'CSS1Compat');
       assert.equal(await popup.locator('header, nav, .stats, .dashboard-sidebar, script').count(), 0);
       assert(await popup.locator('#tblEmpty').isVisible());
@@ -124,19 +124,21 @@ async function toolGroup(page, name) {
       await page.waitForFunction(() => document.getElementById('traverseTools').parentElement.classList.contains('dashboard-traverse-slot'));
       assert(await page.locator('#traverseDataDialog').isHidden());
     });
-    await check('捲動主表不移動設定和統計，表頭留在捲動區頂端', async () => {
+    await check('在主表滾輪帶動整頁，表頭貼在視窗頂端且沒有內部捲軸', async () => {
+      await page.evaluate(()=>scrollTo(0,0));
       const before = await page.locator('#stats').boundingBox();
       const sideBefore = await page.locator('.dashboard-sidebar').boundingBox();
       const table = page.locator('.pit .table-scroll');
-      await table.evaluate(el => { el.scrollTop = 600; });
-      assert(await table.evaluate(el => el.scrollTop > 0));
-      assert.deepEqual(await page.locator('#stats').boundingBox(), before);
-      assert.deepEqual(await page.locator('.dashboard-sidebar').boundingBox(), sideBefore);
+      const tableBox=await table.boundingBox();
+      await page.mouse.move(tableBox.x+40,tableBox.y+80);await page.mouse.wheel(0,600);
+      await page.waitForFunction(()=>scrollY>0);
+      const pageY=await page.evaluate(()=>scrollY);
+      assert(await table.evaluate(el=>el.scrollTop===0&&el.scrollHeight<=el.clientHeight+1&&el.scrollWidth<=el.clientWidth+1));
+      assert(Math.abs((await page.locator('#stats').boundingBox()).y-(before.y-pageY))<2);
+      assert(Math.abs((await page.locator('.dashboard-sidebar').boundingBox()).y-(sideBefore.y-pageY))<2);
       const th = await page.locator('#roundsHead th').first().boundingBox();
-      const scroll = await table.boundingBox();
-      assert(Math.abs(th.y - scroll.y) < 3);
-      assert(await page.evaluate(() => window.scrollY === 0));
-      await table.evaluate(el => { el.scrollTop = 0; });
+      assert(Math.abs(th.y)<3);
+      await page.evaluate(()=>scrollTo(0,0));
     });
     await check('彈窗可選牌，切牌後同步並保留彈窗捲動位置', async () => {
       await toolGroup(page, 'edit');
@@ -161,11 +163,15 @@ async function toolGroup(page, name) {
       });
       assert.equal(Object.keys(inventory).length,104);assert(Object.values(inventory).every(n=>n===4));
       await sameTable(page, popup);
-      const scrollBefore = await popup.locator('.table-scroll').evaluate(el => { el.scrollTop = 450; return { top:el.scrollTop, height:el.clientHeight, total:el.scrollHeight }; });
+      await popup.setViewportSize({width:700,height:700});
+      const scrollBefore = await popup.evaluate(() => { scrollTo(180,450); return { left:scrollX,top:scrollY,height:innerHeight,total:document.scrollingElement.scrollHeight }; });
       await page.evaluate(() => IntegratedModes.cutTraverse(36));
       await sameTable(page, popup);
-      const scrollAfter = await popup.locator('.table-scroll').evaluate(el => ({ top:el.scrollTop, height:el.clientHeight, total:el.scrollHeight }));
+      const scrollAfter = await popup.evaluate(() => ({ left:scrollX,top:scrollY,height:innerHeight,total:document.scrollingElement.scrollHeight }));
       assert(scrollBefore.top > 400 && scrollAfter.top > 400, JSON.stringify({scrollBefore,scrollAfter}));
+      assert(scrollBefore.left>0&&scrollAfter.left===scrollBefore.left,JSON.stringify({scrollBefore,scrollAfter}));
+      assert(await popup.locator('.table-scroll').evaluate(e=>getComputedStyle(e).overflow==='visible'&&e.scrollHeight<=e.clientHeight+1&&e.scrollWidth<=e.clientWidth+1));
+      await popup.setViewportSize({width:1280,height:900});
     });
     await check('一般與緊湊密度在兩邊同步，切換不改牌序', async () => {
       const signature = await page.locator('#roundsBody').textContent();
@@ -178,7 +184,7 @@ async function toolGroup(page, name) {
       await page.locator('.density-control').selectOption('normal');
       await popup.waitForFunction(() => document.body.dataset.density === 'normal');
     });
-    await check('實際短視窗仍可讀至少六局、整頁可捲到所有設定且訊號牌不超框', async () => {
+    await check('短視窗完整牌表隨整頁延伸，設定可達且訊號牌不超框', async () => {
       // Regression: the user's 2561×908 capture is a 1791×636 CSS viewport.
       // A large body font also catches accidental dependence on browser defaults.
       await page.addStyleTag({ content: 'body{font-size:20px}' });
@@ -191,13 +197,14 @@ async function toolGroup(page, name) {
           const box=s=>document.querySelector(s).getBoundingClientRect();
           const table=box('.pit .table-scroll'),head=box('#roundsHead'),row=box('#roundsBody tr');
           const side=box('.dashboard-sidebar-scroll'),signal=box('.signal');
-          return {visibleRows:Math.floor((table.height-head.height)/row.height),tableHeight:table.height,sideHeight:side.height,
+          const last=box('#roundsBody tr:last-child'),container=document.querySelector('.pit .table-scroll');
+          return {allRowsContained:last.bottom<=table.bottom+1&&container.scrollHeight<=container.clientHeight+1&&container.scrollWidth<=container.clientWidth+1,tableHeight:table.height,sideHeight:side.height,
             areas:['header','.dashboard-layout','.dashboard-overview','#stats','#statsVioCard','.dashboard-table-bar','.pit','.felt-head','.logbox','#roundsBody tr'].map(s=>({s,height:box(s).height,y:box(s).y})),
             signalContained:[...document.querySelectorAll('.signal .mini-card')].every(e=>{const r=e.getBoundingClientRect();return r.top>=signal.top&&r.bottom<=signal.bottom&&r.left>=signal.left&&r.right<=signal.right;}),
             actionsContained:[...document.querySelectorAll('.chip-col .chip')].every(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),
             pageCanGrow:getComputedStyle(document.body).overflowY!=='hidden'&&document.documentElement.scrollHeight>innerHeight};
         });
-        assert(geometry.visibleRows>=6,JSON.stringify({width,height,...geometry}));
+        assert(geometry.allRowsContained,JSON.stringify({width,height,...geometry}));
         assert(geometry.sideHeight>=230,JSON.stringify({width,height,...geometry}));
         assert(geometry.signalContained&&geometry.actionsContained&&geometry.pageCanGrow,JSON.stringify({width,height,...geometry}));
         await page.locator('#tvSecond').scrollIntoViewIfNeeded();
@@ -206,16 +213,18 @@ async function toolGroup(page, name) {
       }
       await page.setViewportSize({width:2560,height:1080});
     });
-    await check('整頁可自然向下捲動，主表內捲動不牽動整頁', async () => {
+    await check('整頁可捲到主表最後一局與日誌，主表沒有隱藏捲動區', async () => {
       await page.setViewportSize({width:1791,height:636});
       await page.locator('#logHead').scrollIntoViewIfNeeded();
       const pageY=await page.evaluate(()=>scrollY);
       assert(pageY>0,'page must scroll to content below the viewport');
       const table=page.locator('.pit .table-scroll');
       await table.evaluate(e=>{e.scrollTop=700;});
-      assert(await table.evaluate(e=>e.scrollTop>=700));
+      assert(await table.evaluate(e=>e.scrollTop===0&&e.scrollHeight<=e.clientHeight+1));
       assert.equal(await page.evaluate(()=>scrollY),pageY);
-      await table.evaluate(e=>{e.scrollTop=0;});
+      await page.locator('#roundsBody tr').last().scrollIntoViewIfNeeded();
+      const last=await page.locator('#roundsBody tr').last().boundingBox();
+      assert(last.y>=0&&last.y+last.height<=636);
       await page.keyboard.press('Control+Home');
       await page.setViewportSize({width:2560,height:1080});
     });
@@ -305,10 +314,15 @@ async function toolGroup(page, name) {
       const filePage = await context.newPage();
       await filePage.goto(require('node:url').pathToFileURL(path.join(ROOT,'integrated.html')).href);
       await filePage.waitForFunction(() => !!window.DashboardUI);
+      await filePage.locator('#modeTraverse').click();await toolGroup(filePage,'demo');await filePage.locator('#tvDemo').click();
+      await filePage.waitForFunction(()=>!IntegratedModes.busy&&currentRounds?.length>0);
       const opening = context.waitForEvent('page');
       await filePage.locator('#btnTableWindow').click(); const fileWindow = await opening;
-      await fileWindow.waitForFunction(() => getComputedStyle(document.body).display === 'flex');
+      await fileWindow.waitForFunction(() => getComputedStyle(document.body).display === 'block');
       assert.equal(await fileWindow.evaluate(() => document.compatMode),'CSS1Compat');
+      await fileWindow.locator('#roundsBody tr').last().scrollIntoViewIfNeeded();
+      assert(await fileWindow.evaluate(()=>scrollY>0&&document.querySelector('.table-scroll').scrollTop===0));
+      assert(await fileWindow.locator('.table-scroll').evaluate(e=>getComputedStyle(e).overflow==='visible'&&e.scrollHeight<=e.clientHeight+1));
       const closed = fileWindow.waitForEvent('close');await filePage.close();await closed;
     });
     assert.deepEqual(errors, []);
