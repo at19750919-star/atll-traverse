@@ -2965,8 +2965,8 @@ function verifyShoeRules(rounds, options = {}) {
                 errors++;
                 violationRoundIndexes.add(i);
             }
-            // 規則 6: `非三條局的下一局是和`
-            if (true_result_next === '和') {
+            // 規則 6: `非三條局的下一局是和`（三條開關關閉時不檢查）
+            if (true_result_next === '和' && isTripleRuleOn()) {
                 log(`違規(6): 第 ${round_num} 局不是三條(T局)，但下一局 (第 ${next_round_num} 局) 是和局`, 'error');
                 errors++;
                 violationRoundIndexes.add(i);
@@ -4141,7 +4141,7 @@ function calculateViolationStats(rounds) {
         }
 
         // 反向檢查：和局的上一局必須是三條(T局)
-        if (!isViolation && nextTrue === '和' && !isTRound(currentRound)) {
+        if (!isViolation && nextTrue === '和' && !isTRound(currentRound) && isTripleRuleOn()) {
             isViolation = true;
         }
 
@@ -4781,7 +4781,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                     }
                 }
                 const b6Overflow = swapB6Target_ > 0 && currentB6Count_ >= swapB6Target_ && candidateIsB6;
-                const candidateOk = sensCandidate && !(sensCandidate.result === '和' && !prevIsT) && !b6Overflow;
+                const candidateOk = sensCandidate && !(sensCandidate.result === '和' && !prevIsT && isTripleRuleOn()) && !b6Overflow;
                 if (candidateOk) {
                     copiedRound.cards = sensCandidate.ordered.map((c, pos) => {
                         if (c && typeof c.clone === 'function') return c.clone(pos);
@@ -4876,7 +4876,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                     if (candidate.result === '和') {
                         const prevRound = i > 0 ? updatedRounds[i - 1] : null;
                         const prevIsT = prevRound && (prevRound.isT || (typeof hasFullHouse === 'function' && hasFullHouse(prevRound)));
-                        if (!prevIsT) {
+                        if (!prevIsT && isTripleRuleOn()) {
                             allRemainingCards.push(cardToAdd);
                             failedAttempts++;
                             log(`  ✗ ${formatCardLabel(cardToAdd)} 補入後結果為和局但上一局非三條，改試下一張`, 'warn');

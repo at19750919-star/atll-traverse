@@ -136,7 +136,7 @@ async function inventory(page){
     await check('共用訊號選紅0，穿越實際生成依紅心方塊10/J/Q/K判定',async()=>{
       await page.locator('#modeTraverse').click();await page.locator('#sharedSignalSettings').click();
       await page.locator('[data-q="red0"]').click();await page.locator('#sharedSignalSettings').click();
-      await page.evaluate(()=>{if(document.getElementById('traverseControls').classList.contains('collapsed'))document.getElementById('tvSettingsToggle').click();});await page.locator('#tvLeft').fill('');await page.locator('#tvSide').uncheck();await page.locator('#tvNine').uncheck();
+      await page.evaluate(()=>{if(document.getElementById('traverseControls').classList.contains('collapsed'))document.getElementById('tvSettingsToggle').click();});await page.locator('#tvLeft').fill('');await page.locator('#tvSideLimit').fill('');await page.locator('#tvNine').uncheck();
       await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
       await inventory(page);
       assert.deepEqual(await page.evaluate(()=>IntegratedModes.traversal.result.signalConfig),{suits:['♥','♦'],ranks:['10','J','Q','K']});

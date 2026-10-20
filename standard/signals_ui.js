@@ -1208,7 +1208,11 @@ function pack_all_sensitive_and_segment(deck) {
     let final_rounds = [...a_rounds, ...(c_round ? [c_round] : [])];
 
     // 於生成流程內就完成 T 局訊號處理，避免後續再跑一次
-    if (typeof applyTSignalLogic === 'function') {
+    // 三條開關關閉：不做三條／和局配對，和局照撿到的位置保留（任何局都可開和）
+    const tripleRuleOff = typeof isTripleRuleOn === 'function' && !isTripleRuleOn();
+    if (tripleRuleOff) {
+        log('🔍 三條開關關閉：略過 T 局處理，和局可出現在任何位置。', 'info');
+    } else if (typeof applyTSignalLogic === 'function') {
         try {
             const processed = applyTSignalLogic(final_rounds.slice(), a_rounds, used_pos, c_cards);
             if (Array.isArray(processed) && processed.length > 0) {

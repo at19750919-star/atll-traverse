@@ -1224,6 +1224,8 @@ body.running .deck,body.finished .deck{
     <label hidden>補排次數 <input id="tvTries" class="numbox" type="number" min="1" value="20000"></label>
     <label hidden>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
     <label>剩牌上限 <input id="tvLeft" class="numbox" type="number" min="0" max="416" value="0" placeholder="不限"></label>
+    <label title="整副和局數上限；留白＝不限">和局上限 <input id="tvTieMax" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input id="tvSideLimit" class="numbox" type="number" min="0" max="104" value="8" placeholder="不限"></label>
   </div>
   <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。撿段時計數，整副不符合就重跑">
     <label>4張局下限 <input id="tv4Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
@@ -1242,10 +1244,9 @@ body.running .deck,body.finished .deck{
     <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" hidden><span class="name">強</span><input type="checkbox" id="tvStrong"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><span class="name">第二張敏感</span><input type="checkbox" id="tvSecond"><span class="switch" aria-hidden="true"></span></label>
-    <label class="cond rule-control"><span class="name">莊閒</span><input type="checkbox" id="tvSide" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" hidden><span class="name">莊閒</span><input type="checkbox" id="tvSide" checked><span class="switch" aria-hidden="true"></span></label>
   </div>
   </div>
-  <input id="tvSideLimit" type="hidden" value="8">
 </section>
 <section id="standardControls" class="gframe mode-panel">
   <h2 class="frame-title">百家 3.0 設定</h2>
@@ -1438,9 +1439,9 @@ body.running .deck,body.finished .deck{
 <script>
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
 </script>
-<script src="standard/signals.js?v=21"></script>
+<script src="standard/signals.js?v=23"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
-<script src="standard/signals_ui.js?v=39"></script>
+<script src="standard/signals_ui.js?v=40"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
 <script src="standard/swap_preview.js?v=2"></script>
 <script src="standard/auto_fix_plugin.js?v=3"></script>
@@ -1779,6 +1780,6 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=21"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=4"></script>
+<script src="traverse_builder.js?v=21"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=5"></script>
 </body>
 </html>

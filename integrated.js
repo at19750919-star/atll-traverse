@@ -15,7 +15,7 @@
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', busy = false, stopped = false, optimization = null;
   const states = { standard: null, traverse: { result: null, cut: 0, analysis: null, view: 'after' } };
-  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const num = id => Number($(id).value);
   const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
   function rules() { return { tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
@@ -181,14 +181,17 @@
   // 排好牌後把設定收成一行摘要，主表格往上移；點「展開設定」可再展開
   function settingsSummary() {
     const parts=[`${$('tvMin').value}～${$('tvMax').value}張`,`剩牌${$('tvLeft').value.trim()===''?'不限':'≤'+$('tvLeft').value}`];
+    if($('tvTieMax').value.trim()!=='')parts.push(`和局≤${$('tvTieMax').value}`);
+    if($('tvSideLimit').value.trim()!=='')parts.push(`莊閒差距≤${$('tvSideLimit').value}`);
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
-    const on=[['tvTriple','三條'],['tvB6','莊6'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9'],['tvSide','莊閒']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    const on=[['tvTriple','三條'],['tvB6','莊6'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
   function setSettingsCollapsed(value) {
     $('traverseControls').classList.toggle('collapsed',value);$('tvSettingsSummary').textContent=value?settingsSummary():'';
     $('tvSettingsToggle').textContent=value?'展開設定':'收合設定';$('tvSettingsToggle').setAttribute('aria-expanded',String(!value));
   }
+  function tieCount(cards,cut=0){return E.dealRounds(E.cutDeck(cards,cut)).filter(r=>r.hand&&r.result==='和').length;}
   function sideDiff(cards,cut=0){const rs=E.dealRounds(E.cutDeck(cards,cut)).filter(r=>r.hand);return Math.abs(rs.filter(r=>r.result==='莊').length-rs.filter(r=>r.result!=='莊').length);}
   function nineCut(result) {
     const cs=O.prepare(result), a=O.analyze(cs,rules());
@@ -202,7 +205,10 @@
     const min=num('tvMin'),max=num('tvMax');
     if(!Number.isInteger(min)||!Number.isInteger(max)||min<4||max>416||min>max){status('張數範圍須為 4～416 的整數，最少不能大於最多');return;}
     for(const id of ['tvIdle','tvTries','tvChain'])if(!Number.isInteger(num(id))||num(id)<1){status('撿段、補排與接段次數須為正整數');$(id).focus();return;}
-    if($('tvSide').checked&&(!Number.isInteger(num('tvSideLimit'))||num('tvSideLimit')<0)){status('莊閒差距上限須為非負整數');return;}
+    const optLimit=id=>{const raw=$(id).value.trim();if(raw==='')return null;const v=Number(raw);return Number.isInteger(v)&&v>=0&&v<=104?v:NaN;};
+    const sideLimit=optLimit('tvSideLimit'),tieMax=optLimit('tvTieMax');
+    if(Number.isNaN(sideLimit)){status('莊閒差距須為 0～104 的整數或留白');$('tvSideLimit').focus();return;}
+    if(Number.isNaN(tieMax)){status('和局上限須為 0～104 的整數或留白');$('tvTieMax').focus();return;}
     applySignalConfig();stopped=false;clearOptimization();lock(true);const started=Date.now();let reruns=0,result,cut=null;
     const limit=$('tvLeft').value.trim()===''?null:num('tvLeft');
     if(limit!==null&&(!Number.isInteger(limit)||limit<0||limit>416)){status('剩牌上限須為 0～416 的整數或留白');lock(false);return;}
@@ -222,7 +228,8 @@
         if(!demo&&limit!==null&&result.leftoverCount>limit){reruns++;continue;}
         if(B.SIGNAL_RETRY_ENABLED&&result.signal&&!result.signal.ok&&!demo){reruns++;continue;}
         cut=$('tvNine').checked?nineCut(result):null;
-        if(!demo&&$('tvSide').checked&&sideDiff(result.cards,cut||0)>num('tvSideLimit')){reruns++;continue;}
+        if(!demo&&sideLimit!==null&&sideDiff(result.cards,cut||0)>sideLimit){lastMiss=`莊閒差距超過 ${sideLimit}`;reruns++;continue;}
+        if(!demo&&tieMax!==null&&tieCount(result.cards,cut||0)>tieMax){lastMiss=`和局超過 ${tieMax} 局`;reruns++;continue;}
         if(!demo){const miss=sizeMiss(result.cards,cut||0,sizes.limits);if(miss){lastMiss=miss;reruns++;continue;}}
         break;
       }
