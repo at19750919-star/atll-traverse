@@ -684,14 +684,14 @@ function shouldSkipSensitiveRound(round) {
         }
     }
 
-    // 「避開莊6點贏」勾選時，不論對不對調，只要 5/6 張局會莊6點贏就排除（4 張局豁免）
+    // 「避開莊6點贏」勾選時，不論對不對調，只排除莊家補第三張後 6 點贏（6 張局）；閒補牌、莊不補的 5 張莊6贏與 4 張局豁免
     const skipBanker6El = document.getElementById('skipBanker6');
     const skipBanker6 = skipBanker6El ? skipBanker6El.checked : false;
     if (skipBanker6 && Array.isArray(round.cards) && round.cards.length >= 4) {
         const isBanker6Win = (cards) => {
             const hi = computeRoundHands(cards);
             return !!hi && hi.bankerTotal === 6 && hi.playerTotal <= 5
-                && hi.playerCards.length + hi.bankerCards.length >= 5;
+                && hi.bankerCards.length === 3;
         };
         const tmp = round.cards.map(c => c.clone());
         [tmp[0], tmp[1]] = [tmp[1], tmp[0]];
@@ -3297,7 +3297,8 @@ async function generateShoe() {
                     const tmp = rd.cards.map(c => c.clone());
                     [tmp[0], tmp[1]] = [tmp[1], tmp[0]];
                     const hi = computeRoundHands(tmp);
-                    if (hi && hi.bankerTotal === 6 && hi.playerTotal <= 5) _swapB6Count++;
+                    if (hi && hi.bankerTotal === 6 && hi.playerTotal <= 5
+                        && (!_skipB6Checked || hi.bankerCards.length === 3)) _swapB6Count++;
                 }
                 if (shouldProhibit) {
                     log(`🔍 對調莊6檢查：${_swapB6Count}/0 局（上限）`, 'info');

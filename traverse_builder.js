@@ -124,13 +124,13 @@
     // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
     // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
     const rules = { tripleTie: true, signalRule: true, strong: false, secondStart: false, skipBanker6: false, skipPlayer7: false };
-    // 莊6／閒7（比照百家3.0）：原牌或前兩張對調後，5／6 張的莊 6 點贏、或閒 7 點贏莊 6 點的局不撿
+    // 莊6／閒7（比照百家3.0）：原牌或前兩張對調後，莊補牌（6 張）後 6 點贏、或閒 7 點贏莊 6 點的局不撿（閒補牌莊不補的 5 張莊6贏不排除）
     function excludedHand(hand) {
         if (!rules.skipBanker6 && !rules.skipPlayer7) return false;
         const bad = (a) => {
             const h = simulateHand(a, 0, a.length);
             if (!h) return false;
-            if (rules.skipBanker6 && h.banker === 6 && h.player <= 5 && h.size >= 5) return true;
+            if (rules.skipBanker6 && h.banker === 6 && h.player <= 5 && h.size === 6) return true;
             return rules.skipPlayer7 && h.player === 7 && h.banker === 6;
         };
         const sw = hand.slice();

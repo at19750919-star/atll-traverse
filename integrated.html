@@ -1238,7 +1238,7 @@ body.running .deck,body.finished .deck{
   </div>
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control"><span class="name">三條</span><input type="checkbox" id="tvTriple" checked><span class="switch" aria-hidden="true"></span></label>
-    <label class="cond rule-control" title="撿段時排除 5／6 張的莊 6 點贏（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="tvB6"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="撿段時排除莊補牌後 6 點贏的 6 張局（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="tvB6"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="撿段時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="tvP7"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">末張9</span><input type="checkbox" id="tvNine" checked><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
@@ -1262,7 +1262,7 @@ body.running .deck,body.finished .deck{
   </div>
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control" title="三條局的下一局開和；關閉後三條當一般局"><span class="name">三條</span><input type="checkbox" id="tripleTieRule" checked><span class="switch" aria-hidden="true"></span></label>
-    <label class="cond rule-control" title="挑敏感局時排除 5／6 張的莊 6 點贏（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="skipBanker6"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="挑敏感局時排除莊補牌後 6 點贏的 6 張局（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="skipBanker6"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="挑敏感局時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="skipPlayer7Banker6"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="生成完成後調整牌序，讓整副牌靴第 416 張是 9"><span class="name">末張9</span><input type="checkbox" id="lastCardNine"><span class="switch" aria-hidden="true"></span></label>
   </div>
@@ -1442,7 +1442,7 @@ body.running .deck,body.finished .deck{
 <script>
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
 </script>
-<script src="standard/signals.js?v=26"></script>
+<script src="standard/signals.js?v=27"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
 <script src="standard/signals_ui.js?v=42"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
@@ -1805,6 +1805,6 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=21"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=6"></script>
+<script src="traverse_builder.js?v=22"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=6"></script>
 </body>
 </html>
