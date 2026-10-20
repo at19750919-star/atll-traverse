@@ -31,7 +31,7 @@
             const need = opts.tripleTie && prev.trip ? '和' : prev.signal ? '莊' : '閒';
             const tripleBad = opts.tripleTie && prev.trip !== (h.result === '和');
             const signalBad = opts.signalRule && index > 0 && !(opts.tripleTie && prev.trip)
-                && (h.result === '和' ? !opts.tripleTie : h.result !== need);
+                && (h.result === '和' ? (!opts.tripleTie && need === '莊') : h.result !== need);
             const fixable = h.result === need || (h.sw && h.sw.size === h.size && h.sw.result === need);
             if ((tripleBad || signalBad) && !fixable) out.push(`上一局要求開${need}，對調前兩張也調不成`);
         }

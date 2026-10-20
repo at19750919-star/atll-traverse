@@ -19,8 +19,8 @@
   const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
   const TV_KEY = { red0:'integrated-traverse-red0', a2:'integrated-traverse-a2' }, TV_SUB_KEY = 'integrated-traverse-sub';
   const TV_RULES = {
-    red0: { tvTriple:false, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'4', tvSignal:true, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
-    a2:   { tvTriple:true, tvB6:false, tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'5', tvSignal:true, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
+    red0: { tvTriple:false, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
+    a2:   { tvTriple:true, tvB6:false, tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'8', tvSignal:true, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
   };
   const tvBase = (() => {   // 非規則欄位起始值：HTML 預設，再套用舊的 integrated-traverse-settings（只讀，不搬移）
     const o = {}; controlIds.forEach(id => { const el = $(id); o[id] = el.type === 'checkbox' ? el.checked : el.value; });
@@ -78,7 +78,7 @@
       if ($('tvTriple').checked && trip !== (r.result==='和')) out.triple.push(i+1);
       if (i && $('tvSignal').checked && !($('tvTriple').checked && trip)) {
         const need=B.isSignalHand(prev.cards,config())?'莊':'閒';
-        if (r.result==='和' ? !$('tvTriple').checked : r.result!==need) out.signal.push(i+1);
+        if (r.result==='和' ? (!$('tvTriple').checked && need==='莊') : r.result!==need) out.signal.push(i+1);
       }
     });
     return out;
@@ -277,7 +277,7 @@
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
       if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvB6').checked=$('tvP7').checked=false;}
       for(;;){
-        const opts={...rules(),minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,
+        const opts={...rules(),minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,sideLimit:demo?null:sideLimit,tieMax:demo?null:tieMax,
           onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次${lastMiss?`｜上一副${lastMiss}`:''}］`:''}${m}`),isCancelled:()=>stopped};
         if(demo)opts.rng=rng;else if(limit!==null&&!opts.strong)opts.rejectAbove=limit;
         result=await B.build(opts);

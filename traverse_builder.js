@@ -313,18 +313,23 @@
         return any ? out : null;
     }
     function roundSizeCounts(points) {
-        const c = { 4: 0, 5: 0, 6: 0 };
+        const c = { 4: 0, 5: 0, 6: 0, tie: 0 };
         for (let cur = 0; cur < points.length;) {
             const h = simulateHand(points, cur, points.length);
             if (!h) break;
             c[h.size]++;
+            if (h.result === '和') c.tie++;
             cur += h.size;
         }
         return c;
     }
+    // 和局上限（tieMax，只在三條關閉時用）：三條關閉時和局可出現在任何局、撿段會撿到很多和局，
+    // 所以撿段時已收和局數＋本段和局數超過上限就不收；三條開啟時和局只跟在三條後面，維持排完再檢查
     function sizeLimitOk(seg, opts) {
-        if (!opts.sizeLimits) return true;
+        if (!opts.sizeLimits && opts.tieMax === null) return true;
         const c = roundSizeCounts(seg), t = opts.sizeTally;
+        if (opts.tieMax !== null && opts.tieTally + c.tie > opts.tieMax) return false;
+        if (!opts.sizeLimits) return true;
         for (const k of SIZE_KEYS) {
             const { min, max } = opts.sizeLimits[k];
             if (max !== null && t[k] + c[k] > max) return false;
@@ -333,8 +338,10 @@
         return true;
     }
     function sizeLimitAdd(seg, opts) {
-        if (!opts.sizeLimits) return;
+        if (!opts.sizeLimits && opts.tieMax === null) return;
         const c = roundSizeCounts(seg);
+        opts.tieTally += c.tie;
+        if (!opts.sizeLimits) return;
         for (const k of SIZE_KEYS) opts.sizeTally[k] += c[k];
         opts.sizeUsedCards += seg.length;
     }
@@ -640,6 +647,78 @@
     const neededAfter = (prevHand) =>
         (rules.tripleTie && isTriple(prevHand.map(c => typeof c === 'number' ? c : c.point))) ? '和' : (isSignalHand(prevHand) ? '莊' : '閒');
 
+    // 三條關閉時，上一局沒有訊號牌（應開閒）的和局視為符合（照百家3.0：任何局都可開和，但不能接在訊號局後面）
+    const tieAllowed = (need, result) => !rules.tripleTie && need === '閒' && result === '和';
+
+    // 訊號牌靠花色區分時（例：紅0＝♥♦ 的 10JQK），同點數的牌可互換位置而不影響點數、勝負與穿越。
+    // 用這個自由度決定哪些局含訊號牌：讓和局不接在訊號局後面，並把莊／閒＋和的差距壓到 sideTarget 以內。
+    // 只在同點數之間交換實際牌（physicalCards），回傳 { moves, diff, tieBad }；沒有可調的牌時回傳 null
+    function arrangeSignalCards(seq, physicalCards, opts) {
+        const rounds = [];
+        for (let cur = 0; cur < seq.length;) {
+            const h = simulateHand(seq, cur, seq.length);
+            if (!h) break;
+            rounds.push({ start: cur, size: h.size, result: h.result, trip: rules.tripleTie && isTriple(seq.slice(cur, cur + h.size)) });
+            cur += h.size;
+        }
+        const R = rounds.length;
+        if (R < 2) return null;
+        const roundOf = new Int32Array(seq.length).fill(-1);
+        rounds.forEach((r, i) => { for (let k = 0; k < r.size; k++) roundOf[r.start + k] = i; });
+        const isSig = c => isSignalCard(c);
+        const sig = new Int32Array(R);
+        const groups = new Map();
+        physicalCards.forEach((c, i) => {
+            if (isSig(c) && roundOf[i] >= 0) sig[roundOf[i]]++;
+            if (!groups.has(c.point)) groups.set(c.point, []);
+            groups.get(c.point).push(i);
+        });
+        const flex = [...groups.values()].filter(pos => {
+            const s = pos.filter(i => isSig(physicalCards[i])).length;
+            return s > 0 && s < pos.length;
+        });
+        if (!flex.length) return null;
+        const target = Number.isInteger(opts.sideTarget) && opts.sideTarget >= 0 ? opts.sideTarget : null;
+        const evaluate = () => {
+            let banker = 0, other = 0, tieBad = 0;
+            for (let k = 0; k < R; k++) {
+                const prev = rounds[(k - 1 + R) % R], cur = rounds[k];
+                const need = prev.trip ? '和' : sig[(k - 1 + R) % R] > 0 ? '莊' : '閒';
+                let res = cur.result;
+                if (res === '和') { if (need === '莊') tieBad++; }
+                else if (need !== '和') res = need;
+                if (res === '莊') banker++; else other++;
+            }
+            const diff = Math.abs(banker - other);
+            return { diff, tieBad, cost: tieBad * 1000 + (target === null ? 0 : Math.max(0, diff - target)) };
+        };
+        let best = evaluate(), moves = 0;
+        const rng = opts.rng;
+        for (let step = 0; step < 20000 && best.cost > 0; step++) {
+            const pos = flex[Math.floor(rng() * flex.length)];
+            const i = pos[Math.floor(rng() * pos.length)], j = pos[Math.floor(rng() * pos.length)];
+            const si = isSig(physicalCards[i]), sj = isSig(physicalCards[j]);
+            if (si === sj || roundOf[i] === roundOf[j]) continue;
+            const apply = () => {
+                [physicalCards[i], physicalCards[j]] = [physicalCards[j], physicalCards[i]];
+                const d = si ? -1 : 1;
+                if (roundOf[i] >= 0) sig[roundOf[i]] += d;
+                if (roundOf[j] >= 0) sig[roundOf[j]] -= d;
+            };
+            apply();
+            const now = evaluate();
+            if (now.cost <= best.cost) { best = now; moves++; }
+            else {
+                // 換回來：交換後 i、j 的訊號身分互換，反向更新
+                [physicalCards[i], physicalCards[j]] = [physicalCards[j], physicalCards[i]];
+                const d = si ? -1 : 1;
+                if (roundOf[i] >= 0) sig[roundOf[i]] -= d;
+                if (roundOf[j] >= 0) sig[roundOf[j]] += d;
+            }
+        }
+        return { moves, diff: best.diff, tieBad: best.tieBad };
+    }
+
     // 訊號牌規則（照百家3.0）：上一局是三條 → 這局和（三條優先，含三條 A／2）；
     // 上一局有訊號牌 → 這局莊；沒有 → 這局閒。第 1 局的上一局是最後一局（完整局）。
     // 做法：排好後由前往後，把不符合的局對調前兩張（敏感局對調必定莊閒互換、張數不變），
@@ -665,7 +744,7 @@
             const prev = rounds[(k - 1 + n) % n], cur = rounds[k];
             const need = neededAfter((physicalCards || seq).slice(prev.start, prev.start + prev.size));
             const h = simulateHand(seq, cur.start, cur.start + cur.size);
-            if (!h || h.result === need) continue;
+            if (!h || h.result === need || tieAllowed(need, h.result)) continue;
             if (need === '和' || h.result === '和') { conflicts++; continue; }
             [seq[cur.start], seq[cur.start + 1]] = [seq[cur.start + 1], seq[cur.start]];
             if (physicalCards) [physicalCards[cur.start], physicalCards[cur.start + 1]] = [physicalCards[cur.start + 1], physicalCards[cur.start]];
@@ -695,7 +774,7 @@
             const prevCards = (physicalCards || seq).slice(prev.start, prev.start + prev.size);
             const need = neededAfter(prevCards);
             const actual = simulateHand(seq, rounds[k].start, rounds[k].start + rounds[k].size).result;
-            if (actual !== need) {
+            if (actual !== need && !tieAllowed(need, actual)) {
                 travConflicts++;
                 const why = rules.tripleTie && isTriple(prevPoints) ? '上一局是三條，依三條優先應開和'
                     : isSignalHand(prevCards) ? '上一局有訊號牌，應開莊' : '上一局沒有訊號牌，應開閒';
@@ -762,6 +841,9 @@
             sizeLimits: normalizeSizeLimits(options.sizeLimits),
             sizeTally: { 4: 0, 5: 0, 6: 0 },
             sizeUsedCards: 0,
+            tieMax: options.tripleTie === false && Number.isInteger(options.tieMax) && options.tieMax >= 0 ? options.tieMax : null,
+            tieTally: 0,
+            sideTarget: Number.isInteger(options.sideLimit) && options.sideLimit >= 0 ? options.sideLimit : null,
         };
         opts.computeQuota = opts.secondStart && opts.zeroPolicy === 'quota';
         rules.tripleTie = opts.tripleTie;
@@ -813,12 +895,14 @@
 
         const customSignal = opts.signalRule && JSON.stringify(rules.signalConfig) !== JSON.stringify(defaultSignal());
         let physicalCards = customSignal ? assignCards(chains.flat().concat(leftover), opts.rng).cards : null;
+        let signalBalance = physicalCards ? arrangeSignalCards(chains.flat().concat(leftover), physicalCards, opts) : null;
         let signal = opts.signalRule ? applySignalRule(chains, leftover, physicalCards) : null;
         // 訊號牌對調後長段不合格：段不變，只換接段順序再試，省掉整副重排
         for (let t = 0; SIGNAL_RETRY_ENABLED && signal && !signal.ok && t < 30 && !ctx.cancelled(); t++) {
             chains = await phaseChain(segs, { ...opts, chainAttempts: 1 }, ctx);
             leftover = shuffleInPlace(restCards.slice(), opts.rng);
             physicalCards = customSignal ? assignCards(chains.flat().concat(leftover), opts.rng).cards : null;
+            signalBalance = physicalCards ? arrangeSignalCards(chains.flat().concat(leftover), physicalCards, opts) : null;
             signal = applySignalRule(chains, leftover, physicalCards);
         }
         const balance = opts.signalRule ? null : balanceSides(chains, opts.rng);
@@ -856,6 +940,7 @@
             colorOk,
             signal,
             balance,
+            signalBalance,
             stats: {
                 shuffles: p1.shuffles,
                 phase1Segments: p1.segs.length,
