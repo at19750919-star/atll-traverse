@@ -13,8 +13,8 @@
   const original = { refresh: refreshAnalysisAndRender, violations: calculateViolationStats,
     cannotSwap: calculateCannotSwapViolations, verify: verifyShoeRules, clear: clearAll, export: exportRoundsAsExcelWithDrive, stats: updateStats };
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
-  let mode = 'standard', busy = false, stopped = false, optimization = null;
-  const states = { standard: null, traverse: { result: null, cut: 0, analysis: null, view: 'after' } };
+  let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null;
+  const states = { red0: null, a2: null, traverse: { result: null, cut: 0, analysis: null, view: 'after' } };
   const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const num = id => Number($(id).value);
   const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
@@ -120,21 +120,36 @@
   function snapshot() { return { rounds:currentRounds,analysis:currentAnalysis,deck:originalDeckOrder,originalRounds,
     editEnabled, imported:window.__importedShoeMode,cut:$('cutPos').value,frozen:frozenGridHTML,
     swapSix:new Set(swapBankerSixIndexes),bankerSix:new Set(bankerSixIndexes),violations:new Set(violationRoundIndexes) }; }
+  const SUB_NAME = { red0:'紅0模式', a2:'A2模式' };
+  function currentSignal() { return { suits:SIGNAL_CONFIG.suits.slice(), ranks:SIGNAL_CONFIG.ranks.slice() }; }
+  function applyProfile(name) {
+    // 套用該模式的設定欄與訊號牌（走真實 updateSignalConfig → persist／sync／display）
+    const p = StandardProfiles.fillInputs(name);
+    StandardProfiles.setCurrent(name);
+    updateSignalConfig({ suits:p.signal.suits.slice(), ranks:p.signal.ranks.slice() });
+    $('stTitle').textContent = SUB_NAME[name]+' 設定';
+    document.body.dataset.sub = name;
+    setStandardCollapsed($('standardControls').classList.contains('collapsed'));
+  }
   function switchMode(next) {
-    if(next===mode||busy||window.__isGeneratingShoe)return;
-    if(mode==='standard')states.standard=snapshot();else{absorbEdits();OptimizerDialog.reset();}
-    mode=next;document.body.dataset.mode=mode;
-    $('modeStandard').classList.toggle('active',mode==='standard');$('modeTraverse').classList.toggle('active',mode==='traverse');
-    $('modeStandard').setAttribute('aria-pressed',mode==='standard');$('modeTraverse').setAttribute('aria-pressed',mode==='traverse');
+    if(next==='standard')next=sub;
+    const nextMode=next==='traverse'?'traverse':'standard';
+    if(busy||window.__isGeneratingShoe||(next==='traverse'?mode==='traverse':(mode==='standard'&&next===sub)))return;
+    if(mode==='standard'){states[sub]=snapshot();StandardProfiles.save(sub,currentSignal());}else{absorbEdits();OptimizerDialog.reset();states.traverse.signal=currentSignal();}
+    mode=nextMode;document.body.dataset.mode=mode;
+    if(mode==='standard'){sub=next;applyProfile(sub);}
+    else if(states.traverse.signal)updateSignalConfig(states.traverse.signal);
+    $('modeRed0').classList.toggle('active',mode==='standard'&&sub==='red0');$('modeA2').classList.toggle('active',mode==='standard'&&sub==='a2');$('modeTraverse').classList.toggle('active',mode==='traverse');
+    $('modeRed0').setAttribute('aria-pressed',mode==='standard'&&sub==='red0');$('modeA2').setAttribute('aria-pressed',mode==='standard'&&sub==='a2');$('modeTraverse').setAttribute('aria-pressed',mode==='traverse');
     $('traverseControls').hidden=$('traverseTools').hidden=mode!=='traverse';$('standardControls').hidden=mode==='traverse';
-    $('modeStatus').textContent=mode==='standard'?'百家 3.0 模式':'穿越排牌模式';
+    $('modeStatus').textContent=mode==='standard'?SUB_NAME[sub]:'穿越排牌模式';
     $('btnAutoColor').textContent=mode==='traverse'?'卡色':'換色';
     document.querySelectorAll('#toolCats .tool').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('open'));
     $('pCond').classList.remove('open');document.querySelector('[data-panel="pCond"]').classList.remove('active');
     $('pSet').classList.remove('open');document.querySelector('[data-panel="pSet"]').classList.remove('active');
     if(mode==='standard'){
-      const st=states.standard;
+      const st=states[sub];
       currentRounds=st?.rounds||null;currentAnalysis=st?.analysis||null;originalDeckOrder=st?.deck||null;originalRounds=st?.originalRounds||null;editEnabled=!!st?.editEnabled;window.__importedShoeMode=!!st?.imported;
       frozenGridHTML=st?.frozen||null;if($('frozenGridContainer')){$('frozenGridContainer').style.display=frozenGridHTML?'block':'none';if($('frozenGrid'))$('frozenGrid').innerHTML=frozenGridHTML||'';}
       swapBankerSixIndexes=st?.swapSix||new Set();bankerSixIndexes=st?.bankerSix||new Set();violationRoundIndexes=st?.violations||new Set();
@@ -146,13 +161,13 @@
       if(currentRounds)runRecoveryAnalysis();
     }else{if($('frozenGridContainer'))$('frozenGridContainer').style.display='none';frozenGridHTML=null;window.__importedShoeMode=false;originalDeckOrder=null;originalRounds=null;$('cutPos').value=states.traverse.cut;renderTraverse();if(optimization)$('btnOptOpen').disabled=false;}
     document.body.classList.toggle('finished',!!currentRounds?.length);
-    log(`已切換${mode==='standard'?'百家 3.0':'穿越排牌'}；各模式保留各自牌靴。`,'info');
+    log(`已切換${mode==='standard'?SUB_NAME[sub]:'穿越排牌'}；各模式保留各自牌靴。`,'info');
   }
   function lock(value) {
     busy=value;window.__isGeneratingShoe=value;window.__stopGenerateRequested=false;
     $('generateBtn').disabled=value;$('stopGenerateBtn').disabled=!value;
     $('generatingOverlay').classList.toggle('active',value);document.body.classList.toggle('running',value);
-    ['modeStandard','modeTraverse','sharedSignalSettings',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
+    ['modeRed0','modeA2','modeTraverse','sharedSignalSettings',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
     document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>{el.style.pointerEvents=value?'none':'';el.setAttribute('aria-disabled',value);});
     document.querySelectorAll('.suit-checkbox,.rank-checkbox').forEach(el=>el.disabled=value);
     if(!value)$('tvOptimize').disabled=!states.traverse.result;
@@ -418,7 +433,7 @@
       clearBtn:()=>{clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;setSettingsCollapsed(false);status('已清空穿越牌靴');}};
     if(handlers[id]){event.preventDefault();event.stopImmediatePropagation();if(!busy||id==='stopGenerateBtn'||id==='chipStop')handlers[id]();}
   },true);
-  $('modeStandard').addEventListener('click',()=>switchMode('standard'));$('modeTraverse').addEventListener('click',()=>switchMode('traverse'));
+  $('modeRed0').addEventListener('click',()=>switchMode('red0'));$('modeA2').addEventListener('click',()=>switchMode('a2'));$('modeTraverse').addEventListener('click',()=>switchMode('traverse'));
   $('tvSettingsToggle').addEventListener('click',()=>setSettingsCollapsed(!$('traverseControls').classList.contains('collapsed')));
   $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',optimize);
   $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));});
@@ -437,7 +452,7 @@
   }));
   // Signal controls run their existing handlers first, then refresh the current mode.
   document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>el.addEventListener('click',()=>{
-    setTimeout(()=>{clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('訊號設定已變更，請重新排牌套用。');}},0);
+    setTimeout(()=>{if(mode==='standard')StandardProfiles.save(sub,currentSignal());clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('訊號設定已變更，請重新排牌套用。');}},0);
   }));
   // 百家 3.0 設定區：與穿越設定相同的收合列；生成完成後自動收成一行摘要
   function standardSummary() {
@@ -454,10 +469,15 @@
   }
   $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
   let standardWasRunning=false;
-  new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeStandard','modeTraverse','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
+  new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
     if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length)setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';
-  if(new URLSearchParams(location.search).get('mode')==='traverse')switchMode('traverse');
-  window.IntegratedModes={get mode(){return mode;},get busy(){return busy;},get traversal(){return states.traverse;},switchMode,generateTraverse,cutTraverse,recolor,exportTraverse};
+  {const q=new URLSearchParams(location.search).get('mode');if(q==='red0'||q==='a2')sub=q;
+   applyProfile(sub);
+   $('modeRed0').classList.toggle('active',sub==='red0');$('modeA2').classList.toggle('active',sub==='a2');
+   $('modeRed0').setAttribute('aria-pressed',sub==='red0');$('modeA2').setAttribute('aria-pressed',sub==='a2');
+   $('modeStatus').textContent=SUB_NAME[sub];
+   if(q==='traverse')switchMode('traverse');}
+  window.IntegratedModes={get mode(){return mode;},get sub(){return sub;},get busy(){return busy;},get traversal(){return states.traverse;},switchMode,generateTraverse,cutTraverse,recolor,exportTraverse};
 })();

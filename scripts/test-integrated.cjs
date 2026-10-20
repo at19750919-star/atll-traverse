@@ -76,7 +76,7 @@ async function inventory(page){
       assert.equal(await page.locator('#roundsBody tr').count(),84);
     });
     await check('模式切換保留兩副不同牌靴，訊號使用同一份設定',async()=>{
-      await page.locator('#modeStandard').click();assert.equal(await page.evaluate(signature),standard);
+      await page.locator('#modeRed0').click();assert.equal(await page.evaluate(signature),standard);
       assert(await page.locator('#toolTraverse').isHidden());
       await page.locator('#modeTraverse').click();assert.equal(await page.evaluate(signature),before);
       assert(await page.locator('#toolTraverse').isVisible());
@@ -131,7 +131,7 @@ async function inventory(page){
       assert.notEqual(await page.evaluate(signature),unchanged);
       assert(await page.locator('#btnOptOpen').isDisabled());
       await page.evaluate(()=>document.getElementById('clearBtn').click());assert.equal(await page.evaluate(()=>IntegratedModes.traversal.result),null);
-      await page.locator('#modeStandard').click();assert.equal(await page.evaluate(signature),standard);await inventory(page);
+      await page.locator('#modeRed0').click();assert.equal(await page.evaluate(signature),standard);await inventory(page);
     });
     await check('共用訊號選紅0，穿越實際生成依紅心方塊10/J/Q/K判定',async()=>{
       await page.locator('#modeTraverse').click();await page.locator('#sharedSignalSettings').click();
@@ -141,7 +141,7 @@ async function inventory(page){
       await inventory(page);
       assert.deepEqual(await page.evaluate(()=>IntegratedModes.traversal.result.signalConfig),{suits:['♥','♦'],ranks:['10','J','Q','K']});
       assert(await page.evaluate(()=>[...document.querySelectorAll('#roundsBody .s-signal-card')].every(c=>/^[TJQK][♥♦]$/.test(c.textContent))));
-      await page.locator('#modeStandard').click();assert.equal(await page.evaluate(signature),standard);
+      await page.locator('#modeRed0').click();assert.equal(await page.evaluate(signature),standard);
       assert.deepEqual(await page.evaluate(()=>({suits:SIGNAL_CONFIG.suits,ranks:SIGNAL_CONFIG.ranks})),{suits:['♥','♦'],ranks:['10','J','Q','K']});
       await page.locator('#modeTraverse').click();
     });

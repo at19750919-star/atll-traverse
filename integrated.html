@@ -1073,7 +1073,7 @@ body.running .deck,body.finished .deck{
   </div>
 </header>
 
-<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeStandard" aria-pressed="true">百家 3.0</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越排牌</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><span id="modeStatus" role="status">百家 3.0 模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
+<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeRed0" aria-pressed="true">紅0模式</button><button class="tool-btn" id="modeA2" aria-pressed="false">A2模式</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越排牌</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><span id="modeStatus" role="status">紅0模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
 <!-- ═══════════ 控制甲板 ═══════════ -->
 <section class="deck">
 
@@ -1249,7 +1249,7 @@ body.running .deck,body.finished .deck{
   </div>
 </section>
 <section id="standardControls" class="gframe mode-panel">
-  <h2 class="frame-title">百家 3.0 設定</h2>
+  <h2 class="frame-title" id="stTitle">紅0模式 設定</h2>
   <div class="tv-settings-bar"><span id="stSettingsSummary" aria-live="polite"></span><button type="button" id="stSettingsToggle" class="tool-btn" aria-expanded="true" aria-controls="stControlGroups">收合設定</button></div>
   <div class="traverse-control-groups" id="stControlGroups">
   <div class="traverse-field-stack">
@@ -1449,39 +1449,61 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <script src="standard/swap_preview.js?v=2"></script>
 <script src="standard/auto_fix_plugin.js?v=3"></script>
 
-<!-- 設定持久化：沿用 at-settings key（原始版邏輯原樣） -->
+<!-- 設定持久化：紅0模式／A2模式各自保存（at-settings-red0／at-settings-a2），首次用各模式預設值 -->
 <script>
 (function(){
-    var STORAGE_KEY = 'at-settings';
     var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'];
     var CHECK_IDS = ['skipBanker6','skipPlayer7Banker6','tripleTieRule','lastCardNine'];
-    try {
-        var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        INPUT_IDS.forEach(function(id){
-            var el = document.getElementById(id);
-            if (el && saved[id] !== undefined && saved[id] !== null) el.value = saved[id];
-        });
-        CHECK_IDS.forEach(function(id){
-            var el = document.getElementById(id);
-            if (el && saved[id] !== undefined) el.checked = !!saved[id];
-        });
-    } catch(e){}
-    function saveAll(){
-        var obj = {};
-        INPUT_IDS.forEach(function(id){
-            var el = document.getElementById(id);
-            if (el) obj[id] = el.value;
-        });
-        CHECK_IDS.forEach(function(id){
-            var el = document.getElementById(id);
-            if (el) obj[id] = el.checked;
-        });
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch(e){}
+    var KEYS = { red0:'at-settings-red0', a2:'at-settings-a2' };
+    var SUB_KEY = 'at-standard-sub';
+    var DEFAULTS = {
+        red0: { avgRecoveryLimit:'3.5', maxTieLimit:'4', maxFourCardRate:'30', maxSideLimit:'4', max7PtReversal:'2', swapBanker6Target:'9',
+                tripleTieRule:false, skipBanker6:true, skipPlayer7Banker6:true, lastCardNine:false,
+                signal:{ suits:['\u2665','\u2666'], ranks:['10','J','Q','K'] } },
+        a2:   { avgRecoveryLimit:'3.5', maxTieLimit:'', maxFourCardRate:'35', maxSideLimit:'5', max7PtReversal:'2', swapBanker6Target:'9',
+                tripleTieRule:true, skipBanker6:false, skipPlayer7Banker6:false, lastCardNine:true,
+                signal:{ suits:['\u2660','\u2665','\u2666','\u2663'], ranks:['A','2'] } }
+    };
+    function copy(o){ return JSON.parse(JSON.stringify(o)); }
+    function lastSub(){
+        try { var s = localStorage.getItem(SUB_KEY); if (s === 'red0' || s === 'a2') return s; } catch(e){}
+        return 'red0';
     }
+    function load(sub){
+        var p = copy(DEFAULTS[sub]);
+        try {
+            var raw = localStorage.getItem(KEYS[sub]);
+            if (raw) { var saved = JSON.parse(raw); Object.keys(p).forEach(function(k){ if (saved[k] !== undefined && saved[k] !== null) p[k] = saved[k]; }); }
+        } catch(e){}
+        return p;
+    }
+    var SP = window.StandardProfiles = {
+        defaults: DEFAULTS, current: lastSub(),
+        fillInputs: function(sub){
+            var p = load(sub);
+            INPUT_IDS.forEach(function(id){ var el = document.getElementById(id); if (el) el.value = p[id]; });
+            CHECK_IDS.forEach(function(id){ var el = document.getElementById(id); if (el) el.checked = !!p[id]; });
+            return p;
+        },
+        save: function(sub, signal){
+            sub = sub || SP.current;
+            var obj = load(sub);
+            INPUT_IDS.forEach(function(id){ var el = document.getElementById(id); if (el) obj[id] = el.value; });
+            CHECK_IDS.forEach(function(id){ var el = document.getElementById(id); if (el) obj[id] = el.checked; });
+            if (signal) obj.signal = copy(signal);
+            try { localStorage.setItem(KEYS[sub], JSON.stringify(obj)); } catch(e){}
+        },
+        setCurrent: function(sub){
+            SP.current = sub;
+            try { localStorage.setItem(SUB_KEY, sub); } catch(e){}
+        }
+    };
+    SP.fillInputs(SP.current);
+    function saveCur(){ SP.save(SP.current); }
     INPUT_IDS.concat(CHECK_IDS).forEach(function(id){
         var el = document.getElementById(id);
-        if (el) el.addEventListener('change', saveAll);
-        if (el && el.type === 'number') el.addEventListener('input', saveAll);
+        if (el) el.addEventListener('change', saveCur);
+        if (el && el.type === 'number') el.addEventListener('input', saveCur);
     });
 })();
 </script>
@@ -1783,6 +1805,6 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=21"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=5"></script>
+<script src="traverse_builder.js?v=21"></script><script src="traverse_export.js?v=6"></script><script src="traverse_optimizer.js?v=5"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=6"></script>
 </body>
 </html>
