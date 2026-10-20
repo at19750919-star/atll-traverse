@@ -165,7 +165,7 @@
     updateSignalConfig({ suits:p.signal.suits.slice(), ranks:p.signal.ranks.slice() });
     $('tvTitle').textContent = TV_NAME[t] + '設定';
     document.body.dataset.tsub = t;
-    setSettingsCollapsed(!!tstates[t].result);
+    setSettingsCollapsed(document.body.classList.contains('dashboard') ? $('traverseControls').classList.contains('collapsed') : !!tstates[t].result);
   }
   function refreshModeButtons() {
     [['modeRed0','standard','red0'],['modeA2','standard','a2'],['modeTraverse','traverse','red0'],['modeTraverseA2','traverse','a2']].forEach(([id,m,s]) => {
@@ -293,7 +293,7 @@
       }
       result.reruns=reruns;result.totalMs=Date.now()-started;rotateResult(result,cut||0);
       states.traverse.result=result;states.traverse.cut=0;$('cutPos').value=0;
-      setSettingsCollapsed(true);document.querySelectorAll('#traverseTools details').forEach(d=>{d.open=false;});
+      if(!document.body.classList.contains('dashboard'))setSettingsCollapsed(true);document.querySelectorAll('#traverseTools details').forEach(d=>{d.open=false;});
       renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}`);
       log($('tvProgress').textContent,'success');
     }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{lock(false);}
@@ -468,7 +468,7 @@
     const button=event.target.closest('button');if(!button)return;
     if(mode==='standard'&&button.id==='btnExportCombined'){event.preventDefault();event.stopImmediatePropagation();if(!busy){lock(true);Promise.resolve(original.export()).catch(e=>log(`導出失敗：${e.message}`,'error')).finally(()=>lock(false));}return;}
     if(mode!=='traverse')return;
-    if(busy&&!['stopGenerateBtn','chipStop','logHead'].includes(button.id)){event.preventDefault();event.stopImmediatePropagation();return;}
+    if(busy&&!['stopGenerateBtn','chipStop','logHead','btnTableWindow'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
     const id=button.id;
     const handlers={chipStop:()=>{if(busy){stopped=true;status('停止中，整理目前結果…');}},generateBtn:()=>generateTraverse(),stopGenerateBtn:()=>{stopped=true;status('停止中，整理目前結果…');},btnCut:()=>cutTraverse(Number($('cutPos').value)),btnAutoColor:recolor,
       btnExportCombined:exportTraverse,btnRecordDeckOrder:()=>{absorbEdits();rotateResult(states.traverse.result,states.traverse.cut);states.traverse.cut=0;$('cutPos').value=0;clearOptimization();renderTraverse();status('已套用目前牌序，切牌起點歸零');},
@@ -512,7 +512,7 @@
   $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
   let standardWasRunning=false;
   new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
-    if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length)setStandardCollapsed(true);}}
+    if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length&&!document.body.classList.contains('dashboard'))setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';
   {const q=new URLSearchParams(location.search).get('mode');if(q==='red0'||q==='a2')sub=q;

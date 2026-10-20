@@ -25,6 +25,11 @@ async function inventory(page){
   const counts=await page.evaluate(()=>{const m={};for(const c of currentRounds.flatMap(r=>r.cards)){const key=c.rank+c.suit+c.back_color;m[key]=(m[key]||0)+1;}return m;});
   assert.equal(Object.keys(counts).length,104);assert(Object.values(counts).every(n=>n===4));
 }
+async function toolGroup(page,key){
+  await page.locator('#dashboardToolsTab').click();
+  const group=page.locator(`[data-group="${key}"]`);
+  if(!await group.evaluate(el=>el.open))await group.locator('summary').click();
+}
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const browser=await chromium.launch({channel:'chrome',headless:true});
@@ -66,9 +71,11 @@ async function inventory(page){
     await check('穿越示範共用同一牌表，預設訊號與94個安全點保持',async()=>{
       await page.locator('#modeTraverse').click();assert(await page.locator('#traverseControls').isVisible());
       assert(await page.locator('#traverseTools').isHidden());
-      assert(await page.locator('#toolTraverse').isVisible());
-      await page.locator('#toolTraverse').click();
+      assert(await page.locator('#btnTraverseData').isVisible());
+      await page.locator('#btnTraverseData').click();
       assert(await page.locator('#traverseTools').isVisible());
+      await page.locator('#btnCloseTraverseData').click();
+      await toolGroup(page,'demo');
       await page.locator('#tvDemo').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
       await inventory(page);before=await page.evaluate(signature);
       assert.equal(await page.evaluate(()=>IntegratedModes.traversal.analysis.count),94);
@@ -77,14 +84,15 @@ async function inventory(page){
     });
     await check('模式切換保留兩副不同牌靴，訊號使用同一份設定',async()=>{
       await page.locator('#modeRed0').click();assert.equal(await page.evaluate(signature),standard);
-      assert(await page.locator('#toolTraverse').isHidden());
+      assert(await page.locator('#btnTraverseData').isHidden());
       await page.locator('#modeTraverse').click();assert.equal(await page.evaluate(signature),before);
-      assert(await page.locator('#toolTraverse').isVisible());
+      assert(await page.locator('#btnTraverseData').isVisible());
+      await page.locator('#dashboardSettingsTab').click();
       await page.locator('#sharedSignalSettings').click();assert(await page.locator('#pSet').isVisible());
       await page.locator('#sharedSignalSettings').click();
     });
     await check('局內優化、可拖曳比較與前後牌表切換',async()=>{
-      if(await page.locator('#traverseTools').isHidden())await page.locator('#toolTraverse').click();
+      await toolGroup(page,'edit');
       await page.locator('#tvOptimize').click();await page.waitForFunction(()=>!IntegratedModes.busy,{},{timeout:60000});
       assert(await page.locator('#optimizerPanel').isVisible());
       assert((await page.evaluate(()=>IntegratedModes.traversal.analysis.count))>94);
@@ -115,6 +123,7 @@ async function inventory(page){
     await check('手機與桌面模式選項可操作，無整頁水平溢出',async()=>{
       for(const width of [390,1440]){
         await page.setViewportSize({width,height:900});
+        await page.locator('#dashboardSettingsTab').click();
         await page.evaluate(()=>window.scrollTo(0,0));
         assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width}`);
         await page.locator('#sharedSignalSettings').click();assert(await page.locator('#pSet').isVisible());
@@ -124,7 +133,7 @@ async function inventory(page){
     });
     await check('清空穿越牌不清掉百家3.0牌靴',async()=>{
       const unchanged=await page.evaluate(signature);
-      await page.locator('[data-tp="tpEdit"]').click();await page.locator('#btnSwap').click();
+      await toolGroup(page,'edit');await page.locator('#btnSwap').click();
       await page.locator('[data-action="card"][data-r="0"][data-c="0"]').click();
       await page.locator('[data-action="card"][data-r="0"][data-c="1"]').click();
       await page.locator('#btnSwap').click();await inventory(page);
@@ -134,7 +143,7 @@ async function inventory(page){
       await page.locator('#modeRed0').click();assert.equal(await page.evaluate(signature),standard);await inventory(page);
     });
     await check('共用訊號選紅0，穿越實際生成依紅心方塊10/J/Q/K判定',async()=>{
-      await page.locator('#modeTraverse').click();await page.locator('#sharedSignalSettings').click();
+      await page.locator('#modeTraverse').click();await page.locator('#dashboardSettingsTab').click();await page.locator('#sharedSignalSettings').click();
       await page.locator('[data-q="red0"]').click();await page.locator('#sharedSignalSettings').click();
       await page.evaluate(()=>{if(document.getElementById('traverseControls').classList.contains('collapsed'))document.getElementById('tvSettingsToggle').click();});await page.locator('#tvLeft').fill('');await page.locator('#tvSideLimit').fill('');await page.locator('#tvNine').uncheck();
       await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);

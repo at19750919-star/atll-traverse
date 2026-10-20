@@ -1,0 +1,180 @@
+/* Keep the existing black/gold surfaces, type, controls and green card table. */
+body.dashboard{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:0 20px 16px}
+body.dashboard>header{flex:none;padding:12px 2px;min-height:68px}
+.dashboard-layout{display:grid;grid-template-columns:344px minmax(0,1fr);gap:18px;flex:1;min-height:0;margin-top:16px}
+.dashboard-sidebar{min-width:0;min-height:0;display:flex;flex-direction:column;position:relative;border:1px solid #8a6a2f;background:linear-gradient(155deg,#111b1b,#0b1113);box-shadow:0 8px 30px #0006}
+body.dashboard .mode-switch{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;min-height:0;margin:0;padding:14px;border:0;border-bottom:1px solid #6b4c1d55;background:none;box-shadow:none}
+body.dashboard .mode-switch::before,body.dashboard .mode-switch::after{display:none}
+body.dashboard .mode-label{grid-column:1/-1;font-size:13px;letter-spacing:.15em}
+body.dashboard .mode-switch .tool-btn{min-width:0;height:36px;min-height:36px;padding:0 6px;font-size:13px;letter-spacing:.06em;text-indent:0}
+body.dashboard #modeStatus{grid-column:1/-1;display:block;font-size:11px;color:var(--gold-2)}
+.dashboard-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:none;padding:12px 14px;border-bottom:1px solid #6b4c1d55}
+.dashboard-tabs .tool-btn{min-width:0;padding:0 6px;height:36px;font-size:13px;letter-spacing:.08em}
+.dashboard-tabs [aria-selected=true]{border-color:var(--gold-2);color:var(--gold-1);background:linear-gradient(#2a2516,#17180f);box-shadow:inset 0 1px 0 #f4dfa422}
+.dashboard-sidebar-scroll{flex:1;min-height:0;overflow:auto;padding:16px 12px;scrollbar-width:thin;scrollbar-color:#8a6a2f #0c1a14}
+body.dashboard .signal{margin:0 0 10px;padding:16px 8px 8px;min-width:0;box-shadow:none}
+body.dashboard .signal-row{justify-content:space-around;gap:8px}
+body.dashboard .fan-stage{width:144px;min-height:98px}
+body.dashboard .suit-coins{display:none}
+body.dashboard #sharedSignalSettings{width:100%;margin-bottom:14px;min-height:34px;height:34px;font-size:12px}
+body.dashboard .expanders{display:flex;height:auto;gap:14px;min-width:0}
+body.dashboard .expanders:has(#pSet.open) #traverseControls{display:block}
+body.dashboard .expanders #pSet.open{flex:none;justify-content:flex-start;margin:0;padding:12px;gap:10px;overflow:visible}
+body.dashboard #pSet .set-sep{display:none}
+body.dashboard #pSet .pick-row{flex-wrap:wrap;gap:6px}
+body.dashboard #pSet .pick{width:34px;min-width:34px;height:34px;padding:0 3px;font-size:13px}
+body.dashboard #pSet .pick.quick{width:auto;padding:0 16px}
+body.dashboard :is(#standardControls,#traverseControls){display:block;flex:none;max-width:none;margin:0;padding:14px 10px 12px;box-shadow:none}
+body.dashboard :is(#standardControls,#traverseControls) .frame-title{font-size:13px;letter-spacing:.12em;padding:0;margin:0 0 8px}
+body.dashboard :is(#standardControls,#traverseControls) .tv-settings-bar{margin:0 0 10px;min-height:28px;gap:6px}
+body.dashboard :is(#standardControls,#traverseControls) .tv-settings-bar .tool-btn{min-width:68px;height:28px;padding:0 8px;font-size:11px}
+body.dashboard :is(#standardControls,#traverseControls) .traverse-control-groups{grid-template-columns:1fr;gap:14px}
+body.dashboard :is(#standardControls,#traverseControls) .mode-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+body.dashboard :is(#standardControls,#traverseControls) .mode-fields label{justify-content:space-between;gap:4px;font-size:11.5px;letter-spacing:0;padding:6px 5px}
+body.dashboard :is(#standardControls,#traverseControls) .numbox{flex:none;width:52px;height:30px;font-size:13px}
+body.dashboard :is(#standardControls,#traverseControls) .traverse-rules{border-top:1px solid #6b4c1d55;padding-top:12px;gap:6px}
+body.dashboard :is(#standardControls,#traverseControls) .rule-control{padding:6px;min-height:40px;gap:4px}
+body.dashboard :is(#standardControls,#traverseControls) .rule-control .name{font-size:11.5px}
+body.dashboard :is(#standardControls,#traverseControls).collapsed{display:block}
+body.dashboard :is(#standardControls,#traverseControls).collapsed .frame-title{margin-bottom:8px}
+body.dashboard :is(#tvSettingsSummary,#stSettingsSummary){white-space:normal;font-size:11px;line-height:1.7}
+.dashboard-tool-group{border:1px solid #6b4c1d88;background:linear-gradient(145deg,#141d1c,#0b1213);margin:0 0 10px}
+.dashboard-tool-group>summary{cursor:pointer;padding:12px;font:600 13px var(--serif);color:var(--gold-2);letter-spacing:.08em}
+.dashboard-tool-group[open]>summary{border-bottom:1px solid #6b4c1d55;color:var(--gold-1)}
+.dashboard-tool-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 10px}
+.dashboard-tool-buttons .tool-btn{display:flex;align-items:center;justify-content:center;min-width:0;min-height:36px;height:auto;padding:8px 4px;font-size:12px;letter-spacing:.03em;text-indent:0;text-decoration:none}
+.dashboard-tool-buttons .swap-preview-toggle,.dashboard-tool-buttons .view-num-group{grid-column:1/-1}
+.dashboard-tool-buttons .swap-preview-toggle{font-size:12px;letter-spacing:0}
+.dashboard-tool-buttons .view-num-group{min-width:0;display:flex;flex-wrap:wrap;padding:8px;gap:6px;border:1px solid #6b4c1d55}
+.dashboard-tool-buttons .view-num-group .name{font-size:12px}
+.dashboard-tool-buttons .view-num-group .numbox{width:72px;font-size:14px}
+.dashboard-progress{flex:none;border-top:1px solid #6b4c1d55;padding:6px 12px;max-height:64px;overflow:auto}
+body.dashboard #tvProgress{font-size:11px;line-height:1.6;margin:0;overflow-wrap:anywhere}
+body.dashboard .chip-col{flex:none;display:flex;flex-direction:row;justify-content:space-around;gap:12px;padding:12px;border-top:1px solid #8a6a2f66;background:#0c1414}
+body.dashboard .chip{width:66px;height:66px;box-shadow:0 5px 12px #0008}
+body.dashboard .chip::before{inset:8px;border-width:1px}
+body.dashboard .chip .lbl{font-size:14px;letter-spacing:.1em}
+body.dashboard .chip .sub{font-size:6px;letter-spacing:.12em}
+.dashboard-workspace{display:flex;flex-direction:column;min-width:0;min-height:0;gap:12px}
+.dashboard-overview{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;flex:none;min-width:0}
+.dashboard-overview.has-traverse{grid-template-columns:minmax(0,1.2fr) minmax(550px,1fr)}
+.dashboard-metrics{display:flex;flex-direction:column;gap:14px;min-width:0}
+body.dashboard #stats{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);grid-column:auto;grid-row:auto;justify-content:stretch;align-items:start;min-width:0;padding:16px;gap:20px}
+.dash-stat{min-width:0}
+.dash-stat+.dash-stat{border-left:1px solid #8a6a2f55;padding-left:18px}
+.dash-stat h2{font:600 12px var(--serif);letter-spacing:.1em;color:var(--gold-2);margin:0 0 12px}
+.dash-stat h2>strong{font:700 26px var(--disp);color:var(--gold-1);margin-left:8px}
+.dash-stat h2>small{font:11px var(--sans);color:var(--txt-dim)}
+.dash-kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dash-kpis>div{display:flex;flex-direction:column;gap:5px}
+.dash-kpis span{font-size:11px;color:var(--txt-dim)}
+.dash-kpis strong{font:700 23px var(--disp);white-space:nowrap;color:var(--gold-1)}
+.dash-kpis small{font-size:11px;color:var(--gold-2)}
+.dash-detail{font-size:10px;line-height:1.7;color:var(--txt-dim);margin-top:10px}
+.dash-detail.b6-meta{display:block;white-space:normal}
+.dash-legend{display:flex;flex-wrap:wrap;gap:7px 12px;font-size:11px;line-height:1.6;margin-bottom:5px}
+.dash-legend>span{white-space:nowrap;color:var(--txt-dim)}
+.dash-legend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px}
+.dash-legend b{color:var(--txt);font-size:12px;margin-right:3px}
+.dash-legend small{font-size:10px;color:var(--txt-dim)}
+.dash-proportion{height:9px;display:flex;overflow:hidden;background:#1c2924;border-radius:3px;margin-bottom:14px}
+.dash-proportion>span{height:100%;flex:none}
+.dash-range{display:grid;grid-template-columns:50px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-bottom:9px;font-size:10px;color:var(--txt-dim)}
+.dash-range>div{height:6px;background:#252a23;border-radius:2px;overflow:hidden}
+.dash-range i{display:block;height:100%;background:linear-gradient(90deg,#8a6a2f,var(--gold-1))}
+.dash-range b{font-size:10px;font-weight:500;text-align:right;color:var(--gold-2)}
+body.dashboard #statsVioCard{display:flex;grid-column:auto;grid-row:auto;min-width:0;min-height:38px;padding:10px 12px;justify-content:center;box-shadow:none}
+body.dashboard #statsVioCard .vio-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));max-height:68px}
+body.dashboard #statsVioCard .vio{font-size:11px;padding:3px;gap:4px}
+body.dashboard #statsVioCard .v-val{padding-left:0;font-size:10px}
+body.dashboard #statsVioCard .vio-empty{padding:0;font-size:11px}
+body.dashboard #statsVioCard .frame-title{font-size:10px;letter-spacing:.18em}
+.dashboard-traverse-slot{min-width:0}
+body.dashboard #traverseTools{display:block;max-width:none;margin:0;padding:12px;box-shadow:none}
+body.dashboard #traverseTools #tvSummary{display:block;padding:0;margin-bottom:7px;font-size:10px;line-height:1.6;color:var(--txt-dim)}
+body.dashboard #traverseTools details{padding:3px 0;border-bottom:0}
+body.dashboard #traverseTools summary{font-size:11px;line-height:1.6;letter-spacing:.02em}
+body.dashboard #traverseTools .mode-note{font-size:10px;line-height:1.5;margin:2px 0}
+body.dashboard #tvSafeCuts.cut-map{display:grid;grid-template-columns:repeat(52,minmax(0,1fr));gap:2px;max-height:none;overflow:visible;margin:5px 0 7px}
+.cut-cell{appearance:none;min-width:0;height:11px;padding:0;border:1px solid #5b472b;background:hsl(38 36% var(--cut-light,20%));border-radius:1px;cursor:default;opacity:1}
+.cut-cell.safe{background:#55936b;border-color:#9ac29c;cursor:pointer}
+.cut-cell.safe:hover,.cut-cell.safe:focus-visible{background:#a0dca9;outline:2px solid var(--gold-1);outline-offset:1px;position:relative;z-index:2}
+.cut-cell.pending{background:#202c26;border-color:#354239}
+.cut-map-legend{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:4px 0;font-size:9px;color:var(--txt-dim)}
+.cut-map-legend i{display:inline-block;width:8px;height:8px;margin-right:4px}
+.safe-key{background:#55936b}.depth-key{background:linear-gradient(90deg,#4b3c25,#b59356)}
+body.dashboard #tvBucketsDetail{padding-left:8px!important;margin:2px 0 4px}
+body.dashboard #tvCutBuckets{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));max-height:200px;gap:4px}
+body.dashboard #tvCutBuckets .cut-bucket{font-size:10px;padding:4px}
+body.dashboard #traverseTools .mode-scroll{max-height:320px}
+.dashboard-table-bar{display:flex;align-items:center;gap:10px;flex:none;min-width:0;min-height:36px}
+.dashboard-table-title{font:600 13px var(--serif);color:var(--gold-2);letter-spacing:.1em;white-space:nowrap}
+body.dashboard #sharedCardCounts{min-width:0;margin-right:auto;margin-left:0;font-size:11px;line-height:1.6;color:var(--txt-dim);letter-spacing:0}
+.dashboard-table-bar .tool-btn{flex:none;min-width:88px;height:34px;padding:0 12px;font-size:12px;letter-spacing:.05em;text-indent:0}
+#btnTableWindow{border-color:#8a6a2f;color:var(--gold-1)}
+.table-window-status{font-size:12px;color:var(--gold-1);line-height:1.6;flex:none}
+body.dashboard #shoeMap{flex:none;max-height:220px;overflow:auto;margin:0;padding:12px}
+body.dashboard .pit,body.table-window .pit{display:flex;flex:1;min-width:0;min-height:0;margin:0;padding:7px;border-radius:10px;background:linear-gradient(135deg,#5a421c,#211908 36%,#3c2d11);box-shadow:0 8px 30px #0006}
+body.dashboard .felt,body.table-window .felt{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;padding:10px 10px 8px;border-radius:5px;overflow:hidden}
+body.dashboard .felt-head,body.table-window .felt-head{flex:none;margin-bottom:8px;gap:12px}
+body.dashboard .felt-head .arc-text,body.table-window .felt-head .arc-text{font-size:10px;letter-spacing:.2em;white-space:nowrap}
+.density-control{border:1px solid #8a6a2f77;border-radius:4px;background:#101c16;color:var(--gold-2);padding:4px 7px;font:11px var(--sans);cursor:pointer}
+body.dashboard .pit .table-scroll,body.table-window .table-scroll{flex:1;min-height:0;overflow:auto;max-height:none;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8a6a2f #0c1a14}
+body.dashboard #roundsTable,body.table-window #roundsTable{min-width:900px}
+body.dashboard #roundsTable th,body.table-window #roundsTable th{padding:9px 5px;font-size:11px;letter-spacing:.1em;text-indent:0}
+body.dashboard #roundsTable td,body.table-window #roundsTable td{padding:7px 5px;font-size:13px}
+body[data-density=compact] #roundsTable td{padding-top:3px;padding-bottom:3px}
+body[data-density=compact] #roundsTable .card-label{width:27px;height:27px;font-size:12px}
+body.dashboard .tbl-empty{padding:60px 12px;font-size:13px;line-height:1.8;letter-spacing:.08em}
+body.dashboard .logbox{flex:none;margin:0;box-shadow:none}
+body.dashboard .log-head{min-height:34px;padding:9px 12px}
+body.dashboard .log-body{max-height:110px}
+body.dashboard .frozen-grid-wrapper{max-height:120px;overflow:auto}
+body.dashboard .logbox.closed .frozen-grid-wrapper{display:none}
+.dashboard-data-dialog{position:fixed;z-index:110;top:92px;right:28px;width:min(900px,calc(100vw - 32px));max-height:calc(100dvh - 120px);display:flex;flex-direction:column;background:#101918;box-shadow:0 20px 70px #000b}
+.dashboard-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;padding:12px 16px;border-bottom:1px solid #8a6a2f;touch-action:none;cursor:grab;font:600 14px var(--serif);color:var(--gold-1)}
+.dashboard-dialog-head .tool-btn{height:30px;min-width:60px;padding:0 10px;font-size:11px}
+.dashboard-dialog-body{overflow:auto;min-height:0}
+body.dashboard :is(button,select,summary):focus-visible,body.table-window :is(button,select):focus-visible{outline:2px solid var(--gold-1);outline-offset:2px}
+body.table-window{height:100dvh;min-height:0;padding:10px;display:flex;overflow:hidden}
+body.table-window .pit{width:100%}
+body:not([data-mode=traverse]) :is(#tvOptimize,#btnOptOpen,#tvDemo,a[href="traverse_process.html"],a[href="traverse_scan.html"]){display:none!important}
+@media(min-width:2100px){.dashboard-layout{grid-template-columns:360px minmax(0,1fr)}.dashboard-sidebar-scroll{padding:18px 14px}.dash-kpis strong{font-size:26px}.dash-stat h2{font-size:13px}body.dashboard #stats{padding:20px;gap:26px}.cut-cell{height:13px}}
+@media(max-width:1200px) and (min-width:901px){
+  body.dashboard{padding-left:12px;padding-right:12px}.dashboard-layout{grid-template-columns:312px minmax(0,1fr);gap:14px}
+  body.dashboard #stats{gap:10px;padding:12px}.dash-stat+.dash-stat{padding-left:10px}.dash-kpis{gap:7px}.dash-kpis strong{font-size:18px}
+  .dash-stat h2{font-size:11px;letter-spacing:0}.dash-legend{gap:4px 7px;font-size:10px}.dash-range{grid-template-columns:42px minmax(0,1fr) 35px;gap:4px}
+  body.dashboard :is(#standardControls,#traverseControls) .mode-fields{grid-template-columns:1fr}
+  body.dashboard :is(#standardControls,#traverseControls) .mode-fields label{font-size:12px}
+  body.dashboard :is(#standardControls,#traverseControls) .numbox{width:72px}
+}
+@media(max-width:900px){
+  body.dashboard{height:auto;min-height:100dvh;overflow:visible;padding:0 12px 14px}
+  .dashboard-layout{grid-template-columns:1fr;flex:none;gap:18px;margin-top:14px}
+  .dashboard-sidebar-scroll{flex:none;max-height:460px}.dashboard-progress{max-height:80px}
+  body.dashboard .mode-switch{grid-template-columns:repeat(4,minmax(0,1fr))}
+  body.dashboard .mode-label,body.dashboard #modeStatus{grid-column:1/-1}
+  body.dashboard .signal{max-width:340px;margin:0 auto 10px}
+  body.dashboard :is(#standardControls,#traverseControls) .mode-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+  body.dashboard #sharedSignalSettings{height:34px}
+  body.dashboard .dashboard-workspace>.pit{flex:none;height:70dvh;min-height:320px}
+  body.dashboard #stats{gap:12px;padding:14px}.dash-stat+.dash-stat{padding-left:12px}
+  .dashboard-table-bar{flex-wrap:wrap}.dashboard-table-bar .tool-btn{margin-left:auto}
+  body.dashboard #sharedCardCounts{flex:1}
+}
+@media(max-width:540px){
+  body.dashboard{padding-left:8px;padding-right:8px}body.dashboard>header{gap:10px}
+  body.dashboard>header .crest{width:38px;height:38px;font-size:24px}
+  body.dashboard>header h1{font-size:18px;letter-spacing:.08em}body.dashboard>header h1 small{font-size:9px;letter-spacing:.12em}
+  body.dashboard>header .shoe-state{gap:4px;font-size:9px;padding:6px;flex-wrap:wrap;justify-content:flex-end;max-width:138px}
+  body.dashboard .mode-switch{padding:12px 8px;gap:6px}body.dashboard .mode-switch .tool-btn{font-size:11px;padding:0 3px}
+  body.dashboard :is(#standardControls,#traverseControls) .mode-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.dashboard #stats{grid-template-columns:1fr 1fr;gap:14px;padding:14px 10px}
+  .dash-stat+.dash-stat{padding-left:10px}.dash-distribution{grid-column:1/-1;border-left:0!important;border-top:1px solid #8a6a2f55;padding:12px 0 0!important}
+  .dash-kpis strong{font-size:19px}.dash-legend{gap:3px 8px}.dash-range{grid-template-columns:60px minmax(0,1fr) 46px}
+  .dashboard-table-title{font-size:12px}body.dashboard #sharedCardCounts{flex-basis:100%;font-size:10px}
+  .dashboard-table-bar .tool-btn{flex:1;margin:0}.dashboard-data-dialog{top:60px;right:16px;max-height:calc(100dvh - 80px)}
+  body.dashboard #tvSafeCuts.cut-map{grid-template-columns:repeat(26,minmax(0,1fr))}
+  body.dashboard .felt-head .arc-text{font-size:9px;letter-spacing:.08em}
+}
+@media(prefers-reduced-motion:reduce){body.dashboard *,body.table-window *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
