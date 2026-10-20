@@ -25,7 +25,8 @@
     middle.append(settings,tools);
     const actions = document.querySelector('.chip-col'); $('chipClear').querySelector('.lbl').textContent = '清空';
     const progress = el('div','dashboard-progress'); progress.append($('tvProgress'));
-    sidebar.append(modeNav,tabs,middle,progress,actions);
+    sidebar.append(modeNav,tabs,middle,progress);
+    document.querySelector('body > header').insertBefore(actions,document.querySelector('.shoe-state'));
     const workspace = el('section','dashboard-workspace'); workspace.setAttribute('aria-label','牌靴資料'); layout.append(workspace);
     const overview = el('section','dashboard-overview'), metrics = el('div','dashboard-metrics'), stats = $('stats'); workspace.append(overview); overview.append(metrics);
     // Original sinks remain available to the analysis code, without duplicate calculations.

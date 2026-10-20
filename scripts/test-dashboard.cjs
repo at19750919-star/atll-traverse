@@ -49,6 +49,12 @@ async function toolGroup(page, name) {
       const stats = await page.locator('#stats').boundingBox();
       const table = await page.locator('.pit').boundingBox();
       assert(side && stats && table); assert(side.x < table.x); assert(stats.y < table.y);
+      assert.equal(await page.locator('body > header .chip-col .chip').count(),3);
+      assert.equal(await page.locator('.dashboard-sidebar .chip-col').count(),0);
+      assert(await page.evaluate(()=>['.dashboard-sidebar','.dashboard-sidebar-scroll','.dashboard-progress','#fanStage'].every(s=>{
+        const el=document.querySelector(s),style=getComputedStyle(el);
+        return style.overflowY==='visible'&&style.overflowX==='visible'&&el.scrollHeight<=el.clientHeight+1;
+      })),'left column must grow naturally without its own scroll containers');
       assert(await page.locator('#standardControls').isVisible());
       assert(await page.locator('#btnTableWindow').isVisible());
       assert(await page.evaluate(() => getComputedStyle(document.body).overflowY !== 'hidden' && document.querySelector('.pit').clientHeight >= 480));
@@ -172,7 +178,7 @@ async function toolGroup(page, name) {
       await page.locator('.density-control').selectOption('normal');
       await popup.waitForFunction(() => document.body.dataset.density === 'normal');
     });
-    await check('實際短視窗仍可讀至少六局、設定可捲到底且訊號牌不超框', async () => {
+    await check('實際短視窗仍可讀至少六局、整頁可捲到所有設定且訊號牌不超框', async () => {
       // Regression: the user's 2561×908 capture is a 1791×636 CSS viewport.
       // A large body font also catches accidental dependence on browser defaults.
       await page.addStyleTag({ content: 'body{font-size:20px}' });
@@ -180,6 +186,7 @@ async function toolGroup(page, name) {
         await page.setViewportSize({width,height});
         await page.locator('#dashboardSettingsTab').click();
         await page.locator('.pit .table-scroll').evaluate(e=>{e.scrollTop=0;});
+        await page.evaluate(()=>window.scrollTo(0,0));
         const geometry = await page.evaluate(()=>{
           const box=s=>document.querySelector(s).getBoundingClientRect();
           const table=box('.pit .table-scroll'),head=box('#roundsHead'),row=box('#roundsBody tr');
@@ -251,6 +258,10 @@ async function toolGroup(page, name) {
         await page.locator('#sharedSignalSettings').click();
         assert(await page.locator('#pSet').isVisible());
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'signal overflow ' + width);
+        assert(await page.evaluate(()=>['.dashboard-sidebar-scroll','.dashboard-progress','#fanStage'].every(s=>{
+          const el=document.querySelector(s),style=getComputedStyle(el);
+          return style.overflowY==='visible'&&style.overflowX==='visible'&&el.scrollHeight<=el.clientHeight+1;
+        })),'left column must not scroll internally at width '+width);
         await page.locator('#sharedSignalSettings').click();
       }
     });
