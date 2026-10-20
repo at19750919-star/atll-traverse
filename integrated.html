@@ -1293,6 +1293,7 @@ body.running .deck,body.finished .deck{
     <input type="file" id="importFileInput" accept=".xlsx" style="display:none">
     <button class="tool-btn" id="btnExportCombined">導出</button>
     <button class="tool-btn" id="clearBtn">清空</button>
+    <button class="tool-btn" id="btnPointMatrix">點數矩陣</button>
   </div>
   <!-- 驗證 -->
   <div class="tool-panel gframe" id="tpVerify">
@@ -1435,6 +1436,8 @@ body.running .deck,body.finished .deck{
 
 <!-- 核心邏輯（順序沿用原始版；traverse.js 未在整合包內且無被引用，略） -->
 <link rel="stylesheet" href="standard/import_feedback.css?v=5">
+<link rel="stylesheet" href="standard/point_matrix.css?v=2">
+<script src="standard/point_matrix.js?v=2"></script>
 <script src="standard/import_feedback.js?v=2"></script>
 <script>
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}

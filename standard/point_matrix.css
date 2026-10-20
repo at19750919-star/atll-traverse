@@ -1,0 +1,45 @@
+/* 點數對戰矩陣彈窗：外框沿用 assistant.html 一般對話框（160deg 近黑漸層、直角金線、襯線標題）；
+   表頭沿用主頁 thead th 的襯線字與金色 */
+.pm-dialog{
+  width:min(1480px,calc(100vw - 32px));max-height:calc(100vh - 48px);
+  padding:18px 20px;color:var(--txt);
+  border:1px solid;border-image:var(--gold-line) 1;border-radius:0;
+  background:linear-gradient(160deg,#182021,#0b1113);
+  box-shadow:0 24px 70px rgba(0,0,0,.7);
+  overflow:auto;margin:auto;
+}
+.pm-dialog::backdrop{background:rgba(3,5,6,.72)}
+.pm-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.pm-head h3{margin:0;font-family:var(--serif);font-weight:600;font-size:17px;letter-spacing:.12em;color:var(--gold-1)}
+.pm-close{
+  cursor:pointer;width:34px;height:34px;border-radius:8px;
+  color:var(--txt);background:linear-gradient(180deg,#161f21,#0d1315);border:1px solid #2c3634;
+}
+.pm-close:hover,.pm-close:focus-visible{border-color:#c9a25a;color:var(--gold-1);outline:none}
+.pm-note{margin:6px 0;font-family:var(--sans);font-size:12.5px;color:var(--txt-dim);line-height:1.6}
+.pm-scroll{overflow-x:auto}
+.pm-table{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:12.5px}
+.pm-table th{
+  font-family:var(--serif);font-weight:600;font-size:12px;letter-spacing:.15em;
+  color:var(--gold-1);padding:8px 6px;white-space:nowrap;text-align:center;
+}
+/* 主頁 thead th 是牌桌綠底＋sticky，彈窗內改回面板底，不用氈布色 */
+.pm-table thead th{position:static;background:rgba(201,162,90,.06);border-bottom:1px solid #c9a25a;text-indent:0}
+.pm-table tbody th,.pm-table tfoot th{border-right:1px solid #c9a25a}
+.pm-table td{
+  padding:7px 6px;white-space:nowrap;text-align:right;
+  border-bottom:1px solid rgba(201,162,90,.14);
+}
+.pm-count{color:var(--txt);font-variant-numeric:tabular-nums}
+.pm-pct{margin-left:5px;color:var(--txt-dim);font-variant-numeric:tabular-nums}
+.pm-table td.pm-tie .pm-count{color:var(--tie)}
+.pm-table td.pm-total{background:rgba(201,162,90,.07)}
+.pm-table td.pm-total .pm-count{color:var(--gold-1);font-weight:700}
+.pm-table tfoot td,.pm-table tfoot th{border-top:1px solid #c9a25a}
+@media(max-width:700px){
+  .pm-dialog{padding:14px 12px;width:calc(100vw - 16px)}
+  .pm-table{font-size:12px}
+}
+.pm-sizes{width:auto;min-width:min(420px,100%);margin-top:14px}
+.pm-sizes td{color:var(--txt)}
+.pm-sizes td.pm-total{color:var(--gold-1);font-weight:700}
