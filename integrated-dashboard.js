@@ -190,8 +190,13 @@
       $('dashAvg').textContent = safe + ' 點'; $('dashAvgCards').textContent = '／' + total;
       $('dashMax').textContent = deepest ? `第 ${deepest} 局` : '—'; $('dashMaxCards').textContent = deepest ? count(deepest) + ' 點' : '';
       $('dashMaxAt').textContent = `安全比例 ${(safe / total * 100).toFixed(1)}%（切在安全點，整副發完都不違規）`;
-      const rows = [['安全',safe],['第1局',count(1)],['第2局',count(2)],['第3局',count(3)],['第4局以上',depths.filter(d => d >= 4).length]];
-      $('dashRecoveryBars').replaceChildren(...rows.map(([name,n])=>{ const pct = n / total * 100; return el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${n} 點</b>`); }));
+      const between = (lo,hi) => depths.filter(d => d >= lo && d <= hi).length, unsafe = depths.filter(d => d > 0);
+      const rows = [['安全',safe],['1~2局',between(1,2)],['3~4局',between(3,4)],['5局以上',between(5,Infinity)]];
+      const bars = rows.map(([name,n])=>{ const pct = n / total * 100; return el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${n} 點</b>`); });
+      // 平均：非安全切點第一次違規的平均局數
+      const avg = unsafe.length ? unsafe.reduce((a,d) => a + d,0) / unsafe.length : 0;
+      bars.push(el('div','dash-range',`<span>平均</span><div style="background:none;border:0"></div><b>${unsafe.length ? '第 ' + avg.toFixed(1) + ' 局' : '—'}</b>`));
+      $('dashRecoveryBars').replaceChildren(...bars);
     }
     function refreshDashboard() {
       const rounds = typeof currentRounds === 'undefined' ? [] : currentRounds || [], full = rounds.filter(r => r.cards && [4,5,6].includes(r.cards.length)), has = full.length > 0;
