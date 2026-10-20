@@ -106,7 +106,8 @@ async function toolGroup(page, name) {
       await page.waitForFunction(() => document.getElementById('dashTotal').textContent === document.getElementById('totalRounds').textContent);
       const count = await page.evaluate(() => currentRounds.filter(r=>r.result==='莊').length);
       assert.match(await page.locator('#dashOutcomeBar').getAttribute('aria-label'), new RegExp('莊' + count + '局'));
-      assert.match(await page.locator('#dashAvg').textContent(), /局/);
+      assert.equal(await page.locator('#dashAvg').textContent(), (await page.evaluate(() => IntegratedModes.traversal.analysis.count)) + ' 點');
+      assert.equal(await page.locator('#dashDistTitle').textContent(), '違規深度分布');
       const before = await page.locator('.pit').boundingBox();
       await page.locator('#tvDiagnosticsPanel > summary').click();
       await page.locator('#traverseDataDialog').waitFor({state:'visible'});

@@ -32,14 +32,14 @@
     const legacy = el('div','compat-hidden'); legacy.id = 'dashboardLegacyStats';
     legacy.append(...Array.from(stats.children)); $('compatLayer').append(legacy);
     stats.innerHTML = `
-      <section class="dash-stat"><h2>回復分析</h2><div class="dash-kpis">
-      <div><span>平均回復</span><strong id="dashAvg">—</strong><small id="dashAvgCards">—</small></div>
-      <div><span>最大消耗</span><strong id="dashMax">—</strong><small id="dashMaxCards">—</small></div></div>
+      <section class="dash-stat"><h2 id="dashRecTitle">回復分析</h2><div class="dash-kpis">
+      <div><span id="dashAvgLabel">平均回復</span><strong id="dashAvg">—</strong><small id="dashAvgCards">—</small></div>
+      <div><span id="dashMaxLabel">最大消耗</span><strong id="dashMax">—</strong><small id="dashMaxCards">—</small></div></div>
       <p id="dashMaxAt" class="dash-detail"></p><p id="dashB6" class="dash-detail b6-meta"></p></section>
       <section class="dash-stat"><h2>本副牌靴 <strong id="dashTotal">0</strong><small> 局</small></h2>
       <div id="dashOutcomeLegend" class="dash-legend"></div><div id="dashOutcomeBar" class="dash-proportion"></div>
       <div id="dashSizeLegend" class="dash-legend"></div><div id="dashSizeBar" class="dash-proportion"></div></section>
-      <section class="dash-stat dash-distribution"><h2>回復間距分布</h2><div id="dashRecoveryBars"></div></section>`;
+      <section class="dash-stat dash-distribution"><h2 id="dashDistTitle">回復間距分布</h2><div id="dashRecoveryBars"></div></section>`;
     metrics.append(stats,$('statsVioCard'));
     const traverseSlot = el('div','dashboard-traverse-slot'), traverse = $('traverseTools');
     traverseSlot.append(traverse); overview.append(metrics,traverseSlot);
@@ -179,6 +179,20 @@
       $('tvSafePanel').open = true;
       if (!$('cutMapLegend')) { const legend = el('div','cut-map-legend','<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝越晚出現違規</span><span>滑過看張號・點綠格切牌</span>'); legend.id = 'cutMapLegend'; cuts.before(legend); }
     }
+    // 穿越模式：回復卡與分布改顯示安全切點與違規深度（沿用 integrated.js 已算好的 analysis.depths）
+    function renderTraverseStats() {
+      const state = window.IntegratedModes.traversal, depths = state.result && state.analysis ? state.analysis.depths : null;
+      $('dashRecTitle').textContent = '穿越分析'; $('dashAvgLabel').textContent = '安全切點'; $('dashMaxLabel').textContent = '違規最深'; $('dashDistTitle').textContent = '違規深度分布';
+      $('dashB6').textContent = '';
+      if (!depths) { $('dashAvg').textContent = '—'; $('dashAvgCards').textContent = '／416'; $('dashMax').textContent = '—'; $('dashMaxCards').textContent = ''; $('dashMaxAt').textContent = '尚未排牌'; $('dashRecoveryBars').replaceChildren(); return; }
+      const total = depths.length, safe = depths.filter(d => d === 0).length, deepest = Math.max(0,...depths.filter(Number.isFinite));
+      const count = d => depths.filter(x => x === d).length;
+      $('dashAvg').textContent = safe + ' 點'; $('dashAvgCards').textContent = '／' + total;
+      $('dashMax').textContent = deepest ? `第 ${deepest} 局` : '—'; $('dashMaxCards').textContent = deepest ? count(deepest) + ' 點' : '';
+      $('dashMaxAt').textContent = `安全比例 ${(safe / total * 100).toFixed(1)}%（切在安全點，整副發完都不違規）`;
+      const rows = [['安全',safe],['第1局',count(1)],['第2局',count(2)],['第3局',count(3)],['第4局以上',depths.filter(d => d >= 4).length]];
+      $('dashRecoveryBars').replaceChildren(...rows.map(([name,n])=>{ const pct = n / total * 100; return el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${n} 點</b>`); }));
+    }
     function refreshDashboard() {
       const rounds = typeof currentRounds === 'undefined' ? [] : currentRounds || [], full = rounds.filter(r => r.cards && [4,5,6].includes(r.cards.length)), has = full.length > 0;
       const outcomeTotal = has ? Number(sourceText('totalRounds','0')) : 0;
@@ -191,6 +205,8 @@
       const imm = sourceText('recoveryImmediateDetail','').match(/\(([\d.]+)%\)/);
       const ranges = [['立即',has && imm ? Number(imm[1]) : 0],...['1to5','6to10','11to15','16plus'].map((key,i)=>[['1–5局','6–10局','11–15局','16局以上'][i],has ? parseFloat(sourceText('recoveryRange'+key,'0')) || 0 : 0])];
       $('dashRecoveryBars').replaceChildren(...ranges.map(([name,pct])=>el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${pct.toFixed(1)}%</b>`)));
+      if (document.body.dataset.mode === 'traverse') renderTraverseStats();
+      else { $('dashRecTitle').textContent = '回復分析'; $('dashAvgLabel').textContent = '平均回復'; $('dashMaxLabel').textContent = '最大消耗'; $('dashDistTitle').textContent = '回復間距分布'; }
       renderCutMap(); if (window.IntegratedModes.traversal.result) openData.title = sourceText('tvSummary'); updateDataPlacement();
     }
     let refreshScheduled = false;
