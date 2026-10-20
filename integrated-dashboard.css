@@ -124,6 +124,8 @@ body.dashboard #tvSafeCuts.cut-map{display:grid;grid-template-columns:repeat(52,
 .cut-cell.safe{background:#55936b;border-color:#9ac29c;cursor:pointer}
 .cut-cell.safe:hover,.cut-cell.safe:focus-visible{background:#a0dca9;outline:2px solid var(--gold-1);outline-offset:1px;position:relative;z-index:2}
 .cut-cell.pending{background:#202c26;border-color:#354239}
+.cut-cell:not(.pending){cursor:pointer}
+.cut-cell:not(.safe):not(.pending):hover,.cut-cell:not(.safe):not(.pending):focus-visible{outline:2px solid var(--gold-1);outline-offset:1px;position:relative;z-index:2}
 .cut-map-legend{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:4px 0;font-size:9px;color:var(--txt-dim)}
 .cut-map-legend i{display:inline-block;width:8px;height:8px;margin-right:4px}
 .safe-key{background:#55936b}.depth-key{background:linear-gradient(90deg,#4b3c25,#b59356)}

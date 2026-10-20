@@ -171,13 +171,13 @@
       depths.forEach((depth,index) => {
         const cell = el('button','cut-cell'); cell.type = 'button'; cell.dataset.position = index + 1;
         const safe = depth === 0, label = depth === null ? `第 ${index + 1} 張，尚未排牌` : `第 ${index + 1} 張，${safe ? '安全切點' : `第 ${depth} 局違規`}`;
-        cell.title = label; cell.setAttribute('aria-label',label); cell.disabled = !safe;
+        cell.title = label; cell.setAttribute('aria-label',label); cell.disabled = depth === null;
         cell.classList.toggle('safe',safe); cell.classList.toggle('pending',depth === null);
-        if (safe) cell.dataset.tvCut = index; else if (depth !== null) cell.style.setProperty('--cut-light',(18 + depth / maxDepth * 40).toFixed(1) + '%');
+        if (depth !== null) cell.dataset.tvCut = index; if (!safe && depth !== null) cell.style.setProperty('--cut-light',(18 + depth / maxDepth * 40).toFixed(1) + '%');
         cuts.append(cell);
       });
       $('tvSafePanel').open = true;
-      if (!$('cutMapLegend')) { const legend = el('div','cut-map-legend','<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝越晚出現違規</span><span>滑過看張號・點綠格切牌</span>'); legend.id = 'cutMapLegend'; cuts.before(legend); }
+      if (!$('cutMapLegend')) { const legend = el('div','cut-map-legend','<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝越晚出現違規</span><span>滑過看張號・點任一格切牌</span>'); legend.id = 'cutMapLegend'; cuts.before(legend); }
     }
     // 穿越模式：回復卡與分布改顯示安全切點與違規深度（沿用 integrated.js 已算好的 analysis.depths）
     function renderTraverseStats() {
