@@ -988,6 +988,11 @@ function pack_all_sensitive_and_segment(deck) {
     const max7PtLimit = max7PtInput && max7PtInput.value !== '' ? parseInt(max7PtInput.value) : null;
     let sevenPtReversalCount = 0;
 
+    // 和局上限：挑敏感局時和局達上限就不再挑和局（留白＝不限）
+    const tieLimit = typeof getMaxTieLimitSetting === 'function' ? getMaxTieLimitSetting() : null;
+    let tieCount = 0;
+    const tieFull = (round) => tieLimit !== null && round && round.result === '和' && tieCount >= tieLimit;
+
     const is7PtReversal = (round) => {
         if (!round || !Array.isArray(round.cards) || round.cards.length < 5) return false;
         if (!round.result || round.result === '和') return false;
@@ -1059,6 +1064,8 @@ function pack_all_sensitive_and_segment(deck) {
         if (max7PtLimit !== null && is7PtReversal(r) && sevenPtReversalCount >= max7PtLimit) continue;
         // 和局必須不含訊號牌（避免後續對調把 B6 破壞）
         if (r.result === '和' && !hasNoSignalCard(r)) continue;
+        // 和局達上限就跳過
+        if (tieFull(r)) continue;
         // B6 達目標就不再加入新的 B6 局
         if (swapB6Target > 0 && swapB6Count >= swapB6Target && isSwapBankerSix(r)) continue;
         // 三條+B6 重疊排除
@@ -1069,6 +1076,7 @@ function pack_all_sensitive_and_segment(deck) {
         if (r.cards.length === 4) fourCardCount++;
         if (is7PtReversal(r)) sevenPtReversalCount++;
         if (isSwapBankerSix(r)) swapB6Count++;
+        if (r.result === '和') tieCount++;
     }
     log(`🔍 自然敏感局加入完成：A段 ${a_rounds.length} 局(4張=${fourCardCount})，已用牌 ${used_pos.size} 張`, 'info');
 
@@ -1106,6 +1114,9 @@ function pack_all_sensitive_and_segment(deck) {
                     if (finalRound.result === '和' && !hasNoSignalCard(finalRound)) {
                         return null;
                     }
+                    if (tieFull(finalRound)) {
+                        return null;
+                    }
                     // B6 達目標就不再加入新的 B6 局
                     if (swapB6Target > 0 && swapB6Count >= swapB6Target && isSwapBankerSix(finalRound)) {
                         return null;
@@ -1116,6 +1127,7 @@ function pack_all_sensitive_and_segment(deck) {
                     if (last.cards.length === 4) fourCardCount++;
                     if (is7PtReversal(finalRound)) sevenPtReversalCount++;
                     if (isSwapBankerSix(finalRound)) swapB6Count++;
+                    if (finalRound.result === '和') tieCount++;
                     break;
                 }
             }
@@ -1130,7 +1142,8 @@ function pack_all_sensitive_and_segment(deck) {
                 && !(max7PtLimit !== null && is7PtReversal(r) && sevenPtReversalCount >= max7PtLimit)
                 && !(swapB6Target > 0 && swapB6Count >= swapB6Target && isSwapBankerSix(r))
                 && !(typeof hasFullHouse === 'function' && hasFullHouse(r) && isSwapBankerSix(r))
-                && !(r.result === '和' && !hasNoSignalCard(r));
+                && !(r.result === '和' && !hasNoSignalCard(r))
+                && !tieFull(r);
         // 優先挑選對調莊6的候選（如果目標未達成，且必須不含訊號牌、不能同時是三條）
         let picked = null;
         if (Array.isArray(cands)) {
@@ -1163,6 +1176,7 @@ function pack_all_sensitive_and_segment(deck) {
         if (picked.cards.length === 4) fourCardCount++;
         if (is7PtReversal(picked)) sevenPtReversalCount++;
         if (isSwapBankerSix(picked)) swapB6Count++;
+        if (picked.result === '和') tieCount++;
             added++;
     }
         if (added > 0) {
@@ -1212,6 +1226,7 @@ function pack_all_sensitive_and_segment(deck) {
     const tripleRuleOff = typeof isTripleRuleOn === 'function' && !isTripleRuleOn();
     if (tripleRuleOff) {
         log('🔍 三條開關關閉：略過 T 局處理，和局可出現在任何位置。', 'info');
+        relocateTiesAfterSignal(final_rounds);
     } else if (typeof applyTSignalLogic === 'function') {
         try {
             const processed = applyTSignalLogic(final_rounds.slice(), a_rounds, used_pos, c_cards);
@@ -1243,6 +1258,30 @@ function pack_all_sensitive_and_segment(deck) {
         final_rounds,
         final_card_deck
     };
+}
+
+// 三條關閉時：和局無法對調成莊，所以不能排在有訊號牌那局的後面；
+// 遇到就跟其他非和局對調位置（新位置的上一局不含訊號牌、前後都不是和局）
+function relocateTiesAfterSignal(rounds) {
+    const n = rounds.length;
+    if (n < 3) return rounds;
+    const hasSig = r => !!(r && Array.isArray(r.cards) && r.cards.some(c => c && isSignalCardByConfig(c)));
+    const isTie = r => !!(r && r.result === '和');
+    const movable = i => !!(rounds[i] && rounds[i].segment !== 'C');
+    for (let i = 0; i < n; i++) {
+        if (!isTie(rounds[i]) || !hasSig(rounds[(i - 1 + n) % n])) continue;
+        let moved = false;
+        for (let j = 0; j < n && !moved; j++) {
+            if (j === i || !movable(i) || !movable(j) || isTie(rounds[j])) continue;
+            const prevJ = ((j - 1 + n) % n) === i ? rounds[j] : rounds[(j - 1 + n) % n];
+            const nextJ = ((j + 1) % n) === i ? rounds[j] : rounds[(j + 1) % n];
+            if (hasSig(prevJ) || isTie(prevJ) || isTie(nextJ)) continue;
+            [rounds[i], rounds[j]] = [rounds[j], rounds[i]];
+            moved = true;
+        }
+        if (!moved) throw new Error(`第 ${i + 1} 局和局找不到上一局不含訊號牌的位置，需要重新生成`);
+    }
+    return rounds;
 }
 
 // T局訊號處理:三條局→下一局和局
