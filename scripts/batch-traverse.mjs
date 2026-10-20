@@ -248,7 +248,7 @@ async function main() {
     const filename = `TR${String(Math.max(maxTrNumber(cloud.map((f) => f.name)), maxTrNumber(local)) + 1).padStart(3, '0')}.xlsx`;
     const depths = Array.from({ length: 416 }, (_, c) => cutLastViolation(base, c));
     const startRounds = Array.from({ length: 416 }, (_, i) => depths[(cut + i) % 416]);
-    const blob = await E.buildWorkbook(rounds, { startRounds });
+    const blob = await E.buildWorkbook(rounds, { startRounds, signalConfig: res.signalConfig });
     const buf = new Uint8Array(await blob.arrayBuffer());
     const outputPath = path.join(opt.out, filename);
     await fs.writeFile(outputPath, buf);

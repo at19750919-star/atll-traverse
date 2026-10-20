@@ -96,13 +96,14 @@
     const cardLabel = (c) => `${c.rank === '10' ? 'T' : c.rank}${c.suit}`;
     // 牌背顏色；沒有牌背資料時才依花色推（同百家3.0 getCardColorCode）
     const colorCode = (c) => c.back_color || ((c.suit === '♥' || c.suit === '♦') ? 'R' : 'B');
+    const isSignalCard = (card, config) => config.suits.includes(card.suit) && config.ranks.includes(card.rank);
     function gridValue(c) {
         if (c.rank === 'A') return '1';
         if (['10', 'J', 'Q', 'K'].includes(c.rank)) return '0';
         return c.rank;
     }
 
-    function buildPreviewGrid(rounds) {
+    function buildPreviewGrid(rounds, signalConfig) {
         const COLS = PREVIEW_GRID_COLS;
         const ROWS = PREVIEW_GRID_ROWS;
         const ROUND_COLS = 7;
@@ -120,7 +121,7 @@
             round.cards.forEach((card, ci) => {
                 if (ci >= ROUND_COLS - 1) return;
                 grid[base + 1 + ci] = {
-                    className: `cell ${colorCode(card) === 'R' ? 'card-red' : 'card-blue'}`,
+                    className: `cell ${colorCode(card) === 'R' ? 'card-red' : 'card-blue'}${isSignalCard(card, signalConfig) ? ' signal-match' : ''}`,
                     value: gridValue(card),
                 };
             });
@@ -157,8 +158,10 @@
     }
 
     // opts.startRounds[i]：從第 i+1 張開始發，最後一個違規落在第幾局（0＝沒有違規），寫在直立式牌靴第 3 欄
+    // opts.signalConfig：導出時的訊號花色／牌面；未指定沿用獨立穿越頁的全花色 A、2。
     async function buildWorkbook(rounds, opts = {}) {
         if (typeof ExcelJS === 'undefined' || !ExcelJS.Workbook) throw new Error('ExcelJS 載入失敗');
+        const signalConfig = opts.signalConfig || { suits: ['♠', '♥', '♦', '♣'], ranks: ['A', '2'] };
         const deckCards = rounds.flatMap(r => r.cards);
         const wb = new ExcelJS.Workbook();
 
@@ -181,7 +184,7 @@
         widths.forEach((w, i) => { ws1.getColumn(i + 1).width = w; });
         ws1.pageSetup.printArea = `A1:${lastColStr}${ROWS}`;
         const borderThin = { style: 'thin', color: { argb: 'FF333333' } };
-        const grid = buildPreviewGrid(rounds);
+        const grid = buildPreviewGrid(rounds, signalConfig);
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const sheetCol = c + 1 + Math.floor(c / GROUP);
@@ -200,6 +203,7 @@
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00CFCF' } };
                     cell.font = { ...cell.font, color: { argb: 'FFFFFFFF' } };
                 }
+                if (cls.includes('signal-match')) cell.font = { ...cell.font, color: { argb: 'FFDC3545' } };
                 if (cls.includes('result-banker')) cell.font = { ...cell.font, color: { argb: 'FFCC0000' } };
                 else if (cls.includes('result-player')) cell.font = { ...cell.font, color: { argb: 'FF0033AA' } };
                 else if (cls.includes('result-tie')) cell.font = { ...cell.font, color: { argb: 'FF006633' } };
@@ -244,7 +248,7 @@
             }
             const cardCell = dataRow.getCell(2);
             cardCell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cardCell.font = { size: 16, bold: true, color: { argb: 'FF000000' } };
+            cardCell.font = { size: 16, bold: true, color: { argb: isSignalCard(card, signalConfig) ? 'FFDC3545' : 'FF000000' } };
             cardCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colorCode(card) === 'R' ? 'FFFFFF00' : 'FF00FFFF' } };
             const posCell = dataRow.getCell(1);
             posCell.alignment = { vertical: 'middle', horizontal: 'center' };

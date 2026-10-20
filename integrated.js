@@ -451,14 +451,14 @@
 
 
   async function exportTraverse() {
-    if(!states.traverse.result||busy)return;absorbEdits();const source=copy(states.traverse.result),cut=states.traverse.cut;
+    if(!states.traverse.result||busy)return;absorbEdits();const source=copy(states.traverse.result),cut=states.traverse.cut,signalConfig=currentSignal();
     const rs=E.dealRounds(E.cutDeck(O.prepare(source),cut));
     const dirPromise=getExportDir();lock(true);
     try{
       const dir=await dirPromise,g=violationGroups(rs),items=Object.entries(g).filter(([,a])=>a.length);
       if(items.length&&!confirm('牌表仍有違規，是否繼續導出？\n'+items.map(([k,a])=>`${({noSwap:'無法對調',same:'不符敏感局',triple:'三條',signal:'訊號',color:'卡色'})[k]}：${a.length} 局`).join('\n'))){status('已取消導出');return;}
       const a=O.analyze(O.prepare(source),rules());const startRounds=Array.from({length:416},(_,i)=>a.depths[(cut+i)%416]);
-      const blob=await E.buildWorkbook(rs,{startRounds});const files=await cloudFiles();const name=await nextExportFilename(files);
+      const blob=await E.buildWorkbook(rs,{startRounds,signalConfig});const files=await cloudFiles();const name=await nextExportFilename(files);
       const where=await saveLocal(blob,name,dir);status(`已存到${where}：${name}，正在上傳穿越牌…`);
       try{await uploadToDrive(blob,name,files);files.push({name});status(`已導出 ${name}，本機與雲端「穿越牌」皆已存好`);}catch(e){status(`已存本機 ${name}；雲端上傳失敗：${e.message}`);}
     }catch(e){status(`導出失敗：${e.message}`);}finally{lock(false);}

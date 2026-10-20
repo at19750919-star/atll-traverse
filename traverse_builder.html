@@ -523,7 +523,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="traverse_builder.js?v=19"></script>
-<script src="traverse_export.js?v=6"></script>
+<script src="traverse_export.js?v=7"></script>
 <script src="traverse_optimizer.js?v=5"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
 <script>
@@ -1245,6 +1245,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 
   async function exportExcel() {
     if (!shownRounds.length) return;
+    const exportSignalConfig = signalConfig();
     $('btnExport').disabled = true;
     try {
       const dir = await getExportDir();
@@ -1259,7 +1260,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       }
       // 直立式牌靴每張牌後面標「從這張開始發，違規到第幾局」（換算成切牌前的位置）
       const startRounds = Array.from({ length: 416 }, (_, i) => cutDepths[(cutPos + i) % 416]);
-      const blob = await TraverseExport.buildWorkbook(shownRounds, { startRounds });
+      const blob = await TraverseExport.buildWorkbook(shownRounds, { startRounds, signalConfig: exportSignalConfig });
       $('progress').textContent = '讀取雲端編號…';
       const files = await cloudFiles();
       const filename = await nextExportFilename(files);

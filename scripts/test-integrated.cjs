@@ -12,6 +12,8 @@ function dependency(name) {
 }
 const { chromium } = dependency('playwright');
 const ExcelJS = dependency('exceljs');
+const { assertSignalFonts } = require('./test-export-signal.cjs');
+const exportState = () => ({ rounds:currentRounds.map(r=>({result:r.result,cards:r.cards.map(c=>({rank:c.rank,suit:c.suit,back_color:c.back_color}))})), config:{suits:SIGNAL_CONFIG.suits.slice(),ranks:SIGNAL_CONFIG.ranks.slice()} });
 const checks=[];
 async function check(name,fn){await fn();checks.push(name);console.log('PASS '+name);}
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'};
@@ -62,11 +64,25 @@ async function toolGroup(page,key){
       assert(await page.locator('#traverseControls').isHidden());
     });
     await check('百家3.0 導出改為F系列雲端資料夾並從F636開始',async()=>{
+      const state=await page.evaluate(exportState);
       const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
       const file=await download;assert.match(file.suggestedFilename(),/^F636\.xlsx$/);
       const wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());assert(wb.getWorksheet('直立式牌靴'));
+      assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
       await page.waitForFunction(()=>!IntegratedModes.busy);
       assert(posts.some(p=>p.filename==='F636.xlsx'&&p.folderId==='1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb'));
+    });
+    await check('百家A2實際導出依各自設定標紅訊號牌',async()=>{
+      await page.locator('#modeA2').click();
+      await page.evaluate(()=>{document.getElementById('maxTieLimit').value='';document.getElementById('maxSideLimit').value='';document.getElementById('skipBanker6').checked=false;document.getElementById('lastCardNine').checked=false;});
+      await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&currentRounds?.length>0,{},{timeout:60000});
+      await inventory(page);
+      const state=await page.evaluate(exportState);
+      assert.deepEqual(state.config,{suits:['♠','♥','♦','♣'],ranks:['A','2']});
+      const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
+      const file=await download,wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());
+      assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
+      await page.waitForFunction(()=>!IntegratedModes.busy);await page.locator('#modeRed0').click();
     });
     await check('穿越示範共用同一牌表，預設訊號與94個安全點保持',async()=>{
       await page.locator('#modeTraverse').click();assert(await page.locator('#traverseControls').isVisible());
@@ -111,14 +127,26 @@ async function toolGroup(page,key){
       assert.equal(await page.evaluate(()=>calculateViolationStats(currentRounds).cardColorViolations),0);
     });
     await check('穿越導出依目前切牌序，TR編號與穿越牌資料夾獨立',async()=>{
+      const state=await page.evaluate(exportState);
       const faces=await page.evaluate(()=>currentRounds.flatMap(r=>r.cards.map(c=>(c.rank==='10'?'T':c.rank)+c.suit)));
       const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
       const file=await download;assert.equal(file.suggestedFilename(),'TR008.xlsx');
       const wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());
       const sheet=wb.getWorksheet('直立式牌靴');assert(sheet);assert.equal(sheet.rowCount,416);
       for(let i=0;i<416;i++)assert.equal(sheet.getCell(i+1,2).value,faces[i]);
+      assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
       await page.waitForFunction(()=>!IntegratedModes.busy);
       assert(posts.some(p=>p.filename==='TR008.xlsx'&&p.folderId==='17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx'));
+    });
+    await check('穿越A2實際導出依各自設定標紅訊號牌',async()=>{
+      await page.locator('#modeTraverseA2').click();await toolGroup(page,'demo');await page.locator('#tvDemo').click();
+      await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
+      const state=await page.evaluate(exportState);
+      assert.deepEqual(state.config,{suits:['♠','♥','♦','♣'],ranks:['A','2']});
+      const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
+      const file=await download,wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());
+      assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
+      await page.waitForFunction(()=>!IntegratedModes.busy);await page.locator('#modeTraverse').click();
     });
     await check('手機與桌面模式選項可操作，無整頁水平溢出',async()=>{
       for(const width of [390,1440]){
@@ -153,6 +181,14 @@ async function toolGroup(page,key){
       await page.locator('#modeRed0').click();assert.equal(await page.evaluate(signature),standard);
       assert.deepEqual(await page.evaluate(()=>({suits:SIGNAL_CONFIG.suits,ranks:SIGNAL_CONFIG.ranks})),{suits:['♥','♦'],ranks:['10','J','Q','K']});
       await page.locator('#modeTraverse').click();
+    });
+    await check('穿越紅0實際導出僅紅心方塊10/J/Q/K的0為紅字',async()=>{
+      const state=await page.evaluate(exportState);
+      assert.deepEqual(state.config,{suits:['♥','♦'],ranks:['10','J','Q','K']});
+      const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
+      const file=await download,wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());
+      assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
+      await page.waitForFunction(()=>!IntegratedModes.busy);
     });
     await check('穿越停止籌碼可中止重跑，進行中不允許切模式',async()=>{
       await page.evaluate(()=>{if(document.getElementById('traverseControls').classList.contains('collapsed'))document.getElementById('tvSettingsToggle').click();});await page.locator('#tvLeft').fill('0');await page.locator('#tvMin').fill('4');await page.locator('#tvMax').fill('4');
