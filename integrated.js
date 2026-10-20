@@ -19,7 +19,7 @@
   const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
   const TV_KEY = { red0:'integrated-traverse-red0', a2:'integrated-traverse-a2' }, TV_SUB_KEY = 'integrated-traverse-sub';
   const TV_RULES = {
-    red0: { tvTriple:false, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
+    red0: { tvTriple:true, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
     a2:   { tvTriple:true, tvB6:false, tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'8', tvSignal:true, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
   };
   const tvBase = (() => {   // 非規則欄位起始值：HTML 預設，再套用舊的 integrated-traverse-settings（只讀，不搬移）

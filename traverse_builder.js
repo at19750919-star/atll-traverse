@@ -678,6 +678,10 @@
             return s > 0 && s < pos.length;
         });
         if (!flex.length) return null;
+        // 只有一組可調的點數時（紅0：0 點的 10JQK），先「集中放」：挑約一半的局放訊號牌，
+        // 優先挑 0 點牌多的局（三張公的局三張都放紅0），讓開莊的局數接近其他局；
+        // 訊號局的下一局不能是和局（三條局除外，三條優先下一局本來就開和），三條局與局外位置可多放、不影響莊數
+        if (flex.length === 1) packSignalCards(flex[0]);
         const target = Number.isInteger(opts.sideTarget) && opts.sideTarget >= 0 ? opts.sideTarget : null;
         const evaluate = () => {
             let banker = 0, other = 0, tieBad = 0;
@@ -692,6 +696,56 @@
             const diff = Math.abs(banker - other);
             return { diff, tieBad, cost: tieBad * 1000 + (target === null ? 0 : Math.max(0, diff - target)) };
         };
+        function packSignalCards(pos) {
+            const rng = opts.rng;
+            const sigCards = pos.filter(i => isSig(physicalCards[i])).map(i => physicalCards[i]);
+            const plainCards = pos.filter(i => !isSig(physicalCards[i])).map(i => physicalCards[i]);
+            const K = sigCards.length;
+            const inPos = new Set(pos);
+            const flexOf = new Int32Array(R), fixedSig = new Int32Array(R);
+            pos.forEach(i => { if (roundOf[i] >= 0) flexOf[roundOf[i]]++; });
+            physicalCards.forEach((c, i) => { if (!inPos.has(i) && isSig(c) && roundOf[i] >= 0) fixedSig[roundOf[i]]++; });
+            const nextTie = k => rounds[(k + 1) % R].result === '和';
+            // 不會產生莊的位置：三條局、局外（剩牌）位置
+            const sinkPos = pos.filter(i => roundOf[i] < 0 || rounds[roundOf[i]].trip);
+            // 已固定是訊號局（含不可調的訊號牌）且不是三條局：一定會讓下一局開莊
+            let forced = 0;
+            for (let k = 0; k < R; k++) if (fixedSig[k] > 0 && !rounds[k].trip) forced++;
+            const ties = rounds.filter(r => r.result === '和').length;
+            const want = Math.max(0, Math.round((R - ties) / 2) - forced);
+            const eligible = [];
+            for (let k = 0; k < R; k++) {
+                if (rounds[k].trip || fixedSig[k] > 0 || flexOf[k] === 0 || nextTie(k)) continue;
+                eligible.push(k);
+            }
+            shuffleInPlace(eligible, rng);
+            eligible.sort((x, y) => flexOf[y] - flexOf[x]);
+            const sinkCap = sinkPos.length;
+            let count = Math.min(want, eligible.length, K);
+            const capOf = n => eligible.slice(0, n).reduce((s, k) => s + flexOf[k], 0) + sinkCap;
+            while (count < Math.min(eligible.length, K) && capOf(count) < K) count++;
+            if (capOf(count) < K) return false;
+            const chosen = new Set(eligible.slice(0, count));
+            // 每個選中的局先放一張，剩下的訊號牌隨機放進選中局的其他 0 點位置或三條局／局外位置
+            const sigAt = new Set();
+            const rest = [];
+            const byRound = new Map();
+            pos.forEach(i => { const k = roundOf[i]; if (chosen.has(k)) { if (!byRound.has(k)) byRound.set(k, []); byRound.get(k).push(i); } });
+            for (const list of byRound.values()) {
+                shuffleInPlace(list, rng);
+                sigAt.add(list[0]);
+                rest.push(...list.slice(1));
+            }
+            rest.push(...sinkPos);
+            shuffleInPlace(rest, rng);
+            for (const i of rest) { if (sigAt.size >= K) break; sigAt.add(i); }
+            if (sigAt.size !== K) return false;
+            shuffleInPlace(sigCards, rng); shuffleInPlace(plainCards, rng);
+            pos.forEach(i => { physicalCards[i] = sigAt.has(i) ? sigCards.pop() : plainCards.pop(); });
+            sig.fill(0);
+            physicalCards.forEach((c, i) => { if (isSig(c) && roundOf[i] >= 0) sig[roundOf[i]]++; });
+            return true;
+        }
         let best = evaluate(), moves = 0;
         const rng = opts.rng;
         for (let step = 0; step < 20000 && best.cost > 0; step++) {
