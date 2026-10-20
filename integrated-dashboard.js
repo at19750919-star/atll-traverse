@@ -66,12 +66,14 @@
     const oldToolbar = $('toolCats'), oldPanels = document.querySelector('.tool-panels');
     oldToolbar.hidden = oldPanels.hidden = true; $('compatLayer').append(oldToolbar,oldPanels);
     traverse.classList.remove('tool-panel'); traverse.querySelector('.mode-actions')?.remove();
+    const moreData = el('div','dashboard-data-more'), diagnostics = $('tvDiagnostics').closest('details');
+    diagnostics.id = 'tvDiagnosticsPanel'; moreData.append($('tvBucketsDetail'),diagnostics); traverse.append(moreData);
     const pit = document.querySelector('.pit'), tableBar = el('div','dashboard-table-bar');
     tableBar.append(el('span','dashboard-table-title','牌靴主表'),counts);
     const openData = button('btnTraverseData','穿越資料'), openTable = button('btnTableWindow','彈出主表 ↗');
     tableBar.append(openData,openTable);
     const density = el('select','density-control','<option value="normal">一般</option><option value="compact">緊湊</option>');
-    density.setAttribute('aria-label','主表顯示密度'); pit.querySelector('.felt-head').append(density);
+    density.setAttribute('aria-label','主表顯示密度'); tableBar.insertBefore(density,openData);
     let tableDensity = 'normal';
     try { tableDensity = localStorage.getItem('integrated-table-density') === 'compact' ? 'compact' : 'normal'; } catch (_) {}
     function setDensity(value) {
@@ -113,10 +115,18 @@
       const isTraverse = document.body.dataset.mode === 'traverse'; openData.hidden = !isTraverse; progress.hidden = !isTraverse;
       if (!isTraverse) closeDataDialog();
       const expanded = Array.from(traverse.querySelectorAll('details')).some(d => d.open && d.id !== 'tvSafePanel');
-      const shouldFloat = workspace.clientWidth < 1450 || workspace.clientHeight < 650 || expanded;
-      if (shouldFloat !== floatingData || (!shouldFloat && traverse.parentElement !== traverseSlot)) {
-        floatingData = shouldFloat; (shouldFloat ? dialogBody : traverseSlot).append(traverse); if (!shouldFloat) closeDataDialog();
+      let shouldFloat = workspace.clientWidth < 1180 || innerHeight < 560 || expanded;
+      // Judge the real inline height, including loaded fonts and wrapped summaries.
+      // Keep at least the majority of the workspace available to the card table.
+      if (isTraverse && !shouldFloat) {
+        if (traverse.parentElement !== traverseSlot) traverseSlot.append(traverse);
+        traverseSlot.hidden = false; overview.classList.add('has-traverse');
+        shouldFloat = overview.getBoundingClientRect().height > Math.min(280,innerHeight * .35);
       }
+      floatingData = shouldFloat;
+      const parent = shouldFloat ? dialogBody : traverseSlot;
+      if (traverse.parentElement !== parent) parent.append(traverse);
+      if (!shouldFloat) closeDataDialog();
       traverseSlot.hidden = !isTraverse || floatingData; overview.classList.toggle('has-traverse',isTraverse && !floatingData);
       openData.textContent = floatingData ? '穿越資料 ↗' : '穿越資料'; checkingPlacement = false;
     }
@@ -125,9 +135,9 @@
       dataDialog.hidden = !dataDialog.hidden; openData.setAttribute('aria-expanded',String(!dataDialog.hidden));
     });
     closeData.addEventListener('click',closeDataDialog);
-    traverse.addEventListener('toggle',() => {
-      const wasInline = !floatingData; updateDataPlacement();
-      if (wasInline && floatingData) { dataDialog.hidden = false; openData.setAttribute('aria-expanded','true'); }
+    traverse.addEventListener('toggle',event => {
+      updateDataPlacement();
+      if (floatingData && event.target.open && event.target.id !== 'tvSafePanel') { dataDialog.hidden = false; openData.setAttribute('aria-expanded','true'); }
     },true);
     let drag = null;
     dialogHead.addEventListener('pointerdown',e => {
@@ -220,23 +230,24 @@
         return selector + '{' + properties.map(p=>p+':'+css.getPropertyValue(p)).join(';') + '}';
       }
       windowLayout.textContent = [
-        'body.table-window{height:100dvh;min-height:0;padding:10px;display:flex;overflow:hidden}',
+        'body.table-window{height:100dvh;min-height:0;padding:10px;display:flex;overflow:hidden;font-size:14px;line-height:1.4}',
         'body.table-window .pit{display:flex;flex:1;min-width:0;min-height:0;margin:0;width:100%}',
         visual('body.table-window .pit',pit,['padding','border-radius','background','box-shadow']),
         'body.table-window .felt{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;overflow:hidden}',
         visual('body.table-window .felt',pit.querySelector('.felt'),['padding','border-radius']),
-        'body.table-window .felt-head{flex:none;margin-bottom:8px;gap:12px}',
+        'body.table-window .felt-head{flex:none;margin-bottom:4px;gap:12px;height:24px}',
         'body.table-window .felt-head .arc-text{font-size:10px;letter-spacing:.2em;white-space:nowrap}',
         'body.table-window .table-scroll{flex:1;min-height:0;overflow:auto;max-height:none;overscroll-behavior:contain}',
         visual('body.table-window #roundsTable', $('roundsTable'), ['min-width']),
-        'body.table-window #roundsTable th{padding:9px 5px;font-size:11px;letter-spacing:.1em;text-indent:0}',
-        'body.table-window #roundsTable td{padding:7px 5px;font-size:13px}',
+        'body.table-window #roundsTable th{padding:6px 5px;font-size:11px;line-height:16px;letter-spacing:.1em;text-indent:0}',
+        'body.table-window #roundsTable td{padding:4px 5px;font-size:13px}',
         'body.table-window[data-density=compact] #roundsTable td{padding-top:3px;padding-bottom:3px}',
         'body.table-window[data-density=compact] #roundsTable .card-label{width:27px;height:27px;font-size:12px}',
         visual('.density-control',density,['border','border-radius','background','color','padding','font'])
       ].join('\n');
       target.head.append(windowLayout);
       target.body.replaceChildren(target.importNode(pit,true));
+      target.querySelector('.felt-head').append(target.importNode(density,true));
       target.body.addEventListener('click',event => {
         if (document.body.classList.contains('running')) return;
         const card = event.target.closest('[data-action="card"]'), row = event.target.closest('tr[data-r]');

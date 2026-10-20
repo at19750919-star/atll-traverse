@@ -51,7 +51,7 @@ async function toolGroup(page, name) {
       assert(side && stats && table); assert(side.x < table.x); assert(stats.y < table.y);
       assert(await page.locator('#standardControls').isVisible());
       assert(await page.locator('#btnTableWindow').isVisible());
-      assert(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight));
+      assert(await page.evaluate(() => getComputedStyle(document.body).overflowY !== 'hidden' && document.querySelector('.pit').clientHeight >= 480));
     });
     await check('左欄兩分頁、五組工具及原有模式適用範圍', async () => {
       await toolGroup(page, 'edit');
@@ -94,7 +94,7 @@ async function toolGroup(page, name) {
     await check('416格安全切點與原分析一致，點安全格實際切牌', async () => {
       await page.waitForFunction(() => document.querySelectorAll('.cut-cell').length === 416);
       assert.equal(await page.locator('.cut-cell.safe').count(), await page.evaluate(() => IntegratedModes.traversal.analysis.count));
-      assert(await page.locator('#traverseTools').isVisible());
+      assert(await page.locator('#traverseTools').isVisible(),JSON.stringify(await page.evaluate(()=>['.dashboard-overview','.dashboard-workspace','#stats','#traverseTools','#tvSafeCuts'].map(s=>{const e=document.querySelector(s);return {s,height:e.getBoundingClientRect().height,display:getComputedStyle(e).display};}))));
       assert(await page.locator('#traverseDataDialog').isHidden());
       const cut = await page.evaluate(() => IntegratedModes.traversal.analysis.safe.find(n => n > 0));
       await page.locator(`.cut-cell[data-tv-cut="${cut}"]`).click();
@@ -108,11 +108,12 @@ async function toolGroup(page, name) {
       assert.match(await page.locator('#dashOutcomeBar').getAttribute('aria-label'), new RegExp('莊' + count + '局'));
       assert.match(await page.locator('#dashAvg').textContent(), /局/);
       const before = await page.locator('.pit').boundingBox();
-      await page.locator('#traverseTools > details').last().locator('summary').click();
+      await page.locator('#tvDiagnosticsPanel > summary').click();
+      await page.locator('#traverseDataDialog').waitFor({state:'visible'});
       assert(await page.locator('#traverseDataDialog').isVisible());
       const after = await page.locator('.pit').boundingBox();
       assert(after.height >= before.height - 2);
-      await page.locator('#traverseTools > details').last().locator('summary').click();
+      await page.locator('#tvDiagnosticsPanel > summary').click();
       await page.waitForFunction(() => document.getElementById('traverseTools').parentElement.classList.contains('dashboard-traverse-slot'));
       assert(await page.locator('#traverseDataDialog').isHidden());
     });
@@ -170,6 +171,63 @@ async function toolGroup(page, name) {
       await page.locator('.density-control').selectOption('normal');
       await popup.waitForFunction(() => document.body.dataset.density === 'normal');
     });
+    await check('實際短視窗仍可讀至少六局、設定可捲到底且訊號牌不超框', async () => {
+      // Regression: the user's 2561×908 capture is a 1791×636 CSS viewport.
+      // A large body font also catches accidental dependence on browser defaults.
+      await page.addStyleTag({ content: 'body{font-size:20px}' });
+      for (const [width,height] of [[1791,636],[1707,605],[1920,720],[1280,720],[1024,768]]) {
+        await page.setViewportSize({width,height});
+        await page.locator('#dashboardSettingsTab').click();
+        await page.locator('.pit .table-scroll').evaluate(e=>{e.scrollTop=0;});
+        const geometry = await page.evaluate(()=>{
+          const box=s=>document.querySelector(s).getBoundingClientRect();
+          const table=box('.pit .table-scroll'),head=box('#roundsHead'),row=box('#roundsBody tr');
+          const side=box('.dashboard-sidebar-scroll'),signal=box('.signal');
+          return {visibleRows:Math.floor((table.height-head.height)/row.height),tableHeight:table.height,sideHeight:side.height,
+            areas:['header','.dashboard-layout','.dashboard-overview','#stats','#statsVioCard','.dashboard-table-bar','.pit','.felt-head','.logbox','#roundsBody tr'].map(s=>({s,height:box(s).height,y:box(s).y})),
+            signalContained:[...document.querySelectorAll('.signal .mini-card')].every(e=>{const r=e.getBoundingClientRect();return r.top>=signal.top&&r.bottom<=signal.bottom&&r.left>=signal.left&&r.right<=signal.right;}),
+            actionsContained:[...document.querySelectorAll('.chip-col .chip')].every(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),
+            pageCanGrow:getComputedStyle(document.body).overflowY!=='hidden'&&document.documentElement.scrollHeight>innerHeight};
+        });
+        assert(geometry.visibleRows>=6,JSON.stringify({width,height,...geometry}));
+        assert(geometry.sideHeight>=230,JSON.stringify({width,height,...geometry}));
+        assert(geometry.signalContained&&geometry.actionsContained&&geometry.pageCanGrow,JSON.stringify({width,height,...geometry}));
+        await page.locator('#tvSecond').scrollIntoViewIfNeeded();
+        assert(await page.locator('#tvSecond').isVisible());
+        await page.locator('#dashboardSettingsTab').click();
+      }
+      await page.setViewportSize({width:2560,height:1080});
+    });
+    await check('整頁可自然向下捲動，主表內捲動不牽動整頁', async () => {
+      await page.setViewportSize({width:1791,height:636});
+      await page.locator('#logHead').scrollIntoViewIfNeeded();
+      const pageY=await page.evaluate(()=>scrollY);
+      assert(pageY>0,'page must scroll to content below the viewport');
+      const table=page.locator('.pit .table-scroll');
+      await table.evaluate(e=>{e.scrollTop=700;});
+      assert(await table.evaluate(e=>e.scrollTop>=700));
+      assert.equal(await page.evaluate(()=>scrollY),pageY);
+      await table.evaluate(e=>{e.scrollTop=0;});
+      await page.keyboard.press('Control+Home');
+      await page.setViewportSize({width:2560,height:1080});
+    });
+    await check('路單與日誌自然展開，不遮住或縮小主表', async () => {
+      await page.setViewportSize({width:1791,height:636});
+      const before=await page.locator('.pit .table-scroll').evaluate(e=>e.clientHeight);
+      await toolGroup(page,'analysis');
+      await page.locator('#btnShoeMap').click();
+      const {road,pit}=await page.evaluate(()=>({road:document.querySelector('#shoeMap').getBoundingClientRect().toJSON(),pit:document.querySelector('.pit').getBoundingClientRect().toJSON()}));
+      assert(road.height>0&&road.y+road.height<=pit.y+1,JSON.stringify({road,pit,state:await page.locator('#shoeMap').getAttribute('class')}));
+      assert.equal(await page.locator('.pit .table-scroll').evaluate(e=>e.clientHeight),before);
+      await page.locator('#btnShoeMap').click();
+      await page.locator('#logHead').click();
+      const {log,table}=await page.evaluate(()=>({log:document.querySelector('.logbox').getBoundingClientRect().toJSON(),table:document.querySelector('.pit').getBoundingClientRect().toJSON()}));
+      assert(log.y>=table.y+table.height,'log must be below the table');
+      assert.equal(await page.locator('.pit .table-scroll').evaluate(e=>e.clientHeight),before);
+      await page.locator('#logHead').click();
+      await page.keyboard.press('Control+Home');
+      await page.setViewportSize({width:2560,height:1080});
+    });
     await check('關閉後可重開；清空也同步；瀏覽器阻擋彈窗時顯示提示', async () => {
       await popup.close();
       const reopened = context.waitForEvent('page');
@@ -192,6 +250,29 @@ async function toolGroup(page, name) {
         await page.locator('#sharedSignalSettings').click();
         assert(await page.locator('#pSet').isVisible());
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'signal overflow ' + width);
+        await page.locator('#sharedSignalSettings').click();
+      }
+    });
+    await check('自訂全部十三種訊號牌或清空時，訊號卡與張數仍留在左欄', async () => {
+      await page.locator('#modeRed0').click();
+      for (const width of [1791,390]) {
+        await page.setViewportSize({width,height:720});
+        await page.locator('#dashboardSettingsTab').click();
+        await page.locator('#sharedSignalSettings').click();
+        for(const pick of await page.locator('.suit-button,.rank-button').all()) {
+          if(!await pick.evaluate(e=>e.classList.contains('selected'))) await pick.click();
+        }
+        assert.equal(await page.locator('#fanStage .mini-card').count(),13);
+        assert.match(await page.locator('#formula').textContent(),/416/);
+        assert(await page.evaluate(()=>{
+          const s=document.querySelector('.signal').getBoundingClientRect(),f=document.querySelector('#fanStage').getBoundingClientRect(),n=document.querySelector('#formula').getBoundingClientRect();
+          return f.right<=s.right&&n.right<=s.right&&document.documentElement.scrollWidth<=innerWidth;
+        }),'all ranks must not push the count out of the signal panel');
+        for(const pick of await page.locator('.rank-button').all()) {
+          if(await pick.evaluate(e=>e.classList.contains('selected'))) await pick.click();
+        }
+        assert.match(await page.locator('#formula').textContent(),/未設定/);
+        await page.locator('.pick.quick[data-q="red0"]').click();
         await page.locator('#sharedSignalSettings').click();
       }
     });
