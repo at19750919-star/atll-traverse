@@ -1260,6 +1260,14 @@ body.running .deck,body.finished .deck{
     <label title="4 張局比例上限 %；留白＝不檢查">四張比例% <input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="不限"></label>
   </div>
+  <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。挑局時計數，整副不符合就重跑；原四張比例上限仍一併檢查">
+    <label>4張局下限 <input id="st4Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>5張局下限 <input id="st5Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>6張局下限 <input id="st6Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>4張局上限 <input id="st4Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>5張局上限 <input id="st5Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label>6張局上限 <input id="st6Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+  </div>
   </div>
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control" title="三條局的下一局開和；關閉後三條當一般局"><span class="name">三條</span><input type="checkbox" id="tripleTieRule" checked><span class="switch" aria-hidden="true"></span></label>
@@ -1443,9 +1451,10 @@ body.running .deck,body.finished .deck{
 <script>
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
 </script>
-<script src="standard/signals.js?v=27"></script>
+<script src="standard/round_size_limits.js?v=1"></script>
+<script src="standard/signals.js?v=30"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
-<script src="standard/signals_ui.js?v=42"></script>
+<script src="standard/signals_ui.js?v=44"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
 <script src="standard/swap_preview.js?v=2"></script>
 <script src="standard/auto_fix_plugin.js?v=3"></script>
@@ -1453,15 +1462,17 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <!-- 設定持久化：紅0模式／A2模式各自保存（at-settings-red0／at-settings-a2），首次用各模式預設值 -->
 <script>
 (function(){
-    var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'];
+    var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','swapBanker6Target','st4Min','st4Max','st5Min','st5Max','st6Min','st6Max'];
     var CHECK_IDS = ['skipBanker6','skipPlayer7Banker6','tripleTieRule','lastCardNine'];
     var KEYS = { red0:'at-settings-red0', a2:'at-settings-a2' };
     var SUB_KEY = 'at-standard-sub';
     var DEFAULTS = {
         red0: { avgRecoveryLimit:'3.5', maxTieLimit:'4', maxFourCardRate:'30', maxSideLimit:'4', max7PtReversal:'2', swapBanker6Target:'9',
+                st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
                 tripleTieRule:false, skipBanker6:true, skipPlayer7Banker6:true, lastCardNine:false,
                 signal:{ suits:['\u2665','\u2666'], ranks:['10','J','Q','K'] } },
         a2:   { avgRecoveryLimit:'3.5', maxTieLimit:'', maxFourCardRate:'35', maxSideLimit:'5', max7PtReversal:'2', swapBanker6Target:'9',
+                st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
                 tripleTieRule:true, skipBanker6:false, skipPlayer7Banker6:false, lastCardNine:true,
                 signal:{ suits:['\u2660','\u2665','\u2666','\u2663'], ranks:['A','2'] } }
     };
@@ -1482,7 +1493,7 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
         defaults: DEFAULTS, current: lastSub(),
         fillInputs: function(sub){
             var p = load(sub);
-            INPUT_IDS.forEach(function(id){ var el = document.getElementById(id); if (el) el.value = p[id]; });
+            INPUT_IDS.forEach(function(id){ var el = document.getElementById(id); if (el) { el.value = p[id]; el.setCustomValidity(''); } });
             CHECK_IDS.forEach(function(id){ var el = document.getElementById(id); if (el) el.checked = !!p[id]; });
             return p;
         },
@@ -1504,7 +1515,7 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
     INPUT_IDS.concat(CHECK_IDS).forEach(function(id){
         var el = document.getElementById(id);
         if (el) el.addEventListener('change', saveCur);
-        if (el && el.type === 'number') el.addEventListener('input', saveCur);
+        if (el && el.type === 'number') el.addEventListener('input', function(){ el.setCustomValidity(''); saveCur(); });
     });
 })();
 </script>
@@ -1806,7 +1817,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=11"></script>
-<script src="integrated-dashboard.js?v=10"></script>
+<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=13"></script>
+<script src="integrated-dashboard.js?v=11"></script>
 </body>
 </html>

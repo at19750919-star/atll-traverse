@@ -221,7 +221,7 @@
     const windowName = 'shoe-table-' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     function liveWindow() { try { return tableWindow && !tableWindow.closed && tableWindow.document.body.classList.contains('table-window'); } catch (_) { return false; } }
     function syncTableWindow() {
-      if (!liveWindow()) return;
+      if (!liveWindow() || window.__pendingSizeShoe) return;
       const target = tableWindow.document; target.title = $('modeStatus').textContent + ' · 主表';
       target.body.className = 'table-window' + (document.body.classList.contains('table-zoom') ? ' table-zoom' : ''); Object.assign(target.body.dataset,document.body.dataset);
       target.body.dataset.density = tableDensity; target.querySelector('.density-control').value = tableDensity;

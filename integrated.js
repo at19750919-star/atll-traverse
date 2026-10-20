@@ -15,6 +15,7 @@
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null;
   const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  const standardSizeControlIds = [4,5,6].flatMap(n=>[`st${n}Min`,`st${n}Max`]);
   // 穿越紅0／穿越A2：同一個穿越引擎，各自保存設定、訊號牌與牌靴；states.traverse 永遠指向目前的穿越牌靴
   const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
   const TV_KEY = { red0:'integrated-traverse-red0', a2:'integrated-traverse-a2' }, TV_SUB_KEY = 'integrated-traverse-sub';
@@ -466,7 +467,8 @@
   // Capture only mode-dependent actions; all standard-mode handlers run unchanged.
   document.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
-    if(mode==='standard'&&button.id==='btnExportCombined'){event.preventDefault();event.stopImmediatePropagation();if(!busy){lock(true);Promise.resolve(original.export()).catch(e=>log(`導出失敗：${e.message}`,'error')).finally(()=>lock(false));}return;}
+    if(mode==='standard'&&window.__pendingSizeShoe&&!['chipStop','stopGenerateBtn'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
+    if(mode==='standard'&&button.id==='btnExportCombined'){event.preventDefault();event.stopImmediatePropagation();if(!busy&&!window.__isGeneratingShoe){lock(true);Promise.resolve(original.export()).catch(e=>log(`導出失敗：${e.message}`,'error')).finally(()=>lock(false));}return;}
     if(mode!=='traverse')return;
     if(busy&&!['stopGenerateBtn','chipStop','logHead','btnTableWindow'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
     const id=button.id;
@@ -502,6 +504,7 @@
     const parts=[`回復${Number(v('avgRecoveryLimit'))>0?'≤'+v('avgRecoveryLimit'):'不限'}`,`和局${v('maxTieLimit')===''?'不限':'≤'+v('maxTieLimit')}`];
     if(v('maxFourCardRate')!=='')parts.push(`四張≤${v('maxFourCardRate')}%`);
     if(v('maxSideLimit')!=='')parts.push(`莊閒差距≤${v('maxSideLimit')}`);
+    for(const n of [4,5,6]){const lo=v(`st${n}Min`),hi=v(`st${n}Max`);if(lo||hi)parts.push(`${n}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
     const on=[['tripleTieRule','三條'],['skipBanker6','莊6'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
@@ -512,6 +515,7 @@
   $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
   let standardWasRunning=false;
   new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
+    standardSizeControlIds.forEach(id=>$(id).disabled=running);
     if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length&&!document.body.classList.contains('dashboard'))setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';

@@ -2011,6 +2011,7 @@ function refreshAnalysisAndRender(options = {}) {
         log(`重新分析失敗:${error && error.message ? error.message : error}`, 'error');
         currentAnalysis = null;
     }
+    if (typeof window !== 'undefined' && window.__pendingSizeShoe) return;
     const stats = buildStatsFromRounds();
     updateStats(stats);
     renderRoundsTable(currentRounds, currentAnalysis);
@@ -3060,12 +3061,25 @@ async function generateShoe() {
         log('目前已有生成流程進行中', 'warn');
         return;
     }
+    const sizeSettings = typeof RoundSizeLimits !== 'undefined' ? RoundSizeLimits.read(document) : { limits: null };
+    if (sizeSettings.error) {
+        const input = document.getElementById(sizeSettings.focus);
+        input?.setCustomValidity(sizeSettings.error);
+        input?.reportValidity();
+        input?.focus();
+        log(sizeSettings.error, 'error');
+        return;
+    }
+    const previousSizeShoe = sizeSettings.limits ? { rounds: currentRounds, analysis: currentAnalysis } : null;
+    let sizeAccepted = !sizeSettings.limits;
     if (typeof window !== 'undefined') {
         window.__isGeneratingShoe = true;
         window.__stopGenerateRequested = false;
+        window.__pendingSizeShoe = Boolean(sizeSettings.limits);
         // 重新生成 → 取消「匯入模式」的違規檢查跳過
         window.__importedShoeMode = false;
     }
+    if (sizeSettings.limits) setEditButtonsAvailability(false);
 
     // 檢查是否為自動重新生成
     const isAutoRegenerate = (typeof window !== 'undefined' && window.__regenerateCount > 0);
@@ -3081,7 +3095,7 @@ async function generateShoe() {
         logArea.innerHTML = '';
     }
     const roundsBody = document.getElementById('roundsBody');
-    if (roundsBody) {
+    if (roundsBody && !sizeSettings.limits) {
         roundsBody.innerHTML = '';
     }
 
@@ -3098,6 +3112,8 @@ async function generateShoe() {
     if (autoColorBtn) autoColorBtn.disabled = true;
 
     try {
+        // 最後修正也可能改變局數；不符合時在同一生成流程繼續重排，仍可停止。
+        while (true) {
         if (isAutoRegenerate) {
             log(`🔄 自動重新生成 (第 ${window.__regenerateCount} 次)`, 'warn');
         } else {
@@ -3241,7 +3257,16 @@ async function generateShoe() {
                 continue;
             }
 
-            // 6. 預先模擬 S 局調整後的局數上限檢查（必須在 finalize 前做，因為 S 調整會改變比例）
+            // 6. 局數上下限在殘牌分配、訊號與局內優化後檢查。
+            if (sizeSettings.limits) {
+                const sizes = RoundSizeLimits.check(roundsToCheck, sizeSettings.limits);
+                if (!sizes.ok) {
+                    log(`局數上下限不符：${sizes.reason}，重新生成...`, 'warn');
+                    result = null;
+                    continue;
+                }
+            }
+            // 預先模擬 S 局調整後的局數上限檢查（必須在 finalize 前做，因為 S 調整會改變比例）
             const preflightLimits = preflightCheckMaxSideLimit(roundsToCheck, { alreadyAdjusted: true });
             if (preflightLimits.enabled) {
                 const c = preflightLimits.counts;
@@ -3423,6 +3448,22 @@ async function generateShoe() {
             log(`末張9調整完成：從原第 ${startRound} 局開始，第 416 張為 9`, 'success');
         }
 
+        // 最終輸出再驗一次，涵蓋後續規則修復、卡色與末張9調整。
+        if (sizeSettings.limits) {
+            const sizes = RoundSizeLimits.check(currentRounds, sizeSettings.limits);
+            if (!sizes.ok) {
+                log(`最後調整後不符局數上下限：${sizes.reason}，重新生成...`, 'warn');
+                if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
+                currentRounds = previousSizeShoe.rounds;
+                currentAnalysis = previousSizeShoe.analysis;
+                continue;
+            }
+            sizeAccepted = true;
+            window.__pendingSizeShoe = false;
+            refreshAnalysisAndRender({ mutate: false, skipVerify: true });
+            setEditButtonsAvailability(true);
+        }
+
         // 【輸出統計日誌】
         const stats = buildStatsFromRounds();
         log(`生成完成!`, 'success');
@@ -3499,14 +3540,27 @@ async function generateShoe() {
         } catch (e) {
             log(`回復分析顯示更新失敗: ${e.message}`, 'error');
         }
-
+        break;
+        }
     } catch (error) {
         log(`生成失敗: ${error.message}`, 'error');
         setEditButtonsAvailability(false);
     } finally {
+        const restoreSizeShoe = previousSizeShoe && !sizeAccepted;
+        if (restoreSizeShoe) {
+            currentRounds = previousSizeShoe.rounds;
+            currentAnalysis = previousSizeShoe.analysis;
+        }
         if (typeof window !== 'undefined') {
+            window.__pendingSizeShoe = false;
             window.__isGeneratingShoe = false;
             window.__stopGenerateRequested = false;
+        }
+        if (restoreSizeShoe) {
+            if (currentRounds?.length) refreshAnalysisAndRender({ mutate: false, skipVerify: true });
+            else renderRoundsTable(null, null);
+            setEditButtonsAvailability(Boolean(currentRounds?.length));
+            if (currentRounds?.length) log('已保留上次完成的牌靴，這次未通過限制的結果已捨棄。', 'info');
         }
         btn.disabled = false;
         btn.textContent = '生成';
@@ -5509,6 +5563,11 @@ function showViolationConfirmDialog(stats) {
 }
 
 async function exportRoundsAsExcelWithDrive() {
+    // 整合層導出本身也會設 __isGeneratingShoe 鎖定，候選結果改以暫存旗標判斷。
+    if (typeof window !== 'undefined' && window.__pendingSizeShoe) {
+        log('排牌尚未完成，請完成或停止後再導出。', 'warn');
+        return false;
+    }
     // === 違規檢查（包含無法對調 + 卡色）===
     const { hasViolation, stats } = checkViolationsBeforeExport();
     if (hasViolation) {

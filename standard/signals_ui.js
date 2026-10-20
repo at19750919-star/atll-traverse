@@ -982,6 +982,22 @@ function pack_all_sensitive_and_segment(deck) {
         ? Math.floor(estimatedTotalRounds * (fourCardRateLimit / 100))
         : Infinity;
     let fourCardCount = 0;
+    const sizeSettings = typeof RoundSizeLimits !== 'undefined' ? RoundSizeLimits.read(document) : { limits: null };
+    if (sizeSettings.error) throw new Error(sizeSettings.error);
+    const sizeLimits = sizeSettings.limits, sizeCounts = { 4: 0, 5: 0, 6: 0 };
+    const sizeFull = r => {
+        const n = r?.cards?.length, max = sizeLimits?.[n]?.max;
+        return max !== null && max !== undefined && sizeCounts[n] >= max;
+    };
+    const needsSize = r => {
+        const n = r?.cards?.length, min = sizeLimits?.[n]?.min;
+        return min !== null && min !== undefined && sizeCounts[n] < min;
+    };
+    const recordSize = r => {
+        const n = r.cards.length;
+        if (sizeCounts[n] !== undefined) sizeCounts[n]++;
+        if (n === 4) fourCardCount++;
+    };
 
     // 七點逆轉上限控制
     const max7PtInput = document.getElementById('max7PtReversal');
@@ -1036,6 +1052,7 @@ function pack_all_sensitive_and_segment(deck) {
     if (swapB6Target > 0) {
         for (const r of all_sensitive) {
             if (swapB6Count >= swapB6Target) break;
+            if (sizeFull(r)) continue;
             if (typeof shouldSkipSensitiveRound === 'function' && shouldSkipSensitiveRound(r)) continue;
             if (r.cards.some(c => used_pos.has(c.pos))) continue;
             if (r.cards.length === 4) continue; // 對調莊6不挑4張局
@@ -1046,7 +1063,7 @@ function pack_all_sensitive_and_segment(deck) {
             r.segment = 'A';
             a_rounds.push(r);
             r.cards.forEach(c => used_pos.add(c.pos));
-            if (r.cards.length === 4) fourCardCount++;
+            recordSize(r);
             if (is7PtReversal(r)) sevenPtReversalCount++;
             swapB6Count++;
         }
@@ -1054,7 +1071,9 @@ function pack_all_sensitive_and_segment(deck) {
     }
 
     // 先把所有敏感局加入 A 段（按原始順序，但 4 張局達上限就跳過）
-    for (const r of all_sensitive) {
+    const firstPass = sizeLimits ? all_sensitive.slice().sort((a,b)=>Number(needsSize(b))-Number(needsSize(a))) : all_sensitive;
+    for (const r of firstPass) {
+        if (sizeFull(r)) continue;
         if (typeof shouldSkipSensitiveRound === 'function' && shouldSkipSensitiveRound(r)) continue;
         // 如果這局有用過的牌就跳過
         if (r.cards.some(c => used_pos.has(c.pos))) continue;
@@ -1073,7 +1092,7 @@ function pack_all_sensitive_and_segment(deck) {
         r.segment = 'A';
         a_rounds.push(r);
         r.cards.forEach(c => used_pos.add(c.pos));
-        if (r.cards.length === 4) fourCardCount++;
+        recordSize(r);
         if (is7PtReversal(r)) sevenPtReversalCount++;
         if (isSwapBankerSix(r)) swapB6Count++;
         if (r.result === '和') tieCount++;
@@ -1106,6 +1125,7 @@ function pack_all_sensitive_and_segment(deck) {
                     });
                     const startPos = orderedOriginalCards.length ? orderedOriginalCards[0].pos : 0;
                     const finalRound = makeRoundInfo(startPos, orderedOriginalCards, last.result, true);
+                    if (sizeFull(finalRound)) return null;
                     // 七點逆轉已達上限就跳過
                     if (max7PtLimit !== null && is7PtReversal(finalRound) && sevenPtReversalCount >= max7PtLimit) {
                         return null;
@@ -1124,7 +1144,7 @@ function pack_all_sensitive_and_segment(deck) {
                     finalRound.segment = 'A';
                     a_rounds.push(finalRound);
                     orderedOriginalCards.forEach(card => used_pos.add(card.pos));
-                    if (last.cards.length === 4) fourCardCount++;
+                    recordSize(finalRound);
                     if (is7PtReversal(finalRound)) sevenPtReversalCount++;
                     if (isSwapBankerSix(finalRound)) swapB6Count++;
                     if (finalRound.result === '和') tieCount++;
@@ -1138,6 +1158,7 @@ function pack_all_sensitive_and_segment(deck) {
         // 4 張局已達上限就跳過，七點逆轉已達上限也跳過，B6 達標不再挑 B6，三條+B6 重疊排除，和局必須無訊號牌
         const isValidCandidate = (r) => Array.isArray(r.cards) && r.cards.length > 0
                 && !r.cards.some(c => used_pos.has(c.pos))
+                && !sizeFull(r)
                 && !(r.cards.length === 4 && fourCardCount >= maxFourCardRounds)
                 && !(max7PtLimit !== null && is7PtReversal(r) && sevenPtReversalCount >= max7PtLimit)
                 && !(swapB6Target > 0 && swapB6Count >= swapB6Target && isSwapBankerSix(r))
@@ -1150,6 +1171,9 @@ function pack_all_sensitive_and_segment(deck) {
             if (swapB6Target > 0 && swapB6Count < swapB6Target) {
                 picked = cands.find(r => isValidCandidate(r) && isSwapBankerSix(r) && r.cards.length > 4 && hasNoSignalCard(r) && !(typeof hasFullHouse === 'function' && hasFullHouse(r)));
             }
+            if (!picked && sizeLimits) {
+                picked = cands.find(r => isValidCandidate(r) && needsSize(r));
+            }
             if (!picked) {
                 picked = cands.find(r => isValidCandidate(r));
             }
@@ -1158,7 +1182,7 @@ function pack_all_sensitive_and_segment(deck) {
         }
 
         // 檢查挑出來的敏感局是否合法
-        if (!picked || !Array.isArray(picked.cards) || picked.cards.length === 0) {
+        if (!picked || !Array.isArray(picked.cards) || picked.cards.length === 0 || sizeFull(picked)) {
              multi_pass_attempts++;
             if (multi_pass_attempts >= MAX_MULTI_PASS_ATTEMPTS) break;
             continue;
@@ -1173,7 +1197,7 @@ function pack_all_sensitive_and_segment(deck) {
         picked.segment = 'A';
         a_rounds.push(picked);
         picked.cards.forEach(c => used_pos.add(c.pos));
-        if (picked.cards.length === 4) fourCardCount++;
+        recordSize(picked);
         if (is7PtReversal(picked)) sevenPtReversalCount++;
         if (isSwapBankerSix(picked)) swapB6Count++;
         if (picked.result === '和') tieCount++;
@@ -2992,6 +3016,7 @@ function renderRoundsTableHeader() {
 
 // 根據上一輪分析渲染 table 的身體
 function renderRoundsTable(rounds, analysis) {
+    if (typeof window !== 'undefined' && window.__pendingSizeShoe) return;
     const table = document.getElementById('roundsTable');
     const tbody = document.getElementById('roundsBody');
 
@@ -3199,7 +3224,7 @@ function cancelPendingAutoRegenerate() {
 
 // 控制編輯相關按鈕的可用狀態
 function setEditButtonsAvailability(enabled) {
-    editEnabled = Boolean(enabled);
+    editEnabled = Boolean(enabled) && !(typeof window !== 'undefined' && window.__pendingSizeShoe);
     if (!editEnabled) {
         EDIT_STATE.mode = 'none';
         EDIT_STATE.first = null;
