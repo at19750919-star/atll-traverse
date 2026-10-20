@@ -3178,6 +3178,16 @@ async function generateShoe() {
                 continue;
             }
 
+            // 4.5 局內優化：每局只換自己的牌順序，降低平均回復局數（結果與各項規則不變）
+            try {
+                const opt = optimizeRecoveryInRounds(roundsToCheck);
+                if (opt.ok && opt.changed > 0) {
+                    log(`第 ${attempt} 次局內優化：調整 ${opt.changed} 局，平均回復 ${opt.before} → ${opt.after} 局`, 'info');
+                }
+            } catch (e) {
+                log(`第 ${attempt} 次局內優化失敗，沿用原牌序 (${e && e.message ? e.message : e})`, 'warn');
+            }
+
             // 5. 檢查牌靴回復速度（這是檢查S局調整前的原始結果）
             try {
                 const recoveryResult = analyzeShoeRecovery(roundsToCheck);
@@ -5779,6 +5789,138 @@ async function exportRoundsAsExcelWithDrive() {
         const message = error && error.message ? error.message : error;
         log(`導出失敗:${message}`, 'error');
     }
+}
+
+// 局內優化（比照穿越排牌）：每局只在自己的牌之間換順序，不跨局換牌，
+// 挑讓「平均回復局數」最低的排法。每局的張數、結果、對調後結果、敏感性、
+// 禁止組合、莊6／閒7、七點逆轉、三條與訊號牌都保持不變。直接修改傳入的牌局。
+function optimizeRecoveryInRounds(rounds, maxPasses = 4) {
+    if (!Array.isArray(rounds) || !rounds.length) return { ok: false, changed: 0 };
+    if (rounds.some(r => !r || !Array.isArray(r.cards))) return { ok: false, changed: 0 };
+    const starts = [];
+    let N = 0;
+    rounds.forEach(r => { starts.push(N); N += r.cards.length; });
+    if (N < 6) return { ok: false, changed: 0 };
+    const isStart = new Uint8Array(N);
+    starts.forEach(st => { isStart[st] = 1; });
+    const pts = rounds.flatMap(r => r.cards.map(c => c.point()));
+
+    // 依點數算從某位置開始的這局要用幾張（與 computeRoundHands 同規則）
+    const sizeOf = (p) => {
+        const pt = (p(0) + p(2)) % 10, bt = (p(1) + p(3)) % 10;
+        if (pt >= 8 || bt >= 8) return 4;
+        if (pt <= 5) {
+            const t = p(4);
+            if (t === undefined) return 5;
+            let draw = false;
+            if (bt <= 2) draw = true;
+            else if (bt === 3 && t !== 8) draw = true;
+            else if (bt === 4 && t >= 2 && t <= 7) draw = true;
+            else if (bt === 5 && t >= 4 && t <= 7) draw = true;
+            else if (bt === 6 && (t === 6 || t === 7)) draw = true;
+            return draw ? 6 : 5;
+        }
+        return bt <= 5 ? 5 : 4;
+    };
+    const sizeAt = i => sizeOf(k => pts[(i + k) % N]);
+    const sizes = new Uint8Array(N);
+    for (let i = 0; i < N; i++) sizes[i] = sizeAt(i);
+    const refresh = (st, n) => { for (let k = -5; k < n; k++) { const i = (st + k + N) % N; sizes[i] = sizeAt(i); } };
+
+    // 與 analyzeShoeRecovery 相同：每個切點發到接回原局起點為止的局數總和
+    const maxSim = rounds.length * 2;
+    const totalRounds = () => {
+        let sum = 0;
+        for (let c = 0; c < N; c++) {
+            if (isStart[c]) continue;
+            let used = 0, r = 0;
+            while (used < N && r < maxSim) {
+                const sz = sizes[(c + used) % N];
+                if (used + sz > N) break;
+                used += sz; r++;
+                if (isStart[(c + used) % N]) break;
+            }
+            sum += r;
+        }
+        return sum;
+    };
+
+    const swapFirst = cards => { const t = cards.slice(); [t[0], t[1]] = [t[1], t[0]]; return t; };
+    const facts = (cards) => {
+        const n = cards.length, a = cards.map(c => c.point());
+        if (sizeOf(k => a[k]) !== n) return null;
+        const h = computeRoundHands(cards);
+        const res = h.playerTotal === h.bankerTotal ? '和' : (h.playerTotal > h.bankerTotal ? '閒' : '莊');
+        const pi = (a[0] + a[2]) % 10, bi = (a[1] + a[3]) % 10;
+        const rev7 = n >= 5 && res !== '和' && pi < 8 && bi < 8 && (pi === 7 || bi === 7)
+            && ((pi === 7 && res === '莊') || (bi === 7 && res === '閒'));
+        const b6 = h.bankerTotal === 6 && h.playerTotal <= 5;
+        const p7 = h.playerTotal === 7 && h.bankerTotal === 6;
+        return [res, rev7, b6, p7, isBannedThirdCardPatternOnCards(cards)].join('|');
+    };
+    const signature = (cards) => {
+        const own = facts(cards), sw = swapFirst(cards), other = facts(sw);
+        if (!own || !other) return null;
+        return own + '#' + other;
+    };
+    const perms = (arr) => {
+        const out = [], used = new Array(arr.length).fill(false), cur = [];
+        (function visit() {
+            if (cur.length === arr.length) { out.push(cur.slice()); return; }
+            const seen = new Set();
+            arr.forEach((c, i) => {
+                const key = c.rank + c.suit;
+                if (used[i] || seen.has(key)) return;
+                seen.add(key); used[i] = true; cur.push(c); visit(); cur.pop(); used[i] = false;
+            });
+        })();
+        return out;
+    };
+
+    const before = totalRounds();
+    let best = before, changed = 0;
+    const touched = new Set();
+    for (let pass = 0; pass < maxPasses; pass++) {
+        let passChanged = 0;
+        rounds.forEach((round, ri) => {
+            const st = starts[ri], n = round.cards.length;
+            if (n < 4) return;
+            // 對調後用牌數不同的局（swap_info 牽涉後面的牌）不動
+            if (round.swap_info && Array.isArray(round.swap_info.cards) && round.swap_info.cards.length !== n) return;
+            const sig0 = signature(round.cards);
+            if (!sig0) return;
+            const keepNine = ri === rounds.length - 1 && round.cards[n - 1].rank === '9';
+            let bestAlt = null;
+            for (const alt of perms(round.cards)) {
+                if (alt.every((c, k) => c === round.cards[k])) continue;
+                if (keepNine && alt[n - 1].rank !== '9') continue;
+                if (signature(alt) !== sig0) continue;
+                if (shouldSkipSensitiveRound({ cards: alt, swap_info: { cards: swapFirst(alt) } })) continue;
+                alt.forEach((c, k) => { pts[st + k] = c.point(); });
+                refresh(st, n);
+                const t = totalRounds();
+                if (t < best) { best = t; bestAlt = alt; }
+            }
+            const keep = bestAlt || round.cards;
+            keep.forEach((c, k) => { pts[st + k] = c.point(); });
+            refresh(st, n);
+            if (bestAlt) {
+                round.cards = bestAlt.slice();
+                if (round.swap_info && Array.isArray(round.swap_info.cards)) {
+                    round.swap_info = { ...round.swap_info, cards: swapFirst(bestAlt).map(c => c.clone()) };
+                }
+                touched.add(ri);
+                passChanged++;
+            }
+        });
+        if (!passChanged) break;
+    }
+    if (touched.size) {
+        let p = 0;
+        rounds.forEach(r => { r.start_index = p; r.cards.forEach(c => { c.pos = p++; }); });
+    }
+    changed = touched.size;
+    return { ok: true, changed, before: +(before / N).toFixed(2), after: +(best / N).toFixed(2) };
 }
 
 // 牌靴回復分析 V3 - 支援切牌旋轉
