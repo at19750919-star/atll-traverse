@@ -684,21 +684,8 @@ function shouldSkipSensitiveRound(round) {
         }
     }
 
-    // 「避開莊6點贏」勾選時，不論對不對調，只排除莊家補第三張後 6 點贏（6 張局）；閒補牌、莊不補的 5 張莊6贏與 4 張局豁免
-    const skipBanker6El = document.getElementById('skipBanker6');
-    const skipBanker6 = skipBanker6El ? skipBanker6El.checked : false;
-    if (skipBanker6 && Array.isArray(round.cards) && round.cards.length >= 4) {
-        const isBanker6Win = (cards) => {
-            const hi = computeRoundHands(cards);
-            return !!hi && hi.bankerTotal === 6 && hi.playerTotal <= 5
-                && hi.bankerCards.length === 3;
-        };
-        const tmp = round.cards.map(c => c.clone());
-        [tmp[0], tmp[1]] = [tmp[1], tmp[0]];
-        if (isBanker6Win(round.cards) || isBanker6Win(tmp)) {
-            return true;
-        }
-    }
+    // 原莊6開關或有填莊6贏上限時，原牌／對調後補第三張莊6贏都排除。
+    if (isBankerSixDrawExclusionEnabled() && hasBankerSixDrawWin(round)) return true;
 
     // 「避開閒7贏莊6」勾選時，不論對不對調，只要閒 7 點贏莊 6 點就排除
     const skipP7El = document.getElementById('skipPlayer7Banker6');
@@ -3052,6 +3039,23 @@ function isBankerSixWinRound(round) {
     return hand.bankerTotal === 6 && hand.playerTotal !== null && hand.playerTotal <= 5;
 }
 
+function hasBankerSixDrawWin(round) {
+    if (!Array.isArray(round?.cards) || round.cards.length < 4) return false;
+    const wins = cards => {
+        const h = computeRoundHands(cards);
+        return h.bankerTotal === 6 && h.playerTotal !== null && h.playerTotal <= 5 && h.bankerCards.length === 3;
+    };
+    if (wins(round.cards)) return true;
+    const swapped = round.cards.slice();
+    [swapped[0], swapped[1]] = [swapped[1], swapped[0]];
+    return wins(swapped);
+}
+
+function isBankerSixDrawExclusionEnabled() {
+    const setting = readBankerSixWinLimit();
+    return Boolean(document.getElementById('skipBanker6')?.checked || (!setting.error && setting.limit !== null));
+}
+
 function readBankerSixWinLimit(doc = document) {
     const input = doc.getElementById('maxBankerSixWin');
     const raw = input?.value.trim() ?? '';
@@ -3063,8 +3067,12 @@ function readBankerSixWinLimit(doc = document) {
 
 function checkBankerSixWinLimit(rounds, limit) {
     const count = (rounds || []).filter(isBankerSixWinRound).length;
-    const ok = limit === null || count <= limit;
-    return { ok, count, reason: ok ? '' : `莊6點贏 ${count} 局 > 上限 ${limit}` };
+    const forbiddenRounds = [];
+    if (limit !== null) (rounds || []).forEach((r,i) => { if (hasBankerSixDrawWin(r)) forbiddenRounds.push(i+1); });
+    const okCount = limit === null || count <= limit, okDraws = forbiddenRounds.length === 0;
+    const reason = !okDraws ? `第${forbiddenRounds.join('、')}局原牌或對調後為莊補第三張6點贏，須排除`
+        : !okCount ? `莊6點贏 ${count} 局 > 上限 ${limit}` : '';
+    return { ok: okCount && okDraws, okCount, okDraws, count, forbiddenRounds, reason };
 }
 
 async function repairRareReversalSpacing(rounds, options = {}) {
@@ -3408,8 +3416,7 @@ async function generateShoe() {
             const _swapB6Input = document.getElementById('swapBanker6Target');
             const _swapB6Raw = _swapB6Input ? _swapB6Input.value.trim() : '';
             const _swapB6Target = _swapB6Raw !== '' ? parseInt(_swapB6Raw) : null;
-            const _skipB6El = document.getElementById('skipBanker6');
-            const _skipB6Checked = _skipB6El ? _skipB6El.checked : false;
+            const _skipB6Checked = isBankerSixDrawExclusionEnabled();
 
             const shouldProhibit = _skipB6Checked || _swapB6Target === 0;
             const shouldEnforceMin = !shouldProhibit && _swapB6Target !== null && _swapB6Target > 0;

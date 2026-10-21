@@ -75,7 +75,25 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
         return {flags:rounds.map(isBankerSixWinRound),at2:checkBankerSixWinLimit(rounds,2),at1:checkBankerSixWinLimit(rounds,1),blank:checkBankerSixWinLimit(rounds,null),empty:isBankerSixWinRound(null)};
       });
       assert.deepEqual(actual.flags,[true,true,false,false,false,false,false]);
-      assert(actual.at2.ok);assert(!actual.at1.ok);assert.equal(actual.at2.count,2);assert(actual.blank.ok);assert.equal(actual.empty,false);
+      assert(!actual.at2.ok);assert(actual.at2.okCount);assert(!actual.at2.okDraws);assert(!actual.at1.okCount);
+      assert.equal(actual.at2.count,2);assert(actual.blank.ok);assert.equal(actual.empty,false);
+    });
+    await check('填上限就排除原牌或對調後補第三張莊6，留白依原開關，五張莊6仍依上限',async()=>{
+      const results=await page.evaluate(()=>{
+        const make=values=>({cards:values.map((n,i)=>new Card(n===0?'K':String(n),'♠',i)),result:'莊'});
+        const five=make([0,0,0,6,0]),six=make([0,0,0,0,0,6]),swapOnly=make([0,2,0,0,0,6]);
+        const flags=[five,six,swapOnly].map(hasBankerSixDrawWin),out=[];
+        for(const [value,checked] of [['',false],['',true],['2',false],['0',false]]){
+          document.getElementById('maxBankerSixWin').value=value;document.getElementById('skipBanker6').checked=checked;
+          out.push({value,checked,enabled:isBankerSixDrawExclusionEnabled(),skips:[five,six,swapOnly].map(shouldSkipSensitiveRound)});
+        }
+        document.getElementById('maxBankerSixWin').value='2';document.getElementById('skipBanker6').checked=false;
+        return {flags,out,fiveOK:checkBankerSixWinLimit([five],2).ok,fiveAtZero:checkBankerSixWinLimit([five],0).ok,sixAt104:checkBankerSixWinLimit([six,swapOnly],104)};
+      });
+      assert.deepEqual(results.flags,[false,true,true]);assert(results.fiveOK);assert(!results.fiveAtZero);
+      assert(!results.sixAt104.ok&&results.sixAt104.okCount);assert.deepEqual(results.sixAt104.forbiddenRounds,[1,2]);
+      assert.deepEqual(results.out.map(r=>r.enabled),[false,true,true,true]);
+      assert.deepEqual(results.out.map(r=>r.skips),[[false,false,false],[false,true,true],[false,true,true],[false,true,true]]);
     });
     await check('實際挑敏感局在0／1／2上限停止加入莊6贏',async()=>{
       const counts=await page.evaluate(()=>{
@@ -84,11 +102,11 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
         for(const cap of [0,1,2]) {
           document.getElementById('maxBankerSixWin').value=String(cap);
           const rounds=pack_all_sensitive_and_segment(build_shuffled_deck()).a_rounds;
-          out.push({cap,total:rounds.length,count:checkBankerSixWinLimit(rounds,cap).count});
+          out.push({cap,total:rounds.length,...checkBankerSixWinLimit(rounds,cap)});
         }
         return out;
       });
-      for(const r of counts){assert(r.total>0);assert(r.count<=r.cap,JSON.stringify(r));}
+      for(const r of counts){assert(r.total>0);assert(r.count<=r.cap,JSON.stringify(r));assert.deepEqual(r.forbiddenRounds,[]);}
     });
     for(const [mode,cap] of [['modeRed0',0],['modeA2',2]])await check(mode+'完整生成符合上限，統計一致、生成鎖定與牌庫保留',async()=>{
       await page.locator('#'+mode).click();await setLimit(page,cap);
@@ -100,29 +118,32 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
         new MutationObserver(()=>{if(window.__isGeneratingShoe&&document.getElementById('maxBankerSixWin').disabled)window.__sixLocked=true;})
           .observe(document.getElementById('maxBankerSixWin'),{attributes:true,attributeFilter:['disabled']});
       });
+      // The old hidden swap target must not demand nine forbidden draw-B6 rounds.
+      if(mode==='modeA2')await page.evaluate(()=>{document.getElementById('swapBanker6Target').value='9';});
       await page.locator('#chipGen').click();
       await page.waitForFunction(()=>!window.__isGeneratingShoe&&currentRounds?.length>0,{},{timeout:120000}).catch(async e=>{console.log(await page.locator('#logArea').textContent());throw e;});
       const out=await page.evaluate(()=>{
         const inventory={};for(const c of currentRounds.flatMap(r=>r.cards)){const k=c.rank+c.suit+c.back_color;inventory[k]=(inventory[k]||0)+1;}
-        return {count:checkBankerSixWinLimit(currentRounds,readBankerSixWinLimit().limit).count,stat:document.getElementById('recoveryBanker6Count').textContent,inventory,locked:window.__sixLocked};
+        return {...checkBankerSixWinLimit(currentRounds,readBankerSixWinLimit().limit),stat:document.getElementById('recoveryBanker6Count').textContent,inventory,locked:window.__sixLocked};
       });
       assert(out.count<=cap,JSON.stringify(out));assert.equal(parseInt(out.stat),out.count);
+      assert.deepEqual(out.forbiddenRounds,[]);assert(out.ok);
       assert.equal(Object.keys(out.inventory).length,104);assert(Object.values(out.inventory).every(n=>n===4));
       assert(out.locked);assert(await page.locator('#maxBankerSixWin').isEnabled());
       console.log('  莊6贏 '+out.count+'／上限 '+cap);
     });
-    await check('最後調整改出超標莊6贏時拒絕輸出，停止後保留上次牌靴',async()=>{
+    await check('最後調整改出禁用的補第三張莊6時，即使未超過104上限也拒絕輸出並保留舊牌',async()=>{
       const before=await page.evaluate(()=>JSON.stringify(currentRounds.map(r=>r.cards.map(c=>[c.rank,c.suit,c.back_color]))));
       const faces=await page.locator('#roundsBody [data-action="card"]').allTextContents();
-      await setLimit(page,0);
+      await setLimit(page,104);
       await page.evaluate(()=>{
         window.__sixOriginalColor=runAutoColorSwap_Signal;window.__sixOriginalCheck=checkBankerSixWinLimit;
         runAutoColorSwap_Signal=function(rounds){
-          const out=window.__sixOriginalColor(rounds),target=out.find(r=>r.cards.length===5);
-          if(!target)throw new Error('注入測試需要5張局');
+          const out=window.__sixOriginalColor(rounds),target=out.find(r=>r.cards.length===6);
+          if(!target)throw new Error('注入測試需要6張局');
           // Swap existing cards, preserving the complete inventory. The final
           // check must reject the candidate even after earlier checks passed.
-          for(const [i,point] of [0,0,0,6,0].entries()) {
+          for(const [i,point] of [0,0,0,0,0,6].entries()) {
             const all=out.flatMap(r=>r.cards.map((c,j)=>({r,j,c})));
             const src=all.find(x=>x.c.point()===point&&(x.r!==target||x.j>=i));
             [target.cards[i],src.r.cards[src.j]]=[src.c,target.cards[i]];
@@ -133,6 +154,7 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
           const result=window.__sixOriginalCheck(rounds,limit);
           if(window.__sixInjected&&!result.ok&&rounds===currentRounds){
             window.__sixRejected=true;
+            window.__sixRejectedBelowCap=result.okCount;
             window.__sixFacesAtRejection=[...document.querySelectorAll('#roundsBody [data-action="card"]')].map(e=>e.textContent);
             exportRoundsAsExcelWithDrive().then(v=>{window.__sixPendingExport=v;});
             window.__stopGenerateRequested=true;
@@ -146,6 +168,7 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
       assert.deepEqual(await page.evaluate(()=>window.__sixFacesAtRejection),faces);
       assert.deepEqual(await page.locator('#roundsBody [data-action="card"]').allTextContents(),faces);
       assert.equal(await page.evaluate(()=>window.__sixPendingExport),false);
+      assert.equal(await page.evaluate(()=>window.__sixRejectedBelowCap),true);
       assert(await page.locator('#maxBankerSixWin').isEnabled());
     });
     assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:checks.length,pageErrors:errors}));
