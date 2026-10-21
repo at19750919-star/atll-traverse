@@ -5942,6 +5942,7 @@ async function exportRoundsAsExcelWithDrive() {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        if (typeof ExportFilename !== 'undefined') ExportFilename.advance(filename);
 
         log('合併Excel檔案已導出成功!', 'success');
 

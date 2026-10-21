@@ -438,17 +438,12 @@
   }
   async function saveLocal(blob, filename, dir) {
     if (dir) {
-      if (ExportFilename.read()) {
-        try {
-          await dir.getFileHandle(filename);
-          throw new Error(`資料夾已有同名檔案「${filename}」，請修改導出檔名。`);
-        } catch (error) { if (error.name !== 'NotFoundError') throw error; }
-      }
+      if (ExportFilename.read()) filename = await ExportFilename.resolveLocal(dir, filename);
       const fh = await dir.getFileHandle(filename, { create: true });
       const w = await fh.createWritable();
       await w.write(blob);
       await w.close();
-      return dir.name;
+      return { where: dir.name, filename };
     }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -457,7 +452,7 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    return '下載';
+    return { where: '下載', filename };
   }
 
 
@@ -470,8 +465,8 @@
       const dir=await dirPromise,g=violationGroups(rs),items=Object.entries(g).filter(([,a])=>a.length);
       if(items.length&&!confirm('牌表仍有違規，是否繼續導出？\n'+items.map(([k,a])=>`${({noSwap:'無法對調',same:'不符敏感局',triple:'三條',signal:'訊號',color:'卡色'})[k]}：${a.length} 局`).join('\n'))){status('已取消導出');return;}
       const a=O.analyze(O.prepare(source),rules());const startRounds=Array.from({length:416},(_,i)=>a.depths[(cut+i)%416]);
-      const blob=await E.buildWorkbook(rs,{startRounds,signalConfig});const files=await cloudFiles();const name=await nextExportFilename(files);
-      const where=await saveLocal(blob,name,dir);status(`已存到${where}：${name}，正在上傳穿越牌…`);
+      const blob=await E.buildWorkbook(rs,{startRounds,signalConfig});const files=await cloudFiles();let name=await nextExportFilename(files);
+      const saved=await saveLocal(blob,name,dir);name=saved.filename;ExportFilename.advance(name);status(`已存到${saved.where}：${name}，正在上傳穿越牌…`);
       try{await uploadToDrive(blob,name,files);files.push({name});status(`已導出 ${name}，本機與雲端「穿越牌」皆已存好`);}catch(e){status(`已存本機 ${name}；雲端上傳失敗：${e.message}`);}
     }catch(e){status(`導出失敗：${e.message}`);}finally{lock(false);}
   }

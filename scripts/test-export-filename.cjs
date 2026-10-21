@@ -6,6 +6,16 @@ assert.equal(names.normalize('  '),null);
 for(const bad of ['../test','a/b','a\\b','a:b','a*','a?','a|','a<','a>','a"','CON','LPT1.txt','test.','.xlsx','a\x01','a'.repeat(151)])assert.throws(()=>names.normalize(bad),bad);
 assert.throws(()=>names.resolve([{name:'test.xlsx'}],'TEST'));
 assert.equal(names.resolve([],'test'),'test.xlsx');
+assert.equal(names.resolve([{name:'A2-001.xlsx'},{name:'A2-020.xlsx'},{name:'A2-009.xlsx'}],'A2-001'),'A2-021.xlsx');
+assert.equal(names.resolve([{name:'A2-010.xlsx'},{name:'B2-999.xlsx'}],'A2-100'),'A2-100.xlsx');
+assert.equal(names.resolve([{name:'a2-002.XLSX'}],'A2-001'),'A2-003.xlsx');
+assert.equal(names.nextName('A2-009.xlsx'),'A2-010.xlsx');
+assert.equal(names.nextName('A2-999.xlsx'),'A2-1000.xlsx');
+assert.equal(names.nextName('牌靴.xlsx'),null);
+assert.equal(names.nextName('A2-99999999999999999999.xlsx'),'A2-100000000000000000000.xlsx');
+const longInput={value:'9'.repeat(150),setCustomValidity(message){this.error=message;}};
+global.document={getElementById:()=>longInput};assert.doesNotThrow(()=>names.advance(longInput.value+'.xlsx'));assert(longInput.error);delete global.document;
+
 console.log('PASS 檔名正規化、中文、副檔名、空白、無效字元與同名檢查');
 const ROOT=path.resolve(__dirname,'..');
 function dependency(name){for(const base of [process.env.CODEX_NODE_MODULES,path.join(process.env.USERPROFILE||'','.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'),path.resolve(ROOT,'../百家3.0/node_modules')].filter(Boolean)){try{return require(path.join(base,name));}catch{}}return require(name);}
@@ -16,7 +26,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
     const browser=await chromium.launch({channel:'chrome',headless:true});
     try{
         const page=await browser.newPage({viewport:{width:1791,height:1000},acceptDownloads:true});
-        const errors=[],posts=[],downloads=[];
+        const errors=[],posts=[],stored=[],downloads=[];let failListing=false,failUpload=false;
         page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());page.on('download',d=>downloads.push(d));
         await page.addInitScript(()=>{window.showDirectoryPicker=undefined;});
         await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
@@ -24,15 +34,16 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
         if(fs.existsSync(dist))await page.route('https://cdn.jsdelivr.net/npm/exceljs@*/dist/exceljs.min.js',r=>r.fulfill({path:dist,contentType:'text/javascript'}));
         await page.route('https://script.google.com/**',route=>{
             const req=route.request(),tr=req.url().includes('17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx');
-            if(req.method()==='POST')posts.push(JSON.parse(req.postData()));
-            const files=[{name:tr?'TR007.xlsx':'F635.xlsx'},...posts.filter(p=>p.folderId===(tr?'17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx':'1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb')).map(p=>({name:p.filename}))];
+            if(failListing&&req.method()!=='POST')return route.fulfill({status:503,json:{success:false,message:'test listing failure'}});
+            if(req.method()==='POST'){const data=JSON.parse(req.postData());posts.push(data);if(failUpload)return route.fulfill({json:{success:false,message:'test upload failure'}});stored.push(data);}
+            const files=[{name:tr?'TR007.xlsx':'F635.xlsx'},...stored.filter(p=>p.folderId===(tr?'17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx':'1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb')).map(p=>({name:p.filename}))];
             return route.fulfill({json:req.method()==='POST'?{success:true,fileName:posts.at(-1).filename}:{success:true,files}});
         });
         await page.goto(`http://127.0.0.1:${server.address().port}/integrated.html`);await page.waitForFunction(()=>!!window.IntegratedModes);
         async function openFiles(){await page.locator('#dashboardToolsTab').click();const group=page.locator('[data-group="files"]');if(!await group.evaluate(e=>e.open))await group.locator('summary').click();}
         const input=page.locator('#exportFilename');await openFiles();
         assert(await input.isVisible());assert.equal(await input.inputValue(),'');
-        const modes=[['modeRed0','紅0牌靴'],['modeA2','A2牌靴.xlsx'],['modeTraverse','穿越紅0'],['modeTraverseA2','穿越A2']];
+        const modes=[['modeRed0','紅0牌靴'],['modeA2','A2牌靴.xlsx'],['modeTraverse','穿越紅0牌靴'],['modeTraverseA2','穿越A2牌靴']];
         for(const [mode,value] of modes){await page.locator('#'+mode).click();await input.fill(value);}
         await page.reload();await page.waitForFunction(()=>!!window.IntegratedModes);await openFiles();
         for(const [mode,value] of modes){await page.locator('#'+mode).click();assert.equal(await input.inputValue(),value);}
@@ -92,7 +103,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
             window.showDirectoryPicker=async()=>({name:'測試資料夾',getFileHandle:async(name,options)=>{
                 if(!options?.create)throw new DOMException('not found','NotFoundError');
                 window.__localExportName=name;
-                return {createWritable:async()=>{window.__filenameWrites++;return {write:async blob=>{window.__localExportSize=blob.size;},close:async()=>{}};}};
+                return {createWritable:async()=>{window.__filenameWrites++;return {write:async blob=>{if(window.__failFilenameWrite)throw new Error('test write failure');window.__localExportSize=blob.size;},close:async()=>{}};}};
             }});
             document.getElementById('btnExportCombined').click();
         });
@@ -100,7 +111,54 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
         assert.equal(await page.evaluate(()=>window.__localExportName),'本機新檔.xlsx');
         assert.equal(await page.evaluate(()=>window.__filenameWrites),1);assert((await page.evaluate(()=>window.__localExportSize))>0);
         assert(posts.some(p=>p.filename==='本機新檔.xlsx'));
+
+        await input.fill('本機-001');
+        await page.evaluate(()=>{window.__failFilenameWrite=true;document.getElementById('btnExportCombined').click();});
+        await page.waitForFunction(()=>!IntegratedModes.busy&&document.getElementById('tvProgress').textContent.includes('test write failure'));
+        assert.equal(await input.inputValue(),'本機-001');
+        await page.evaluate(()=>{window.__failFilenameWrite=false;});
+        await input.fill('本機-001');
+        await page.evaluate(()=>{
+            window.showDirectoryPicker=async()=>({name:'測試資料夾',getFileHandle:async(name,options)=>{
+                if(!options?.create){if(name==='本機-001.xlsx'||name==='本機-002.xlsx')return {};throw new DOMException('not found','NotFoundError');}
+                window.__localExportName=name;
+                return {createWritable:async()=>({write:async()=>{},close:async()=>{}})};
+            }});
+            document.getElementById('btnExportCombined').click();
+        });
+        await page.waitForFunction(()=>!IntegratedModes.busy&&document.getElementById('tvProgress').textContent.includes('皆已存好'));
+        assert.equal(await page.evaluate(()=>window.__localExportName),'本機-003.xlsx');
+        assert.equal(await input.inputValue(),'本機-004');
+        assert(posts.some(p=>p.filename==='本機-003.xlsx'));
         await page.evaluate(()=>{indexedDB.open=window.__oldFilenameDbOpen;window.showDirectoryPicker=undefined;});
+        for(const [index,[mode]] of modes.entries()){
+            await page.locator('#'+mode).click();await input.fill('A2-001');
+            const start=index%2===0?1:3;
+            const folder=index<2?'1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb':'17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx';
+            for(let n=start;n<start+2;n++){
+                await exported(`A2-${String(n).padStart(3,'0')}.xlsx`,folder);
+                assert.equal(await input.inputValue(),`A2-${String(n+1).padStart(3,'0')}`);
+            }
+        }
+        await page.locator('#modeRed0').click();
+        const failedCounts={posts:posts.length,downloads:downloads.length};
+        failListing=true;
+        await page.evaluate(()=>document.getElementById('btnExportCombined').click());
+        await page.waitForFunction(()=>!IntegratedModes.busy);
+        assert.equal(await input.inputValue(),'A2-003');assert.equal(posts.length,failedCounts.posts);assert.equal(downloads.length,failedCounts.downloads);
+        failListing=false;
+        failUpload=true;await input.fill('上傳失敗-001');
+        await exported('上傳失敗-001.xlsx','1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb');
+        assert.equal(await input.inputValue(),'上傳失敗-002');
+        failUpload=false;await input.fill('A2-003');
+        await page.reload();await page.waitForFunction(()=>!!window.IntegratedModes);await openFiles();
+        for(const [index,[mode]] of modes.entries()){
+            await page.locator('#'+mode).click();
+            assert.equal(await input.inputValue(),index%2===0?'A2-003':'A2-005');
+        }
+        if(process.env.FILENAME_SCREENSHOT)await page.locator('[data-group="files"]').screenshot({path:process.env.FILENAME_SCREENSHOT});
+        console.log('PASS 四模式連續兩次導出自動001→002；雲端同前綴接續、補零、重載保存；本機重名跳號／寫入失敗不跳號；雲端清單失敗不跳號；本機已存好時雲端上傳失敗仍接續');
+
         assert.deepEqual(errors,[]);
         console.log('PASS 同名／無效檔名不下載或上傳，清空恢復F／TR自動編號，本機目錄同名不覆蓋（記憶體模擬），無JS錯誤');
     }finally{await browser.close();server.close();}
