@@ -157,6 +157,7 @@
     updateSignalConfig({ suits:p.signal.suits.slice(), ranks:p.signal.ranks.slice() });
     $('stTitle').textContent = SUB_NAME[name]+' 設定';
     document.body.dataset.sub = name;
+    ExportFilename.setMode('standard-' + name);
     setStandardCollapsed($('standardControls').classList.contains('collapsed'));
   }
   function applyTraverseProfile(t) {
@@ -166,6 +167,7 @@
     updateSignalConfig({ suits:p.signal.suits.slice(), ranks:p.signal.ranks.slice() });
     $('tvTitle').textContent = TV_NAME[t] + '設定';
     document.body.dataset.tsub = t;
+    ExportFilename.setMode('traverse-' + t);
     setSettingsCollapsed(document.body.classList.contains('dashboard') ? $('traverseControls').classList.contains('collapsed') : !!tstates[t].result);
   }
   function refreshModeButtons() {
@@ -211,7 +213,7 @@
     busy=value;window.__isGeneratingShoe=value;window.__stopGenerateRequested=false;
     $('generateBtn').disabled=value;$('stopGenerateBtn').disabled=!value;
     $('generatingOverlay').classList.toggle('active',value);document.body.classList.toggle('running',value);
-    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
+    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings','exportFilename',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
     document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>{el.style.pointerEvents=value?'none':'';el.setAttribute('aria-disabled',value);});
     document.querySelectorAll('.suit-checkbox,.rank-checkbox').forEach(el=>el.disabled=value);
     if(!value)$('tvOptimize').disabled=!states.traverse.result;
@@ -368,6 +370,8 @@
   }
 
   async function nextExportFilename(files) {
+    const custom = ExportFilename.read();
+    if (custom) return ExportFilename.resolve(files, custom);
     const re = new RegExp(`^${EXPORT_PREFIX}(\\d+)\\.xlsx$`, 'i');
     let max = 0;
     files.forEach((f) => { const m = (f.name || '').match(re); if (m) max = Math.max(max, parseInt(m[1], 10)); });
@@ -434,6 +438,12 @@
   }
   async function saveLocal(blob, filename, dir) {
     if (dir) {
+      if (ExportFilename.read()) {
+        try {
+          await dir.getFileHandle(filename);
+          throw new Error(`資料夾已有同名檔案「${filename}」，請修改導出檔名。`);
+        } catch (error) { if (error.name !== 'NotFoundError') throw error; }
+      }
       const fh = await dir.getFileHandle(filename, { create: true });
       const w = await fh.createWritable();
       await w.write(blob);
@@ -452,6 +462,7 @@
 
 
   async function exportTraverse() {
+    try { ExportFilename.read(); } catch (error) { status(error.message); return; }
     if(!states.traverse.result||busy)return;absorbEdits();const source=copy(states.traverse.result),cut=states.traverse.cut,signalConfig=currentSignal();
     const rs=E.dealRounds(E.cutDeck(O.prepare(source),cut));
     const dirPromise=getExportDir();lock(true);
@@ -517,7 +528,7 @@
   $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
   let standardWasRunning=false;
   new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
-    [...standardSizeControlIds,'maxTwoThirteenReversal'].forEach(id=>$(id).disabled=running);
+    [...standardSizeControlIds,'maxTwoThirteenReversal','exportFilename'].forEach(id=>$(id).disabled=running);
     if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length&&!document.body.classList.contains('dashboard'))setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';

@@ -5230,11 +5230,13 @@ async function fetchDriveFileList() {
  * 雲端清單讀不到時直接中止導出，不再退回本機計數器。
  */
 async function getNextExportFilename() {
+    const custom = typeof ExportFilename !== 'undefined' ? ExportFilename.read() : null;
     const key = 'at-export-counter';
     const START = 635; // 從 F636 開始（START + 1）
 
     // 取得雲端現有最大 F 編號；讀不到就停止導出，避免退回本機計數器造成跳號或重號
     const files = await fetchDriveFileList();
+    if (custom) return ExportFilename.resolve(files, custom);
     let cloudMax = -1;
     for (const f of files) {
         const m = (f.name || '').match(/^F(\d+)\.xlsx$/i);
@@ -5650,6 +5652,8 @@ async function exportRoundsAsExcelWithDrive() {
         log('排牌尚未完成，請完成或停止後再導出。', 'warn');
         return false;
     }
+    try { if (typeof ExportFilename !== 'undefined') ExportFilename.read(); }
+    catch (error) { log(error.message, 'error'); return false; }
     // === 違規檢查（包含無法對調 + 卡色）===
     const { hasViolation, stats } = checkViolationsBeforeExport();
     if (hasViolation) {

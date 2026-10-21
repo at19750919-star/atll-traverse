@@ -48,7 +48,7 @@
       ['牌序編修','edit',['btnSwap','btnRound','btnAutoReorder','btnAutoColor','btnAutoFix','btnCancelEdit','btnApplyChanges','tvOptimize','btnOptOpen']],
       ['切牌定位','cut',['btnRecordDeckOrder']],
       ['分析與參考','analysis',['btnShoeMap','btnPointMatrix','btnPointStats','btnValidate','btnApplyTools']],
-      ['檔案與輸入','files',['btnImport','importFileInput','btnExportCombined','btnManualInput']],
+      ['檔案與輸入','files',['btnImport','importFileInput','exportFilenameField','btnExportCombined','btnManualInput']],
       ['發牌與示範','demo',['btnDealer','btnSpeech','tvDemo']]
     ];
     const groupBodies = {};

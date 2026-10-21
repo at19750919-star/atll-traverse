@@ -1061,6 +1061,10 @@ body.running .deck,body.finished .deck{
   .stat-card{flex-direction:column;gap:12px}
   .rec-info{min-width:0;width:100%}
 }
+.export-filename-field{display:flex;flex-direction:column;gap:6px;min-width:0;grid-column:1/-1;width:100%;font-size:12px;color:var(--gold-2)}
+.export-filename-field input{box-sizing:border-box;min-width:0;width:100%;height:34px;padding:6px 8px;border:1px solid #6b4c1d;border-radius:5px;background:#0b1213;color:#efe2c2;font:inherit;letter-spacing:normal}
+.export-filename-field input:focus{outline:1px solid #c9a25a}
+.export-filename-field small{font-size:11px;color:#a99b7c;line-height:1.5;letter-spacing:normal}
 </style>
 <link rel="stylesheet" href="integrated.css?v=5">
 <link rel="stylesheet" href="integrated-dashboard.css?v=10">
@@ -1307,6 +1311,7 @@ body.running .deck,body.finished .deck{
   <div class="tool-panel gframe" id="tpData">
     <button class="tool-btn" id="btnImport">匯入</button>
     <input type="file" id="importFileInput" accept=".xlsx" style="display:none">
+    <label id="exportFilenameField" class="export-filename-field">導出檔名<input id="exportFilename" type="text" maxlength="155" autocomplete="off" spellcheck="false" placeholder="留白：F 自動編號"><small>可省略 .xlsx；留白沿用自動編號</small></label>
     <button class="tool-btn" id="btnExportCombined">導出</button>
     <button class="tool-btn" id="clearBtn">清空</button>
     <button class="tool-btn" id="btnPointMatrix">點數矩陣</button>
@@ -1459,7 +1464,8 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 </script>
 <script src="standard/round_size_limits.js?v=1"></script>
 <script src="standard/two_thirteen_reversals.js?v=4"></script>
-<script src="standard/signals.js?v=34"></script>
+<script src="standard/export_filename.js?v=1"></script>
+<script src="standard/signals.js?v=35"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
 <script src="standard/signals_ui.js?v=46"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
@@ -1824,7 +1830,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=15"></script>
+<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=16"></script>
 <script src="integrated-dashboard.js?v=11"></script>
 </body>
 </html>
