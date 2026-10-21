@@ -1,4 +1,4 @@
-/* 完整牌庫比例下，逆轉且對方不補牌的機會恰為 2/13；依實際牌序判定。 */
+/* 完整牌庫比例下，1/13與2/13的單方補牌逆轉；依實際牌序判定。 */
 (function (root) {
     'use strict';
     const point = card => {
@@ -28,7 +28,8 @@
         } else return null;
         // 0點有10/J/Q/K四種牌面，其餘點數各一種；不是把十種點數視為等機率。
         const weight = wins.reduce((sum, t) => sum + (t === 0 ? 4 : 1), 0);
-        return weight === 2 && wins.includes(a[4]) ? { winner, playerInitial: p, bankerInitial: b, draws: wins } : null;
+        return weight >= 1 && weight <= 2 && wins.includes(a[4])
+            ? { winner, playerInitial: p, bankerInitial: b, draws: wins, numerator: weight } : null;
     }
     function count(rounds) {
         return (rounds || []).reduce((n, r) => n + Number(Boolean(classify(r))), 0);
@@ -36,16 +37,30 @@
     function read(doc) {
         const input = doc.getElementById('maxTwoThirteenReversal');
         const raw = input?.value.trim() ?? '';
-        if (raw === '') return { limit: null };
+        if (raw === '') return { limit: null, enabled: Boolean(input) };
         const limit = Number(raw);
         if (!Number.isSafeInteger(limit) || limit < 0) return {
-            error: '2／13逆轉上限請填0以上的整數，或留白不限。', focus: 'maxTwoThirteenReversal'
+            error: '逆轉上限（1／13＋2／13）請填0以上的整數，或留白不限。', focus: 'maxTwoThirteenReversal'
         };
-        return { limit };
+        return { limit, enabled: true };
     }
     function check(rounds, limit) {
-        const actual = count(rounds);
-        return { ok: limit === null || actual <= limit, count: actual, limit };
+        const roundNumbers = [];
+        (rounds || []).forEach((r, i) => { if (classify(r)) roundNumbers.push(i + 1); });
+        const actual = roundNumbers.length;
+        const okCount = limit === null || actual <= limit;
+        // 只檢查當副牌的前後次序，不把靴尾與靴頭循環相接；兩次之間至少21局。
+        const spacingViolations = [];
+        for (let i = 1; i < roundNumbers.length; i++) {
+            const firstRound = roundNumbers[i - 1], nextRound = roundNumbers[i];
+            const gap = nextRound - firstRound - 1;
+            if (gap <= 20) spacingViolations.push({ firstRound, nextRound, gap });
+        }
+        const okSpacing = spacingViolations.length === 0;
+        const v = spacingViolations[0];
+        const reason = !okCount ? `逆轉（1／13＋2／13）${actual}局 > 上限${limit}`
+            : !okSpacing ? `第${v.firstRound}、${v.nextRound}局逆轉之間只隔${v.gap}局，須超過20局` : '';
+        return { ok: okCount && okSpacing, okCount, okSpacing, count: actual, limit, roundNumbers, spacingViolations, reason };
     }
     const api = { classify, count, read, check };
     root.TwoThirteenReversals = api;

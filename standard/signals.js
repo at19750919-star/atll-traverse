@@ -3079,7 +3079,7 @@ async function generateShoe() {
         log(reversalSettings.error, 'error');
         return;
     }
-    const requiresFinalValidation = Boolean(sizeSettings.limits || reversalSettings.limit !== null);
+    const requiresFinalValidation = Boolean(sizeSettings.limits || reversalSettings.enabled);
     const previousSizeShoe = requiresFinalValidation ? { rounds: currentRounds, analysis: currentAnalysis } : null;
     let sizeAccepted = !requiresFinalValidation;
     if (typeof window !== 'undefined') {
@@ -3314,11 +3314,11 @@ async function generateShoe() {
                 }
             }
 
-            // 2／13逆轉包含非敏感局，依訊號調整後的實際牌序計數。
-            if (reversalSettings.limit !== null) {
+            // 1／13與2／13逆轉合計上限、相鄰兩次之間超過20局；包含非敏感局。
+            if (reversalSettings.enabled) {
                 const reversalCheck = TwoThirteenReversals.check(roundsToCheck, reversalSettings.limit);
                 if (!reversalCheck.ok) {
-                    log(`第 ${attempt} 次生成失敗：2／13逆轉 ${reversalCheck.count} 局 > 上限 ${reversalSettings.limit}，重新生成...`, 'warn');
+                    log(`第 ${attempt} 次生成失敗：${reversalCheck.reason}，重新生成...`, 'warn');
                     result = null;
                     continue;
                 }
@@ -3469,10 +3469,10 @@ async function generateShoe() {
         }
 
         // 最終輸出再驗一次，涵蓋後續規則修復、卡色與末張9調整。
-        if (reversalSettings.limit !== null) {
+        if (reversalSettings.enabled) {
             const reversalCheck = TwoThirteenReversals.check(currentRounds, reversalSettings.limit);
             if (!reversalCheck.ok) {
-                log(`最後調整後2／13逆轉 ${reversalCheck.count} 局 > 上限 ${reversalSettings.limit}，重新生成...`, 'warn');
+                log(`最後調整後${reversalCheck.reason}，重新生成...`, 'warn');
                 if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
                 currentRounds = previousSizeShoe.rounds;
                 currentAnalysis = previousSizeShoe.analysis;

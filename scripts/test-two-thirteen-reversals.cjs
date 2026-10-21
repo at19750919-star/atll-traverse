@@ -7,6 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const rank = n => n === 0 ? 'K' : n === 1 ? 'A' : String(n);
 const round = (p,b,t) => ({cards:[0,0,p,b,t].map(n=>({rank:rank(n)}))});
 const expected = new Map([
+    ['0,3',[8]], ['1,3',[8]], ['1,4',[8]], ['1,5',[8]], ['3,5',[3]], ['1,6',[8]], ['2,6',[5]],
     ['0,4',[8,9]], ['0,5',[8,9]], ['4,5',[2,3]], ['0,6',[8,9]], ['3,6',[4,5]],
     ...Array.from({length:6},(_,p)=>[`${p},7`,[8-p,9-p]]),
     ...Array.from({length:6},(_,b)=>[`7,${b}`,[8-b,9-b]])
@@ -18,19 +19,29 @@ for(let p=0;p<=9;p++)for(let b=0;b<=9;b++)for(let t=0;t<=9;t++){
     assert.equal(actual,wanted,`p=${p} b=${b} t=${t}`);
     if(actual)hits++;
 }
-assert.equal(hits,34); // 17種起始點數，每種兩個補牌點數。
+assert.equal(hits,41); // 24種起始點數：7種1/13、17種2/13。
 const win=round(3,6,5), lose=round(3,6,3), six=round(3,6,6);
 six.cards.push({rank:'K'});
 assert.equal(rules.classify(six),null);
 assert.equal(rules.classify({...win,cards:win.cards.slice(0,4)}),null);
-assert.equal(rules.classify(round(0,3,8)),null); // 1/13
+assert.equal(rules.classify(round(0,3,8)).numerator,1); // 1/13也納入
+assert.equal(rules.classify(win).numerator,2);
 assert.equal(rules.classify(round(4,6,3)),null); // 3/13
 assert.equal(rules.count([win,lose,six]),1);
 assert.equal(rules.check([win],0).ok,false);
 assert.equal(rules.check([win],1).ok,true);
 assert.equal(rules.check([win],null).ok,true);
 for(const value of ['-1','1.5','abc'])assert(rules.read({getElementById:()=>({value})}).error);
-console.log('PASS 1000種點數組合、17種起始組合、排除1/13與3/13、六張局及上限邊界');
+const spaced=(next)=>{const rounds=Array.from({length:next},()=>({cards:[]}));rounds[0]=win;rounds[next-1]=round(1,6,8);return rounds;};
+for(const next of [2,21,22])assert.equal(rules.check(spaced(next),null).ok,false,'第1與'+next+'局不可通過');
+for(const next of [23,24])assert.equal(rules.check(spaced(next),null).ok,true,'第1與'+next+'局應通過');
+assert.equal(rules.check(spaced(23),1).okCount,false);
+assert.equal(rules.check(spaced(23),2).ok,true);
+assert.equal(rules.check(spaced(22),2).okSpacing,false);
+assert.equal(rules.check(spaced(22),null).spacingViolations[0].gap,20);
+const triple=spaced(46);triple[22]=round(1,6,8);assert.equal(rules.check(triple,null).ok,true);
+triple[43]=win;assert.equal(rules.check(triple,null).okSpacing,false);
+console.log('PASS 1000種點數組合、納入1/13與2/13、排除3/13、上限及第22/23局間隔邊界');
 let chromium;
 for(const base of [process.env.CODEX_NODE_MODULES,path.join(process.env.USERPROFILE||'','.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'),path.resolve(ROOT,'../百家3.0/node_modules')].filter(Boolean)){
     try{({chromium}=require(path.join(base,'playwright')));break;}catch{}
@@ -76,13 +87,14 @@ const server=http.createServer((req,res)=>{
             currentRounds=[[0,0,3,6,5],[0,0,0,3,8],[0,0,4,6,3]].map((a,i)=>makeRoundInfo(i*5,a.map((n,j)=>card(n,i*5+j)), '閒',true));
             currentAnalysis=null;renderRoundsTable(currentRounds,null);
         });
-        assert.equal(await page.locator('#roundsBody .two-thirteen-reversal').count(),1);
+        assert.equal(await page.locator('#roundsBody .two-thirteen-reversal').count(),2);
         assert.equal(await page.locator('#roundsBody tr:first-child td.result-cell').evaluate(e=>getComputedStyle(e,'::after').content),'"2／13"');
+        assert.equal(await page.locator('#roundsBody tr:nth-child(2) td.result-cell').evaluate(e=>getComputedStyle(e,'::after').content),'"1／13"');
         if(process.env.REVERSAL_TABLE_SCREENSHOT)await page.locator('#roundsTable').screenshot({path:process.env.REVERSAL_TABLE_SCREENSHOT});
         const popupEvent=page.waitForEvent('popup');await page.locator('#btnTableWindow').click();const popup=await popupEvent;
         await popup.waitForSelector('.two-thirteen-reversal');
-        assert.equal(await popup.locator('.two-thirteen-reversal').count(),1);
-        assert.equal(await popup.locator('.two-thirteen-reversal td.result-cell').evaluate(e=>getComputedStyle(e,'::after').content),'"2／13"');
+        assert.equal(await popup.locator('.two-thirteen-reversal').count(),2);
+        assert.equal(await popup.locator('.two-thirteen-reversal td.result-cell').first().evaluate(e=>getComputedStyle(e,'::after').content),'"2／13"');
         await popup.close();
         if(process.env.REVERSAL_SCREENSHOT)await page.locator('#standardControls').screenshot({path:process.env.REVERSAL_SCREENSHOT});
         console.log('PASS 欄位、兩模式保存、0/留白重載、四種寬度、無效輸入、主表與獨立視窗高亮');
@@ -93,7 +105,7 @@ const server=http.createServer((req,res)=>{
             finally{document.getElementById('tripleTieRule').checked=saved;}
         });
         console.log('PASS 實際挑局遵守0上限');
-        for(const [mode,limit] of [['modeRed0',0],['modeA2',2]]){
+        for(const [mode,limit] of [['modeRed0',0],['modeA2',2],['modeA2','']]){
             await page.locator('#'+mode).click();await input.fill(String(limit));
             await page.evaluate(()=>{
                 for(const id of ['avgRecoveryLimit','maxTieLimit','maxSideLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'])document.getElementById(id).value='';
@@ -103,11 +115,11 @@ const server=http.createServer((req,res)=>{
             });
             await page.locator('#chipGen').click();
             await page.waitForFunction(()=>!window.__isGeneratingShoe&&currentRounds?.flatMap(r=>r.cards).length===416,{},{timeout:120000});
-            const actual=await page.evaluate(()=>({count:TwoThirteenReversals.count(currentRounds),cards:currentRounds.flatMap(r=>r.cards).length,locked:window.__reversalLocked,highlight:document.querySelectorAll('#roundsBody .two-thirteen-reversal').length}));
-            assert(actual.count<=limit,JSON.stringify(actual));assert.equal(actual.cards,416);assert(actual.locked);assert.equal(actual.highlight,actual.count);
-            console.log(`PASS ${mode}實際生成416張：2/13逆轉${actual.count}局，上限${limit}；生成時欄位鎖定`);
+            const actual=await page.evaluate(()=>({count:TwoThirteenReversals.count(currentRounds),cards:currentRounds.flatMap(r=>r.cards).length,locked:window.__reversalLocked,highlight:document.querySelectorAll('#roundsBody .two-thirteen-reversal').length,spacing:TwoThirteenReversals.check(currentRounds,null).okSpacing}));
+            assert(limit===''||actual.count<=limit,JSON.stringify(actual));assert(actual.spacing,JSON.stringify(actual));assert.equal(actual.cards,416);assert(actual.locked);assert.equal(actual.highlight,actual.count);
+            console.log(`PASS ${mode}實際生成416張：1/13＋2/13逆轉${actual.count}局，上限${limit===''?'不限':limit}；間隔>20局、生成時欄位鎖定`);
         }
-        await page.locator('#modeRed0').click();await input.fill('0');
+        await page.locator('#modeRed0').click();await input.fill('');
         const before=await page.evaluate(()=>JSON.stringify(currentRounds.map(r=>r.cards.map(c=>[c.rank,c.suit,c.back_color]))));
         const faces=await page.locator('#roundsBody [data-action="card"]').allTextContents();
         await page.evaluate(()=>{
@@ -117,12 +129,13 @@ const server=http.createServer((req,res)=>{
             runAutoColorSwap_Signal=function(rounds){
                 const out=window.__originalReversalColor(rounds);
                 const cards=[0,0,3,6,5].map((n,i)=>new Card(n===0?'K':String(n),'♠',500+i));
-                return out.concat(makeRoundInfo(500,cards,'閒',true));
+                return [makeRoundInfo(500,cards,'閒',true),makeRoundInfo(505,cards.map(c=>c.clone()),'閒',true),...out];
             };
             TwoThirteenReversals.check=function(rounds,limit){
                 const result=window.__originalReversalCheck(rounds,limit);
                 if(!result.ok&&rounds===currentRounds&&!window.__reversalRejected){
                     window.__reversalRejected=true;
+                    window.__spacingRejected=result.okCount&&!result.okSpacing;
                     window.__rejectedFaces=[...document.querySelectorAll('#roundsBody [data-action="card"]')].map(e=>e.textContent);
                     exportRoundsAsExcelWithDrive().then(v=>{window.__reversalExportResult=v;});
                     setTimeout(()=>document.getElementById('chipStop').click(),0);
@@ -136,8 +149,9 @@ const server=http.createServer((req,res)=>{
         assert.deepEqual(await page.evaluate(()=>window.__rejectedFaces),faces);
         assert.deepEqual(await page.locator('#roundsBody [data-action="card"]').allTextContents(),faces);
         assert.equal(await page.evaluate(()=>window.__reversalExportResult),false);
+        assert.equal(await page.evaluate(()=>window.__spacingRejected),true);
         await page.evaluate(()=>{TwoThirteenReversals.check=window.__originalReversalCheck;runAutoColorSwap_Signal=window.__originalReversalColor;});
-        console.log('PASS 最後調整後超標必須重排；停止恢復舊牌，未通過結果不顯示／不導出');
+        console.log('PASS 上限留白也檢查最終間隔，不符必須重排；停止恢復舊牌，未通過結果不顯示／不導出');
         assert.deepEqual(errors,[]);
     }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

@@ -3158,9 +3158,12 @@ function renderRoundsTable(rounds, analysis) {
         row.innerHTML = rowHtml;
         row.dataset.r = index;
         row.classList.add('round-row');
-        if (typeof TwoThirteenReversals !== 'undefined' && TwoThirteenReversals.classify(round)) {
+        const rareReversal = typeof TwoThirteenReversals !== 'undefined' && TwoThirteenReversals.classify(round);
+        if (rareReversal) {
             row.classList.add('two-thirteen-reversal');
-            row.title = '2／13補牌逆轉：原本落後，補牌獲勝且對方不補牌（完整牌庫比例）';
+            row.dataset.reversalOdds = `${rareReversal.numerator}／13`;
+            row.querySelector('td.result-cell')?.setAttribute('data-reversal-odds', row.dataset.reversalOdds);
+            row.title = `${row.dataset.reversalOdds}補牌逆轉：原本落後，補牌獲勝且對方不補牌（完整牌庫比例）`;
         }
 
         tbody.appendChild(row);
