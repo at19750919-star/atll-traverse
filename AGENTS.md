@@ -1,6 +1,7 @@
 # ATLL-穿越排牌
 
 ## 已定案
+- [2026-10-22｜Codex] 主表移除卡色欄並縮緊欄距，寬畫面左右分列第1～45局與第46局起，窄視窗改單欄，保留原操作與整頁捲動（使用者要求配合21:9螢幕）。
 - [2026-10-22｜Codex] 整合頁四模式導出暫改只存本機，編號不讀雲端最大值，依輸入起號與本機成功紀錄接續並保存（使用者要求，取代整合頁原雲端導出政策）。
 - [2026-10-22｜Codex] 自訂Excel檔名尾碼數字自動接續並保留補零（如A2-001→A2-002），沿用各模式保存與同前綴雲端編號，本機存好後更新下一號（使用者要求）。
 - [2026-10-22｜Codex] 整合頁可自訂Excel導出檔名，四模式各自保存，本機與雲端同名，留白沿用F／TR自動編號（使用者要求）。
@@ -80,7 +81,7 @@
 - [2026-10-08｜Claude] 末張 9 的切點直接當成新的第 1 張（切牌張數歸 0），牌表與導出牌序一致（使用者要求兩邊起點相同）
 
 ## 專案說明
-- 整合頁儀表板由 integrated-dashboard.js／integrated-dashboard.css 重用既有控制項與統計；生成／停止／清空在頁首，左欄、主表及獨立主表視窗隨整頁延伸、沒有內部捲軸；表頭貼齊視窗頂端，窄螢幕超出表格寬度時捲動整頁查看各欄。21:9 優先，窄畫面或展開詳細穿越資料時改用可拖曳資料彈窗，主表獨立視窗支援直接開 HTML；驗證：node scripts/test-dashboard.cjs（16 項）、node scripts/test-integrated.cjs（14 項）。
+- 整合頁儀表板由 integrated-dashboard.js／integrated-dashboard.css 重用既有控制項與統計；生成／停止／清空在頁首，左欄、主表及獨立主表視窗隨整頁延伸、沒有內部捲軸；表頭貼齊視窗頂端，窄螢幕超出表格寬度時捲動整頁查看各欄。21:9 優先，窄畫面或展開詳細穿越資料時改用可拖曳資料彈窗，主表獨立視窗支援直接開 HTML；驗證：node scripts/test-dashboard.cjs（18 項）、node scripts/test-integrated.cjs（14 項）。
 - 整合入口：integrated.html（index.html 轉入），integrated.js／integrated.css 管理「百家3.0／穿越排牌」切換；兩模式共用 SIGNAL_CONFIG、Card 牌面、牌表、統計、換牌與切牌操作，模式內各自保存牌靴，生成／優化／導出期間禁止切換。
 - 百家3.0 原始功能快照放 standard/（來源為相鄰百家3.0 專案，來源 HEAD f6b4137）；來源專案未改。後續來源更新依 standard/README.md 比對同步並重跑 scripts/test-integrated.cjs。切換回百家模式只渲染，不執行可能移牌的分析函式。
 - 穿越模式仍用 traverse_builder.js／traverse_export.js／traverse_optimizer.js；三條、訊號、強、第二張敏感、剩牌及莊閒政策保留。共用導出按鈕依模式走 F 編號／原雲端，或 TR 編號／穿越牌資料夾；獨立 traverse_builder.html 保留並提供整合版連結。

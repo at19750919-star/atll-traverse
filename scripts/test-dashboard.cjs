@@ -21,6 +21,7 @@ const server = http.createServer((req, res) => {
 const checks = [];
 async function check(name, fn) { await fn(); checks.push(name); console.log('PASS ' + name); }
 async function sameTable(page, popup) {
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const source = await page.locator('#roundsTable').innerHTML();
   await popup.waitForFunction(html => document.getElementById('roundsTable')?.innerHTML === html, source);
 }
@@ -103,6 +104,66 @@ async function toolGroup(page, name) {
         assert.equal(await popup.title(), (await page.locator('#modeStatus').textContent()) + ' · 主表');
       }
     });
+    await check('寬主表左右分列1～45／46起，卡色隱藏且所有牌面不重疊', async () => {
+      for (const total of [1,45,46,84,104]) {
+        await page.evaluate(n => renderRoundsTable(Array.from({length:n},(_,i)=>currentRounds[i%currentRounds.length]),null), total);
+        await page.waitForFunction(n => document.querySelectorAll('#roundsBody tr[style*="--round-side"]').length === n,total);
+        for (const width of [2560,2048,1791]) {
+          await page.setViewportSize({width,height:900});
+          const layout = await page.evaluate(() => {
+            const rows = [...document.querySelectorAll('#roundsBody tr')], box = e => e.getBoundingClientRect();
+            const first=box(rows[0]),right=rows[45]&&box(rows[45]);
+            const overflow=[];
+            for (const row of rows) for (const cell of row.querySelectorAll('td:not(.color-column)')) {
+              const r=box(cell); for (const card of cell.querySelectorAll('.card-label')) {
+                const c=box(card); if(c.left<r.left-1||c.right>r.right+1)overflow.push(row.dataset.r);
+              }
+            }
+            return {first:first.toJSON(),right:right?.toJSON(),overflow,
+              leftCount:rows.filter(e=>getComputedStyle(e).gridColumnStart==='1').length,
+              rightCount:rows.filter(e=>getComputedStyle(e).gridColumnStart==='2').length,
+              heads:[...document.querySelectorAll('#roundsHead tr')].filter(e=>box(e).width>0).length,
+              visibleColors:[...document.querySelectorAll('#roundsTable tr > :nth-child(3)')].some(e=>getComputedStyle(e).display!=='none'),
+              pageOverflow:document.documentElement.scrollWidth>innerWidth};
+          });
+          assert.equal(layout.leftCount,Math.min(total,45),JSON.stringify({width,total,layout}));
+          assert.equal(layout.rightCount,Math.max(total-45,0));
+          assert.equal(layout.heads,2); assert.equal(layout.visibleColors,false);
+          assert.deepEqual(layout.overflow,[]); assert.equal(layout.pageOverflow,false);
+          if(total>45) {assert(layout.right.x>layout.first.x+layout.first.width);assert(Math.abs(layout.right.y-layout.first.y)<1);}
+        }
+      }
+      await page.setViewportSize({width:1280,height:900});
+      assert(await page.evaluate(()=>[...document.querySelectorAll('#roundsBody tr')].every(e=>getComputedStyle(e).gridColumnStart==='1')));
+      assert(await page.locator('#roundsHead .split-right-head').isHidden());
+      await page.evaluate(()=>renderRoundsTable(currentRounds,currentAnalysis));
+      await sameTable(page,popup);
+      await page.setViewportSize({width:2560,height:1080});
+    });
+    await check('左右皆保留逆轉高亮與原局號，右欄表頭貼頂', async () => {
+      await page.evaluate(()=>{
+        const cards=[0,0,3,6,5].map((n,i)=>new Card(n===0?'K':String(n),'♠',500+i));
+        const rare={cards,result:'閒'};
+        renderRoundsTable(Array.from({length:84},(_,i)=>i===0||i===45?rare:currentRounds[i%currentRounds.length]),null);
+      });
+      await page.waitForFunction(()=>document.querySelector('#roundsBody tr[data-r="45"]').style.getPropertyValue('--round-side')==='2');
+      for (const index of [0,45]) {
+        const row=page.locator(`#roundsBody tr[data-r="${index}"]`);
+        assert(await row.evaluate(e=>e.classList.contains('two-thirteen-reversal')));
+        assert.equal(await row.locator('td').first().textContent(),String(index+1));
+        assert.equal(await row.locator('.result-cell').getAttribute('data-reversal-odds'),'2／13');
+      }
+      await page.evaluate(()=>scrollTo(0,650));
+      const headers=await page.locator('#roundsHead tr').evaluateAll(rows=>rows.map(e=>e.getBoundingClientRect().y));
+      assert(headers.every(y=>Math.abs(y)<2),JSON.stringify(headers));
+      if(process.env.SPLIT_TABLE_SCREENSHOT) {
+        await page.setViewportSize({width:1791,height:750});
+        await page.evaluate(()=>scrollTo(0,document.querySelector('.pit').getBoundingClientRect().top+scrollY));
+        await page.screenshot({path:process.env.SPLIT_TABLE_SCREENSHOT,scale:'css'});
+      }
+      await page.evaluate(()=>{renderRoundsTable(currentRounds,currentAnalysis);scrollTo(0,0);});
+      await page.setViewportSize({width:2560,height:1080}); await sameTable(page,popup);
+    });
     await check('416格安全切點與原分析一致，點安全格實際切牌', async () => {
       await page.waitForFunction(() => document.querySelectorAll('.cut-cell').length === 416);
       assert.equal(await page.locator('.cut-cell.safe').count(), await page.evaluate(() => IntegratedModes.traversal.analysis.count));
@@ -149,13 +210,15 @@ async function toolGroup(page, name) {
     await check('彈窗可選牌，切牌後同步並保留彈窗捲動位置', async () => {
       await toolGroup(page, 'edit');
       for (const id of ['btnRound','btnAutoReorder','btnAutoFix']) assert(await page.locator('#' + id).isHidden(), id);
+      await popup.setViewportSize({width:1791,height:900});
+      assert.equal(await popup.locator('#roundsBody tr[data-r="45"]').evaluate(e=>getComputedStyle(e).gridColumnStart),'2');
       await page.locator('#btnSwap').click();
-      await popup.locator('[data-action="card"][data-r="0"][data-c="0"]').click();
-      await page.waitForFunction(() => document.querySelector('[data-action="card"][data-r="0"][data-c="0"]').classList.contains('selected-first'));
+      await popup.locator('[data-action="card"][data-r="45"][data-c="0"]').click();
+      await page.waitForFunction(() => document.querySelector('[data-action="card"][data-r="45"][data-c="0"]').classList.contains('selected-first'));
       await sameTable(page, popup);
       const beforeSwap = await page.evaluate(() => JSON.stringify(currentRounds.flatMap(r=>r.cards.map(c=>[c.rank,c.suit,c.back_color]))));
       const other = await page.evaluate(() => {
-        const first = currentRounds[0].cards[0];
+        const first = currentRounds[45].cards[0];
         for (let r=0;r<currentRounds.length;r++) for(let c=0;c<currentRounds[r].cards.length;c++) {
           const card=currentRounds[r].cards[c];
           if(card.rank!==first.rank||card.suit!==first.suit)return {r,c};

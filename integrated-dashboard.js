@@ -215,8 +215,48 @@
       else { $('dashRecTitle').textContent = '回復分析'; $('dashAvgLabel').textContent = '平均回復'; $('dashMaxLabel').textContent = '最大消耗'; $('dashDistTitle').textContent = '回復間距分布'; }
       renderCutMap(); if (window.IntegratedModes.traversal.result) openData.title = sourceText('tvSummary'); updateDataPlacement();
     }
+    // Keep the original rows and event handlers. Grid only changes where they
+    // appear; all data-r/data-c indexes still refer to the original shoe.
+    // Inline rules also survive the file:// popup's opaque external stylesheets.
+    const splitStyles = el('style',''); splitStyles.id = 'splitRoundsStyles';
+    splitStyles.textContent = `
+      #roundsTable.split-rounds{min-width:580px;grid-template-columns:minmax(0,1fr);gap:0 18px;align-content:start}
+      #roundsTable.split-rounds colgroup{display:none}
+      #roundsTable.split-rounds thead,#roundsTable.split-rounds tbody{display:contents}
+      #roundsTable.split-rounds tr{display:grid;grid-template-columns:30px minmax(196px,2fr) 42px repeat(2,minmax(100px,1fr)) repeat(3,28px);grid-column:1;align-items:stretch;min-width:0}
+      #roundsTable.split-rounds thead tr{position:sticky;top:0;z-index:3;background:var(--felt-1);grid-row:1}
+      #roundsTable.split-rounds thead .split-right-head{display:none}
+      #roundsTable.split-rounds.split-rounds th{position:static;display:flex;align-items:center;justify-content:center;padding:6px 3px;letter-spacing:0;text-indent:0;min-width:0}
+      #roundsTable.split-rounds.split-rounds td{display:flex;align-items:center;justify-content:center;padding:3px;min-width:0;width:auto;font-size:13px}
+      #roundsTable.split-rounds.split-rounds :is(th,td):nth-child(3){display:none}
+      #roundsTable.split-rounds.split-rounds :is(td.cards-column,td.hand-card-cell){justify-content:flex-start}
+      #roundsTable.split-rounds.split-rounds td.result-cell{flex-direction:column}
+      #roundsTable.split-rounds :is(.card-strip,.hand-chip-strip){gap:2px;flex-wrap:nowrap}
+      #roundsTable.split-rounds.split-rounds .card-label{width:30px;height:30px;flex:none;font-size:12px;letter-spacing:0}
+      body[data-density=compact] #roundsTable.split-rounds.split-rounds td{padding-top:2px;padding-bottom:2px}
+      body[data-density=compact] #roundsTable.split-rounds.split-rounds .card-label{width:27px;height:27px}
+      @media(min-width:1600px){
+        #roundsTable.split-rounds{min-width:1180px;grid-template-columns:repeat(2,minmax(0,1fr))}
+        #roundsTable.split-rounds tbody tr{grid-column:var(--round-side);grid-row:var(--round-line)}
+        #roundsTable.split-rounds thead .split-right-head{display:grid;grid-column:2}
+      }
+    `;
+    document.head.append(splitStyles);
+    function layoutRoundTable() {
+      const table = $('roundsTable'), head = $('roundsHead'), rows = Array.from($('roundsBody').children);
+      if (!table.classList.contains('split-rounds')) table.classList.add('split-rounds');
+      if (rows.length && table.style.display !== 'none' && table.style.display !== 'grid') table.style.display = 'grid';
+      if (head.firstElementChild && !head.querySelector('.split-right-head')) {
+        const right = head.firstElementChild.cloneNode(true); right.classList.add('split-right-head'); head.append(right);
+      }
+      rows.forEach((row,index) => {
+        const side = String(index < 45 ? 1 : 2), line = String(index < 45 ? index + 2 : index - 43);
+        if (row.style.getPropertyValue('--round-side') !== side) row.style.setProperty('--round-side',side);
+        if (row.style.getPropertyValue('--round-line') !== line) row.style.setProperty('--round-line',line);
+      });
+    }
     let refreshScheduled = false;
-    function scheduleRefresh() { if (refreshScheduled) return; refreshScheduled = true; requestAnimationFrame(()=>{ refreshScheduled = false; refreshDashboard(); syncTableWindow(); }); }
+    function scheduleRefresh() { if (refreshScheduled) return; refreshScheduled = true; requestAnimationFrame(()=>{ refreshScheduled = false; layoutRoundTable(); refreshDashboard(); syncTableWindow(); }); }
     let tableWindow = null;
     const windowName = 'shoe-table-' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     function liveWindow() { try { return tableWindow && !tableWindow.closed && tableWindow.document.body.classList.contains('table-window'); } catch (_) { return false; } }
@@ -288,7 +328,7 @@
     new MutationObserver(scheduleRefresh).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     new ResizeObserver(updateDataPlacement).observe(workspace);
     window.addEventListener('pagehide',()=>{ if (liveWindow()) tableWindow.close(); });
-    window.DashboardUI = {refresh:scheduleRefresh,selectTab}; setDensity(tableDensity); refreshDashboard();
+    window.DashboardUI = {refresh:scheduleRefresh,selectTab}; setDensity(tableDensity); layoutRoundTable(); refreshDashboard();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',buildDashboard); else buildDashboard();
 })();
