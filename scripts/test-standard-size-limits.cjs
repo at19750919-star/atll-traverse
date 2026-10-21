@@ -31,12 +31,24 @@ async function setValues(page,entries){for(const [id,value] of Object.entries(en
     if(fs.existsSync(dist))await page.route('https://cdn.jsdelivr.net/npm/exceljs@*/dist/exceljs.min.js',r=>r.fulfill({path:dist,contentType:'text/javascript'}));
     await page.goto(`http://127.0.0.1:${server.address().port}/integrated.html`);
     await page.waitForFunction(()=>!!window.IntegratedModes);
-    await check('紅0與A2各有六個局數上下限，預設留白不限',async()=>{
+    await check('紅0與A2各有六個局數上下限，預設留白不限，且一般與穿越皆為4上4下、5上5下、6上6下排列',async()=>{
       for(const mode of ['modeRed0','modeA2']){
         await page.locator('#'+mode).click();
         assert.equal(await page.locator('#standardControls .size-limit-fields input').count(),6);
+        assert.deepEqual(await page.locator('#standardControls .size-limit-fields input').evaluateAll(els=>els.map(e=>e.id)),['st4Max','st4Min','st5Max','st5Min','st6Max','st6Min']);
+        const boxes=await page.locator('#standardControls .size-limit-fields label').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y)};}));
+        assert(boxes[0].y===boxes[1].y&&boxes[0].x<boxes[1].x);
+        assert(boxes[2].y===boxes[3].y&&boxes[2].x<boxes[3].x&&boxes[2].y>boxes[0].y);
+        assert(boxes[4].y===boxes[5].y&&boxes[4].x<boxes[5].x&&boxes[4].y>boxes[2].y);
         for(const id of ids){assert(await page.locator('#'+id).isVisible(),id);assert.equal(await page.locator('#'+id).inputValue(),'');}
       }
+      await page.locator('#modeTraverse').click();
+      assert.deepEqual(await page.locator('#traverseControls .size-limit-fields input').evaluateAll(els=>els.map(e=>e.id)),['tv4Max','tv4Min','tv5Max','tv5Min','tv6Max','tv6Min']);
+      const tvBoxes=await page.locator('#traverseControls .size-limit-fields label').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y)};}));
+      assert(tvBoxes[0].y===tvBoxes[1].y&&tvBoxes[0].x<tvBoxes[1].x);
+      assert(tvBoxes[2].y===tvBoxes[3].y&&tvBoxes[2].x<tvBoxes[3].x&&tvBoxes[2].y>tvBoxes[0].y);
+      assert(tvBoxes[4].y===tvBoxes[5].y&&tvBoxes[4].x<tvBoxes[5].x&&tvBoxes[4].y>tvBoxes[2].y);
+      await page.locator('#modeRed0').click();
       if(process.env.STANDARD_SIZE_SCREENSHOT)await page.locator('#standardControls .size-limit-fields').screenshot({path:process.env.STANDARD_SIZE_SCREENSHOT});
     });
     await check('兩個百家模式各自保存六欄，切穿越及重新載入也保留',async()=>{
