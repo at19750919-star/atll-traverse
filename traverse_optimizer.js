@@ -121,6 +121,7 @@
                     if (alt.every((c, i) => c.point === cards[round.start + i].point)) continue;
                     const ps = alt.map(c => c.point), h = B.simulateHand(ps, 0, ps.length);
                     if (!h || h.size !== round.hand.size || h.result !== round.result || !B.handSensitive(ps)) continue;
+                    if (global.TraverseLimits && JSON.stringify(B.specialRoundCounts(ps)) !== JSON.stringify(B.specialRoundCounts(round.cards.map(c=>c.point)))) continue;
                     const test = cards.slice(); test.splice(round.start, round.hand.size, ...alt);
                     if (preserveNine && test.at(-1).rank !== '9') continue;
                     if (!validChain(test, ch, opts)) continue;
@@ -138,6 +139,7 @@
         }
         const finalRounds = E.dealRounds(cards).filter(r => r.hand);
         if (finalRounds.length !== originalRounds.length || finalRounds.some((r, i) => !sameHand(r, originalRounds[i]))) throw new Error('驗證失敗：局內調整改變了局數、結果或用牌');
+        if (global.TraverseLimits && finalRounds.some((r,i)=>JSON.stringify(B.specialRoundCounts(r.cards.map(c=>c.point)))!==JSON.stringify(B.specialRoundCounts(originalRounds[i].cards.map(c=>c.point))))) throw new Error('驗證失敗：局內調整改變莊6或逆轉牌型');
         if (before.chains.some(ch => !validChain(cards, ch, opts))) throw new Error('驗證失敗：長段不合格');
         if (new Set(cards).size !== base.length || cards.some(c => !base.includes(c))) throw new Error('驗證失敗：牌張不守恆');
         const after = clone(before);

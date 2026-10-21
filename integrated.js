@@ -14,14 +14,14 @@
     cannotSwap: calculateCannotSwapViolations, verify: verifyShoeRules, clear: clearAll, export: exportRoundsAsExcelWithDrive, stats: updateStats };
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null;
-  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvMixedColor','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvMixedColor','tvBankerSixMax','tvSevenReversalMax','tvRareReversalMax','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const standardSizeControlIds = [4,5,6].flatMap(n=>[`st${n}Min`,`st${n}Max`]);
   // 穿越紅0／穿越A2：同一個穿越引擎，各自保存設定、訊號牌與牌靴；states.traverse 永遠指向目前的穿越牌靴
   const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
   const TV_KEY = { red0:'integrated-traverse-red0', a2:'integrated-traverse-a2' }, TV_SUB_KEY = 'integrated-traverse-sub';
   const TV_RULES = {
-    red0: { tvTriple:true, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
-    a2:   { tvTriple:true, tvB6:false, tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
+    red0: { tvTriple:true, tvBankerSixMax:'', tvSevenReversalMax:'2', tvRareReversalMax:'', tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
+    a2:   { tvTriple:true, tvBankerSixMax:'', tvSevenReversalMax:'2', tvRareReversalMax:'', tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
   };
   const tvBase = (() => {   // 非規則欄位起始值：HTML 預設，再套用舊的 integrated-traverse-settings（只讀，不搬移）
     const o = {}; controlIds.forEach(id => { const el = $(id); o[id] = el.type === 'checkbox' ? el.checked : el.value; });
@@ -47,7 +47,7 @@
   const num = id => Number($(id).value);
   const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
   function rules() { return { mixedColor: $('tvMixedColor').checked, tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
-    strong: $('tvStrong').checked, secondStart: $('tvSecond').checked, skipBanker6: $('tvB6').checked, skipPlayer7: $('tvP7').checked, signalConfig: config(), preserveLastNine: $('tvNine').checked }; }
+    strong: $('tvStrong').checked, secondStart: $('tvSecond').checked, skipBanker6: $('tvBankerSixMax').value.trim()!=='', skipPlayer7: $('tvP7').checked, signalConfig: config(), preserveLastNine: $('tvNine').checked }; }
   function setRules() { Object.assign(B.rules, rules()); }
   function plain(card) { return { rank: card.rank, suit: card.suit, point: typeof card.point === 'function' ? card.point() : card.point,
     back_color: card.back_color, traverse: !!card.traverse }; }
@@ -227,7 +227,7 @@
   function sizeLimits() {
     const out={};let any=false;
     for(const k of [4,5,6]){
-      const read=id=>{const raw=$(id).value.trim();if(raw==='')return null;const v=Number(raw);return Number.isInteger(v)&&v>=0&&v<=104?v:NaN;};
+      const read=id=>{const raw=$(id).value.trim();if($(id).validity.badInput)return NaN;if(raw==='')return null;const v=Number(raw);return Number.isInteger(v)&&v>=0&&v<=104?v:NaN;};
       const min=read(`tv${k}Min`),max=read(`tv${k}Max`);
       if(Number.isNaN(min)||Number.isNaN(max))return {error:`${k}張局上下限須為 0～104 的整數或留白`,focus:Number.isNaN(min)?`tv${k}Min`:`tv${k}Max`};
       if(min!==null&&max!==null&&min>max)return {error:`${k}張局下限不能大於上限`,focus:`tv${k}Min`};
@@ -247,8 +247,10 @@
     const parts=[`${$('tvMin').value}～${$('tvMax').value}張`,`剩牌${$('tvLeft').value.trim()===''?'不限':'≤'+$('tvLeft').value}`];
     if($('tvTieMax').value.trim()!=='')parts.push(`和局≤${$('tvTieMax').value}`);
     if($('tvSideLimit').value.trim()!=='')parts.push(`莊閒差距≤${$('tvSideLimit').value}`);
+    for(const [id,name] of [['tvBankerSixMax','莊6贏'],['tvSevenReversalMax','七點逆轉'],['tvRareReversalMax','逆轉']])if($(id).value.trim()!=='')parts.push(`${name}≤${$(id).value}`);
+    parts.push('逆轉間隔>20局');
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
-    const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvB6','莊6'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
   function setSettingsCollapsed(value) {
@@ -273,6 +275,10 @@
     const sideLimit=optLimit('tvSideLimit'),tieMax=optLimit('tvTieMax');
     if(Number.isNaN(sideLimit)){status('莊閒差距須為 0～104 的整數或留白');$('tvSideLimit').focus();return;}
     if(Number.isNaN(tieMax)){status('和局上限須為 0～104 的整數或留白');$('tvTieMax').focus();return;}
+    const specialLimits={bankerSix:optLimit('tvBankerSixMax'),seven:optLimit('tvSevenReversalMax'),rare:optLimit('tvRareReversalMax')};
+    for(const [key,id,name] of [['bankerSix','tvBankerSixMax','莊6贏'],['seven','tvSevenReversalMax','七點逆轉'],['rare','tvRareReversalMax','逆轉']]){
+      if(!demo&&Number.isNaN(specialLimits[key])){status(`${name}上限須為0～104整數或留白`);$(id).focus();return;}
+    }
     applySignalConfig();stopped=false;clearOptimization();lock(true);const started=Date.now();let reruns=0,result,cut=null;
     const limit=$('tvLeft').value.trim()===''?null:num('tvLeft');
     if(limit!==null&&(!Number.isInteger(limit)||limit<0||limit>416)){status('剩牌上限須為 0～416 的整數或留白');lock(false);return;}
@@ -281,24 +287,44 @@
     let lastMiss='';
     try {
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
-      if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvB6').checked=$('tvP7').checked=false;}
+      if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvP7').checked=false;}
       for(;;){
-        const opts={...rules(),minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,sideLimit:demo?null:sideLimit,tieMax:demo?null:tieMax,
+        const opts={...rules(),specialLimits:demo?null:specialLimits,minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,sideLimit:demo?null:sideLimit,tieMax:demo?null:tieMax,
           onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次${lastMiss?`｜上一副${lastMiss}`:''}］`:''}${m}`),isCancelled:()=>stopped};
-        if(demo)opts.rng=rng;else if(limit!==null&&!opts.strong)opts.rejectAbove=limit;
+        if(demo){opts.rng=rng;opts.skipBanker6=false;}else if(limit!==null&&!opts.strong)opts.rejectAbove=limit;
         result=await B.build(opts);
-        if(result.rejected){if(stopped){delete opts.rejectAbove;result=await B.build({...opts,idleLimit:50});break;}reruns++;continue;}
-        if(stopped||opts.strong)break;
-        if(!demo&&limit!==null&&result.leftoverCount>limit){reruns++;continue;}
-        if(B.SIGNAL_RETRY_ENABLED&&result.signal&&!result.signal.ok&&!demo){reruns++;continue;}
-        cut=$('tvNine').checked?nineCut(result):null;
-        if(!demo&&sideLimit!==null&&sideDiff(result.cards,cut||0)>sideLimit){lastMiss=`莊閒差距超過 ${sideLimit}`;reruns++;continue;}
-        if(!demo&&tieMax!==null&&tieCount(result.cards,cut||0)>tieMax){lastMiss=`和局超過 ${tieMax} 局`;reruns++;continue;}
-        if(!demo){const miss=sizeMiss(result.cards,cut||0,sizes.limits);if(miss){lastMiss=miss;reruns++;continue;}}
+        if(stopped){status('已停止，保留上次完成的牌靴');return;}
+        if(result.rejected){reruns++;continue;}
+        if(!demo&&!opts.strong&&limit!==null&&result.leftoverCount>limit){reruns++;continue;}
+        if(B.SIGNAL_RETRY_ENABLED&&result.signal&&!result.signal.ok&&!demo&&!opts.strong){reruns++;continue;}
+        cut=!opts.strong&&$('tvNine').checked?nineCut(result):null;
+        if(!demo&&!opts.strong&&sideLimit!==null&&sideDiff(result.cards,cut||0)>sideLimit){lastMiss=`莊閒差距超過 ${sideLimit}`;reruns++;continue;}
+        if(!demo&&!opts.strong&&tieMax!==null&&tieCount(result.cards,cut||0)>tieMax){lastMiss=`和局超過 ${tieMax} 局`;reruns++;continue;}
+        if(!demo&&!opts.strong){const miss=sizeMiss(result.cards,cut||0,sizes.limits);if(miss){lastMiss=miss;reruns++;continue;}}
+        // Rotate before checking spacing: the limits apply to the displayed shoe.
+        if(!demo)rotateResult(result,cut||0);
+        if(!demo){
+          const check=TraverseLimits.check(result,specialLimits);
+          if(!check.okCount){lastMiss=check.reason;reruns++;continue;}
+          if(!check.okSpacing){
+            const repaired=await TraverseLimits.repairSpacing(result,{limits:specialLimits,policy:opts,preserveLastNine:$('tvNine').checked,shouldStop:()=>stopped});
+            if(stopped){status('已停止，保留上次完成的牌靴');return;}
+            if(!repaired.ok){status(`逆轉間隔交換失敗：${repaired.reason}；保留上次牌靴，不整副重跑`);log($('tvProgress').textContent,'warn');return;}
+            result=repaired.result;
+            if(repaired.swaps.length)log(`穿越逆轉間隔整局交換：${repaired.swaps.map(x=>`第${x.from}局 ↔ 第${x.to}局`).join('、')}`,'success');
+          }
+        }
+        if(!demo&&$('tvMixedColor').checked){const colored=B.reassignColors(result.cards);if(colored.ok){result.cards=colored.cards;result.colorOk=true;}else result.colorOk=false;}
+        if(!demo){
+          const final=TraverseLimits.check(result,specialLimits);
+          if(!final.okCount){lastMiss=final.reason;reruns++;continue;}
+          if(!final.okSpacing){status(`最後逆轉間隔不符：${final.reason}；保留上次牌靴，不整副重跑`);return;}
+        }
         break;
       }
-      result.reruns=reruns;result.totalMs=Date.now()-started;rotateResult(result,cut||0);
-      if ($('tvMixedColor').checked) {
+      result.reruns=reruns;result.totalMs=Date.now()-started;
+      if(demo)rotateResult(result,cut||0);
+      if (demo&&$('tvMixedColor').checked) {
         const colored=B.reassignColors(result.cards);
         if(colored.ok){result.cards=colored.cards;result.colorOk=true;}else result.colorOk=false;
       }
@@ -508,6 +534,9 @@
     if(id==='tvMixedColor'){persistCardColorMixedMode($('tvMixedColor').checked);setRules();}
     if(mode==='traverse')tvSave(tsub,currentSignal());
     clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('條件已變更，請重新排牌套用。');}
+  }));
+  ['tvBankerSixMax','tvSevenReversalMax','tvRareReversalMax'].forEach(id=>$(id).addEventListener('input',()=>{
+    if(mode==='traverse')tvSave(tsub,currentSignal());
   }));
   $('mixedCardColor').addEventListener('change',()=>{persistCardColorMixedMode($('mixedCardColor').checked);clearOptimization();if(currentRounds?.length)refreshViolationStats();});
   // Signal controls run their existing handlers first, then refresh the current mode.

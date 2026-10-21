@@ -185,6 +185,9 @@ async function toolGroup(page,key){
       await page.locator('#modeTraverse').click();await page.locator('#dashboardSettingsTab').click();await page.locator('#sharedSignalSettings').click();
       await page.locator('[data-q="red0"]').click();await page.locator('#sharedSignalSettings').click();
       await page.evaluate(()=>{if(document.getElementById('traverseControls').classList.contains('collapsed'))document.getElementById('tvSettingsToggle').click();});await page.locator('#tvLeft').fill('');await page.locator('#tvSideLimit').fill('');await page.locator('#tvNine').uncheck();
+      // Limit acceptance/spacing has its own tests; avoid an intentional
+      // no-safe-exchange stop in this signal/export regression.
+      await page.locator('#tvRareReversalMax').fill('0');await page.locator('#tvSevenReversalMax').fill('');
       await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
       await inventory(page);
       assert.deepEqual(await page.evaluate(()=>IntegratedModes.traversal.result.signalConfig),{suits:['♥','♦'],ranks:['10','J','Q','K']});

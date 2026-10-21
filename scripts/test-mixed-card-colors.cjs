@@ -77,6 +77,7 @@ async function inspect(page){return page.evaluate(()=>{
         await page.locator('#chipGen').click();
       }else if(mode==='modeTraverse'){
         await page.locator('#tvLeft').fill('');await page.locator('#tvSideLimit').fill('');await page.locator('#tvTieMax').fill('');
+        await page.locator('#tvRareReversalMax').fill('0');await page.locator('#tvSevenReversalMax').fill('');
         await page.locator('#chipGen').click();
       }else{await toolGroup(page,'demo');await page.locator('#tvDemo').click();}
       await page.waitForFunction(()=>!window.__isGeneratingShoe&&!IntegratedModes.busy&&currentRounds?.length>60,{},{timeout:120000});

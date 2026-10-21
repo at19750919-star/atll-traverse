@@ -1236,6 +1236,12 @@ body.running .deck,body.finished .deck{
     <label title="整副和局數上限；留白＝不限">和局上限 <input id="tvTieMax" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input id="tvSideLimit" class="numbox" type="number" min="0" max="104" value="8" placeholder="不限"></label>
   </div>
+  <div class="mode-fields">
+    <label title="填數字時排除原牌或對調後莊家補第三張6點贏，再限制其他實際莊6贏；留白不限，0禁止">莊6贏上限 <input id="tvBankerSixMax" class="numbox" type="number" min="0" max="104" step="1" placeholder="不限"></label>
+    <label title="起手7點最後被補牌逆轉的局數上限；留白不限，0禁止">七點逆轉上限 <input id="tvSevenReversalMax" class="numbox" type="number" min="0" max="104" step="1" value="2" placeholder="不限"></label>
+    <label title="1／13＋2／13補牌逆轉合計上限；留白局數不限、0禁止；兩次之間須隔超過20局，間隔不足交換同結果同訊號整局並重驗穿越，無安全交換就停止並保留舊牌">逆轉上限 <input id="tvRareReversalMax" class="numbox" type="number" min="0" max="104" step="1" placeholder="不限"></label>
+  </div>
+  <p class="rare-reversal-note" style="margin:4px 0 6px;font-size:11px;color:#c8b78f">逆轉：1/13＋2/13，兩次之間須隔超過20局；不足時安全交換整局</p>
   <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。撿段時計數，整副不符合就重跑">
     <label>4張局上限 <input id="tv4Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
     <label>4張局下限 <input id="tv4Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
@@ -1248,7 +1254,6 @@ body.running .deck,body.finished .deck{
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control"><span class="name">三條</span><input type="checkbox" id="tvTriple" checked><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="開啟：BBBR／RRRB與BBRR／RRBB兩組，每組最多連續3局，之後須換另一組；關閉：只用BBBR／RRRB"><span class="name">混色模式</span><input type="checkbox" id="tvMixedColor"><span class="switch" aria-hidden="true"></span></label>
-    <label class="cond rule-control" title="撿段時排除莊補牌後 6 點贏的 6 張局（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="tvB6"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="撿段時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="tvP7"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">末張9</span><input type="checkbox" id="tvNine" checked><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
@@ -1832,7 +1837,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=25"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=7"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=22"></script>
+<script src="traverse_builder.js?v=26"></script><script src="traverse_export.js?v=7"></script><script src="traverse_limits.js?v=1"></script><script src="traverse_optimizer.js?v=8"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=23"></script>
 <script src="integrated-dashboard.js?v=13"></script>
 </body>
 </html>

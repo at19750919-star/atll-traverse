@@ -323,10 +323,38 @@
         }
         return c;
     }
+    // Actual-round counters are shared by picking, final acceptance and the
+    // optimizer. Reversing a candidate may change these counts, so the final
+    // physical shoe is checked again after applying signals.
+    function specialRoundCounts(points) {
+        const out = { bankerSix: 0, seven: 0, rare: 0, drawSix: 0 };
+        for (let cur = 0; cur < points.length;) {
+            const h = simulateHand(points, cur, points.length);
+            if (!h) break;
+            const hand = points.slice(cur, cur + h.size), p = (hand[0] + hand[2]) % 10, b = (hand[1] + hand[3]) % 10;
+            if (h.banker === 6 && h.player <= 5) out.bankerSix++;
+            if (p < 8 && b < 8 && ((p === 7 && h.result === '莊') || (b === 7 && h.result === '閒'))) out.seven++;
+            if (global.TwoThirteenReversals && global.TwoThirteenReversals.classify({ cards: hand.map(n => ({ rank: String(n) })) })) out.rare++;
+            const sw = hand.slice(); [sw[0],sw[1]] = [sw[1],sw[0]];
+            const swapped = simulateHand(sw, 0, sw.length);
+            const drawSix = r => r && r.size === 6 && r.banker === 6 && r.player <= 5;
+            if (drawSix(h) || drawSix(swapped)) out.drawSix++;
+            cur += h.size;
+        }
+        return out;
+    }
+
     // 和局上限（tieMax，只在三條關閉時用）：三條關閉時和局可出現在任何局、撿段會撿到很多和局，
     // 所以撿段時已收和局數＋本段和局數超過上限就不收；三條開啟時和局只跟在三條後面，維持排完再檢查
     function sizeLimitOk(seg, opts) {
-        if (!opts.sizeLimits && opts.tieMax === null) return true;
+        if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return true;
+        if (opts.specialLimits) {
+            const special = specialRoundCounts(seg);
+            for (const k of ['bankerSix','seven','rare']) {
+                const max = opts.specialLimits[k];
+                if (max !== null && opts.specialTally[k] + special[k] > max) return false;
+            }
+        }
         const c = roundSizeCounts(seg), t = opts.sizeTally;
         if (opts.tieMax !== null && opts.tieTally + c.tie > opts.tieMax) return false;
         if (!opts.sizeLimits) return true;
@@ -338,7 +366,11 @@
         return true;
     }
     function sizeLimitAdd(seg, opts) {
-        if (!opts.sizeLimits && opts.tieMax === null) return;
+        if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return;
+        if (opts.specialLimits) {
+            const special = specialRoundCounts(seg);
+            for (const k of ['bankerSix','seven','rare']) opts.specialTally[k] += special[k];
+        }
         const c = roundSizeCounts(seg);
         opts.tieTally += c.tie;
         if (!opts.sizeLimits) return;
@@ -909,7 +941,13 @@
         rules.signalConfig = normalizeSignal(options.signalConfig);
         rules.strong = opts.strong;
         rules.secondStart = opts.secondStart;
-        rules.skipBanker6 = options.skipBanker6 === true;
+        opts.specialLimits = options.specialLimits ? { bankerSix: null, seven: null, rare: null, ...options.specialLimits } : null;
+        if (opts.specialLimits) for (const value of Object.values(opts.specialLimits)) {
+            if (value !== null && (!Number.isInteger(value) || value < 0 || value > 104)) throw new Error('莊6與逆轉上限須為0～104的整數或null');
+        }
+        if (opts.specialLimits?.rare != null && !global.TwoThirteenReversals) throw new Error('缺少1／13＋2／13逆轉判定模組');
+        opts.specialTally = { bankerSix: 0, seven: 0, rare: 0 };
+        rules.skipBanker6 = options.skipBanker6 === true || opts.specialLimits?.bankerSix != null;
         rules.skipPlayer7 = options.skipPlayer7 === true;
         rules.mixedColor = options.mixedColor === true;
         opts.scanLengths = [];
@@ -1008,12 +1046,13 @@
                 fallbackSegments: fallbackSegs.length,
                 fallbackCards: fallbackSegs.reduce((n, s) => n + s.length, 0),
                 sizeTally: opts.sizeLimits ? { ...opts.sizeTally } : null,
+                specialPicked: opts.specialLimits ? { ...opts.specialTally } : null,
                 totalCards: points.length,
                 ms: Date.now() - t0,
             },
         };
     }
 
-    global.TraverseBuilder = { roundSizeCounts, normalizeSizeLimits, allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { specialRoundCounts, roundSizeCounts, normalizeSizeLimits, allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);
