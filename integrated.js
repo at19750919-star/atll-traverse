@@ -504,6 +504,7 @@
     const parts=[`回復${Number(v('avgRecoveryLimit'))>0?'≤'+v('avgRecoveryLimit'):'不限'}`,`和局${v('maxTieLimit')===''?'不限':'≤'+v('maxTieLimit')}`];
     if(v('maxFourCardRate')!=='')parts.push(`四張≤${v('maxFourCardRate')}%`);
     if(v('maxSideLimit')!=='')parts.push(`莊閒差距≤${v('maxSideLimit')}`);
+    if(v('maxTwoThirteenReversal')!=='')parts.push(`2／13逆轉≤${v('maxTwoThirteenReversal')}`);
     for(const n of [4,5,6]){const lo=v(`st${n}Min`),hi=v(`st${n}Max`);if(lo||hi)parts.push(`${n}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
     const on=[['tripleTieRule','三條'],['skipBanker6','莊6'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
@@ -515,7 +516,7 @@
   $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
   let standardWasRunning=false;
   new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
-    standardSizeControlIds.forEach(id=>$(id).disabled=running);
+    [...standardSizeControlIds,'maxTwoThirteenReversal'].forEach(id=>$(id).disabled=running);
     if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length&&!document.body.classList.contains('dashboard'))setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';

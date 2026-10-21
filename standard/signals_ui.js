@@ -1003,6 +1003,10 @@ function pack_all_sensitive_and_segment(deck) {
     const max7PtInput = document.getElementById('max7PtReversal');
     const max7PtLimit = max7PtInput && max7PtInput.value !== '' ? parseInt(max7PtInput.value) : null;
     let sevenPtReversalCount = 0;
+    const twoThirteenLimit = typeof TwoThirteenReversals !== 'undefined' ? TwoThirteenReversals.read(document).limit : null;
+    let twoThirteenCount = 0;
+    const isTwoThirteen = r => typeof TwoThirteenReversals !== 'undefined' && Boolean(TwoThirteenReversals.classify(r));
+    const twoThirteenFull = r => twoThirteenLimit != null && twoThirteenCount >= twoThirteenLimit && isTwoThirteen(r);
 
     // 和局上限：挑敏感局時和局達上限就不再挑和局（留白＝不限）
     const tieLimit = typeof getMaxTieLimitSetting === 'function' ? getMaxTieLimitSetting() : null;
@@ -1052,7 +1056,7 @@ function pack_all_sensitive_and_segment(deck) {
     if (swapB6Target > 0) {
         for (const r of all_sensitive) {
             if (swapB6Count >= swapB6Target) break;
-            if (sizeFull(r)) continue;
+            if (sizeFull(r) || twoThirteenFull(r)) continue;
             if (typeof shouldSkipSensitiveRound === 'function' && shouldSkipSensitiveRound(r)) continue;
             if (r.cards.some(c => used_pos.has(c.pos))) continue;
             if (r.cards.length === 4) continue; // 對調莊6不挑4張局
@@ -1065,6 +1069,7 @@ function pack_all_sensitive_and_segment(deck) {
             r.cards.forEach(c => used_pos.add(c.pos));
             recordSize(r);
             if (is7PtReversal(r)) sevenPtReversalCount++;
+            if (isTwoThirteen(r)) twoThirteenCount++;
             swapB6Count++;
         }
         log(`🔍 優先挑選對調莊6局：找到 ${swapB6Count}/${swapB6Target} 局`, swapB6Count >= swapB6Target ? 'success' : 'warn');
@@ -1073,7 +1078,7 @@ function pack_all_sensitive_and_segment(deck) {
     // 先把所有敏感局加入 A 段（按原始順序，但 4 張局達上限就跳過）
     const firstPass = sizeLimits ? all_sensitive.slice().sort((a,b)=>Number(needsSize(b))-Number(needsSize(a))) : all_sensitive;
     for (const r of firstPass) {
-        if (sizeFull(r)) continue;
+        if (sizeFull(r) || twoThirteenFull(r)) continue;
         if (typeof shouldSkipSensitiveRound === 'function' && shouldSkipSensitiveRound(r)) continue;
         // 如果這局有用過的牌就跳過
         if (r.cards.some(c => used_pos.has(c.pos))) continue;
@@ -1094,6 +1099,7 @@ function pack_all_sensitive_and_segment(deck) {
         r.cards.forEach(c => used_pos.add(c.pos));
         recordSize(r);
         if (is7PtReversal(r)) sevenPtReversalCount++;
+        if (isTwoThirteen(r)) twoThirteenCount++;
         if (isSwapBankerSix(r)) swapB6Count++;
         if (r.result === '和') tieCount++;
     }
@@ -1125,7 +1131,7 @@ function pack_all_sensitive_and_segment(deck) {
                     });
                     const startPos = orderedOriginalCards.length ? orderedOriginalCards[0].pos : 0;
                     const finalRound = makeRoundInfo(startPos, orderedOriginalCards, last.result, true);
-                    if (sizeFull(finalRound)) return null;
+                    if (sizeFull(finalRound) || twoThirteenFull(finalRound)) return null;
                     // 七點逆轉已達上限就跳過
                     if (max7PtLimit !== null && is7PtReversal(finalRound) && sevenPtReversalCount >= max7PtLimit) {
                         return null;
@@ -1146,6 +1152,7 @@ function pack_all_sensitive_and_segment(deck) {
                     orderedOriginalCards.forEach(card => used_pos.add(card.pos));
                     recordSize(finalRound);
                     if (is7PtReversal(finalRound)) sevenPtReversalCount++;
+                    if (isTwoThirteen(finalRound)) twoThirteenCount++;
                     if (isSwapBankerSix(finalRound)) swapB6Count++;
                     if (finalRound.result === '和') tieCount++;
                     break;
@@ -1158,7 +1165,7 @@ function pack_all_sensitive_and_segment(deck) {
         // 4 張局已達上限就跳過，七點逆轉已達上限也跳過，B6 達標不再挑 B6，三條+B6 重疊排除，和局必須無訊號牌
         const isValidCandidate = (r) => Array.isArray(r.cards) && r.cards.length > 0
                 && !r.cards.some(c => used_pos.has(c.pos))
-                && !sizeFull(r)
+                && !sizeFull(r) && !twoThirteenFull(r)
                 && !(r.cards.length === 4 && fourCardCount >= maxFourCardRounds)
                 && !(max7PtLimit !== null && is7PtReversal(r) && sevenPtReversalCount >= max7PtLimit)
                 && !(swapB6Target > 0 && swapB6Count >= swapB6Target && isSwapBankerSix(r))
@@ -1182,7 +1189,7 @@ function pack_all_sensitive_and_segment(deck) {
         }
 
         // 檢查挑出來的敏感局是否合法
-        if (!picked || !Array.isArray(picked.cards) || picked.cards.length === 0 || sizeFull(picked)) {
+        if (!picked || !Array.isArray(picked.cards) || picked.cards.length === 0 || sizeFull(picked) || twoThirteenFull(picked)) {
              multi_pass_attempts++;
             if (multi_pass_attempts >= MAX_MULTI_PASS_ATTEMPTS) break;
             continue;
@@ -1199,6 +1206,7 @@ function pack_all_sensitive_and_segment(deck) {
         picked.cards.forEach(c => used_pos.add(c.pos));
         recordSize(picked);
         if (is7PtReversal(picked)) sevenPtReversalCount++;
+        if (isTwoThirteen(picked)) twoThirteenCount++;
         if (isSwapBankerSix(picked)) swapB6Count++;
         if (picked.result === '和') tieCount++;
             added++;
@@ -3150,6 +3158,10 @@ function renderRoundsTable(rounds, analysis) {
         row.innerHTML = rowHtml;
         row.dataset.r = index;
         row.classList.add('round-row');
+        if (typeof TwoThirteenReversals !== 'undefined' && TwoThirteenReversals.classify(round)) {
+            row.classList.add('two-thirteen-reversal');
+            row.title = '2／13補牌逆轉：原本落後，補牌獲勝且對方不補牌（完整牌庫比例）';
+        }
 
         tbody.appendChild(row);
     });

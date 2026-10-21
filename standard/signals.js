@@ -3070,16 +3070,26 @@ async function generateShoe() {
         log(sizeSettings.error, 'error');
         return;
     }
-    const previousSizeShoe = sizeSettings.limits ? { rounds: currentRounds, analysis: currentAnalysis } : null;
-    let sizeAccepted = !sizeSettings.limits;
+    const reversalSettings = typeof TwoThirteenReversals !== 'undefined' ? TwoThirteenReversals.read(document) : { limit: null };
+    if (reversalSettings.error) {
+        const input = document.getElementById(reversalSettings.focus);
+        input?.setCustomValidity(reversalSettings.error);
+        input?.reportValidity();
+        input?.focus();
+        log(reversalSettings.error, 'error');
+        return;
+    }
+    const requiresFinalValidation = Boolean(sizeSettings.limits || reversalSettings.limit !== null);
+    const previousSizeShoe = requiresFinalValidation ? { rounds: currentRounds, analysis: currentAnalysis } : null;
+    let sizeAccepted = !requiresFinalValidation;
     if (typeof window !== 'undefined') {
         window.__isGeneratingShoe = true;
         window.__stopGenerateRequested = false;
-        window.__pendingSizeShoe = Boolean(sizeSettings.limits);
+        window.__pendingSizeShoe = requiresFinalValidation;
         // 重新生成 → 取消「匯入模式」的違規檢查跳過
         window.__importedShoeMode = false;
     }
-    if (sizeSettings.limits) setEditButtonsAvailability(false);
+    if (requiresFinalValidation) setEditButtonsAvailability(false);
 
     // 檢查是否為自動重新生成
     const isAutoRegenerate = (typeof window !== 'undefined' && window.__regenerateCount > 0);
@@ -3095,7 +3105,7 @@ async function generateShoe() {
         logArea.innerHTML = '';
     }
     const roundsBody = document.getElementById('roundsBody');
-    if (roundsBody && !sizeSettings.limits) {
+    if (roundsBody && !requiresFinalValidation) {
         roundsBody.innerHTML = '';
     }
 
@@ -3304,6 +3314,16 @@ async function generateShoe() {
                 }
             }
 
+            // 2／13逆轉包含非敏感局，依訊號調整後的實際牌序計數。
+            if (reversalSettings.limit !== null) {
+                const reversalCheck = TwoThirteenReversals.check(roundsToCheck, reversalSettings.limit);
+                if (!reversalCheck.ok) {
+                    log(`第 ${attempt} 次生成失敗：2／13逆轉 ${reversalCheck.count} 局 > 上限 ${reversalSettings.limit}，重新生成...`, 'warn');
+                    result = null;
+                    continue;
+                }
+            }
+
             // 8. 對調莊6局數檢查
             // 規則：避開莊6 勾選 或 局數 = 0 → 上限 0（禁止）；局數 > 0 → 下限；空白 → 不檢查
             const _swapB6Input = document.getElementById('swapBanker6Target');
@@ -3449,6 +3469,16 @@ async function generateShoe() {
         }
 
         // 最終輸出再驗一次，涵蓋後續規則修復、卡色與末張9調整。
+        if (reversalSettings.limit !== null) {
+            const reversalCheck = TwoThirteenReversals.check(currentRounds, reversalSettings.limit);
+            if (!reversalCheck.ok) {
+                log(`最後調整後2／13逆轉 ${reversalCheck.count} 局 > 上限 ${reversalSettings.limit}，重新生成...`, 'warn');
+                if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
+                currentRounds = previousSizeShoe.rounds;
+                currentAnalysis = previousSizeShoe.analysis;
+                continue;
+            }
+        }
         if (sizeSettings.limits) {
             const sizes = RoundSizeLimits.check(currentRounds, sizeSettings.limits);
             if (!sizes.ok) {
@@ -3458,6 +3488,8 @@ async function generateShoe() {
                 currentAnalysis = previousSizeShoe.analysis;
                 continue;
             }
+        }
+        if (requiresFinalValidation) {
             sizeAccepted = true;
             window.__pendingSizeShoe = false;
             refreshAnalysisAndRender({ mutate: false, skipVerify: true });
@@ -5939,7 +5971,8 @@ function optimizeRecoveryInRounds(rounds, maxPasses = 4) {
             && ((pi === 7 && res === '莊') || (bi === 7 && res === '閒'));
         const b6 = h.bankerTotal === 6 && h.playerTotal <= 5;
         const p7 = h.playerTotal === 7 && h.bankerTotal === 6;
-        return [res, rev7, b6, p7, isBannedThirdCardPatternOnCards(cards)].join('|');
+        const rev2 = typeof TwoThirteenReversals !== 'undefined' && Boolean(TwoThirteenReversals.classify({cards}));
+        return [res, rev7, rev2, b6, p7, isBannedThirdCardPatternOnCards(cards)].join('|');
     };
     const signature = (cards) => {
         const own = facts(cards), sw = swapFirst(cards), other = facts(sw);

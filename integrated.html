@@ -577,6 +577,10 @@ tbody tr.full-house-round td{background:rgba(122,92,190,.10)}
 tbody tr.violation-row td{background:rgba(224,92,79,.13);box-shadow:inset 0 0 0 .5px rgba(224,92,79,.25)}
 tbody tr.card-color-violation-row td{background:rgba(232,163,61,.12)}
 tbody tr.banker-six-win-row td{background:rgba(212,176,106,.10)}
+/* 2／13逆轉採青色，保留既有違規列的底色。 */
+tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row) td{background:rgba(59,190,181,.14)}
+tbody tr.two-thirteen-reversal td.result-cell{color:#7fe4d7}
+tbody tr.two-thirteen-reversal td.result-cell::after{content:"2／13";display:block;font-size:10px;line-height:1.3;letter-spacing:0;color:#7fe4d7}
 tbody tr.card-count-mismatch td{border-bottom:1px dashed rgba(255,107,94,.6)}
 tbody tr.selected-first td{background:rgba(244,223,164,.16);box-shadow:inset 0 0 0 1px rgba(244,223,164,.5)}
 tbody tr.selected-second td{background:rgba(79,163,216,.16);box-shadow:inset 0 0 0 1px rgba(79,163,216,.5)}
@@ -1260,6 +1264,7 @@ body.running .deck,body.finished .deck{
     <label title="4 張局比例上限 %；留白＝不檢查">四張比例% <input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="不限"></label>
     <label title="每靴七點被逆轉局數上限；莊或閒起手7點，最後被對方補牌贏走；留白＝不限，0＝不允許">七點逆轉上限 <input class="numbox" type="number" inputmode="numeric" id="max7PtReversal" min="0" step="1" value="2" placeholder="不限"></label>
+    <label title="每靴2／13補牌逆轉局數上限（完整牌庫比例）；原本落後，補牌逆轉且對方不補牌；包含七點被逆轉，兩項上限同時套用；留白＝不限，0＝不允許">2/13上限 <input class="numbox" type="number" inputmode="numeric" id="maxTwoThirteenReversal" min="0" step="1" value="" placeholder="不限"></label>
   </div>
   <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。挑局時計數，整副不符合就重跑；原四張比例上限仍一併檢查">
     <label>4張局上限 <input id="st4Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
@@ -1452,9 +1457,10 @@ body.running .deck,body.finished .deck{
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
 </script>
 <script src="standard/round_size_limits.js?v=1"></script>
-<script src="standard/signals.js?v=30"></script>
+<script src="standard/two_thirteen_reversals.js?v=1"></script>
+<script src="standard/signals.js?v=31"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
-<script src="standard/signals_ui.js?v=44"></script>
+<script src="standard/signals_ui.js?v=45"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
 <script src="standard/swap_preview.js?v=2"></script>
 <script src="standard/auto_fix_plugin.js?v=3"></script>
@@ -1462,16 +1468,16 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <!-- 設定持久化：紅0模式／A2模式各自保存（at-settings-red0／at-settings-a2），首次用各模式預設值 -->
 <script>
 (function(){
-    var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','swapBanker6Target','st4Min','st4Max','st5Min','st5Max','st6Min','st6Max'];
+    var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','maxTwoThirteenReversal','swapBanker6Target','st4Min','st4Max','st5Min','st5Max','st6Min','st6Max'];
     var CHECK_IDS = ['skipBanker6','skipPlayer7Banker6','tripleTieRule','lastCardNine'];
     var KEYS = { red0:'at-settings-red0', a2:'at-settings-a2' };
     var SUB_KEY = 'at-standard-sub';
     var DEFAULTS = {
-        red0: { avgRecoveryLimit:'3.5', maxTieLimit:'4', maxFourCardRate:'30', maxSideLimit:'4', max7PtReversal:'2', swapBanker6Target:'9',
+        red0: { avgRecoveryLimit:'3.5', maxTieLimit:'4', maxFourCardRate:'30', maxSideLimit:'4', max7PtReversal:'2', maxTwoThirteenReversal:'', swapBanker6Target:'9',
                 st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
                 tripleTieRule:false, skipBanker6:true, skipPlayer7Banker6:true, lastCardNine:false,
                 signal:{ suits:['\u2665','\u2666'], ranks:['10','J','Q','K'] } },
-        a2:   { avgRecoveryLimit:'3.5', maxTieLimit:'', maxFourCardRate:'35', maxSideLimit:'5', max7PtReversal:'2', swapBanker6Target:'9',
+        a2:   { avgRecoveryLimit:'3.5', maxTieLimit:'', maxFourCardRate:'35', maxSideLimit:'5', max7PtReversal:'2', maxTwoThirteenReversal:'', swapBanker6Target:'9',
                 st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
                 tripleTieRule:true, skipBanker6:false, skipPlayer7Banker6:false, lastCardNine:true,
                 signal:{ suits:['\u2660','\u2665','\u2666','\u2663'], ranks:['A','2'] } }
@@ -1817,7 +1823,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=13"></script>
+<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=14"></script>
 <script src="integrated-dashboard.js?v=11"></script>
 </body>
 </html>
