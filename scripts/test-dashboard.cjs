@@ -52,9 +52,9 @@ async function toolGroup(page, name) {
       assert(side && stats && table && chips); assert(side.x < table.x); assert(stats.y < table.y);
       assert(Math.abs(chips.x - stats.x) <= 24, `chip-col x=${chips.x} should align with stats x=${stats.x}`);
       assert(await page.evaluate(() => [...document.querySelectorAll('body > header .chip-col .chip')].every(b => {
-        const r = b.getBoundingClientRect(), style = getComputedStyle(b);
-        return r.width > r.height + 16 && style.borderTopLeftRadius !== '50%';
-      })), 'header action buttons must be rectangular');
+        const r = b.getBoundingClientRect(), style = getComputedStyle(b), before = getComputedStyle(b, '::before');
+        return r.width > r.height + 16 && style.borderTopLeftRadius !== '50%' && style.backgroundImage.includes('repeating-conic-gradient') && before.display !== 'none' && before.borderTopStyle === 'dashed';
+      })), 'header action buttons must be rectangular poker chips');
       assert.equal(await page.locator('body > header .chip-col .chip').count(),3);
       assert.equal(await page.locator('.dashboard-sidebar .chip-col').count(),0);
       assert(await page.evaluate(()=>['.dashboard-sidebar','.dashboard-sidebar-scroll','.dashboard-progress','#fanStage'].every(s=>{

@@ -1063,7 +1063,7 @@ body.running .deck,body.finished .deck{
 }
 </style>
 <link rel="stylesheet" href="integrated.css?v=5">
-<link rel="stylesheet" href="integrated-dashboard.css?v=9">
+<link rel="stylesheet" href="integrated-dashboard.css?v=10">
 </head>
 <body data-mode="standard">
 
@@ -1264,9 +1264,9 @@ body.running .deck,body.finished .deck{
     <label title="4 張局比例上限 %；留白＝不檢查">四張比例% <input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="不限"></label>
     <label title="每靴七點被逆轉局數上限；莊或閒起手7點，最後被對方補牌贏走；留白＝不限，0＝不允許">七點逆轉上限 <input class="numbox" type="number" inputmode="numeric" id="max7PtReversal" min="0" step="1" value="2" placeholder="不限"></label>
-    <label title="每靴1／13與2／13補牌逆轉合計上限（完整牌庫比例）；原本落後，補牌逆轉且對方不補牌；與七點逆轉上限同時套用；留白＝局數不限，0＝不允許；無論上限是否留白，兩次之間都須隔超過20局（第1局後最早第23局）">逆轉上限 <input class="numbox" type="number" inputmode="numeric" id="maxTwoThirteenReversal" min="0" step="1" value="" placeholder="不限"></label>
+    <label title="每靴1／13與2／13補牌逆轉合計上限（完整牌庫比例）；原本落後，補牌逆轉且對方不補牌；與七點逆轉上限同時套用；留白＝局數不限，0＝不允許；無論上限是否留白，兩次之間都須隔超過20局（第1局後最早第23局）；間隔不足時交換同結果、同訊號的整局，找不到就停止並保留舊牌">逆轉上限 <input class="numbox" type="number" inputmode="numeric" id="maxTwoThirteenReversal" min="0" step="1" value="" placeholder="不限"></label>
   </div>
-  <p class="rare-reversal-note" style="margin:4px 0 6px;font-size:11px;color:#c8b78f">逆轉：1/13＋2/13，兩次之間須隔超過20局</p>
+  <p class="rare-reversal-note" style="margin:4px 0 6px;font-size:11px;color:#c8b78f">逆轉：1/13＋2/13，兩次之間須隔超過20局；不足時整局交換</p>
   <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。挑局時計數，整副不符合就重跑；原四張比例上限仍一併檢查">
     <label>4張局上限 <input id="st4Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
     <label>4張局下限 <input id="st4Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
@@ -1458,8 +1458,8 @@ body.running .deck,body.finished .deck{
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
 </script>
 <script src="standard/round_size_limits.js?v=1"></script>
-<script src="standard/two_thirteen_reversals.js?v=2"></script>
-<script src="standard/signals.js?v=32"></script>
+<script src="standard/two_thirteen_reversals.js?v=3"></script>
+<script src="standard/signals.js?v=33"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
 <script src="standard/signals_ui.js?v=46"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
