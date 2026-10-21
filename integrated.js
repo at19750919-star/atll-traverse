@@ -14,14 +14,14 @@
     cannotSwap: calculateCannotSwapViolations, verify: verifyShoeRules, clear: clearAll, export: exportRoundsAsExcelWithDrive, stats: updateStats };
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null;
-  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvMixedColor','tvB6','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const standardSizeControlIds = [4,5,6].flatMap(n=>[`st${n}Min`,`st${n}Max`]);
   // 穿越紅0／穿越A2：同一個穿越引擎，各自保存設定、訊號牌與牌靴；states.traverse 永遠指向目前的穿越牌靴
   const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
   const TV_KEY = { red0:'integrated-traverse-red0', a2:'integrated-traverse-a2' }, TV_SUB_KEY = 'integrated-traverse-sub';
   const TV_RULES = {
-    red0: { tvTriple:true, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
-    a2:   { tvTriple:true, tvB6:false, tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'8', tvSignal:true, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
+    red0: { tvTriple:true, tvB6:true, tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
+    a2:   { tvTriple:true, tvB6:false, tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
   };
   const tvBase = (() => {   // 非規則欄位起始值：HTML 預設，再套用舊的 integrated-traverse-settings（只讀，不搬移）
     const o = {}; controlIds.forEach(id => { const el = $(id); o[id] = el.type === 'checkbox' ? el.checked : el.value; });
@@ -46,7 +46,7 @@
   }
   const num = id => Number($(id).value);
   const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
-  function rules() { return { tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
+  function rules() { return { mixedColor: $('tvMixedColor').checked, tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
     strong: $('tvStrong').checked, secondStart: $('tvSecond').checked, skipBanker6: $('tvB6').checked, skipPlayer7: $('tvP7').checked, signalConfig: config(), preserveLastNine: $('tvNine').checked }; }
   function setRules() { Object.assign(B.rules, rules()); }
   function plain(card) { return { rank: card.rank, suit: card.suit, point: typeof card.point === 'function' ? card.point() : card.point,
@@ -69,11 +69,11 @@
   function violationGroups(rounds) {
     const out = { noSwap:[],same:[],triple:[],signal:[],color:[] };
     const full = rounds.filter(r => r.hand);
+    out.color = CardColorRules.violations(full.map(r=>r.cards.slice(0,4).map(c=>c.back_color).join('')), $('tvMixedColor').checked);
     full.forEach((r,i) => {
       const p = r.cards.map(c=>c.point), sw = E.swappedTotals(r);
       if (!sw || sw.size !== r.hand.size) out.noSwap.push(i+1);
       else if (!B.handSensitive(p)) out.same.push(i+1);
-      if (!['RRRB','BBBR'].includes(r.cards.slice(0,4).map(c=>c.back_color).join(''))) out.color.push(i+1);
       if (full.length < 2) return;
       const prev=full[(i+full.length-1)%full.length], trip=B.isTriple(prev.cards.map(c=>c.point));
       if ($('tvTriple').checked && trip !== (r.result==='和')) out.triple.push(i+1);
@@ -154,6 +154,7 @@
     // 套用該模式的設定欄與訊號牌（走真實 updateSignalConfig → persist／sync／display）
     const p = StandardProfiles.fillInputs(name);
     StandardProfiles.setCurrent(name);
+    persistCardColorMixedMode($('mixedCardColor').checked);
     updateSignalConfig({ suits:p.signal.suits.slice(), ranks:p.signal.ranks.slice() });
     $('stTitle').textContent = SUB_NAME[name]+' 設定';
     document.body.dataset.sub = name;
@@ -163,6 +164,7 @@
   function applyTraverseProfile(t) {
     const p = tstates[t].live || tvLoad(t);   // 離開時的即時狀態（含示範改過的值）優先，確保回來時與牌靴一致
     controlIds.forEach(id => { const el = $(id); el[el.type === 'checkbox' ? 'checked' : 'value'] = p[id]; });
+    persistCardColorMixedMode($('tvMixedColor').checked); setRules();
     tsub = t; try { localStorage.setItem(TV_SUB_KEY, t); } catch (_) {}
     updateSignalConfig({ suits:p.signal.suits.slice(), ranks:p.signal.ranks.slice() });
     $('tvTitle').textContent = TV_NAME[t] + '設定';
@@ -246,7 +248,7 @@
     if($('tvTieMax').value.trim()!=='')parts.push(`和局≤${$('tvTieMax').value}`);
     if($('tvSideLimit').value.trim()!=='')parts.push(`莊閒差距≤${$('tvSideLimit').value}`);
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
-    const on=[['tvTriple','三條'],['tvB6','莊6'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvB6','莊6'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
   function setSettingsCollapsed(value) {
@@ -296,9 +298,13 @@
         break;
       }
       result.reruns=reruns;result.totalMs=Date.now()-started;rotateResult(result,cut||0);
+      if ($('tvMixedColor').checked) {
+        const colored=B.reassignColors(result.cards);
+        if(colored.ok){result.cards=colored.cards;result.colorOk=true;}else result.colorOk=false;
+      }
       states.traverse.result=result;states.traverse.cut=0;$('cutPos').value=0;
       if(!document.body.classList.contains('dashboard'))setSettingsCollapsed(true);document.querySelectorAll('#traverseTools details').forEach(d=>{d.open=false;});
-      renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}`);
+      renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}${$('tvMixedColor').checked&&!result.colorOk?'｜混色卡色配置失敗，請查看違規':''}`);
       log($('tvProgress').textContent,'success');
     }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{lock(false);}
   }
@@ -308,7 +314,7 @@
     absorbEdits();states.traverse.cut=cut;$('cutPos').value=cut;renderTraverse();status(`已切 ${cut} 張，從原第 ${cut+1} 張發牌（${states.traverse.analysis.depths[cut]===0?'安全':'不安全'}）`);
   }
   function recolor() {
-    if(!states.traverse.result)return;absorbEdits();const colored=B.reassignColors(displayedCards());
+    if(!states.traverse.result)return;setRules();absorbEdits();const colored=B.reassignColors(displayedCards());
     if(!colored.ok){status('找不到完整牌庫可用的卡色配置，保留原牌');return;}
     currentRounds=toRounds(colored.cards);absorbEdits();clearOptimization();renderTraverse();status(`已依目前起點重新卡色（調整 ${colored.changed} 張），牌面順序保留`);
   }
@@ -499,9 +505,11 @@
     $('tvExampleCut').onclick=()=>cutTraverse(c);
   });
   controlIds.forEach(id=>$(id).addEventListener('change',()=>{
+    if(id==='tvMixedColor'){persistCardColorMixedMode($('tvMixedColor').checked);setRules();}
     if(mode==='traverse')tvSave(tsub,currentSignal());
     clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('條件已變更，請重新排牌套用。');}
   }));
+  $('mixedCardColor').addEventListener('change',()=>{persistCardColorMixedMode($('mixedCardColor').checked);clearOptimization();if(currentRounds?.length)refreshViolationStats();});
   // Signal controls run their existing handlers first, then refresh the current mode.
   document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>el.addEventListener('click',()=>{
     setTimeout(()=>{if(mode==='standard')StandardProfiles.save(sub,currentSignal());else tvSave(tsub,currentSignal());clearOptimization();if(mode==='traverse'&&states.traverse.result){renderTraverse();status('訊號設定已變更，請重新排牌套用。');}},0);
@@ -516,7 +524,7 @@
     if(v('maxTwoThirteenReversal')!=='')parts.push(`1/13＋2/13逆轉≤${v('maxTwoThirteenReversal')}`);
     parts.push('逆轉間隔>20局');
     for(const n of [4,5,6]){const lo=v(`st${n}Min`),hi=v(`st${n}Max`);if(lo||hi)parts.push(`${n}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
-    const on=[['tripleTieRule','三條'],['skipBanker6','莊6'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    const on=[['mixedCardColor','混色（同組≤3局）'],['tripleTieRule','三條'],['skipBanker6','莊6'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
   function setStandardCollapsed(value) {
@@ -526,7 +534,7 @@
   $('stSettingsToggle').addEventListener('click',()=>setStandardCollapsed(!$('standardControls').classList.contains('collapsed')));
   let standardWasRunning=false;
   new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
-    [...standardSizeControlIds,'maxTwoThirteenReversal','maxBankerSixWin','exportFilename'].forEach(id=>$(id).disabled=running);
+    [...standardSizeControlIds,'maxTwoThirteenReversal','maxBankerSixWin','mixedCardColor','exportFilename'].forEach(id=>$(id).disabled=running);
     if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length&&!document.body.classList.contains('dashboard'))setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';

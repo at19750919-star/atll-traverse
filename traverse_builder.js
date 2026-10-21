@@ -123,7 +123,7 @@
 
     // 三條規則（百家3.0 雙向）：三條的下一局一定開和，不是三條的下一局不能開和。
     // 段頭那局的上一局在別段，所以段頭不能是和、段尾不能是三條，接段後規則仍成立。
-    const rules = { tripleTie: true, signalRule: true, strong: false, secondStart: false, skipBanker6: false, skipPlayer7: false };
+    const rules = { tripleTie: true, signalRule: true, strong: false, secondStart: false, skipBanker6: false, skipPlayer7: false, mixedColor: false };
     // 莊6／閒7（比照百家3.0）：原牌或前兩張對調後，莊補牌（6 張）後 6 點贏、或閒 7 點贏莊 6 點的局不撿（閒補牌莊不補的 5 張莊6贏不排除）
     function excludedHand(hand) {
         if (!rules.skipBanker6 && !rules.skipPlayer7) return false;
@@ -537,7 +537,8 @@
 
     // 點數 → 實際牌（每個點數從 8 副牌的牌池隨機取）
     // 卡色（牌背）：8 副牌中 4 副紅背、4 副藍背（同百家3.0 generateDeck）。
-    // 每局前 4 張必須是 RRRB 或 BBBR（百家3.0 預設、不開混色），第 5、6 張與殘牌不限。
+    // 預設只用 RRRB／BBBR；混色時再加 BBRR／RRBB，兩組各最多連續3局。
+    // 第 5、6 張與殘牌不限。
     // 這兩種樣式前兩張同色，所以對調前兩張不會破壞卡色。
     const COLOR_PATTERNS = [['R', 'R', 'R', 'B'], ['B', 'B', 'B', 'R']];
 
@@ -555,6 +556,9 @@
         for (const p of groups) supply[p]++;
         const half = supply.map(n => n / 2); // 每個點數紅、藍各半
         const available = limits || { R: half, B: half };
+        if (typeof CardColorRules !== 'undefined') {
+            return CardColorRules.plan(rounds, groups, available, points.length, { mixed: rules.mixedColor === true, rng });
+        }
         for (let attempt = 0; attempt < 50; attempt++) {
             const pick = rounds.map(() => (rng() < 0.5 ? 0 : 1));
             const demand = () => {
@@ -907,6 +911,7 @@
         rules.secondStart = opts.secondStart;
         rules.skipBanker6 = options.skipBanker6 === true;
         rules.skipPlayer7 = options.skipPlayer7 === true;
+        rules.mixedColor = options.mixedColor === true;
         opts.scanLengths = [];
         for (let L = opts.maxLen; L >= opts.minLen; L--) opts.scanLengths.push(L);
         const ctx = {

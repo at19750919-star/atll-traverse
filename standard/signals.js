@@ -1224,7 +1224,7 @@ function findValidDealOrderForCards(cards, options = {}) {
             }
             if (requireValidColor) {
                 const colors4 = ordered.slice(0, 4).map(c => (c && c.back_color) ? c.back_color : '?').join('');
-                if (colors4 !== 'RRRB' && colors4 !== 'BBBR') return;
+                if (!getValidCardColorStrings().has(colors4)) return;
             }
             found = ordered;
             return;
@@ -3589,6 +3589,9 @@ async function generateShoe() {
                 continue;
             }
         }
+        if (CARD_COLOR_MIXED_MODE && calculateCardColorViolations(currentRounds) > 0) {
+            runAutoColorSwap_Signal(currentRounds);
+        }
         if (requiresFinalValidation) {
             sizeAccepted = true;
             window.__pendingSizeShoe = false;
@@ -3921,12 +3924,16 @@ let $ROUNDS = [];
  * 【新增】卡色邏輯的啟動函式
  */
 // 針對卡色邏輯抽換備援牌
-// 卡色（比照穿越排牌）：牌面與位置不動，先決定每局前 4 張用 RRRB 或 BBBR，
+// 卡色（比照穿越排牌）：牌面與位置不動，先決定每局前 4 張的允許樣式，
 // 再在同牌面（同點數同花色）的紅背／藍背張數內重新分配牌背。做不到才退回舊的換牌做法。
 function runAutoColorSwap_Signal(rounds) {
     const planned = planBackColorsKeepFaces(rounds);
     if (planned.ok) {
-        log(`卡色：已依 RRRB／BBBR 重新分配牌背（變動 ${planned.changed} 張，牌面不動）`, 'success');
+        log(`卡色：已依 ${CARD_COLOR_MIXED_MODE ? '混色模式（同組最多3局）' : 'RRRB／BBBR'} 重新分配牌背（變動 ${planned.changed} 張，牌面不動）`, 'success');
+        return rounds;
+    }
+    if (CARD_COLOR_MIXED_MODE && typeof CardColorRules !== 'undefined') {
+        log('混色卡色配置失敗：保留原牌，請查看卡色違規；不觸發整副重跑。', 'warn');
         return rounds;
     }
     log('⚠️ 卡色：牌背張數不足以重新分配，改用舊的換牌方式', 'warn');
@@ -3956,37 +3963,42 @@ function planBackColorsKeepFaces(rounds, rng = Math.random) {
     const limits = { R: new Array(ids.size).fill(0), B: new Array(ids.size).fill(0) };
     cards.forEach((c, i) => limits[c.back_color][groups[i]]++);
 
-    const patterns = getCardColorPatterns();
-    let need = null;
-    for (let attempt = 0; attempt < 50 && !need; attempt++) {
-        const pick = starts.map(() => Math.floor(rng() * patterns.length));
-        const demand = { R: new Array(ids.size).fill(0), B: new Array(ids.size).fill(0) };
-        const apply = (i, sign) => patterns[pick[i]].forEach((c, k) => { demand[c][groups[starts[i] + k]] += sign; });
-        const over = (c, g) => Math.max(0, demand[c][g] - limits[c][g]);
-        starts.forEach((_, i) => apply(i, 1));
-        let overflow = 0;
-        for (let g = 0; g < ids.size; g++) overflow += over('R', g) + over('B', g);
+    let need;
+    if (typeof CardColorRules !== 'undefined') {
+        need = CardColorRules.plan(starts, groups, limits, cards.length, { mixed: CARD_COLOR_MIXED_MODE, rng });
+    } else {
+        const patterns = getCardColorPatterns();
+        need = null;
+        for (let attempt = 0; attempt < 50 && !need; attempt++) {
+            const pick = starts.map(() => Math.floor(rng() * patterns.length));
+            const demand = { R: new Array(ids.size).fill(0), B: new Array(ids.size).fill(0) };
+            const apply = (i, sign) => patterns[pick[i]].forEach((c, k) => { demand[c][groups[starts[i] + k]] += sign; });
+            const over = (c, g) => Math.max(0, demand[c][g] - limits[c][g]);
+            starts.forEach((_, i) => apply(i, 1));
+            let overflow = 0;
+            for (let g = 0; g < ids.size; g++) overflow += over('R', g) + over('B', g);
 
-        for (let step = 0; step < 4000 && overflow > 0; step++) {
-            const i = Math.floor(rng() * starts.length);
-            const touched = [...new Set(groups.slice(starts[i], starts[i] + 4))];
-            const before = touched.reduce((t, g) => t + over('R', g) + over('B', g), 0);
-            const prev = pick[i];
-            apply(i, -1);
-            pick[i] = (prev + 1 + Math.floor(rng() * (patterns.length - 1))) % patterns.length;
-            apply(i, 1);
-            const after = touched.reduce((t, g) => t + over('R', g) + over('B', g), 0);
-            if (after <= before) {
-                overflow += after - before;
-            } else {
+            for (let step = 0; step < 4000 && overflow > 0; step++) {
+                const i = Math.floor(rng() * starts.length);
+                const touched = [...new Set(groups.slice(starts[i], starts[i] + 4))];
+                const before = touched.reduce((t, g) => t + over('R', g) + over('B', g), 0);
+                const prev = pick[i];
                 apply(i, -1);
-                pick[i] = prev;
+                pick[i] = (prev + 1 + Math.floor(rng() * (patterns.length - 1))) % patterns.length;
                 apply(i, 1);
+                const after = touched.reduce((t, g) => t + over('R', g) + over('B', g), 0);
+                if (after <= before) {
+                    overflow += after - before;
+                } else {
+                    apply(i, -1);
+                    pick[i] = prev;
+                    apply(i, 1);
+                }
             }
-        }
-        if (overflow === 0) {
-            need = new Array(cards.length).fill(null);
-            starts.forEach((st, i) => patterns[pick[i]].forEach((c, k) => { need[st + k] = c; }));
+            if (overflow === 0) {
+                need = new Array(cards.length).fill(null);
+                starts.forEach((st, i) => patterns[pick[i]].forEach((c, k) => { need[st + k] = c; }));
+            }
         }
     }
     if (!need) return { ok: false, changed: 0 };
@@ -5662,6 +5674,11 @@ function collectCardColorViolationRounds(rounds) {
         return violationRounds;
     }
 
+    if (typeof CardColorRules !== 'undefined') {
+        const full = rounds.map((r,i) => ({r,i})).filter(({r}) => r?.cards?.length >= 4);
+        return CardColorRules.violations(full.map(({r}) => r.cards.slice(0,4).map(c=>c?.back_color || '?').join('')), CARD_COLOR_MIXED_MODE)
+            .map(n => full[n-1].i + 1);
+    }
     const validSet = getValidCardColorStrings();
     for (let i = 0; i < rounds.length; i++) {
         const round = rounds[i];

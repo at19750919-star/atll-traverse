@@ -4,7 +4,7 @@
     const B = global.TraverseBuilder, E = global.TraverseExport;
     const clone = x => JSON.parse(JSON.stringify(x));
     const settings = o => ({ tripleTie: o.tripleTie !== false, signalRule: o.signalRule !== false, signalConfig: B.normalizeSignal(o.signalConfig || B.rules.signalConfig),
-        strong: o.strong === true, secondStart: o.secondStart === true });
+        mixedColor: o.mixedColor === true, strong: o.strong === true, secondStart: o.secondStart === true });
 
     function prepare(result) {
         const cards = result.cards.map(c => ({ ...c, traverse: false }));
@@ -142,7 +142,14 @@
         if (new Set(cards).size !== base.length || cards.some(c => !base.includes(c))) throw new Error('驗證失敗：牌張不守恆');
         const after = clone(before);
         after.cards = cards.map(c => ({ ...c }));
-        after.colorOk = finalRounds.every(r => ['RRRB', 'BBBR'].includes(r.cards.slice(0, 4).map(c => c.back_color).join('')));
+        if (opts.mixedColor && global.CardColorRules) {
+            B.rules.mixedColor = true;
+            const colored = B.reassignColors(after.cards);
+            if (colored.ok) after.cards = colored.cards;
+        }
+        const colorPatterns = E.dealRounds(after.cards).filter(r=>r.hand).map(r=>r.cards.slice(0,4).map(c=>c.back_color).join(''));
+        after.colorOk = global.CardColorRules ? !global.CardColorRules.violations(colorPatterns,opts.mixedColor).length
+            : colorPatterns.every(p => ['RRRB','BBBR'].includes(p));
         after.chains.forEach(ch => {
             const ps = chainPoints(cards, ch), rs = B.roundsFromStart(ps);
             ch.traverse = B.isTraverse(ps); ch.rounds = rs ? rs.length : 0;

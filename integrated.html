@@ -1247,6 +1247,7 @@ body.running .deck,body.finished .deck{
   </div>
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control"><span class="name">三條</span><input type="checkbox" id="tvTriple" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="開啟：BBBR／RRRB與BBRR／RRBB兩組，每組最多連續3局，之後須換另一組；關閉：只用BBBR／RRRB"><span class="name">混色模式</span><input type="checkbox" id="tvMixedColor"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="撿段時排除莊補牌後 6 點贏的 6 張局（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="tvB6"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="撿段時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="tvP7"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">末張9</span><input type="checkbox" id="tvNine" checked><span class="switch" aria-hidden="true"></span></label>
@@ -1283,6 +1284,7 @@ body.running .deck,body.finished .deck{
   </div>
   <div class="mode-actions traverse-rules">
     <label class="cond rule-control" title="三條局的下一局開和；關閉後三條當一般局"><span class="name">三條</span><input type="checkbox" id="tripleTieRule" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="開啟：BBBR／RRRB與BBRR／RRBB兩組，每組最多連續3局，之後須換另一組；關閉：只用BBBR／RRRB"><span class="name">混色模式</span><input type="checkbox" id="mixedCardColor"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="挑敏感局時排除莊補牌後 6 點贏的 6 張局（原牌或對調後）"><span class="name">莊6</span><input type="checkbox" id="skipBanker6"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="挑敏感局時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="skipPlayer7Banker6"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="生成完成後調整牌序，讓整副牌靴第 416 張是 9"><span class="name">末張9</span><input type="checkbox" id="lastCardNine"><span class="switch" aria-hidden="true"></span></label>
@@ -1463,10 +1465,11 @@ body.running .deck,body.finished .deck{
 <script>
 try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(localStorage.getItem('traverseSignalConfig')); if (previous) localStorage.setItem('signal_config', JSON.stringify(previous)); } } catch (_) {}
 </script>
+<script src="card_color_rules.js?v=1"></script>
 <script src="standard/round_size_limits.js?v=1"></script>
 <script src="standard/two_thirteen_reversals.js?v=4"></script>
 <script src="standard/export_filename.js?v=3"></script>
-<script src="standard/signals.js?v=38"></script>
+<script src="standard/signals.js?v=39"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
 <script src="standard/signals_ui.js?v=47"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
@@ -1477,17 +1480,17 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <script>
 (function(){
     var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','maxTwoThirteenReversal','maxBankerSixWin','swapBanker6Target','st4Min','st4Max','st5Min','st5Max','st6Min','st6Max'];
-    var CHECK_IDS = ['skipBanker6','skipPlayer7Banker6','tripleTieRule','lastCardNine'];
+    var CHECK_IDS = ['mixedCardColor','skipBanker6','skipPlayer7Banker6','tripleTieRule','lastCardNine'];
     var KEYS = { red0:'at-settings-red0', a2:'at-settings-a2' };
     var SUB_KEY = 'at-standard-sub';
     var DEFAULTS = {
         red0: { avgRecoveryLimit:'3.5', maxTieLimit:'4', maxFourCardRate:'30', maxSideLimit:'4', max7PtReversal:'2', maxTwoThirteenReversal:'', maxBankerSixWin:'', swapBanker6Target:'9',
                 st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
-                tripleTieRule:false, skipBanker6:true, skipPlayer7Banker6:true, lastCardNine:false,
+                mixedCardColor:false, tripleTieRule:false, skipBanker6:true, skipPlayer7Banker6:true, lastCardNine:false,
                 signal:{ suits:['\u2665','\u2666'], ranks:['10','J','Q','K'] } },
         a2:   { avgRecoveryLimit:'3.5', maxTieLimit:'', maxFourCardRate:'35', maxSideLimit:'5', max7PtReversal:'2', maxTwoThirteenReversal:'', maxBankerSixWin:'', swapBanker6Target:'9',
                 st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
-                tripleTieRule:true, skipBanker6:false, skipPlayer7Banker6:false, lastCardNine:true,
+                mixedCardColor:false, tripleTieRule:true, skipBanker6:false, skipPlayer7Banker6:false, lastCardNine:true,
                 signal:{ suits:['\u2660','\u2665','\u2666','\u2663'], ranks:['A','2'] } }
     };
     function copy(o){ return JSON.parse(JSON.stringify(o)); }
@@ -1671,9 +1674,8 @@ function bindSwitch(swId, cbId, onChange){
         if (onChange) onChange(cb.checked);
     });
 }
-/* 混合卡色開關已移除：一律強制標準模式（只允許 BBBR / RRRB），
-   不再讀 localStorage 的舊值，避免舊裝置殘留的 '1' 讓生成邏輯偷跑混和組合 */
-if (typeof persistCardColorMixedMode === 'function') persistCardColorMixedMode(false);
+/* 混色設定由紅0／A2或穿越模式各自保存，不採用舊共用值。 */
+if (typeof persistCardColorMixedMode === 'function') persistCardColorMixedMode($('mixedCardColor').checked);
 /* 莊6／閒7／三條／末張9 已改成設定區內的勾選開關（#standardControls），不再需要 bindSwitch */
 
 /* ───────── 籌碼三鈕 → 真實按鈕 ───────── */
@@ -1831,7 +1833,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=19"></script>
+<script src="traverse_builder.js?v=25"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=7"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=20"></script>
 <script src="integrated-dashboard.js?v=12"></script>
 </body>
 </html>
