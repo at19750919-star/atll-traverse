@@ -1259,6 +1259,7 @@ body.running .deck,body.finished .deck{
     <label title="和局數上限；留白＝不檢查">和局上限 <input class="numbox" type="number" inputmode="numeric" id="maxTieLimit" min="0" value="3" placeholder="不限"></label>
     <label title="4 張局比例上限 %；留白＝不檢查">四張比例% <input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="不限"></label>
+    <label title="每靴七點被逆轉局數上限；莊或閒起手7點，最後被對方補牌贏走；留白＝不限，0＝不允許">七點逆轉上限 <input class="numbox" type="number" inputmode="numeric" id="max7PtReversal" min="0" step="1" value="2" placeholder="不限"></label>
   </div>
   <div class="mode-fields size-limit-fields" title="整副牌的局數；留白＝不限。挑局時計數，整副不符合就重跑；原四張比例上限仍一併檢查">
     <label>4張局上限 <input id="st4Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
@@ -1406,7 +1407,6 @@ body.running .deck,body.finished .deck{
   <span id="signalCardCount">0</span>
 
   <!-- 設計稿未曝光的生成條件（沿用原始版預設；at-settings 會還原上次值） -->
-  <input type="number" id="max7PtReversal" min="0" value="2">
   <input type="number" id="swapBanker6Target" min="0" value="9">
 
   <!-- 工具細項已全部移至可見的 4 大類面板（.tool-panels） -->
