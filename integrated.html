@@ -1267,6 +1267,7 @@ body.running .deck,body.finished .deck{
     <label title="和局數上限；留白＝不檢查">和局上限 <input class="numbox" type="number" inputmode="numeric" id="maxTieLimit" min="0" value="3" placeholder="不限"></label>
     <label title="4 張局比例上限 %；留白＝不檢查">四張比例% <input class="numbox" type="number" inputmode="decimal" id="maxFourCardRate" min="0" max="100" step="0.1" value="" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input class="numbox" type="number" inputmode="numeric" id="maxSideLimit" min="0" value="" placeholder="不限"></label>
+    <label title="每靴實際莊家最後6點、閒家0～5點的贏局上限；與統計的莊6點贏一致，不計對調後的莊6；留白＝不限，0＝不允許；原莊6排除開關仍同時套用">莊6贏上限 <input class="numbox" type="number" inputmode="numeric" id="maxBankerSixWin" min="0" max="104" step="1" value="" placeholder="不限"></label>
     <label title="每靴七點被逆轉局數上限；莊或閒起手7點，最後被對方補牌贏走；留白＝不限，0＝不允許">七點逆轉上限 <input class="numbox" type="number" inputmode="numeric" id="max7PtReversal" min="0" step="1" value="2" placeholder="不限"></label>
     <label title="每靴1／13與2／13補牌逆轉合計上限（完整牌庫比例）；原本落後，補牌逆轉且對方不補牌；與七點逆轉上限同時套用；留白＝局數不限，0＝不允許；無論上限是否留白，兩次之間都須隔超過20局（第1局後最早第23局）；間隔不足時交換同結果、同訊號的整局，找不到就停止並保留舊牌">逆轉上限 <input class="numbox" type="number" inputmode="numeric" id="maxTwoThirteenReversal" min="0" step="1" value="" placeholder="不限"></label>
   </div>
@@ -1465,9 +1466,9 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <script src="standard/round_size_limits.js?v=1"></script>
 <script src="standard/two_thirteen_reversals.js?v=4"></script>
 <script src="standard/export_filename.js?v=3"></script>
-<script src="standard/signals.js?v=37"></script>
+<script src="standard/signals.js?v=38"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
-<script src="standard/signals_ui.js?v=46"></script>
+<script src="standard/signals_ui.js?v=47"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
 <script src="standard/swap_preview.js?v=2"></script>
 <script src="standard/auto_fix_plugin.js?v=3"></script>
@@ -1475,16 +1476,16 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <!-- 設定持久化：紅0模式／A2模式各自保存（at-settings-red0／at-settings-a2），首次用各模式預設值 -->
 <script>
 (function(){
-    var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','maxTwoThirteenReversal','swapBanker6Target','st4Min','st4Max','st5Min','st5Max','st6Min','st6Max'];
+    var INPUT_IDS = ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','maxTwoThirteenReversal','maxBankerSixWin','swapBanker6Target','st4Min','st4Max','st5Min','st5Max','st6Min','st6Max'];
     var CHECK_IDS = ['skipBanker6','skipPlayer7Banker6','tripleTieRule','lastCardNine'];
     var KEYS = { red0:'at-settings-red0', a2:'at-settings-a2' };
     var SUB_KEY = 'at-standard-sub';
     var DEFAULTS = {
-        red0: { avgRecoveryLimit:'3.5', maxTieLimit:'4', maxFourCardRate:'30', maxSideLimit:'4', max7PtReversal:'2', maxTwoThirteenReversal:'', swapBanker6Target:'9',
+        red0: { avgRecoveryLimit:'3.5', maxTieLimit:'4', maxFourCardRate:'30', maxSideLimit:'4', max7PtReversal:'2', maxTwoThirteenReversal:'', maxBankerSixWin:'', swapBanker6Target:'9',
                 st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
                 tripleTieRule:false, skipBanker6:true, skipPlayer7Banker6:true, lastCardNine:false,
                 signal:{ suits:['\u2665','\u2666'], ranks:['10','J','Q','K'] } },
-        a2:   { avgRecoveryLimit:'3.5', maxTieLimit:'', maxFourCardRate:'35', maxSideLimit:'5', max7PtReversal:'2', maxTwoThirteenReversal:'', swapBanker6Target:'9',
+        a2:   { avgRecoveryLimit:'3.5', maxTieLimit:'', maxFourCardRate:'35', maxSideLimit:'5', max7PtReversal:'2', maxTwoThirteenReversal:'', maxBankerSixWin:'', swapBanker6Target:'9',
                 st4Min:'', st4Max:'', st5Min:'', st5Max:'', st6Min:'', st6Max:'',
                 tripleTieRule:true, skipBanker6:false, skipPlayer7Banker6:false, lastCardNine:true,
                 signal:{ suits:['\u2660','\u2665','\u2666','\u2663'], ranks:['A','2'] } }
@@ -1830,7 +1831,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=18"></script>
+<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=19"></script>
 <script src="integrated-dashboard.js?v=12"></script>
 </body>
 </html>

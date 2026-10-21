@@ -982,6 +982,10 @@ function pack_all_sensitive_and_segment(deck) {
         ? Math.floor(estimatedTotalRounds * (fourCardRateLimit / 100))
         : Infinity;
     let fourCardCount = 0;
+    let bankerSixWinCount = 0;
+    const bankerSixSettings = readBankerSixWinLimit();
+    if (bankerSixSettings.error) throw new Error(bankerSixSettings.error);
+    const bankerSixFull = r => bankerSixSettings.limit !== null && bankerSixWinCount >= bankerSixSettings.limit && isBankerSixWinRound(r);
     const sizeSettings = typeof RoundSizeLimits !== 'undefined' ? RoundSizeLimits.read(document) : { limits: null };
     if (sizeSettings.error) throw new Error(sizeSettings.error);
     const sizeLimits = sizeSettings.limits, sizeCounts = { 4: 0, 5: 0, 6: 0 };
@@ -997,6 +1001,7 @@ function pack_all_sensitive_and_segment(deck) {
         const n = r.cards.length;
         if (sizeCounts[n] !== undefined) sizeCounts[n]++;
         if (n === 4) fourCardCount++;
+        if (isBankerSixWinRound(r)) bankerSixWinCount++;
     };
 
     // 七點逆轉上限控制
@@ -1056,7 +1061,7 @@ function pack_all_sensitive_and_segment(deck) {
     if (swapB6Target > 0) {
         for (const r of all_sensitive) {
             if (swapB6Count >= swapB6Target) break;
-            if (sizeFull(r) || twoThirteenFull(r)) continue;
+            if (sizeFull(r) || twoThirteenFull(r) || bankerSixFull(r)) continue;
             if (typeof shouldSkipSensitiveRound === 'function' && shouldSkipSensitiveRound(r)) continue;
             if (r.cards.some(c => used_pos.has(c.pos))) continue;
             if (r.cards.length === 4) continue; // 對調莊6不挑4張局
@@ -1078,7 +1083,7 @@ function pack_all_sensitive_and_segment(deck) {
     // 先把所有敏感局加入 A 段（按原始順序，但 4 張局達上限就跳過）
     const firstPass = sizeLimits ? all_sensitive.slice().sort((a,b)=>Number(needsSize(b))-Number(needsSize(a))) : all_sensitive;
     for (const r of firstPass) {
-        if (sizeFull(r) || twoThirteenFull(r)) continue;
+        if (sizeFull(r) || twoThirteenFull(r) || bankerSixFull(r)) continue;
         if (typeof shouldSkipSensitiveRound === 'function' && shouldSkipSensitiveRound(r)) continue;
         // 如果這局有用過的牌就跳過
         if (r.cards.some(c => used_pos.has(c.pos))) continue;
@@ -1131,7 +1136,7 @@ function pack_all_sensitive_and_segment(deck) {
                     });
                     const startPos = orderedOriginalCards.length ? orderedOriginalCards[0].pos : 0;
                     const finalRound = makeRoundInfo(startPos, orderedOriginalCards, last.result, true);
-                    if (sizeFull(finalRound) || twoThirteenFull(finalRound)) return null;
+                    if (sizeFull(finalRound) || twoThirteenFull(finalRound) || bankerSixFull(finalRound)) return null;
                     // 七點逆轉已達上限就跳過
                     if (max7PtLimit !== null && is7PtReversal(finalRound) && sevenPtReversalCount >= max7PtLimit) {
                         return null;
@@ -1165,7 +1170,7 @@ function pack_all_sensitive_and_segment(deck) {
         // 4 張局已達上限就跳過，七點逆轉已達上限也跳過，B6 達標不再挑 B6，三條+B6 重疊排除，和局必須無訊號牌
         const isValidCandidate = (r) => Array.isArray(r.cards) && r.cards.length > 0
                 && !r.cards.some(c => used_pos.has(c.pos))
-                && !sizeFull(r) && !twoThirteenFull(r)
+                && !sizeFull(r) && !twoThirteenFull(r) && !bankerSixFull(r)
                 && !(r.cards.length === 4 && fourCardCount >= maxFourCardRounds)
                 && !(max7PtLimit !== null && is7PtReversal(r) && sevenPtReversalCount >= max7PtLimit)
                 && !(swapB6Target > 0 && swapB6Count >= swapB6Target && isSwapBankerSix(r))
@@ -1189,7 +1194,7 @@ function pack_all_sensitive_and_segment(deck) {
         }
 
         // 檢查挑出來的敏感局是否合法
-        if (!picked || !Array.isArray(picked.cards) || picked.cards.length === 0 || sizeFull(picked) || twoThirteenFull(picked)) {
+        if (!picked || !Array.isArray(picked.cards) || picked.cards.length === 0 || sizeFull(picked) || twoThirteenFull(picked) || bankerSixFull(picked)) {
              multi_pass_attempts++;
             if (multi_pass_attempts >= MAX_MULTI_PASS_ATTEMPTS) break;
             continue;

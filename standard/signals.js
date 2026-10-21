@@ -3046,6 +3046,27 @@ function verifyShoeRules(rounds, options = {}) {
 
 // 主要生成函數 - 使用完整的ABC段排列並自動分析
 // 生成整副牌靴並進行分析
+function isBankerSixWinRound(round) {
+    if (!Array.isArray(round?.cards) || round.cards.length < 4) return false;
+    const hand = computeRoundHands(round.cards);
+    return hand.bankerTotal === 6 && hand.playerTotal !== null && hand.playerTotal <= 5;
+}
+
+function readBankerSixWinLimit(doc = document) {
+    const input = doc.getElementById('maxBankerSixWin');
+    const raw = input?.value.trim() ?? '';
+    if (input?.validity?.badInput || (raw !== '' && (!Number.isInteger(Number(raw)) || Number(raw) < 0 || Number(raw) > 104))) {
+        return { error: '莊6贏上限請填0～104的整數，或留白不限。', focus: 'maxBankerSixWin' };
+    }
+    return { limit: raw === '' ? null : Number(raw) };
+}
+
+function checkBankerSixWinLimit(rounds, limit) {
+    const count = (rounds || []).filter(isBankerSixWinRound).length;
+    const ok = limit === null || count <= limit;
+    return { ok, count, reason: ok ? '' : `莊6點贏 ${count} 局 > 上限 ${limit}` };
+}
+
 async function repairRareReversalSpacing(rounds, options = {}) {
     const lastNine = options.preserveLastNine ?? Boolean(document.getElementById('lastCardNine')?.checked);
     const avgLimit = Number(document.getElementById('avgRecoveryLimit')?.value) || 0;
@@ -3109,7 +3130,16 @@ async function generateShoe() {
         log(reversalSettings.error, 'error');
         return;
     }
-    const requiresFinalValidation = Boolean(sizeSettings.limits || reversalSettings.enabled);
+    const bankerSixSettings = readBankerSixWinLimit();
+    if (bankerSixSettings.error) {
+        const input = document.getElementById(bankerSixSettings.focus);
+        input?.setCustomValidity(bankerSixSettings.error);
+        input?.reportValidity();
+        input?.focus();
+        log(bankerSixSettings.error, 'error');
+        return;
+    }
+    const requiresFinalValidation = Boolean(sizeSettings.limits || reversalSettings.enabled || bankerSixSettings.limit !== null);
     const previousSizeShoe = requiresFinalValidation ? { rounds: currentRounds, analysis: currentAnalysis } : null;
     let sizeAccepted = !requiresFinalValidation;
     if (typeof window !== 'undefined') {
@@ -3331,6 +3361,16 @@ async function generateShoe() {
                 }
             }
 
+            // 含非敏感局及訊號對調後的實際莊6點贏。
+            if (bankerSixSettings.limit !== null) {
+                const bankerSixCheck = checkBankerSixWinLimit(roundsToCheck, bankerSixSettings.limit);
+                if (!bankerSixCheck.ok) {
+                    log(`第 ${attempt} 次生成失敗：${bankerSixCheck.reason}，重新生成...`, 'warn');
+                    result = null;
+                    continue;
+                }
+            }
+
             // 7. 七點逆轉上限檢查（含非敏感局）
             const max7PtInput = document.getElementById('max7PtReversal');
             const max7PtLimit = max7PtInput && max7PtInput.value !== '' ? parseInt(max7PtInput.value) : null;
@@ -3533,6 +3573,16 @@ async function generateShoe() {
             const sizes = RoundSizeLimits.check(currentRounds, sizeSettings.limits);
             if (!sizes.ok) {
                 log(`最後調整後不符局數上下限：${sizes.reason}，重新生成...`, 'warn');
+                if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
+                currentRounds = previousSizeShoe.rounds;
+                currentAnalysis = previousSizeShoe.analysis;
+                continue;
+            }
+        }
+        if (bankerSixSettings.limit !== null) {
+            const bankerSixCheck = checkBankerSixWinLimit(currentRounds, bankerSixSettings.limit);
+            if (!bankerSixCheck.ok) {
+                log(`最後調整後${bankerSixCheck.reason}，重新生成...`, 'warn');
                 if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
                 currentRounds = previousSizeShoe.rounds;
                 currentAnalysis = previousSizeShoe.analysis;
