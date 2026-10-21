@@ -35,7 +35,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
   await page.setViewportSize({width:1791,height:1000});
   await page.locator('#modeRed0').click();await page.evaluate(()=>{
    for(const id of ['avgRecoveryLimit','maxTieLimit','maxSideLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'])document.getElementById(id).value='';
-   document.getElementById('maxTwoThirteenReversal').value='0';for(const id of ['skipBanker6','skipPlayer7Banker6','lastCardNine'])document.getElementById(id).checked=false;
+   document.getElementById('maxTwoThirteenReversal').value='0';for(const id of ['skipPlayer7Banker6','lastCardNine'])document.getElementById(id).checked=false;
   });
   await page.locator('#chipGen').click();await page.waitForFunction(()=>!window.__isGeneratingShoe&&currentRounds?.length>0,{},{timeout:120000});
   await page.evaluate(()=>{window.__filenameShoe=cloneRoundsDeep(currentRounds);});
@@ -82,7 +82,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
   for(const [mode] of modes){await page.locator('#'+mode).click();assert.equal(await input.inputValue(),saved[mode]);}
   assert.equal(await page.evaluate(()=>localStorage.getItem('at-export-local-history-v1')),ledger);
   assert.equal(await page.evaluate(()=>ExportFilename.localName(null,'F636.xlsx')),'F704.xlsx');assert.equal(await page.evaluate(()=>ExportFilename.localName('701','F636.xlsx')),'704.xlsx');
-  if(process.env.FILENAME_SCREENSHOT)await page.locator('[data-group="files"]').screenshot({path:process.env.FILENAME_SCREENSHOT});
+  if(process.env.FILENAME_SCREENSHOT)await page.locator('body > header').screenshot({path:process.env.FILENAME_SCREENSHOT});
   assert.deepEqual(errors,[]);assert.deepEqual(cloud,[]);console.log('PASS 指定目錄跳過舊檔／不覆蓋，寫入失敗不跳號且可再按導出；下一號與成功紀錄重載保留，無JS錯誤');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

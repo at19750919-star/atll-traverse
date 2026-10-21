@@ -27,6 +27,11 @@
     const progress = el('div','dashboard-progress'); progress.append($('tvProgress'));
     sidebar.append(modeNav,tabs,middle,progress);
     document.querySelector('body > header').insertBefore(actions,document.querySelector('.shoe-state'));
+    const exportTools = el('div','dashboard-header-export');
+    exportTools.setAttribute('aria-label','導出Excel');
+    $('exportFilenameField').title = '僅存本機；尾碼自動接續，編號保存在本機';
+    move(['exportFilenameField','btnExportCombined'],exportTools);
+    document.querySelector('body > header').insertBefore(exportTools,document.querySelector('.shoe-state'));
     const workspace = el('section','dashboard-workspace'); workspace.setAttribute('aria-label','牌靴資料'); layout.append(workspace);
     const overview = el('section','dashboard-overview'), metrics = el('div','dashboard-metrics'), stats = $('stats'); workspace.append(overview); overview.append(metrics);
     // Original sinks remain available to the analysis code, without duplicate calculations.
@@ -48,7 +53,7 @@
       ['牌序編修','edit',['btnSwap','btnRound','btnAutoReorder','btnAutoColor','btnAutoFix','btnCancelEdit','btnApplyChanges','tvOptimize','btnOptOpen']],
       ['切牌定位','cut',['btnRecordDeckOrder']],
       ['分析與參考','analysis',['btnShoeMap','btnPointMatrix','btnPointStats','btnValidate','btnApplyTools']],
-      ['檔案與輸入','files',['btnImport','importFileInput','exportFilenameField','btnExportCombined','btnManualInput']],
+      ['檔案與輸入','files',['btnImport','importFileInput','btnManualInput']],
       ['發牌與示範','demo',['btnDealer','btnSpeech','tvDemo']]
     ];
     const groupBodies = {};

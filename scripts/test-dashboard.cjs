@@ -66,6 +66,25 @@ async function toolGroup(page, name) {
       assert(await page.locator('#btnTableWindow').isVisible());
       assert(await page.evaluate(() => getComputedStyle(document.body).overflowY === 'visible' && getComputedStyle(document.querySelector('.table-scroll')).overflow === 'visible'));
     });
+    await check('導出檔名與按鈕在頁首待命左邊，寬窄畫面可操作且原工具區不重複', async () => {
+      assert.equal(await page.locator('header #exportFilename').count(),1);
+      assert.equal(await page.locator('header #btnExportCombined').count(),1);
+      assert.equal(await page.locator('.dashboard-sidebar #exportFilename,.dashboard-sidebar #btnExportCombined,#skipBanker6').count(),0);
+      for(const width of [2560,1791,1280,1024,390]){
+        await page.setViewportSize({width,height:900});
+        const geometry=await page.evaluate(()=>{
+          const r=s=>document.querySelector(s).getBoundingClientRect().toJSON();
+          return {field:r('#exportFilenameField'),button:r('#btnExportCombined'),state:r('header .shoe-state'),input:r('#exportFilename'),
+            order:document.querySelector('.dashboard-header-export').nextElementSibling.matches('.shoe-state'),overflow:document.documentElement.scrollWidth>innerWidth};
+        });
+        assert(geometry.order&&!geometry.overflow,JSON.stringify({width,geometry}));
+        assert(geometry.input.width>=50);assert(geometry.field.x+geometry.field.width<=geometry.button.x+1);
+        assert(geometry.button.x+geometry.button.width<=width,JSON.stringify({width,geometry}));
+        if(width>=1791){assert(geometry.button.x+geometry.button.width<=geometry.state.x);assert(Math.abs(geometry.button.y+geometry.button.height/2-geometry.state.y-geometry.state.height/2)<2);}
+        if(width===1791&&process.env.HEADER_EXPORT_SCREENSHOT)await page.locator('body > header').screenshot({path:process.env.HEADER_EXPORT_SCREENSHOT});
+      }
+      await page.setViewportSize({width:2560,height:1080});
+    });
     await check('左欄兩分頁、五組工具及原有模式適用範圍', async () => {
       await toolGroup(page, 'edit');
       assert.equal(await page.locator('.dashboard-tool-group').count(), 5);

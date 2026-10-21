@@ -3053,7 +3053,10 @@ function hasBankerSixDrawWin(round) {
 
 function isBankerSixDrawExclusionEnabled() {
     const setting = readBankerSixWinLimit();
-    return Boolean(document.getElementById('skipBanker6')?.checked || (!setting.error && setting.limit !== null));
+    // The integrated page has a single source of truth. Old standalone pages
+    // without the limit field retain their original checkbox behavior.
+    if (document.getElementById('maxBankerSixWin')) return !setting.error && setting.limit !== null;
+    return Boolean(document.getElementById('skipBanker6')?.checked);
 }
 
 function readBankerSixWinLimit(doc = document) {

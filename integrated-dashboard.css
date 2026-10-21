@@ -4,7 +4,18 @@ body.dashboard>header{flex:none;padding:6px 2px;min-height:50px;gap:14px}
 body.dashboard>header .crest{width:34px;height:34px}
 body.dashboard>header h1{font-size:22px;line-height:1.15;min-width:272px}
 body.dashboard>header h1 small{font-size:9px;line-height:1.4}
-body.dashboard>header .shoe-state{margin-left:auto}
+body.dashboard>header .shoe-state{margin-left:0;flex:none}
+.dashboard-header-export{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;flex:none}
+.dashboard-header-export .export-filename-field{flex-direction:row;align-items:center;gap:8px;width:auto;white-space:nowrap;font-size:12px}
+.dashboard-header-export .export-filename-field input{width:166px;height:34px}
+.dashboard-header-export .export-filename-field small{display:none}
+.dashboard-header-export .tool-btn{height:34px;min-width:68px;padding:0 10px;font-size:12px;letter-spacing:.05em;text-indent:0}
+@media(max-width:1400px){body.dashboard>header{flex-wrap:wrap}}
+@media(max-width:540px){
+  .dashboard-header-export{width:100%;flex:none}
+  .dashboard-header-export .export-filename-field{flex:1;min-width:0}
+  .dashboard-header-export .export-filename-field input{width:0;flex:1;min-width:0}
+}
 .dashboard-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start;min-height:0;margin-top:10px}
 .dashboard-sidebar{min-width:0;min-height:0;height:auto;display:flex;flex-direction:column;border:1px solid #8a6a2f;background:linear-gradient(155deg,#111b1b,#0b1113);box-shadow:0 8px 30px #0006}
 body.dashboard .mode-switch{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:6px;min-height:0;margin:0;padding:10px;border:0;border-bottom:1px solid #6b4c1d55;background:none;box-shadow:none}

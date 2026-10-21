@@ -72,7 +72,7 @@ async function inspect(page){return page.evaluate(()=>{
         await page.evaluate(()=>{
           for(const id of ['avgRecoveryLimit','maxTieLimit','maxSideLimit','maxFourCardRate','max7PtReversal','swapBanker6Target','maxBankerSixWin'])document.getElementById(id).value='';
           document.getElementById('maxTwoThirteenReversal').value='0';
-          for(const id of ['skipBanker6','skipPlayer7Banker6','lastCardNine','tripleTieRule'])document.getElementById(id).checked=false;
+          for(const id of ['skipPlayer7Banker6','lastCardNine','tripleTieRule'])document.getElementById(id).checked=false;
         });
         await page.locator('#chipGen').click();
       }else if(mode==='modeTraverse'){

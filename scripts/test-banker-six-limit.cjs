@@ -43,9 +43,11 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
       await page.locator('#modeA2').click();assert.equal(await page.locator('#maxBankerSixWin').inputValue(),'3');
       await page.locator('#modeTraverseA2').click();assert(await page.locator('#maxBankerSixWin').isHidden());
       await page.locator('#modeA2').click();
-      await page.evaluate(()=>{const p=JSON.parse(localStorage.getItem('at-settings-a2'));delete p.maxBankerSixWin;localStorage.setItem('at-settings-a2',JSON.stringify(p));});
+      await page.evaluate(()=>{const p=JSON.parse(localStorage.getItem('at-settings-a2'));delete p.maxBankerSixWin;p.skipBanker6=true;localStorage.setItem('at-settings-a2',JSON.stringify(p));});
       await page.reload();await page.waitForFunction(()=>!!window.IntegratedModes);
       assert.equal(await page.locator('#maxBankerSixWin').inputValue(),'');
+      assert.equal(await page.locator('#skipBanker6').count(),0);
+      assert.equal(await page.evaluate(()=>isBankerSixDrawExclusionEnabled()),false,'舊開關儲存值不得繼續生效');
     });
     await check('非法值阻止生成，欄位在四種寬度保持可讀',async()=>{
       for(const value of [-1,1.5,105]) {
@@ -78,22 +80,22 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
       assert(!actual.at2.ok);assert(actual.at2.okCount);assert(!actual.at2.okDraws);assert(!actual.at1.okCount);
       assert.equal(actual.at2.count,2);assert(actual.blank.ok);assert.equal(actual.empty,false);
     });
-    await check('填上限就排除原牌或對調後補第三張莊6，留白依原開關，五張莊6仍依上限',async()=>{
+    await check('只依上限排除補第三張莊6，留白不限制，五張莊6仍依上限',async()=>{
       const results=await page.evaluate(()=>{
         const make=values=>({cards:values.map((n,i)=>new Card(n===0?'K':String(n),'♠',i)),result:'莊'});
         const five=make([0,0,0,6,0]),six=make([0,0,0,0,0,6]),swapOnly=make([0,2,0,0,0,6]);
         const flags=[five,six,swapOnly].map(hasBankerSixDrawWin),out=[];
-        for(const [value,checked] of [['',false],['',true],['2',false],['0',false]]){
-          document.getElementById('maxBankerSixWin').value=value;document.getElementById('skipBanker6').checked=checked;
-          out.push({value,checked,enabled:isBankerSixDrawExclusionEnabled(),skips:[five,six,swapOnly].map(shouldSkipSensitiveRound)});
+        for(const value of ['','2','0']){
+          document.getElementById('maxBankerSixWin').value=value;
+          out.push({value,enabled:isBankerSixDrawExclusionEnabled(),skips:[five,six,swapOnly].map(shouldSkipSensitiveRound)});
         }
-        document.getElementById('maxBankerSixWin').value='2';document.getElementById('skipBanker6').checked=false;
+        document.getElementById('maxBankerSixWin').value='2';
         return {flags,out,fiveOK:checkBankerSixWinLimit([five],2).ok,fiveAtZero:checkBankerSixWinLimit([five],0).ok,sixAt104:checkBankerSixWinLimit([six,swapOnly],104)};
       });
       assert.deepEqual(results.flags,[false,true,true]);assert(results.fiveOK);assert(!results.fiveAtZero);
       assert(!results.sixAt104.ok&&results.sixAt104.okCount);assert.deepEqual(results.sixAt104.forbiddenRounds,[1,2]);
-      assert.deepEqual(results.out.map(r=>r.enabled),[false,true,true,true]);
-      assert.deepEqual(results.out.map(r=>r.skips),[[false,false,false],[false,true,true],[false,true,true],[false,true,true]]);
+      assert.deepEqual(results.out.map(r=>r.enabled),[false,true,true]);
+      assert.deepEqual(results.out.map(r=>r.skips),[[false,false,false],[false,true,true],[false,true,true]]);
     });
     await check('實際挑敏感局在0／1／2上限停止加入莊6贏',async()=>{
       const counts=await page.evaluate(()=>{
@@ -113,7 +115,7 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
       await page.evaluate(()=>{
         for(const id of ['avgRecoveryLimit','maxTieLimit','maxSideLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'])document.getElementById(id).value='';
         document.getElementById('maxTwoThirteenReversal').value='0';
-        for(const id of ['skipBanker6','skipPlayer7Banker6','lastCardNine','tripleTieRule'])document.getElementById(id).checked=false;
+        for(const id of ['skipPlayer7Banker6','lastCardNine','tripleTieRule'])document.getElementById(id).checked=false;
         window.__sixLocked=false;
         new MutationObserver(()=>{if(window.__isGeneratingShoe&&document.getElementById('maxBankerSixWin').disabled)window.__sixLocked=true;})
           .observe(document.getElementById('maxBankerSixWin'),{attributes:true,attributeFilter:['disabled']});

@@ -148,7 +148,7 @@ const server=http.createServer((req,res)=>{
             await page.locator('#'+mode).click();await input.fill(String(limit));
             await page.evaluate(()=>{
                 for(const id of ['avgRecoveryLimit','maxTieLimit','maxSideLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'])document.getElementById(id).value='';
-                for(const id of ['skipBanker6','skipPlayer7Banker6','lastCardNine'])document.getElementById(id).checked=false;
+                for(const id of ['skipPlayer7Banker6','lastCardNine'])document.getElementById(id).checked=false;
                 window.__reversalLocked=false;
                 new MutationObserver(()=>{if(window.__isGeneratingShoe&&document.getElementById('maxTwoThirteenReversal').disabled)window.__reversalLocked=true;}).observe(document.getElementById('maxTwoThirteenReversal'),{attributes:true});
             });
