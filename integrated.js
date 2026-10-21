@@ -212,6 +212,7 @@
   function lock(value) {
     busy=value;window.__isGeneratingShoe=value;window.__stopGenerateRequested=false;
     $('generateBtn').disabled=value;$('stopGenerateBtn').disabled=!value;
+    $('btnExportCombined').disabled=value;$('btnExportCombined').textContent=value?'處理中…':'導出';
     $('generatingOverlay').classList.toggle('active',value);document.body.classList.toggle('running',value);
     ['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings','exportFilename',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
     document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>{el.style.pointerEvents=value?'none':'';el.setAttribute('aria-disabled',value);});
@@ -331,9 +332,9 @@
     if(!states.traverse.result||busy)return;absorbEdits();clearOptimization();stopped=false;lock(true);
     try{optimization=await O.optimize(copy(states.traverse.result),{...rules(),isCancelled:()=>stopped,onProgress:p=>status(`局內優化 ${p.round}/${p.total} 局｜安全點 ${p.before} → ${p.best}`)});lock(false);comparison();status(`優化${optimization.cancelled?'已停止':'完成'}：${optimization.initial.count} → ${optimization.final.count} 個安全切點`);}catch(e){status(`局內優化：${e.message}`);}finally{lock(false);}
   }
-  // Keep the existing TR numbering, folder, local directory permission and workbook.
-  // Helpers are copied from the standalone exporter with their own closure.
-  const DRIVE_FOLDER_ID='17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx', EXPORT_PREFIX='TR', CLOUD_UPLOAD_ENABLED=true;
+  // 整合頁只存本機；雲端helper保留但不由導出或編號流程呼叫。
+  // 本機目錄授權與Excel內容沿用既有流程。
+  const DRIVE_FOLDER_ID='17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx', EXPORT_PREFIX='TR', CLOUD_UPLOAD_ENABLED=false;
   async function fetchFolderFiles() {
     let lastError = null;
     for (let attempt = 1; attempt <= 4; attempt++) {
@@ -371,6 +372,7 @@
 
   async function nextExportFilename(files) {
     const custom = ExportFilename.read();
+    if (ExportFilename.localOnly) return ExportFilename.localName(custom, 'TR001.xlsx');
     if (custom) return ExportFilename.resolve(files, custom);
     const re = new RegExp(`^${EXPORT_PREFIX}(\\d+)\\.xlsx$`, 'i');
     let max = 0;
@@ -438,7 +440,7 @@
   }
   async function saveLocal(blob, filename, dir) {
     if (dir) {
-      if (ExportFilename.read()) filename = await ExportFilename.resolveLocal(dir, filename);
+      filename = await ExportFilename.resolveLocal(dir, filename);
       const fh = await dir.getFileHandle(filename, { create: true });
       const w = await fh.createWritable();
       await w.write(blob);
@@ -460,21 +462,21 @@
     try { ExportFilename.read(); } catch (error) { status(error.message); return; }
     if(!states.traverse.result||busy)return;absorbEdits();const source=copy(states.traverse.result),cut=states.traverse.cut,signalConfig=currentSignal();
     const rs=E.dealRounds(E.cutDeck(O.prepare(source),cut));
-    const dirPromise=getExportDir();lock(true);
+    const dirPromise=getExportDir();lock(true);$('generatingText').textContent='正在建立本機Excel檔案…';
     try{
       const dir=await dirPromise,g=violationGroups(rs),items=Object.entries(g).filter(([,a])=>a.length);
       if(items.length&&!confirm('牌表仍有違規，是否繼續導出？\n'+items.map(([k,a])=>`${({noSwap:'無法對調',same:'不符敏感局',triple:'三條',signal:'訊號',color:'卡色'})[k]}：${a.length} 局`).join('\n'))){status('已取消導出');return;}
       const a=O.analyze(O.prepare(source),rules());const startRounds=Array.from({length:416},(_,i)=>a.depths[(cut+i)%416]);
-      const blob=await E.buildWorkbook(rs,{startRounds,signalConfig});const files=await cloudFiles();let name=await nextExportFilename(files);
-      const saved=await saveLocal(blob,name,dir);name=saved.filename;ExportFilename.advance(name);status(`已存到${saved.where}：${name}，正在上傳穿越牌…`);
-      try{await uploadToDrive(blob,name,files);files.push({name});status(`已導出 ${name}，本機與雲端「穿越牌」皆已存好`);}catch(e){status(`已存本機 ${name}；雲端上傳失敗：${e.message}`);}
+      const blob=await E.buildWorkbook(rs,{startRounds,signalConfig});let name=await nextExportFilename([]);
+      const saved=await saveLocal(blob,name,dir);name=saved.filename;ExportFilename.advance(name);
+      status(`已導出本機：${name}（${saved.where}，不讀取或上傳雲端）`);
     }catch(e){status(`導出失敗：${e.message}`);}finally{lock(false);}
   }
   // Capture only mode-dependent actions; all standard-mode handlers run unchanged.
   document.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
     if(mode==='standard'&&window.__pendingSizeShoe&&!['chipStop','stopGenerateBtn'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
-    if(mode==='standard'&&button.id==='btnExportCombined'){event.preventDefault();event.stopImmediatePropagation();if(!busy&&!window.__isGeneratingShoe){lock(true);Promise.resolve(original.export()).catch(e=>log(`導出失敗：${e.message}`,'error')).finally(()=>lock(false));}return;}
+    if(mode==='standard'&&button.id==='btnExportCombined'){event.preventDefault();event.stopImmediatePropagation();if(!busy&&!window.__isGeneratingShoe){lock(true);$('generatingText').textContent='正在建立本機Excel檔案…';Promise.resolve(original.export()).catch(e=>log(`導出失敗：${e.message}`,'error')).finally(()=>lock(false));}return;}
     if(mode!=='traverse')return;
     if(busy&&!['stopGenerateBtn','chipStop','logHead','btnTableWindow'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
     const id=button.id;

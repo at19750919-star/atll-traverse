@@ -5225,14 +5225,18 @@ async function fetchDriveFileList() {
 }
 
 /**
- * 產生下一個導出檔名：從 F636.xlsx 起，並接續現有最大編號
- * 編號以「雲端 Drive 現有最大 F 編號 +1」為準（跨瀏覽器/port/裝置一致），
- * 雲端清單讀不到時直接中止導出，不再退回本機計數器。
+ * 整合頁：只讀本機成功導出紀錄及舊本機F計數，留白由F636起；不讀雲端。
+ * 未載入整合頁ExportFilename的獨立舊頁保留原雲端命名流程。
  */
 async function getNextExportFilename() {
     const custom = typeof ExportFilename !== 'undefined' ? ExportFilename.read() : null;
     const key = 'at-export-counter';
     const START = 635; // 從 F636 開始（START + 1）
+    if (typeof ExportFilename !== 'undefined' && ExportFilename.localOnly) {
+        let last = null;
+        try { last = localStorage.getItem(key); } catch (_) {}
+        return ExportFilename.localName(custom, 'F636.xlsx', last);
+    }
 
     // 取得雲端現有最大 F 編號；讀不到就停止導出，避免退回本機計數器造成跳號或重號
     const files = await fetchDriveFileList();
@@ -5945,6 +5949,11 @@ async function exportRoundsAsExcelWithDrive() {
         if (typeof ExportFilename !== 'undefined') ExportFilename.advance(filename);
 
         log('合併Excel檔案已導出成功!', 'success');
+
+        if (typeof ExportFilename !== 'undefined' && ExportFilename.localOnly) {
+            log(`已導出本機：${filename}（不讀取或上傳雲端）`, 'success');
+            return filename;
+        }
 
         // === 上傳到 Google Drive ===
         try {

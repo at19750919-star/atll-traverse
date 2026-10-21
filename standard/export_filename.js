@@ -51,7 +51,37 @@
     function persist() {
         try { localStorage.setItem('at-export-filename-' + currentMode, input().value); } catch (_) {}
     }
+    const historyKey = 'at-export-local-history-v1';
+    const canonical = value => String(value).normalize('NFC').toLowerCase();
+    function history() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(historyKey) || '{}');
+            return { counters: saved.counters || {}, files: saved.files || {} };
+        } catch (_) { return { counters: {}, files: {} }; }
+    }
+    function lastNumber(data, prefix) {
+        const raw = data.counters['prefix:' + canonical(prefix)];
+        return /^\d+$/.test(String(raw)) ? BigInt(raw) : -1n;
+    }
+    function localName(custom, fallback, legacyLast = null) {
+        const filename = normalize(custom || fallback), data = history(), seq = sequence(filename);
+        if (!seq) {
+            if (data.files['file:' + canonical(filename)]) throw new Error(`本機已導出同名檔案「${filename}」，請修改導出檔名。`);
+            return filename;
+        }
+        let last = lastNumber(data, seq.prefix);
+        if (!custom && legacyLast !== null && /^\d+$/.test(String(legacyLast)) && BigInt(legacyLast) > last) last = BigInt(legacyLast);
+        const number = seq.number > last ? seq.number : last + 1n;
+        return normalize(seq.prefix + String(number).padStart(seq.width, '0'));
+    }
+    function record(filename) {
+        const data = history(), seq = sequence(filename);
+        if (seq && seq.number > lastNumber(data, seq.prefix)) data.counters['prefix:' + canonical(seq.prefix)] = String(seq.number);
+        data.files['file:' + canonical(filename)] = true;
+        try { localStorage.setItem(historyKey, JSON.stringify(data)); } catch (_) {}
+    }
     function advance(exportedName) {
+        record(exportedName);
         const el = input();
         if (!el || !read() || !sequence(read())) return;
         let next;
@@ -86,7 +116,7 @@
         el.placeholder = mode.startsWith('traverse-') ? '留白：TR 自動編號' : '留白：F 自動編號';
         el.setCustomValidity('');
     }
-    const api = { normalize, read, resolve, setMode, nextName, advance, resolveLocal };
+    const api = { normalize, read, resolve, setMode, nextName, advance, resolveLocal, localName, localOnly: true };
     root.ExportFilename = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

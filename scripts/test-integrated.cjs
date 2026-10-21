@@ -37,13 +37,13 @@ async function toolGroup(page,key){
   const browser=await chromium.launch({channel:'chrome',headless:true});
   try{
     const page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});
-    const errors=[],missing=[],posts=[];
+    const errors=[],missing=[],posts=[],cloudRequests=[];
     page.on('pageerror',e=>errors.push(e.message));
     page.on('response',r=>{if(r.url().startsWith('http://127.0.0.1')&&r.status()>=400)missing.push(r.url());});
     page.on('dialog',d=>d.accept());
     await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
     await page.route('https://script.google.com/**',route=>{
-      const req=route.request();if(req.method()==='POST')posts.push(JSON.parse(req.postData()));
+      const req=route.request();cloudRequests.push(req.method());if(req.method()==='POST')posts.push(JSON.parse(req.postData()));
       const url=req.url();
       let files=[{name:'F635.xlsx'}];
       if(url.includes('1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb')) files=[{name:'F635.xlsx'}];
@@ -64,14 +64,14 @@ async function toolGroup(page,key){
       await inventory(page);standard=await page.evaluate(signature);
       assert(await page.locator('#traverseControls').isHidden());
     });
-    await check('百家3.0 導出改為F系列雲端資料夾並從F636開始',async()=>{
+    await check('百家3.0僅導出本機F編號，從本機F636開始',async()=>{
       const state=await page.evaluate(exportState);
       const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
       const file=await download;assert.match(file.suggestedFilename(),/^F636\.xlsx$/);
       const wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());assert(wb.getWorksheet('直立式牌靴'));
       assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
       await page.waitForFunction(()=>!IntegratedModes.busy);
-      assert(posts.some(p=>p.filename==='F636.xlsx'&&p.folderId==='1inVTulKpwiiggGp8TyIeWmFmpH6QG0gb'));
+      assert.equal(posts.length,0);
     });
     await check('百家A2實際導出依各自設定標紅訊號牌',async()=>{
       await page.locator('#modeA2').click();
@@ -128,17 +128,17 @@ async function toolGroup(page,key){
       assert.deepEqual(await page.evaluate(()=>IntegratedModes.traversal.analysis.safe),safe);
       assert.equal(await page.evaluate(()=>calculateViolationStats(currentRounds).cardColorViolations),0);
     });
-    await check('穿越導出依目前切牌序，TR編號與穿越牌資料夾獨立',async()=>{
+    await check('穿越依目前切牌序導出本機TR編號，不讀取或上傳雲端',async()=>{
       const state=await page.evaluate(exportState);
       const faces=await page.evaluate(()=>currentRounds.flatMap(r=>r.cards.map(c=>(c.rank==='10'?'T':c.rank)+c.suit)));
       const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
-      const file=await download;assert.equal(file.suggestedFilename(),'TR008.xlsx');
+      const file=await download;assert.equal(file.suggestedFilename(),'TR001.xlsx');
       const wb=new ExcelJS.Workbook();await wb.xlsx.readFile(await file.path());
       const sheet=wb.getWorksheet('直立式牌靴');assert(sheet);assert.equal(sheet.rowCount,416);
       for(let i=0;i<416;i++)assert.equal(sheet.getCell(i+1,2).value,faces[i]);
       assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
       await page.waitForFunction(()=>!IntegratedModes.busy);
-      assert(posts.some(p=>p.filename==='TR008.xlsx'&&p.folderId==='17RvOVNDc0a_JEem1SnRPsTEvm8otkJdx'));
+      assert.equal(posts.length,0);
     });
     await check('穿越A2實際導出依各自設定標紅訊號牌',async()=>{
       await page.locator('#modeTraverseA2').click();await toolGroup(page,'demo');await page.locator('#tvDemo').click();
@@ -205,7 +205,7 @@ async function toolGroup(page,key){
       assert.equal(await page.evaluate(()=>IntegratedModes.mode),'traverse');
       assert.match(await page.locator('#tvProgress').textContent(),/已停止/);await inventory(page);
     });
-    assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);
+    assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);assert.deepEqual(cloudRequests,[]);
     console.log(JSON.stringify({passed:checks.length,pageErrors:errors,missingAssets:missing,cloudPostsIntercepted:posts.map(p=>({filename:p.filename,folderId:p.folderId||'原預設'}))}));
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

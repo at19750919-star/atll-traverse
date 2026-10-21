@@ -1311,7 +1311,7 @@ body.running .deck,body.finished .deck{
   <div class="tool-panel gframe" id="tpData">
     <button class="tool-btn" id="btnImport">匯入</button>
     <input type="file" id="importFileInput" accept=".xlsx" style="display:none">
-    <label id="exportFilenameField" class="export-filename-field">導出檔名<input id="exportFilename" type="text" maxlength="155" autocomplete="off" spellcheck="false" placeholder="留白：F 自動編號"><small>例 A2-001，導出後接續 A2-002；留白自動編號</small></label>
+    <label id="exportFilenameField" class="export-filename-field">導出檔名<input id="exportFilename" type="text" maxlength="155" autocomplete="off" spellcheck="false" placeholder="留白：F 自動編號"><small>僅存本機；例 A2-001 → A2-002；編號保存在本機</small></label>
     <button class="tool-btn" id="btnExportCombined">導出</button>
     <button class="tool-btn" id="clearBtn">清空</button>
     <button class="tool-btn" id="btnPointMatrix">點數矩陣</button>
@@ -1464,8 +1464,8 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 </script>
 <script src="standard/round_size_limits.js?v=1"></script>
 <script src="standard/two_thirteen_reversals.js?v=4"></script>
-<script src="standard/export_filename.js?v=2"></script>
-<script src="standard/signals.js?v=36"></script>
+<script src="standard/export_filename.js?v=3"></script>
+<script src="standard/signals.js?v=37"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
 <script src="standard/signals_ui.js?v=46"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
@@ -1830,7 +1830,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=17"></script>
+<script src="traverse_builder.js?v=24"></script><script src="traverse_export.js?v=7"></script><script src="traverse_optimizer.js?v=6"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=18"></script>
 <script src="integrated-dashboard.js?v=11"></script>
 </body>
 </html>
