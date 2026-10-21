@@ -62,7 +62,78 @@
             : !okSpacing ? `第${v.firstRound}、${v.nextRound}局逆轉之間只隔${v.gap}局，須超過20局` : '';
         return { ok: okCount && okSpacing, okCount, okSpacing, count: actual, limit, roundNumbers, spacingViolations, reason };
     }
-    const api = { classify, count, read, check };
+    // 搜尋各種同類位置的組合，再把逆轉局與一般局整局交換；失敗不改輸入。
+    async function repairSpacing(rounds, options = {}) {
+        const originalCheck = check(rounds, null);
+        if (originalCheck.okSpacing) return { ok: true, rounds, swaps: [], nodes: 0 };
+        const keyFor = options.keyFor;
+        if (typeof keyFor !== 'function') return { ok: false, reason: '缺少整局交換的規則檢查' };
+        const canMove = options.canMove || (() => true);
+        const groups = new Map(), fixed = [];
+        const keys = rounds.map(keyFor);
+        rounds.forEach((r, i) => {
+            if (!classify(r)) return;
+            if (!canMove(i)) { fixed.push(i); return; }
+            const key = keys[i];
+            if (!groups.has(key)) groups.set(key, { key, sources: [], slots: [] });
+            groups.get(key).sources.push(i);
+        });
+        const items = [...groups.values()];
+        for (const group of items) group.slots = rounds.map((_, i) => i)
+            .filter(i => canMove(i) && keys[i] === group.key && fixed.every(j => Math.abs(i - j) >= 22));
+        const impossible = originalCheck.count > Math.floor((rounds.length - 1) / 22) + 1
+            || fixed.some((v, i) => fixed.slice(i + 1).some(w => Math.abs(v - w) < 22))
+            || items.some(g => g.slots.length < g.sources.length);
+        if (impossible) return { ok: false, reason: '沒有足夠的同結果、同訊號安全位置可交換' };
+        items.sort((a, b) => (a.slots.length - a.sources.length) - (b.slots.length - b.sources.length));
+        let nodes = 0, validations = 0, stopped = false, exhausted = false, answer = null;
+        const chosen = fixed.slice(), targets = new Map();
+        const maxNodes = options.maxNodes ?? 50000, maxValidations = options.maxValidations ?? 128;
+        async function search(groupIndex, offset = 0, after = -1) {
+            if (answer || stopped || exhausted) return;
+            if (options.shouldStop?.()) { stopped = true; return; }
+            if (++nodes > maxNodes) { exhausted = true; return; }
+            if (nodes % 128 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+                if (options.shouldStop?.()) { stopped = true; return; }
+            }
+            if (groupIndex === items.length) {
+                const work = rounds.slice(), swaps = [];
+                for (const group of items) {
+                    const dest = targets.get(group.key), destSet = new Set(dest), sourceSet = new Set(group.sources);
+                    const leaving = group.sources.filter(i => !destSet.has(i));
+                    const entering = dest.filter(i => !sourceSet.has(i));
+                    leaving.forEach((from, i) => {
+                        const to = entering[i];
+                        [work[from], work[to]] = [work[to], work[from]];
+                        swaps.push({ from: from + 1, to: to + 1 });
+                    });
+                }
+                if (++validations > maxValidations) { exhausted = true; return; }
+                if (!options.validate || await options.validate(work)) answer = { ok: true, rounds: work, swaps, nodes };
+                return;
+            }
+            const group = items[groupIndex];
+            if (offset === group.sources.length) { await search(groupIndex + 1); return; }
+            if (!targets.has(group.key)) targets.set(group.key, []);
+            // 優先保留原逆轉位置，避免不必要的交換；仍會回溯找其他組合。
+            const candidates = group.slots.filter(i => i > after)
+                .sort((a, b) => Number(!group.sources.includes(a)) - Number(!group.sources.includes(b)) || a - b);
+            for (const i of candidates) {
+                if (chosen.some(j => Math.abs(i - j) < 22)) continue;
+                if (group.slots.filter(j => j > i).length < group.sources.length - offset - 1) continue;
+                targets.get(group.key).push(i); chosen.push(i);
+                await search(groupIndex, offset + 1, i);
+                chosen.pop(); targets.get(group.key).pop();
+                if (answer || stopped || exhausted) return;
+            }
+        }
+        await search(0);
+        return answer || { ok: false, stopped, exhausted, nodes, reason: stopped ? '已停止整局交換'
+            : exhausted ? '在本次搜尋範圍內找不到符合其他限制的整局交換'
+            : '找不到符合其他限制的同結果、同訊號整局交換' };
+    }
+    const api = { classify, count, read, check, repairSpacing };
     root.TwoThirteenReversals = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

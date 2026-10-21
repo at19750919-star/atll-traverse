@@ -3046,6 +3046,36 @@ function verifyShoeRules(rounds, options = {}) {
 
 // 主要生成函數 - 使用完整的ABC段排列並自動分析
 // 生成整副牌靴並進行分析
+async function repairRareReversalSpacing(rounds, options = {}) {
+    const lastNine = options.preserveLastNine ?? Boolean(document.getElementById('lastCardNine')?.checked);
+    const avgLimit = Number(document.getElementById('avgRecoveryLimit')?.value) || 0;
+    const rangeInput = document.getElementById('range16Limit');
+    const rangeLimit = rangeInput && rangeInput.value !== '' ? Number(rangeInput.value) : null;
+    const repaired = await TwoThirteenReversals.repairSpacing(rounds, {
+        keyFor: r => {
+            const h = computeRoundHands(r.cards);
+            const result = h.playerTotal === h.bankerTotal ? '和' : h.playerTotal > h.bankerTotal ? '閒' : '莊';
+            const signal = r.cards.some(c => c && isSignalCardByConfig(c));
+            // 保留每個位置的結果、訊號、三條、段別及是否四張局；五／六張局可互換。
+            return JSON.stringify([result, r.result, signal, Boolean(r.isT), hasFullHouse(r), r.segment || '', r.cards.length === 4]);
+        },
+        canMove: i => !lastNine || i !== rounds.length - 1,
+        shouldStop: () => window.__stopGenerateRequested === true,
+        validate: candidate => {
+            if (avgLimit <= 0 && rangeLimit === null) return true;
+            const recovery = analyzeShoeRecovery(candidate);
+            return !!recovery && (avgLimit <= 0 || Number(recovery.avgRounds) <= avgLimit)
+                && (rangeLimit === null || (recovery.distribution?.range16plus || 0) <= rangeLimit);
+        }
+    });
+    if (repaired.ok && repaired.swaps.length) {
+        let pos = 0;
+        repaired.rounds.forEach(r => { r.start_index = pos; r.cards.forEach(c => { c.pos = pos++; }); });
+        log(`逆轉間隔整局交換：${repaired.swaps.map(s => `第${s.from}局 ↔ 第${s.to}局`).join('、')}，牌局內牌序不變`, 'success');
+    }
+    return repaired;
+}
+
 async function generateShoe() {
     const btn = document.getElementById('generateBtn');
     const stopBtn = document.getElementById('stopGenerateBtn');
@@ -3317,10 +3347,19 @@ async function generateShoe() {
             // 1／13與2／13逆轉合計上限、相鄰兩次之間超過20局；包含非敏感局。
             if (reversalSettings.enabled) {
                 const reversalCheck = TwoThirteenReversals.check(roundsToCheck, reversalSettings.limit);
-                if (!reversalCheck.ok) {
+                if (!reversalCheck.okCount) {
                     log(`第 ${attempt} 次生成失敗：${reversalCheck.reason}，重新生成...`, 'warn');
                     result = null;
                     continue;
+                }
+                if (!reversalCheck.okSpacing) {
+                    const repaired = await repairRareReversalSpacing(roundsToCheck, { preserveLastNine: false });
+                    if (ensureNotStopped()) return;
+                    if (!repaired.ok) {
+                        if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
+                        throw new Error(`${repaired.reason}；不因間隔問題整副重跑，保留上次牌靴`);
+                    }
+                    roundsToCheck = repaired.rounds;
                 }
             }
 
@@ -3471,12 +3510,23 @@ async function generateShoe() {
         // 最終輸出再驗一次，涵蓋後續規則修復、卡色與末張9調整。
         if (reversalSettings.enabled) {
             const reversalCheck = TwoThirteenReversals.check(currentRounds, reversalSettings.limit);
-            if (!reversalCheck.ok) {
+            if (!reversalCheck.okCount) {
                 log(`最後調整後${reversalCheck.reason}，重新生成...`, 'warn');
                 if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
                 currentRounds = previousSizeShoe.rounds;
                 currentAnalysis = previousSizeShoe.analysis;
                 continue;
+            }
+            if (!reversalCheck.okSpacing) {
+                const repaired = await repairRareReversalSpacing(currentRounds);
+                if (ensureNotStopped()) return;
+                if (!repaired.ok) {
+                    if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
+                    throw new Error(`${repaired.reason}；不因間隔問題整副重跑，保留上次牌靴`);
+                }
+                currentRounds = repaired.rounds;
+                // 位置變動後更新局號標示；禁止此處再次移牌或觸發自動重跑。
+                verifyShoeRules(currentRounds, { allowMutations: false, allowAutoRegenerate: false });
             }
         }
         if (sizeSettings.limits) {

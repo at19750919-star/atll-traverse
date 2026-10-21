@@ -58,7 +58,8 @@ async function toolGroup(page,key){
     assert.match(page.url(),/integrated\.html$/);assert.equal(await page.locator('iframe').count(),0);
     let standard, before, after;
     await check('百家3.0 使用原生成器產出完整416張牌庫',async()=>{
-      await page.evaluate(()=>{document.getElementById('maxTieLimit').value='';document.getElementById('maxSideLimit').value='';document.getElementById('skipBanker6').checked=false;document.getElementById('lastCardNine').checked=false;});
+      // 導出與整合流程使用逆轉上限0；整局交換與無解停止另由逆轉專用測試覆蓋。
+      await page.evaluate(()=>{document.getElementById('maxTwoThirteenReversal').value='0';document.getElementById('maxTieLimit').value='';document.getElementById('maxSideLimit').value='';document.getElementById('skipBanker6').checked=false;document.getElementById('lastCardNine').checked=false;});
       await page.locator('#chipGen').click();await page.waitForFunction(()=>!window.__isGeneratingShoe&&currentRounds?.length>0,{},{timeout:60000});
       await inventory(page);standard=await page.evaluate(signature);
       assert(await page.locator('#traverseControls').isHidden());
@@ -74,7 +75,8 @@ async function toolGroup(page,key){
     });
     await check('百家A2實際導出依各自設定標紅訊號牌',async()=>{
       await page.locator('#modeA2').click();
-      await page.evaluate(()=>{document.getElementById('maxTieLimit').value='';document.getElementById('maxSideLimit').value='';document.getElementById('skipBanker6').checked=false;document.getElementById('lastCardNine').checked=false;});
+      // 導出與整合流程使用逆轉上限0；整局交換與無解停止另由逆轉專用測試覆蓋。
+      await page.evaluate(()=>{document.getElementById('maxTwoThirteenReversal').value='0';document.getElementById('maxTieLimit').value='';document.getElementById('maxSideLimit').value='';document.getElementById('skipBanker6').checked=false;document.getElementById('lastCardNine').checked=false;});
       await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&currentRounds?.length>0,{},{timeout:60000});
       await inventory(page);
       const state=await page.evaluate(exportState);

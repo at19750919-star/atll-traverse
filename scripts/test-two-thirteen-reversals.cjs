@@ -105,6 +105,45 @@ const server=http.createServer((req,res)=>{
             finally{document.getElementById('tripleTieRule').checked=saved;}
         });
         console.log('PASS 實際挑局遵守0上限');
+        await page.evaluate(async()=>{
+            document.getElementById('avgRecoveryLimit').value='';
+            if(document.getElementById('range16Limit'))document.getElementById('range16Limit').value='';
+            document.getElementById('lastCardNine').checked=false;
+            const make=(rare,i)=>{
+                const pts=rare?[0,0,3,6,5]:[0,0,4,6,3];
+                const r=makeRoundInfo(i*5,pts.map((n,j)=>new Card(n===0?'K':String(n),'♦',i*5+j)),'閒',true);
+                r.segment='A';return r;
+            };
+            const shoe=Array.from({length:30},(_,i)=>make(i===0||i===5,i));
+            const before=shoe.slice(),cardRefs=shoe.flatMap(r=>r.cards);
+            const result=await repairRareReversalSpacing(shoe);
+            if(!result.ok||!TwoThirteenReversals.check(result.rounds,null).okSpacing)throw new Error('整局交換未達成間隔');
+            if(result.rounds.some((r,i)=>r.result!==shoe[i].result||r.cards.some(isSignalCardByConfig)!==shoe[i].cards.some(isSignalCardByConfig)))throw new Error('結果或訊號狀態改變');
+            if(shoe.some((r,i)=>r!==before[i])||cardRefs.some(c=>!result.rounds.some(r=>r.cards.includes(c))))throw new Error('原牌／牌庫遺失');
+            const flat=result.rounds.flatMap(r=>r.cards);
+            if(flat.some((c,i)=>c.pos!==i))throw new Error('位置索引未更新');
+
+            const sixShoe=Array.from({length:30},(_,i)=>{
+                if(i===0||i===5)return make(true,i);
+                const pts=[0,0,5,0,3,1];
+                const r=makeRoundInfo(i*6,pts.map((n,j)=>new Card(n===0?'K':n===1?'A':String(n),'♦',i*6+j)),'閒',true);
+                r.segment='A';return r;
+            });
+            const sixResult=await repairRareReversalSpacing(sixShoe);
+            if(!sixResult.ok||sixResult.swaps.length!==1||!TwoThirteenReversals.check(sixResult.rounds,null).okSpacing)throw new Error('五張逆轉局不能與六張同結果同訊號局交換');
+            const oldRecovery=analyzeShoeRecovery;
+            const avg=document.getElementById('avgRecoveryLimit');
+            let calls=0;
+            avg.value='1';
+            try{
+                analyzeShoeRecovery=()=>({avgRounds:++calls===1?'2.0':'1.0',distribution:{range16plus:0}});
+                const next=await repairRareReversalSpacing(shoe);
+                if(!next.ok||calls<2)throw new Error('未跳過回復超標的交換方案');
+            }finally{analyzeShoeRecovery=oldRecovery;avg.value='';}
+
+        });
+        console.log('PASS 實際整局交換函式保留結果／訊號、牌庫與局內牌序、更新索引；回復超標時找其他交換');
+
         for(const [mode,limit] of [['modeRed0',0],['modeA2',2],['modeA2','']]){
             await page.locator('#'+mode).click();await input.fill(String(limit));
             await page.evaluate(()=>{
@@ -126,6 +165,14 @@ const server=http.createServer((req,res)=>{
             window.__originalReversalCheck=TwoThirteenReversals.check;
             window.__originalReversalColor=runAutoColorSwap_Signal;
             window.__reversalRejected=false;
+            window.__originalSpacingRepair=TwoThirteenReversals.repairSpacing;
+            window.__originalReversalBuild=build_shuffled_deck;
+            window.__reversalBuilds=0;
+            build_shuffled_deck=function(){window.__reversalBuilds++;return window.__originalReversalBuild();};
+            TwoThirteenReversals.repairSpacing=async function(rounds,options){
+                if(window.__reversalRejected)return {ok:false,reason:'測試：沒有安全交換候選'};
+                return window.__originalSpacingRepair(rounds,options);
+            };
             runAutoColorSwap_Signal=function(rounds){
                 const out=window.__originalReversalColor(rounds);
                 const cards=[0,0,3,6,5].map((n,i)=>new Card(n===0?'K':String(n),'♠',500+i));
@@ -138,8 +185,10 @@ const server=http.createServer((req,res)=>{
                     window.__spacingRejected=result.okCount&&!result.okSpacing;
                     window.__rejectedFaces=[...document.querySelectorAll('#roundsBody [data-action="card"]')].map(e=>e.textContent);
                     exportRoundsAsExcelWithDrive().then(v=>{window.__reversalExportResult=v;});
-                    setTimeout(()=>document.getElementById('chipStop').click(),0);
+                    window.__buildsAtRejection=window.__reversalBuilds;
                 }
+                // 此案例只注入最終調整故障，預檢間隔暫放行以隔離最後驗收路徑。
+                if(rounds!==currentRounds)return {...result,ok:result.okCount,okSpacing:true};
                 return result;
             };
         });
@@ -150,8 +199,9 @@ const server=http.createServer((req,res)=>{
         assert.deepEqual(await page.locator('#roundsBody [data-action="card"]').allTextContents(),faces);
         assert.equal(await page.evaluate(()=>window.__reversalExportResult),false);
         assert.equal(await page.evaluate(()=>window.__spacingRejected),true);
-        await page.evaluate(()=>{TwoThirteenReversals.check=window.__originalReversalCheck;runAutoColorSwap_Signal=window.__originalReversalColor;});
-        console.log('PASS 上限留白也檢查最終間隔，不符必須重排；停止恢復舊牌，未通過結果不顯示／不導出');
+        assert(await page.evaluate(()=>window.__reversalBuilds===window.__buildsAtRejection),'間隔交換失敗不得整副重跑');
+        await page.evaluate(()=>{TwoThirteenReversals.check=window.__originalReversalCheck;runAutoColorSwap_Signal=window.__originalReversalColor;TwoThirteenReversals.repairSpacing=window.__originalSpacingRepair;build_shuffled_deck=window.__originalReversalBuild;});
+        console.log('PASS 上限留白也檢查最終間隔；交換無解不整副重跑、恢復舊牌、不顯示／不導出未通過結果');
         assert.deepEqual(errors,[]);
     }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

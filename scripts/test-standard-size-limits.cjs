@@ -117,6 +117,8 @@ async function setValues(page,entries){for(const [id,value] of Object.entries(en
       await setValues(page,{st4Min:15,st4Max:34,st5Min:20,st5Max:45,st6Min:15,st6Max:38});
       await page.evaluate(()=>{
         for(const id of ['avgRecoveryLimit','maxTieLimit','maxSideLimit','maxFourCardRate','max7PtReversal','swapBanker6Target'])document.getElementById(id).value='';
+        // 隔離局數上下限測試；避免新間隔政策無安全交換時主動停止。
+        document.getElementById('maxTwoThirteenReversal').value='0';
         for(const id of ['skipBanker6','skipPlayer7Banker6','lastCardNine'])document.getElementById(id).checked=false;
       });
       if(mode==='modeA2')await page.evaluate(()=>{
