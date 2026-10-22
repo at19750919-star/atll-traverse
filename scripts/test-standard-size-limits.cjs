@@ -34,8 +34,8 @@ async function setValues(page,entries){for(const [id,value] of Object.entries(en
     await check('紅0與A2各有六個局數上下限，預設留白不限，且一般與穿越皆為4上4下、5上5下、6上6下排列',async()=>{
       for(const mode of ['modeRed0','modeA2']){
         await page.locator('#'+mode).click();
-        assert.equal(await page.locator('#standardControls .size-limit-fields input').count(),6);
-        assert.deepEqual(await page.locator('#standardControls .size-limit-fields input').evaluateAll(els=>els.map(e=>e.id)),['st4Max','st4Min','st5Max','st5Min','st6Max','st6Min']);
+        assert.equal(await page.locator('#standardControls .size-limit-fields > label > input').count(),6);
+        assert.deepEqual(await page.locator('#standardControls .size-limit-fields > label > input').evaluateAll(els=>els.map(e=>e.id)),['st4Max','st4Min','st5Max','st5Min','st6Max','st6Min']);
         const boxes=await page.locator('#standardControls .size-limit-fields label').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y)};}));
         assert(boxes[0].y===boxes[1].y&&boxes[0].x<boxes[1].x);
         assert(boxes[2].y===boxes[3].y&&boxes[2].x<boxes[3].x&&boxes[2].y>boxes[0].y);

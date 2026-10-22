@@ -77,7 +77,8 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
       await page.waitForFunction(() => document.getElementById('stTargetRoadSummary').textContent.includes('測試匯入難打路'));
 
       await page.click('#chipGen');
-      await page.waitForFunction(() => !window.__isGeneratingShoe && Array.isArray(currentRounds) && currentRounds.length > 0, null, { timeout: 60000 });
+      await page.waitForFunction(() => !window.__isGeneratingShoe, null, { timeout: 60000 });
+      assert(await page.evaluate(() => currentRounds?.length > 0), (await page.locator('#logArea').textContent()).slice(-1800));
 
       const stCheck = await page.evaluate(() => {
         const nonTie = currentRounds.map(r => r.result).filter(r => r === '莊' || r === '閒');
@@ -88,16 +89,26 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
           if (nonTie[i] === target[i]) matches++;
         }
         const vio = calculateViolationStats(currentRounds);
+        const inventory = {};
+        for (const c of currentRounds.flatMap(r => r.cards)) {
+          const key = c.rank + c.suit + c.back_color;
+          inventory[key] = (inventory[key] || 0) + 1;
+        }
         return {
           compareLen,
           matches,
           signalViolations: vio.signalViolations,
           streakViolations: vio.streakViolations,
           fourCardViolations: vio.fourCardViolations,
+          cannotSwap: calculateCannotSwapViolations(currentRounds).count,
+          inventory,
         };
       });
       assert.strictEqual(stCheck.matches, stCheck.compareLen, `紅0模式大路應 100% 符合目標路單 (${stCheck.matches}/${stCheck.compareLen})`);
       assert.strictEqual(stCheck.signalViolations, 0, '紅0模式訊號違規應為 0');
+      assert.strictEqual(stCheck.cannotSwap, 0);
+      assert.strictEqual(Object.keys(stCheck.inventory).length, 104);
+      assert(Object.values(stCheck.inventory).every(n => n === 4), '目標路單須保留完整紅藍牌庫');
       assert.strictEqual(stCheck.streakViolations, 0, '紅0模式目標路單不應誤判連續莊閒違規');
       console.log(`PASS 紅0模式：匯入路單排牌成功，${stCheck.matches}/${stCheck.compareLen} 局莊閒完全吻合且 0 訊號違規`);
 

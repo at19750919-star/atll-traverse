@@ -667,7 +667,8 @@
                         ? (redPool.length ? redPool.pop() : blackPool.pop())
                         : (blackPool.length ? blackPool.pop() : redPool.pop());
                     if (picked) {
-                        picked.back_color = c.back_color;
+                        // 移動的是整張牌；保留自己的牌背，避免破壞每牌面紅藍各4張。
+                        // 牌背圖樣由生成流程後續的同牌面配置統一處理。
                         r.cards[cIdx] = picked;
                     }
                 }

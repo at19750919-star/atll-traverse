@@ -80,7 +80,8 @@ async function toolGroup(page,key){
       await page.locator('#modeA2').click();
       // 導出與整合流程使用逆轉上限0；整局交換與無解停止另由逆轉專用測試覆蓋。
       await page.evaluate(()=>{document.getElementById('maxTwoThirteenReversal').value='0';document.getElementById('maxTieLimit').value='';document.getElementById('maxSideLimit').value='';document.getElementById('lastCardNine').checked=false;});
-      await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&currentRounds?.length>0,{},{timeout:60000});
+      await page.locator('#chipGen').click();await page.waitForFunction(()=>!window.__isGeneratingShoe,{},{timeout:60000});
+      assert(await page.evaluate(()=>currentRounds?.length>0),(await page.locator('#logArea').textContent()).slice(-1600));
       await inventory(page);
       const state=await page.evaluate(exportState);
       assert.deepEqual(state.config,{suits:['♠','♥','♦','♣'],ranks:['A','2']});
