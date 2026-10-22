@@ -5,6 +5,7 @@
     const SAVED_ROADS_KEY = 'at_baccarat_saved_roads_v1';
     const SELECTED_KEY = {
         'standard-red0': 'at-target-road-standard-red0',
+        'standard-a2': 'at-target-road-standard-a2',
         'traverse-red0': 'at-target-road-traverse-red0',
     };
 
@@ -154,12 +155,18 @@
     }
 
     function getModeKeyForScope(scope) {
-        if (scope !== 'standard' && scope !== 'standard-red0') return null;
+        if (scope !== 'standard' && scope !== 'standard-red0' && scope !== 'standard-a2') return null;
         const sub = typeof document !== 'undefined'
             ? (document.body?.dataset?.sub || (global.StandardProfiles && global.StandardProfiles.current) || 'red0')
             : 'red0';
-        if (scope === 'standard' && sub !== 'red0') return null;
-        return 'standard-red0';
+        if (scope === 'standard') {
+            if (sub === 'a2') return 'standard-a2';
+            if (sub === 'red0') return 'standard-red0';
+            return null;
+        }
+        if (scope === 'standard-red0') return 'standard-red0';
+        if (scope === 'standard-a2') return 'standard-a2';
+        return null;
     }
 
     function getActiveRoad(scope = 'standard') {
@@ -315,11 +322,219 @@
         return wantOutcome;
     }
 
+    function alignA2StandardRounds(rounds, targetOutcomes) {
+        if (!Array.isArray(rounds) || rounds.length < 2) return false;
+        if (!Array.isArray(targetOutcomes) || !targetOutcomes.length) return false;
+        const n = rounds.length;
+
+        const hasSignal = r => Boolean(
+            r && Array.isArray(r.cards) && r.cards.some(c =>
+                typeof global.isSignalCardByConfig === 'function'
+                    ? global.isSignalCardByConfig(c)
+                    : (c && (String(c.rank).toUpperCase() === 'A' || String(c.rank).toUpperCase() === '2'))
+            )
+        );
+        const isTriple = r => Boolean(r && (r.isT || (typeof global.hasFullHouse === 'function' && global.hasFullHouse(r))));
+        const isTie = r => Boolean(r && (r.result === '和' || (typeof global.standardRoundOutcome === 'function' && global.standardRoundOutcome(r) === '和')));
+
+        const preserveLastNine = Boolean(
+            typeof document !== 'undefined' &&
+            document.getElementById('lastCardNine')?.checked &&
+            String(rounds[n - 1]?.cards?.at(-1)?.rank) === '9'
+        );
+
+        // 若末張9固定且第1局目標需要特定訊號，嘗試在末尾局對齊該訊號
+        if (preserveLastNine && rounds[n - 1]?.cards) {
+            const needNineSig = (targetOutcomes[0] === '莊');
+            if (hasSignal(rounds[n - 1]) !== needNineSig) {
+                for (let k = 0; k < n - 1; k++) {
+                    const rk = rounds[k];
+                    if (!rk || isTie(rk) || isTriple(rk)) continue;
+                    const prev = k > 0 ? rounds[k - 1] : null;
+                    if (prev && isTriple(prev)) continue;
+                    if (String(rk.cards?.at(-1)?.rank) === '9' && hasSignal(rk) === needNineSig) {
+                        const tmp = rounds[n - 1];
+                        rounds[n - 1] = rounds[k];
+                        rounds[k] = tmp;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 固定不可任意移動局：和局、三條T局、三條T局的下一局（和局），以及末張9固定時的最後一局
+        const fixedPos = new Uint8Array(n);
+        for (let i = 0; i < n; i++) {
+            const r = rounds[i];
+            if (!r || isTie(r) || isTriple(r)) {
+                fixedPos[i] = 1;
+            }
+            const prev = rounds[(i - 1 + n) % n];
+            if (prev && isTriple(prev)) {
+                fixedPos[i] = 1;
+            }
+        }
+        if (preserveLastNine) fixedPos[n - 1] = 1;
+
+        const wantOutcome = buildTargetWantOutcomes(rounds, targetOutcomes);
+        const needSig = new Uint8Array(n);
+        for (let i = 0; i < n; i++) {
+            if (isTriple(rounds[i])) {
+                needSig[i] = 0;
+                continue;
+            }
+            const nextWant = wantOutcome[(i + 1) % n];
+            needSig[i] = (nextWant === '莊') ? 1 : 0;
+        }
+
+        // 對於固定位置，其訊號由其自身牌面決定，並將下一局的目標結果同步為該位置實際訊號
+        for (let i = 0; i < n; i++) {
+            if (fixedPos[i] && !isTriple(rounds[i])) {
+                const actualSig = hasSignal(rounds[i]) ? 1 : 0;
+                needSig[i] = actualSig;
+                const nextIdx = (i + 1) % n;
+                if (!fixedPos[nextIdx] || !isTie(rounds[nextIdx])) {
+                    wantOutcome[nextIdx] = actualSig ? '莊' : '閒';
+                }
+            }
+        }
+
+        const movableIndices = [];
+        const pool = [];
+        for (let i = 0; i < n; i++) {
+            if (!fixedPos[i]) {
+                movableIndices.push(i);
+                pool.push({
+                    round: rounds[i],
+                    hasSig: hasSignal(rounds[i]),
+                    b6: hasB6PotentialStandard(rounds[i]),
+                    len: rounds[i]?.cards?.length || 0,
+                });
+            }
+        }
+
+        const assigned = new Array(n).fill(null);
+        for (let i = 0; i < n; i++) {
+            if (fixedPos[i]) assigned[i] = rounds[i];
+        }
+
+        const usedPool = new Uint8Array(pool.length);
+        const needSigPositions = movableIndices.filter(pos => needSig[pos] === 1);
+        const noSigPositions = movableIndices.filter(pos => needSig[pos] === 0);
+
+        // 先為 needSig === 1 的位置挑選具訊號牌（A、2）的局
+        for (const pos of needSigPositions) {
+            const preferB6 = wantOutcome[pos] === '閒';
+            let bestIdx = -1;
+            let bestScore = -1e9;
+            for (let j = 0; j < pool.length; j++) {
+                if (usedPool[j]) continue;
+                const item = pool[j];
+                if (!item.hasSig) continue;
+                const b6Score = preferB6 ? (item.b6 ? 20 : 0) : (item.b6 ? -10 : 10);
+                if (b6Score > bestScore) {
+                    bestScore = b6Score;
+                    bestIdx = j;
+                }
+            }
+            if (bestIdx < 0) {
+                // 訊號局不足時取剩餘局遞補（產生尾部輕微局數誤差）
+                for (let j = 0; j < pool.length; j++) {
+                    if (!usedPool[j]) { bestIdx = j; break; }
+                }
+                needSig[pos] = 0;
+                const nextIdx = (pos + 1) % n;
+                if (wantOutcome[nextIdx] === '莊') wantOutcome[nextIdx] = '閒';
+            }
+            usedPool[bestIdx] = 1;
+            assigned[pos] = pool[bestIdx].round;
+        }
+
+        // 再為 needSig === 0 的位置挑選無訊號牌的局
+        for (const pos of noSigPositions) {
+            const preferB6 = wantOutcome[pos] === '閒';
+            let bestIdx = -1;
+            let bestScore = -1e9;
+            for (let j = 0; j < pool.length; j++) {
+                if (usedPool[j]) continue;
+                const item = pool[j];
+                if (item.hasSig) continue;
+                const b6Score = preferB6 ? (item.b6 ? 20 : 0) : (item.b6 ? -10 : 10);
+                if (b6Score > bestScore) {
+                    bestScore = b6Score;
+                    bestIdx = j;
+                }
+            }
+            if (bestIdx < 0) {
+                // 無訊號局不足（訊號局過多）時取剩餘局遞補
+                for (let j = 0; j < pool.length; j++) {
+                    if (!usedPool[j]) { bestIdx = j; break; }
+                }
+                needSig[pos] = 1;
+                const nextIdx = (pos + 1) % n;
+                if (wantOutcome[nextIdx] === '閒') wantOutcome[nextIdx] = '莊';
+            }
+            usedPool[bestIdx] = 1;
+            assigned[pos] = pool[bestIdx].round;
+        }
+
+        // 避免出現連續 5 局 4 張牌：在相同訊號狀態的可移動局互換
+        for (let pass = 0; pass < 6; pass++) {
+            let run = 0, broken = false;
+            for (let i = 0; i < n; i++) {
+                if ((assigned[i]?.cards?.length || 0) === 4) {
+                    run++;
+                    if (run >= 5) {
+                        for (let k = i; k >= i - 4; k--) {
+                            if (fixedPos[k]) continue;
+                            const candidate = movableIndices.find(m =>
+                                (m < i - 4 || m > i) &&
+                                (assigned[m]?.cards?.length || 0) !== 4 &&
+                                hasSignal(assigned[m]) === hasSignal(assigned[k])
+                            );
+                            if (candidate !== undefined) {
+                                const tmp = assigned[k];
+                                assigned[k] = assigned[candidate];
+                                assigned[candidate] = tmp;
+                                broken = true;
+                                break;
+                            }
+                        }
+                        run = 0;
+                    }
+                } else {
+                    run = 0;
+                }
+            }
+            if (!broken) break;
+        }
+
+        let posCounter = 0;
+        for (let i = 0; i < n; i++) {
+            rounds[i] = assigned[i];
+            const r = rounds[i];
+            if (!r || !Array.isArray(r.cards)) continue;
+            r.start_index = posCounter;
+            for (let cIdx = 0; cIdx < r.cards.length; cIdx++) {
+                if (r.cards[cIdx]) r.cards[cIdx].pos = posCounter++;
+            }
+        }
+        return true;
+    }
+
     function alignStandardRounds(rounds) {
         if (!Array.isArray(rounds) || rounds.length < 2) return false;
         if (!isActive('standard')) return false;
         const targetOutcomes = getTargetOutcomes('standard');
         if (!targetOutcomes || !targetOutcomes.length) return false;
+
+        const sub = typeof document !== 'undefined'
+            ? (document.body?.dataset?.sub || (global.StandardProfiles && global.StandardProfiles.current) || 'red0')
+            : 'red0';
+
+        if (sub === 'a2') {
+            return alignA2StandardRounds(rounds, targetOutcomes);
+        }
 
         // 確認目前訊號設定為 0 點花色區分（如紅0 ♥♦ × 10,J,Q,K）
         const zeroSlotsAll = [];
@@ -398,6 +613,9 @@
             for (let ins = 1; ins <= maxIns; ins++) {
                 if (ins === unitStart) continue;
                 if (ins > 0 && isTRoundStandard(rounds[ins - 1])) continue;
+                if (ins > 0 && rounds[ins - 1]?.result === '和') continue;
+                if (ins < rounds.length && rounds[ins]?.result === '和') continue;
+                if (ins < rounds.length && isTRoundStandard(rounds[ins])) continue;
                 rounds.splice(ins, 0, ...removed);
                 const testWant = buildTargetWantOutcomes(rounds, targetOutcomes);
                 const newTieIdx = ins + unitLen - 1;
@@ -703,7 +921,8 @@
             const selectEl = document.getElementById(cfg.selectId);
             const summaryEl = document.getElementById(cfg.summaryId);
             const clearBtn = document.getElementById(cfg.clearBtnId);
-            const selectedId = getSelectedId(cfg.modeKey);
+            const currentModeKey = getModeKeyForScope(cfg.scope) || cfg.modeKey;
+            const selectedId = getSelectedId(currentModeKey);
 
             if (selectEl) {
                 selectEl.innerHTML = '';
@@ -767,7 +986,8 @@
             if (selectEl && !selectEl.dataset.boundTargetRoad) {
                 selectEl.dataset.boundTargetRoad = '1';
                 selectEl.addEventListener('change', () => {
-                    setSelectedId(cfg.modeKey, selectEl.value);
+                    const currentModeKey = getModeKeyForScope(cfg.scope) || cfg.modeKey;
+                    setSelectedId(currentModeKey, selectEl.value);
                     const road = getRoadById(selectEl.value);
                     if (typeof global.log === 'function') {
                         global.log(
@@ -791,7 +1011,8 @@
                         const text = await file.text();
                         const baseName = file.name.replace(/\.json$/i, '').trim() || '匯入路單';
                         const added = importRoadFromJsonText(text, baseName);
-                        setSelectedId(cfg.modeKey, added.id);
+                        const currentModeKey = getModeKeyForScope(cfg.scope) || cfg.modeKey;
+                        setSelectedId(currentModeKey, added.id);
                         if (typeof global.log === 'function') {
                             global.log(`✅ 已匯入並套用目標路單：${formatRoadSummary(added)}`, 'success');
                         }
@@ -806,7 +1027,8 @@
             if (clearBtn && !clearBtn.dataset.boundTargetRoad) {
                 clearBtn.dataset.boundTargetRoad = '1';
                 clearBtn.addEventListener('click', () => {
-                    setSelectedId(cfg.modeKey, '');
+                    const currentModeKey = getModeKeyForScope(cfg.scope) || cfg.modeKey;
+                    setSelectedId(currentModeKey, '');
                     if (typeof global.log === 'function') {
                         global.log('已清除目標路單設定，恢復隨機路排牌', 'info');
                     }

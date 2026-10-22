@@ -3165,7 +3165,18 @@ function validateStandardGeneratedShoe(rounds) {
     if (typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard')) {
         const target = TargetRoadmap.getTargetOutcomes('standard');
         const actual = rounds.map(standardRoundOutcome).filter(r => r !== '和');
-        if (actual.some((r, i) => i < target.length && r !== target[i])) failures.push('不符目標路單');
+        const isA2 = (typeof window !== 'undefined' && window.StandardProfiles?.current === 'a2')
+            || (typeof document !== 'undefined' && document.body?.dataset?.sub === 'a2');
+        if (isA2) {
+            let mismatches = 0;
+            const checkLen = Math.min(actual.length, target.length);
+            for (let i = 0; i < checkLen; i++) {
+                if (actual[i] !== target[i]) mismatches++;
+            }
+            if (mismatches > 8) failures.push(`不符目標路單（誤差 ${mismatches} 局，超過允許上限 8 局）`);
+        } else {
+            if (actual.some((r, i) => i < target.length && r !== target[i])) failures.push('不符目標路單');
+        }
     }
     return { ok: failures.length === 0, reason: [...new Set(failures)].join('；'),
         retryable: roundIssues && inventoryOk && !spacingFailure };

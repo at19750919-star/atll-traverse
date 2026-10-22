@@ -54,14 +54,16 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
       await page.evaluate(() => localStorage.clear());
       await page.reload();
 
-      // 確認僅紅0模式可見，A2模式與穿越模式皆不顯示目標路單面板
+      // 確認紅0模式與A2模式可見，穿越模式皆不顯示目標路單面板
       assert.strictEqual(await page.locator('#stTargetRoadPanel').isVisible(), true, '紅0模式應顯示目標路單面板');
       await page.click('#modeA2');
-      assert.strictEqual(await page.locator('#stTargetRoadPanel').isVisible(), false, 'A2模式應隱藏目標路單面板');
+      assert.strictEqual(await page.locator('#stTargetRoadPanel').isVisible(), true, 'A2模式應顯示目標路單面板');
       await page.click('#modeTraverse');
       assert.strictEqual(await page.locator('#stTargetRoadPanel').isVisible(), false, '穿越紅0不顯示目標路單面板');
+      await page.click('#modeTraverseA2');
+      assert.strictEqual(await page.locator('#stTargetRoadPanel').isVisible(), false, '穿越A2不顯示目標路單面板');
       assert.strictEqual(await page.locator('#tvTargetRoadPanel').count(), 0, '穿越模式不設目標路單面板');
-      console.log('PASS 整合頁：目標路單僅在紅0模式顯示，A2模式與穿越模式不顯示');
+      console.log('PASS 整合頁：目標路單在紅0與A2模式顯示，穿越模式不顯示');
 
       // 切回紅0模式，匯入 JSON 路單並生成牌靴
       await page.click('#modeRed0');
@@ -142,6 +144,59 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
       assert.strictEqual(presetCheck.signalViolations, 0, '紅0模式內建難打路訊號違規應為 0');
       assert.strictEqual(presetCheck.streakViolations, 0, '紅0模式內建難打路連續莊閒違規應為 0');
       console.log(`PASS 紅0模式：套用內建難打路1排牌成功，${presetCheck.matches}/${presetCheck.compareLen} 局莊閒完全吻合且 0 違規`);
+
+      // 3. 測試 A2 模式套用目標路單排牌
+      await page.click('#modeA2');
+      // A2 模式初始應為不指定
+      assert.strictEqual(await page.locator('#stTargetRoadSelect').inputValue(), '');
+      // 選取內建「難打路2」
+      await page.selectOption('#stTargetRoadSelect', 'preset-hard-2');
+      assert.strictEqual(await page.locator('#stTargetRoadSelect').inputValue(), 'preset-hard-2');
+
+      // 切換回紅0，確認紅0維持選取 preset-hard-1
+      await page.click('#modeRed0');
+      assert.strictEqual(await page.locator('#stTargetRoadSelect').inputValue(), 'preset-hard-1');
+
+      // 切回 A2，確認維持 preset-hard-2
+      await page.click('#modeA2');
+      assert.strictEqual(await page.locator('#stTargetRoadSelect').inputValue(), 'preset-hard-2');
+
+      // A2 模式生成牌靴
+      await page.fill('#maxTwoThirteenReversal', '0');
+      await page.click('#chipGen');
+      await page.waitForFunction(() => !window.__isGeneratingShoe && Array.isArray(currentRounds) && currentRounds.length > 0, null, { timeout: 60000 });
+      assert(await page.evaluate(() => /生成完成!/.test(document.getElementById('logArea').textContent)), (await page.locator('#logArea').textContent()).slice(-1200));
+
+      const a2Check = await page.evaluate(() => {
+        const nonTie = currentRounds.map(r => r.result).filter(r => r === '莊' || r === '閒');
+        const target = TargetRoadmap.getTargetOutcomes('standard');
+        const compareLen = Math.min(nonTie.length, target.length);
+        let matches = 0;
+        for (let i = 0; i < compareLen; i++) {
+          if (nonTie[i] === target[i]) matches++;
+        }
+        const vio = calculateViolationStats(currentRounds);
+        const inventory = {};
+        for (const c of currentRounds.flatMap(r => r.cards)) {
+          const key = c.rank + c.suit + c.back_color;
+          inventory[key] = (inventory[key] || 0) + 1;
+        }
+        return {
+          compareLen,
+          matches,
+          mismatches: compareLen - matches,
+          signalViolations: vio.signalViolations,
+          streakViolations: vio.streakViolations,
+          cannotSwap: calculateCannotSwapViolations(currentRounds).count,
+          inventory,
+        };
+      });
+      assert.strictEqual(a2Check.signalViolations, 0, 'A2模式訊號違規應為 0');
+      assert.strictEqual(a2Check.cannotSwap, 0, 'A2模式不能對調違規應為 0');
+      assert.strictEqual(Object.keys(a2Check.inventory).length, 104);
+      assert(Object.values(a2Check.inventory).every(n => n === 4), 'A2模式須保留完整紅藍牌庫');
+      assert(a2Check.mismatches <= 8, `A2模式目標路單誤差局數應在允許範圍內 (誤差 ${a2Check.mismatches} 局，上限 8 局)`);
+      console.log(`PASS A2模式：套用內建難打路2排牌成功，${a2Check.matches}/${a2Check.compareLen} 局吻合 (誤差僅 ${a2Check.mismatches} 局)，0 訊號違規且牌庫完整`);
 
       await page.close();
     }

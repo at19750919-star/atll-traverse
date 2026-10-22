@@ -1066,7 +1066,7 @@ body.running .deck,body.finished .deck{
 .export-filename-field input:focus{outline:1px solid #c9a25a}
 .export-filename-field small{font-size:11px;color:#a99b7c;line-height:1.5;letter-spacing:normal}
 .target-road-panel{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;padding:7px 8px;border:1px solid #6b4c1d88;border-radius:6px;background:rgba(10,16,15,.55);min-width:0;max-width:100%;box-sizing:border-box}
-body:not([data-sub="red0"]) #stTargetRoadPanel{display:none!important}
+body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none!important}
 .target-road-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0;max-width:100%}
 .target-road-label{font-size:12px;color:var(--gold-2);white-space:nowrap}
 .target-road-select{flex:1 1 130px;min-width:0;max-width:100%;height:30px;padding:0 6px;border:1px solid #6b4c1d;border-radius:5px;background:#0b1213;color:#efe2c2;font-size:12px;box-sizing:border-box}
@@ -1296,7 +1296,7 @@ body:not([data-sub="red0"]) #stTargetRoadPanel{display:none!important}
     <div class="target-road-panel" id="stTargetRoadPanel">
       <div class="target-road-row">
         <span class="target-road-label">目標路單</span>
-        <select id="stTargetRoadSelect" class="target-road-select" aria-label="紅0模式目標路單"><option value="">不指定（隨機路）</option></select>
+        <select id="stTargetRoadSelect" class="target-road-select" aria-label="目標路單"><option value="">不指定（隨機路）</option></select>
         <button type="button" id="stTargetRoadImportBtn" class="tool-btn">匯入路單</button>
         <button type="button" id="stTargetRoadClearBtn" class="tool-btn" disabled>清除</button>
         <input type="file" id="stTargetRoadFileInput" accept=".json,application/json" style="display:none">
