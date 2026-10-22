@@ -1949,7 +1949,8 @@ function preflightCheckMaxSideLimit(rounds, options = {}) {
     const counts = countBankerPlayerTie(sourceRounds);
     const fourCardStats = countFourCardRate(sourceRounds);
     const sideDiff = Math.abs(counts.banker - (counts.player + counts.tie));
-    const okSide = (!sideLimit) || (sideDiff <= sideLimit);
+    const targetRoadActive = typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard');
+    const okSide = targetRoadActive || (!sideLimit) || (sideDiff <= sideLimit);
     const okTie = (tieLimit === null) || (counts.tie <= tieLimit);
     const okFourCard = (!fourCardRateLimit) || (fourCardStats.rate <= fourCardRateLimit);
     const ok = okSide && okTie && okFourCard;
@@ -2236,6 +2237,7 @@ function findSwapForFourCardBlock(rounds, blockStart, blockEnd) {
 
             if (candidateResult !== targetResult) continue; // 結果必須相同
             if (candidateCardCount === targetCardCount) continue; // 張數必須不同
+            if (typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard') && hasSignal(candidateRound) !== hasSignal(targetRound)) continue;
 
             const indicesToCheck = new Set([
                 targetIdx - 1, targetIdx, targetIdx + 1,
@@ -2806,9 +2808,9 @@ function verifyShoeRules(rounds, options = {}) {
         }
     }
 
-    // 規則 7: 檢查連續莊/閒（最多允許2段連續7局，連續8局以上直接視為違規）
+    // 規則 7: 檢查連續莊/閒（最多允許2段連續7局，連續8局以上直接視為違規；指定目標路單時依路單走）
     log('--- 連續莊/閒局數檢查 ---', 'info');
-    {
+    if (!(typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard'))) {
         const allBlocks = findConsecutiveBankerPlayerBlocks(rounds);
         // 連續8局以上一律違規；5-7局最多允許2段
         const violationBlocks = [];
@@ -3279,6 +3281,20 @@ async function generateShoe() {
                 }
             }
 
+            // 3.8 若紅0模式有指定目標路單：先對齊末張9切點（若有勾選），再依目標路單配置紅0與黑0訊號位置
+            if (typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard')) {
+                if (document.getElementById('lastCardNine')?.checked) {
+                    const preRotated = rotateShoeAfterEndingNine(roundsToCheck);
+                    if (!preRotated) {
+                        log(`第 ${attempt} 次生成沒有完整 416 張且末張為 9 的局，重新生成...`, 'warn');
+                        result = null;
+                        continue;
+                    }
+                    roundsToCheck = preRotated.rounds;
+                }
+                TargetRoadmap.alignStandardRounds(roundsToCheck);
+            }
+
             // 4. 全段檢查原始莊6且閒≤5
             try {
                 analyze_signal_cards(roundsToCheck, { mutate: true });
@@ -3453,25 +3469,27 @@ async function generateShoe() {
 
             // 8.5 和局間距檢查已解除：和局可自由出現，不再要求最少間距與末尾空間
 
-            // 9. 連續莊/閒檢查（≥8 局違規；5-7 局最多 2 段）
-            try {
-                const allBlocks = findConsecutiveBankerPlayerBlocks(roundsToCheck);
-                let bad = false;
-                let allowed = 0;
-                for (const block of allBlocks) {
-                    if (block.count >= 8) { bad = true; break; }
-                    allowed++;
-                    if (allowed > 2) { bad = true; break; }
-                }
-                if (bad) {
-                    log(`第 ${attempt} 次生成失敗：連續莊/閒超標，重新生成...`, 'warn');
+            // 9. 連續莊/閒檢查（≥8 局違規；5-7 局最多 2 段；指定目標路單時依路單走）
+            if (!(typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard'))) {
+                try {
+                    const allBlocks = findConsecutiveBankerPlayerBlocks(roundsToCheck);
+                    let bad = false;
+                    let allowed = 0;
+                    for (const block of allBlocks) {
+                        if (block.count >= 8) { bad = true; break; }
+                        allowed++;
+                        if (allowed > 2) { bad = true; break; }
+                    }
+                    if (bad) {
+                        log(`第 ${attempt} 次生成失敗：連續莊/閒超標，重新生成...`, 'warn');
+                        result = null;
+                        continue;
+                    }
+                } catch (e) {
+                    log(`⚠️ 連續莊/閒檢查異常: ${e && e.message ? e.message : e}`, 'warn');
                     result = null;
                     continue;
                 }
-            } catch (e) {
-                log(`⚠️ 連續莊/閒檢查異常: ${e && e.message ? e.message : e}`, 'warn');
-                result = null;
-                continue;
             }
 
             // 通過所有檢查，確認使用此結果
@@ -3543,8 +3561,8 @@ async function generateShoe() {
             }
         }
 
-        // 生成與原有調整完成後，依「末張9」條件旋轉整副牌靴。
-        if (document.getElementById('lastCardNine')?.checked) {
+        // 生成與原有調整完成後，依「末張9」條件旋轉整副牌靴（若目標路單已預先對齊末張9則不再重複旋轉）。
+        if (document.getElementById('lastCardNine')?.checked && !(typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard') && String(currentRounds?.at(-1)?.cards?.at(-1)?.rank) === '9')) {
             const adjusted = rotateShoeAfterEndingNine(currentRounds);
             if (!adjusted) {
                 currentRounds = null;
@@ -4412,18 +4430,20 @@ function calculateViolationStats(rounds) {
         }
         return blocks;
     })();
-    // 連續8局以上一律違規；5-7局最多允許2段，超過的算違規
+    // 連續8局以上一律違規；5-7局最多允許2段，超過的算違規（指定目標路單時不將路單本身計為違規）
     const streakBlocks = [];
-    let allowedCount = 0;
-    for (const block of allStreakBlocks) {
-        if (block.count >= 8) {
-            // 連續8局以上一律違規
-            streakBlocks.push(block);
-        } else {
-            // 5-7局：前2段允許，之後算違規
-            allowedCount++;
-            if (allowedCount > 2) {
+    if (!(typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard'))) {
+        let allowedCount = 0;
+        for (const block of allStreakBlocks) {
+            if (block.count >= 8) {
+                // 連續8局以上一律違規
                 streakBlocks.push(block);
+            } else {
+                // 5-7局：前2段允許，之後算違規
+                allowedCount++;
+                if (allowedCount > 2) {
+                    streakBlocks.push(block);
+                }
             }
         }
     }

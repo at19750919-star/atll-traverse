@@ -159,6 +159,7 @@
     $('stTitle').textContent = SUB_NAME[name]+' 設定';
     document.body.dataset.sub = name;
     ExportFilename.setMode('standard-' + name);
+    if(window.TargetRoadmap)TargetRoadmap.syncUI();
     setStandardCollapsed($('standardControls').classList.contains('collapsed'));
   }
   function applyTraverseProfile(t) {
@@ -553,6 +554,7 @@
     if(v('maxTwoThirteenReversal')!=='')parts.push(`1/13＋2/13逆轉≤${v('maxTwoThirteenReversal')}`);
     parts.push('逆轉間隔>20局');
     for(const n of [4,5,6]){const lo=v(`st${n}Min`),hi=v(`st${n}Max`);if(lo||hi)parts.push(`${n}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
+    if(sub==='red0'&&window.TargetRoadmap&&TargetRoadmap.isActive('standard'))parts.push(TargetRoadmap.summarizeShort('standard'));
     const on=[['mixedCardColor','混色（同組≤3局）'],['tripleTieRule','三條'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
@@ -564,6 +566,8 @@
   let standardWasRunning=false;
   new MutationObserver(()=>{const running=busy||$('generateBtn').disabled;['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings'].forEach(id=>$(id).disabled=running);
     [...standardSizeControlIds,'maxTwoThirteenReversal','maxBankerSixWin','mixedCardColor','exportFilename'].forEach(id=>$(id).disabled=running);
+    ['stTargetRoadSelect','stTargetRoadImportBtn'].forEach(id=>{if($(id))$(id).disabled=running;});
+    if(window.TargetRoadmap&&!running)TargetRoadmap.syncUI();
     if(mode==='standard'){if(running)standardWasRunning=true;else if(standardWasRunning){standardWasRunning=false;if(currentRounds?.length&&!document.body.classList.contains('dashboard'))setStandardCollapsed(true);}}
   }).observe($('generateBtn'),{attributes:true,attributeFilter:['disabled']});
   document.body.dataset.mode='standard';

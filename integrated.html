@@ -1065,6 +1065,14 @@ body.running .deck,body.finished .deck{
 .export-filename-field input{box-sizing:border-box;min-width:0;width:100%;height:34px;padding:6px 8px;border:1px solid #6b4c1d;border-radius:5px;background:#0b1213;color:#efe2c2;font:inherit;letter-spacing:normal}
 .export-filename-field input:focus{outline:1px solid #c9a25a}
 .export-filename-field small{font-size:11px;color:#a99b7c;line-height:1.5;letter-spacing:normal}
+.target-road-panel{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;padding:7px 8px;border:1px solid #6b4c1d88;border-radius:6px;background:rgba(10,16,15,.55);min-width:0;max-width:100%;box-sizing:border-box}
+body:not([data-sub="red0"]) #stTargetRoadPanel{display:none!important}
+.target-road-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0;max-width:100%}
+.target-road-label{font-size:12px;color:var(--gold-2);white-space:nowrap}
+.target-road-select{flex:1 1 130px;min-width:0;max-width:100%;height:30px;padding:0 6px;border:1px solid #6b4c1d;border-radius:5px;background:#0b1213;color:#efe2c2;font-size:12px;box-sizing:border-box}
+.target-road-select:focus{outline:1px solid #c9a25a}
+.target-road-row .tool-btn{height:30px;min-height:30px;min-width:0;padding:0 8px;font-size:11.5px;letter-spacing:.04em;text-indent:0;flex:0 0 auto}
+.target-road-summary{font-size:11px;color:#c8b78f;line-height:1.45;overflow-wrap:anywhere;word-break:break-word}
 </style>
 <link rel="stylesheet" href="integrated.css?v=5">
 <link rel="stylesheet" href="integrated-dashboard.css?v=11">
@@ -1285,6 +1293,16 @@ body.running .deck,body.finished .deck{
     <label>5張局下限 <input id="st5Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
     <label>6張局上限 <input id="st6Max" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
     <label>6張局下限 <input id="st6Min" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <div class="target-road-panel" id="stTargetRoadPanel">
+      <div class="target-road-row">
+        <span class="target-road-label">目標路單</span>
+        <select id="stTargetRoadSelect" class="target-road-select" aria-label="紅0模式目標路單"><option value="">不指定（隨機路）</option></select>
+        <button type="button" id="stTargetRoadImportBtn" class="tool-btn">匯入路單</button>
+        <button type="button" id="stTargetRoadClearBtn" class="tool-btn" disabled>清除</button>
+        <input type="file" id="stTargetRoadFileInput" accept=".json,application/json" style="display:none">
+      </div>
+      <div id="stTargetRoadSummary" class="target-road-summary">未指定（隨機路）</div>
+    </div>
   </div>
   </div>
   <div class="mode-actions traverse-rules">
@@ -1473,7 +1491,8 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <script src="standard/round_size_limits.js?v=1"></script>
 <script src="standard/two_thirteen_reversals.js?v=4"></script>
 <script src="standard/export_filename.js?v=3"></script>
-<script src="standard/signals.js?v=41"></script>
+<script src="standard/target_roadmap.js?v=1"></script>
+<script src="standard/signals.js?v=42"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
 <script src="standard/signals_ui.js?v=47"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
