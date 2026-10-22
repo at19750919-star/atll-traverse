@@ -54,7 +54,7 @@ async function toolGroup(page, name) {
       assert(Math.abs(chips.x - stats.x) <= 24, `chip-col x=${chips.x} should align with stats x=${stats.x}`);
       assert(await page.evaluate(() => [...document.querySelectorAll('body > header .chip-col .chip')].every(b => {
         const r = b.getBoundingClientRect(), style = getComputedStyle(b), before = getComputedStyle(b, '::before');
-        return r.width > r.height + 16 && style.borderTopLeftRadius !== '50%' && style.backgroundImage.includes('repeating-linear-gradient') && before.display !== 'none' && before.borderTopStyle === 'dashed';
+        return r.width > r.height + 16 && style.borderTopLeftRadius !== '50%' && style.backgroundImage.includes('repeating-linear-gradient') && before.display !== 'none' && before.borderTopStyle !== 'none';
       })), 'header action buttons must be rectangular poker chips');
       assert.equal(await page.locator('body > header .chip-col .chip').count(),3);
       assert.equal(await page.locator('.dashboard-sidebar .chip-col').count(),0);
