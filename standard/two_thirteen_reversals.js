@@ -44,14 +44,14 @@
         };
         return { limit, enabled: true };
     }
-    function check(rounds, limit) {
+    function check(rounds, limit, options = {}) {
         const roundNumbers = [];
         (rounds || []).forEach((r, i) => { if (classify(r)) roundNumbers.push(i + 1); });
         const actual = roundNumbers.length;
         const okCount = limit === null || actual <= limit;
         // 只檢查當副牌的前後次序，不把靴尾與靴頭循環相接；兩次之間至少21局。
         const spacingViolations = [];
-        for (let i = 1; i < roundNumbers.length; i++) {
+        for (let i = 1; options.enforceSpacing !== false && i < roundNumbers.length; i++) {
             const firstRound = roundNumbers[i - 1], nextRound = roundNumbers[i];
             const gap = nextRound - firstRound - 1;
             if (gap <= 20) spacingViolations.push({ firstRound, nextRound, gap });
@@ -64,7 +64,7 @@
     }
     // 搜尋各種同類位置的組合，再把逆轉局與一般局整局交換；失敗不改輸入。
     async function repairSpacing(rounds, options = {}) {
-        const originalCheck = check(rounds, null);
+        const originalCheck = check(rounds, null, options);
         if (originalCheck.okSpacing) return { ok: true, rounds, swaps: [], nodes: 0 };
         const keyFor = options.keyFor;
         if (typeof keyFor !== 'function') return { ok: false, reason: '缺少整局交換的規則檢查' };

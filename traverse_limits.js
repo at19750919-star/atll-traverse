@@ -5,7 +5,7 @@
   const point=c=>typeof c.point==='function'?c.point():c.point;
   function check(result,limits){
     const counts=B.specialRoundCounts(result.cards.map(point));
-    const rare=R.check(E.dealRounds(result.cards).filter(r=>r.hand),limits.rare);
+    const rare=R.check(E.dealRounds(result.cards).filter(r=>r.hand),limits.rare,{enforceSpacing:limits.enforceSpacing});
     const reasons=[];
     for(const [key,name] of [['bankerSix','莊6點贏'],['seven','七點逆轉'],['rare','逆轉（1／13＋2／13）']]){
       if(limits[key]!==null&&counts[key]>limits[key])reasons.push(`${name} ${counts[key]} 局 > 上限 ${limits[key]}`);
@@ -32,6 +32,7 @@
     result.chains.forEach((ch,i)=>{for(let j=0;j<ch.length;j++)owners[(ch.start-1+j)%owners.length]=i;});
     const owner=r=>r.cards.every((_,j)=>owners[r.start+j]===owners[r.start])?owners[r.start]:null;
     const repaired=await R.repairSpacing(rounds,{
+      enforceSpacing:options.limits.enforceSpacing,
       keyFor:r=>JSON.stringify([owner(r),r.cards.length,r.result,B.isSignalHand(r.cards,options.policy.signalConfig),B.isTriple(r.cards.map(point))]),
       canMove:i=>owner(rounds[i])!==null&&!(options.preserveLastNine&&i===rounds.length-1),
       shouldStop:options.shouldStop,

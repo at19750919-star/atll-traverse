@@ -178,6 +178,11 @@
       const on = mode === m && (m === 'standard' ? sub : tsub) === s;
       $(id).classList.toggle('active', on); $(id).setAttribute('aria-pressed', on);
     });
+    for(const [panel,input,key] of [['standardControls','maxTwoThirteenReversal',sub],['traverseControls','tvRareReversalMax',tsub]]){
+      const spacing=key==='a2'?'不限間隔；次數依上限設定':'兩次之間須隔超過20局；不足時安全交換整局';
+      $(panel).querySelector('.rare-reversal-note').textContent=`逆轉：1/13＋2/13，${spacing}`;
+      $(input).closest('label').title=`1／13＋2／13補牌逆轉合計上限；留白局數不限、0禁止；${spacing}`;
+    }
   }
   function switchMode(next) {
     if(next==='standard')next=sub;
@@ -249,7 +254,7 @@
     if($('tvTieMax').value.trim()!=='')parts.push(`和局≤${$('tvTieMax').value}`);
     if($('tvSideLimit').value.trim()!=='')parts.push(`莊閒差距≤${$('tvSideLimit').value}`);
     for(const [id,name] of [['tvBankerSixMax','莊6贏'],['tvSevenReversalMax','七點逆轉'],['tvRareReversalMax','逆轉']])if($(id).value.trim()!=='')parts.push(`${name}≤${$(id).value}`);
-    parts.push('逆轉間隔>20局');
+    parts.push(tsub==='a2'?'逆轉不限間隔':'逆轉間隔>20局');
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
     const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
@@ -277,6 +282,7 @@
     if(Number.isNaN(sideLimit)){status('莊閒差距須為 0～104 的整數或留白');$('tvSideLimit').focus();return;}
     if(Number.isNaN(tieMax)){status('和局上限須為 0～104 的整數或留白');$('tvTieMax').focus();return;}
     const specialLimits={bankerSix:optLimit('tvBankerSixMax'),seven:optLimit('tvSevenReversalMax'),rare:optLimit('tvRareReversalMax')};
+    const finalLimits={...specialLimits,enforceSpacing:tsub!=='a2'};
     for(const [key,id,name] of [['bankerSix','tvBankerSixMax','莊6贏'],['seven','tvSevenReversalMax','七點逆轉'],['rare','tvRareReversalMax','逆轉']]){
       if(!demo&&Number.isNaN(specialLimits[key])){status(`${name}上限須為0～104整數或留白`);$(id).focus();return;}
     }
@@ -305,10 +311,10 @@
         // Rotate before checking spacing: the limits apply to the displayed shoe.
         if(!demo)rotateResult(result,cut||0);
         if(!demo){
-          const check=TraverseLimits.check(result,specialLimits);
+          const check=TraverseLimits.check(result,finalLimits);
           if(!check.okCount){lastMiss=check.reason;reruns++;continue;}
           if(!check.okSpacing){
-            const repaired=await TraverseLimits.repairSpacing(result,{limits:specialLimits,policy:opts,preserveLastNine:$('tvNine').checked,shouldStop:()=>stopped});
+            const repaired=await TraverseLimits.repairSpacing(result,{limits:finalLimits,policy:opts,preserveLastNine:$('tvNine').checked,shouldStop:()=>stopped});
             if(stopped){status('已停止，保留上次完成的牌靴');return;}
             if(!repaired.ok){status(`逆轉間隔交換失敗：${repaired.reason}；保留上次牌靴，不整副重跑`);log($('tvProgress').textContent,'warn');return;}
             result=repaired.result;
@@ -317,7 +323,7 @@
         }
         if(!demo&&$('tvMixedColor').checked){const colored=B.reassignColors(result.cards);if(colored.ok){result.cards=colored.cards;result.colorOk=true;}else result.colorOk=false;}
         if(!demo){
-          const final=TraverseLimits.check(result,specialLimits);
+          const final=TraverseLimits.check(result,finalLimits);
           if(!final.okCount){lastMiss=final.reason;reruns++;continue;}
           if(!final.okSpacing){status(`最後逆轉間隔不符：${final.reason}；保留上次牌靴，不整副重跑`);return;}
         }
@@ -552,7 +558,7 @@
     if(v('maxSideLimit')!=='')parts.push(`莊閒差距≤${v('maxSideLimit')}`);
     if(v('maxBankerSixWin')!=='')parts.push(`莊6贏≤${v('maxBankerSixWin')}（禁補牌莊6）`);
     if(v('maxTwoThirteenReversal')!=='')parts.push(`1/13＋2/13逆轉≤${v('maxTwoThirteenReversal')}`);
-    parts.push('逆轉間隔>20局');
+    parts.push(sub==='a2'?'逆轉不限間隔':'逆轉間隔>20局');
     for(const n of [4,5,6]){const lo=v(`st${n}Min`),hi=v(`st${n}Max`);if(lo||hi)parts.push(`${n}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
     if(sub==='red0'&&window.TargetRoadmap&&TargetRoadmap.isActive('standard'))parts.push(TargetRoadmap.summarizeShort('standard'));
     const on=[['mixedCardColor','混色（同組≤3局）'],['tripleTieRule','三條'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);

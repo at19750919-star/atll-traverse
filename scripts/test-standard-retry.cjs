@@ -134,6 +134,11 @@ const root = path.resolve(__dirname, '..');
         done:/生成完成!/.test(document.getElementById('logArea').textContent),signature:JSON.stringify(currentRounds),pending:window.__pendingSizeShoe}));
       assert.equal(out.packs,2);assert.equal(out.repairs,2);assert(out.bad&&!out.done);assert.equal(out.signature,signature);assert.equal(out.pending,false);
       console.log('PASS 真實壞牌持續無解仍會重排，按停止保留原牌且解除鎖定');passed++;
+      await page.evaluate(()=>__retryReset());
+      await page.click('#modeRed0');
+      await page.evaluate(()=>{
+        for(const id of ['avgRecoveryLimit','maxSideLimit','maxTieLimit','maxFourCardRate','max7PtReversal','maxBankerSixWin','swapBanker6Target'])document.getElementById(id).value='';
+      });
       await page.evaluate(()=>{
         __retryUseFixture();
         TwoThirteenReversals.check=()=>({ok:false,okCount:true,okSpacing:false,reason:'測試逆轉間隔無解'});
@@ -142,7 +147,9 @@ const root = path.resolve(__dirname, '..');
       await page.click('#chipGen');await finished();
       out=await page.evaluate(()=>({packs:__retryPacks,done:/生成完成!/.test(document.getElementById('logArea').textContent),log:document.getElementById('logArea').textContent.slice(-400)}));
       assert.equal(out.packs,1);assert(!out.done);assert(out.log.includes('不因間隔問題整副重跑'));
-      console.log('PASS 逆轉間隔無安全交換仍停止，不套用訊號重排政策');passed++;
+      console.log('PASS 紅0逆轉間隔無安全交換仍停止，不套用訊號重排政策');passed++;
+      await page.evaluate(()=>__retryReset());
+      await page.click('#modeA2');
       await page.evaluate(()=>{
         __retryUseFixture();
         document.getElementById('mixedCardColor').checked=true;persistCardColorMixedMode(true);

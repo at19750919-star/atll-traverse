@@ -154,9 +154,9 @@ const server=http.createServer((req,res)=>{
             });
             await page.locator('#chipGen').click();
             await page.waitForFunction(()=>!window.__isGeneratingShoe&&currentRounds?.flatMap(r=>r.cards).length===416,{},{timeout:120000});
-            const actual=await page.evaluate(()=>({count:TwoThirteenReversals.count(currentRounds),cards:currentRounds.flatMap(r=>r.cards).length,locked:window.__reversalLocked,highlight:document.querySelectorAll('#roundsBody .two-thirteen-reversal').length,spacing:TwoThirteenReversals.check(currentRounds,null).okSpacing}));
+            const actual=await page.evaluate(()=>({count:TwoThirteenReversals.count(currentRounds),cards:currentRounds.flatMap(r=>r.cards).length,locked:window.__reversalLocked,highlight:document.querySelectorAll('#roundsBody .two-thirteen-reversal').length,spacing:checkStandardRareReversals(currentRounds,null).okSpacing}));
             assert(limit===''||actual.count<=limit,JSON.stringify(actual));assert(actual.spacing,JSON.stringify(actual));assert.equal(actual.cards,416);assert(actual.locked);assert.equal(actual.highlight,actual.count);
-            console.log(`PASS ${mode}實際生成416張：1/13＋2/13逆轉${actual.count}局，上限${limit===''?'不限':limit}；間隔>20局、生成時欄位鎖定`);
+            console.log(`PASS ${mode}實際生成416張：1/13＋2/13逆轉${actual.count}局，上限${limit===''?'不限':limit}；${mode==='modeA2'?'不限間隔':'間隔>20局'}、生成時欄位鎖定`);
         }
         await page.locator('#modeRed0').click();await input.fill('');
         const before=await page.evaluate(()=>JSON.stringify(currentRounds.map(r=>r.cards.map(c=>[c.rank,c.suit,c.back_color]))));

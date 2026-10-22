@@ -70,11 +70,12 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
       await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result,{},{timeout:120000}).catch(async e=>{console.log(await page.locator('#tvProgress').textContent());throw e;});
       const actual=await page.evaluate(()=>{
         const result=IntegratedModes.traversal.result,inventory={};for(const c of result.cards){const k=c.rank+c.suit+c.back_color;inventory[k]=(inventory[k]||0)+1;}
-        return {...TraverseLimits.check(result,{bankerSix:2,seven:2,rare:1}),cards:result.cards.length,inventory,locked:window.__traverseLimitLocked,lastRank:result.cards.at(-1).rank,status:document.getElementById('tvProgress').textContent};
+        return {...TraverseLimits.check(result,{bankerSix:2,seven:2,rare:1,enforceSpacing:IntegratedModes.tsub!=='a2'}),cards:result.cards.length,inventory,locked:window.__traverseLimitLocked,lastRank:result.cards.at(-1).rank,status:document.getElementById('tvProgress').textContent};
       });assert(actual.ok,JSON.stringify(actual));assert.equal(actual.cards,416);assert.equal(Object.keys(actual.inventory).length,104);assert(Object.values(actual.inventory).every(n=>n===4));assert(actual.locked);
       if(actual.status.includes('末張 9 已套用'))assert.equal(actual.lastRank,'9');
-      console.log('PASS '+mode+'實際生成416張，三種上限及間隔符合、完整牌庫與鎖定保留');
+      console.log('PASS '+mode+'實際生成416張，三種上限及該模式間隔政策符合、完整牌庫與鎖定保留');
     }
+    await page.locator('#modeTraverse').click(); // 間隔無解停止政策僅驗穿越紅0。
     const before=await page.evaluate(()=>JSON.stringify(IntegratedModes.traversal.result));
     const faces=await page.locator('#roundsBody [data-action="card"]').allTextContents();
     await fill(['','','']);

@@ -3002,7 +3002,16 @@ function checkBankerSixWinLimit(rounds, limit) {
     return { ok: okCount && okDraws, okCount, okDraws, count, forbiddenRounds, reason };
 }
 
+function standardRareSpacingEnabled() {
+    return typeof window === 'undefined' || window.StandardProfiles?.current !== 'a2';
+}
+
+function checkStandardRareReversals(rounds, limit) {
+    return TwoThirteenReversals.check(rounds, limit, { enforceSpacing: standardRareSpacingEnabled() });
+}
+
 async function repairRareReversalSpacing(rounds, options = {}) {
+    if (!standardRareSpacingEnabled()) return { ok: true, rounds, swaps: [] };
     const lastNine = options.preserveLastNine ?? Boolean(document.getElementById('lastCardNine')?.checked);
     const avgLimit = Number(document.getElementById('avgRecoveryLimit')?.value) || 0;
     const rangeInput = document.getElementById('range16Limit');
@@ -3139,7 +3148,7 @@ function validateStandardGeneratedShoe(rounds) {
     if (seven && seven.value !== '' && count7PtReversals(rounds).count > Number(seven.value)) failures.push('七點逆轉超標');
     const rare = typeof TwoThirteenReversals !== 'undefined' ? TwoThirteenReversals.read(document) : {};
     if (rare.enabled) {
-        const c = TwoThirteenReversals.check(rounds, rare.limit);
+        const c = checkStandardRareReversals(rounds, rare.limit);
         spacingFailure = !c.okSpacing;
         if (!c.ok) failures.push(c.reason);
     }
@@ -3476,9 +3485,9 @@ async function generateShoe() {
                 }
             }
 
-            // 1／13與2／13逆轉合計上限、相鄰兩次之間超過20局；包含非敏感局。
+            // 1／13與2／13逆轉合計上限；紅0另限制間隔超過20局，A2不限間隔。
             if (reversalSettings.enabled) {
-                const reversalCheck = TwoThirteenReversals.check(roundsToCheck, reversalSettings.limit);
+                const reversalCheck = checkStandardRareReversals(roundsToCheck, reversalSettings.limit);
                 if (!reversalCheck.okCount) {
                     log(`第 ${attempt} 次生成失敗：${reversalCheck.reason}，重新生成...`, 'warn');
                     result = null;
@@ -3641,7 +3650,7 @@ async function generateShoe() {
 
         // 最終輸出再驗一次，涵蓋後續規則修復、卡色與末張9調整。
         if (reversalSettings.enabled) {
-            const reversalCheck = TwoThirteenReversals.check(currentRounds, reversalSettings.limit);
+            const reversalCheck = checkStandardRareReversals(currentRounds, reversalSettings.limit);
             if (!reversalCheck.okCount) {
                 log(`最後調整後${reversalCheck.reason}，重新生成...`, 'warn');
                 if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
