@@ -93,12 +93,21 @@ async function check(name, fn) {
       assert.equal(accepted, 3, '應至少實際完成三副合格A2牌');
       good = await page.evaluate(() => currentRounds.map(r => ({ ...r, cards: r.cards.map(c => ({ rank: c.rank, suit: c.suit, pos: c.pos, back_color: c.back_color })) })));
     });
-    await check('最後卡色後注入不可修復的真實問題：不報完成、不發布、不導出、保留原牌', async () => {
+    await check('最後卡色後持續注入真實問題：自動重排，按停止前不完成／不發布／不導出', async () => {
       assert(good, '需要上一項的合格牌靴');
       const before = await page.evaluate(() => JSON.stringify(currentRounds.map(r => r.cards.map(c => [c.rank,c.suit,c.back_color]))));
       const faces = await page.locator('#roundsBody [data-action="card"]').allTextContents();
       await page.evaluate(() => {
         window.__finalOldColor = runAutoColorSwap_Signal;
+        window.__finalOldRepair = repairStandardRoundViolations;
+        window.__finalRepairFailures = 0;
+        repairStandardRoundViolations = function(rounds) {
+          const result = window.__finalOldRepair(rounds);
+          if (!result.ok && window.__finalInjected && ++window.__finalRepairFailures === 2) {
+            setTimeout(() => document.getElementById('chipStop').click(), 0);
+          }
+          return result;
+        };
         runAutoColorSwap_Signal = function(rounds) {
           const out = window.__finalOldColor(rounds), target = out.find(r => r.cards.length === 5);
           if (!target) throw new Error('測試需要五張局');
@@ -120,12 +129,14 @@ async function check(name, fn) {
         log: document.getElementById('logArea').textContent.slice(-800),
         completed: /生成完成!/.test(document.getElementById('logArea').textContent),
         signature: JSON.stringify(currentRounds.map(r => r.cards.map(c => [c.rank,c.suit,c.back_color]))),
+        failures: window.__finalRepairFailures,
         during: window.__finalFacesDuring, exported: window.__finalExport, pending: window.__pendingSizeShoe }));
       assert(result.injected, result.log); assert(!result.completed, result.log);
+      assert.equal(result.failures, 2, '第一次無解必須重排，第二次以停止按鈕中止');
       assert.equal(result.signature, before); assert.deepEqual(result.during, faces);
       assert.deepEqual(await page.locator('#roundsBody [data-action="card"]').allTextContents(), faces);
       assert.equal(result.exported, false); assert.equal(result.pending, false);
-      await page.evaluate(() => runAutoColorSwap_Signal = window.__finalOldColor);
+      await page.evaluate(() => {runAutoColorSwap_Signal = window.__finalOldColor;repairStandardRoundViolations = window.__finalOldRepair;});
     });
     await check('取消生成保留舊牌並解除鎖定；沒有舊牌時驗收失敗保持空白', async () => {
       assert(good);

@@ -3098,13 +3098,14 @@ function repairStandardRoundViolations(rounds) {
 
 function validateStandardGeneratedShoe(rounds) {
     const failures = [];
+    let roundIssues = false, spacingFailure = false;
     if (!Array.isArray(rounds) || !rounds.length) return { ok: false, reason: '沒有完整牌靴' };
     const inventory = new Map();
     for (let i = 0; i < rounds.length; i++) {
         const round = rounds[i], actual = standardRoundOutcome(round);
-        if (!standardRoundIsSensitive(round)) failures.push(`第${i + 1}局不符完整發牌／敏感對調`);
-        if (actual !== standardExpectedResult(rounds, i)) failures.push(`第${i + 1}局訊號／三條違規`);
-        if (actual !== round.result) failures.push(`第${i + 1}局結果與實際牌不符`);
+        if (!standardRoundIsSensitive(round)) { roundIssues = true; failures.push(`第${i + 1}局不符完整發牌／敏感對調`); }
+        if (actual !== standardExpectedResult(rounds, i)) { roundIssues = true; failures.push(`第${i + 1}局訊號／三條違規`); }
+        if (actual !== round.result) { roundIssues = true; failures.push(`第${i + 1}局結果與實際牌不符`); }
         const simulated = new Simulator(round.cards).simulate_round(0);
         if (simulated && shouldSkipSensitiveRound(simulated)) failures.push(`第${i + 1}局含禁止牌型`);
         for (const c of round.cards) {
@@ -3113,7 +3114,8 @@ function validateStandardGeneratedShoe(rounds) {
         }
         if (actual === '和' && standardRoundOutcome(rounds[(i + 1) % rounds.length]) === '和') failures.push('連續和局');
     }
-    if (inventory.size !== 104 || [...inventory.values()].some(n => n !== 4)) failures.push('牌庫不是完整416張');
+    const inventoryOk = inventory.size === 104 && [...inventory.values()].every(n => n === 4);
+    if (!inventoryOk) failures.push('牌庫不是完整416張');
     const sizes = typeof RoundSizeLimits !== 'undefined' ? RoundSizeLimits.read(document) : {};
     if (sizes.error) failures.push(sizes.error);
     if (sizes.limits) { const c = RoundSizeLimits.check(rounds, sizes.limits); if (!c.ok) failures.push(c.reason); }
@@ -3136,7 +3138,11 @@ function validateStandardGeneratedShoe(rounds) {
     const seven = document.getElementById('max7PtReversal');
     if (seven && seven.value !== '' && count7PtReversals(rounds).count > Number(seven.value)) failures.push('七點逆轉超標');
     const rare = typeof TwoThirteenReversals !== 'undefined' ? TwoThirteenReversals.read(document) : {};
-    if (rare.enabled) { const c = TwoThirteenReversals.check(rounds, rare.limit); if (!c.ok) failures.push(c.reason); }
+    if (rare.enabled) {
+        const c = TwoThirteenReversals.check(rounds, rare.limit);
+        spacingFailure = !c.okSpacing;
+        if (!c.ok) failures.push(c.reason);
+    }
     const stats = calculateViolationStats(rounds);
     if (stats.fourCardViolations || stats.streakViolations) failures.push('連續四張局／莊閒超標');
     if (document.getElementById('lastCardNine')?.checked && String(rounds.at(-1)?.cards.at(-1)?.rank) !== '9') failures.push('末張不是9');
@@ -3152,7 +3158,8 @@ function validateStandardGeneratedShoe(rounds) {
         const actual = rounds.map(standardRoundOutcome).filter(r => r !== '和');
         if (actual.some((r, i) => i < target.length && r !== target[i])) failures.push('不符目標路單');
     }
-    return { ok: failures.length === 0, reason: [...new Set(failures)].join('；') };
+    return { ok: failures.length === 0, reason: [...new Set(failures)].join('；'),
+        retryable: roundIssues && inventoryOk && !spacingFailure };
 }
 
 async function generateShoe() {
@@ -3205,6 +3212,14 @@ async function generateShoe() {
         bankerSix: new Set(bankerSixIndexes), statsViolations: new Set(statsViolationRoundIndexes)
     } : null;
     let sizeAccepted = !requiresFinalValidation;
+    let roundRetryCount = 0;
+    const retryRoundCandidate = reason => {
+        log(`訊號／對調未通過：${reason}；自動重新排牌（第 ${++roundRetryCount} 次，可按停止）。`, 'warn');
+        if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
+        // 沿用同一次生成與隔離狀態；下輪重新洗牌，未通過的候選不發布。
+        currentRounds = previousSizeShoe.rounds;
+        currentAnalysis = previousSizeShoe.analysis;
+    };
     if (typeof window !== 'undefined') {
         window.__isGeneratingShoe = true;
         window.__stopGenerateRequested = false;
@@ -3669,7 +3684,8 @@ async function generateShoe() {
         // 先只修問題局自己的牌序，不改牌庫、訊號身分、三條或局長。
         const localRepair = repairStandardRoundViolations(currentRounds);
         if (!localRepair.ok) {
-            throw new Error(`${localRepair.reason}；無法安全修復，保留上次合格牌靴`);
+            retryRoundCandidate(localRepair.reason);
+            continue;
         }
         currentRounds = localRepair.rounds;
         if (localRepair.repaired.length) {
@@ -3682,6 +3698,10 @@ async function generateShoe() {
         }
         const finalValidation = validateStandardGeneratedShoe(currentRounds);
         if (!finalValidation.ok) {
+            if (finalValidation.retryable) {
+                retryRoundCandidate(finalValidation.reason);
+                continue;
+            }
             if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
             throw new Error(`最終驗收失敗：${finalValidation.reason}；保留上次合格牌靴`);
         }

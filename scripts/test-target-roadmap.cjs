@@ -76,9 +76,13 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
       });
       await page.waitForFunction(() => document.getElementById('stTargetRoadSummary').textContent.includes('測試匯入難打路'));
 
+      // Road matching is independent of the protected spacing-stop policy;
+      // prohibit rare reversals here, as in the integration/export tests.
+      await page.fill('#maxTwoThirteenReversal', '0');
       await page.click('#chipGen');
       await page.waitForFunction(() => !window.__isGeneratingShoe, null, { timeout: 60000 });
       assert(await page.evaluate(() => currentRounds?.length > 0), (await page.locator('#logArea').textContent()).slice(-1800));
+      assert(await page.evaluate(() => /生成完成!/.test(document.getElementById('logArea').textContent)), (await page.locator('#logArea').textContent()).slice(-1200));
 
       const stCheck = await page.evaluate(() => {
         const nonTie = currentRounds.map(r => r.result).filter(r => r === '莊' || r === '閒');
@@ -116,6 +120,7 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
       await page.selectOption('#stTargetRoadSelect', 'preset-hard-1');
       await page.click('#chipGen');
       await page.waitForFunction(() => !window.__isGeneratingShoe && Array.isArray(currentRounds) && currentRounds.length > 0, null, { timeout: 60000 });
+      assert(await page.evaluate(() => /生成完成!/.test(document.getElementById('logArea').textContent)), (await page.locator('#logArea').textContent()).slice(-1200));
 
       const presetCheck = await page.evaluate(() => {
         const nonTie = currentRounds.map(r => r.result).filter(r => r === '莊' || r === '閒');
