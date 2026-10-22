@@ -121,6 +121,40 @@ body.dashboard #statsVioCard .vio .lamp{width:14px;height:14px;font-size:8px}
 body.dashboard #statsVioCard .v-val{padding-left:0;font-size:10px}
 body.dashboard #statsVioCard .vio-empty{padding:0;font-size:11px}
 body.dashboard #statsVioCard .frame-title{font-size:10px;letter-spacing:.18em}
+/* 目前無違規（all-clear）：改用理牌助手開始計時藍色整格風格 */
+#statsVioCard.all-clear,
+body.dashboard #statsVioCard.all-clear{
+  border-image:none;
+  border:1px solid #3d6f9e;
+  background:linear-gradient(180deg,#274870,#12233d);
+  box-shadow:0 4px 12px rgba(18,35,61,.45);
+}
+#statsVioCard.all-clear:hover,
+body.dashboard #statsVioCard.all-clear:hover{
+  border-color:#6fa3e0;
+}
+#statsVioCard.all-clear::before,
+#statsVioCard.all-clear::after,
+body.dashboard #statsVioCard.all-clear::before,
+body.dashboard #statsVioCard.all-clear::after{
+  display:none;
+}
+#statsVioCard.all-clear .frame-title,
+body.dashboard #statsVioCard.all-clear .frame-title{
+  color:#cfe3fb;
+  background:#1d385c;
+  border:1px solid #3d6f9e;
+  border-radius:2px;
+  padding:0 6px;
+}
+#statsVioCard.all-clear .vio-empty,
+body.dashboard #statsVioCard.all-clear .vio-empty{
+  color:#cfe3fb;
+  font-weight:700;
+  font-size:11.5px;
+  letter-spacing:.18em;
+  text-shadow:0 0 8px rgba(111,163,224,.45);
+}
 .dashboard-traverse-slot{min-width:0}
 body.dashboard #traverseTools{display:block;max-width:none;margin:0;padding:8px 10px;box-shadow:none}
 body.dashboard #traverseTools #tvSummary{display:block;padding:0;margin-bottom:7px;font-size:10px;line-height:1.6;color:var(--txt-dim)}

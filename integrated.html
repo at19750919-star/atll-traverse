@@ -870,7 +870,32 @@ body.running .deck,body.finished .deck{
   display:none;text-align:center;padding:22px 0;
   font-size:12px;letter-spacing:.15em;color:var(--ok);
 }
-#statsVioCard.all-clear .vio-empty{display:block}
+#statsVioCard.all-clear{
+  border-image:none;
+  border:1px solid #3d6f9e;
+  background:linear-gradient(180deg,#274870,#12233d);
+  box-shadow:0 4px 12px rgba(18,35,61,.45);
+}
+#statsVioCard.all-clear:hover{
+  border-color:#6fa3e0;
+}
+#statsVioCard.all-clear::before,
+#statsVioCard.all-clear::after{
+  display:none;
+}
+#statsVioCard.all-clear .frame-title{
+  color:#cfe3fb;
+  background:#1d385c;
+  border:1px solid #3d6f9e;
+  border-radius:2px;
+  padding:0 6px;
+}
+#statsVioCard.all-clear .vio-empty{
+  display:block;
+  color:#cfe3fb;
+  font-weight:700;
+  text-shadow:0 0 8px rgba(111,163,224,.45);
+}
 #statsVioCard.all-clear .vio-grid{display:none}
 /* 局號連結：點了跳到主表格對應那列（focusRoundFromShoeMap） */
 .round-link{
@@ -1200,7 +1225,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
 
   <!-- 違規：獨立一張卡（真實 calculateViolationStats 結果，由 updateViolationUI 寫入，id 沿用不變），
        坐在「即時統計」與籌碼欄中間，不掛在 .stats 裡面 -->
-  <div class="vio-live-card gframe" id="statsVioCard">
+  <div class="vio-live-card gframe all-clear" id="statsVioCard">
     <span class="frame-title">違規 VIOLATIONS</span>
     <span class="badge" id="vioFlag">0</span>
     <div class="vio-grid" id="vioGrid">
