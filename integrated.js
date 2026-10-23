@@ -331,6 +331,8 @@
     const sizes=demo?{limits:null}:sizeLimits();
     if(sizes.error){status(sizes.error);$(sizes.focus).focus();lock(false);return;}
     let lastMiss='',spreadMessage='';
+    // 每次重跑都把原因寫進日誌，方便看出卡在哪一項
+    const rerun=reason=>{reruns++;lastMiss=reason;log(`第 ${reruns} 次穿越重跑：${reason}，重新生成...`,'warn');};
     try {
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
       if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvP7').checked=false;}
@@ -340,18 +342,18 @@
         if(demo){opts.rng=rng;opts.skipBanker6=false;}else if(limit!==null&&!opts.strong)opts.rejectAbove=limit;
         result=await B.build(opts);
         if(stopped){status('已停止，保留上次完成的牌靴');return;}
-        if(result.rejected){reruns++;continue;}
-        if(!demo&&!opts.strong&&limit!==null&&result.leftoverCount>limit){reruns++;continue;}
-        if(B.SIGNAL_RETRY_ENABLED&&result.signal&&!result.signal.ok&&!demo&&!opts.strong){reruns++;continue;}
+        if(result.rejected){rerun(`剩牌 ${result.leftoverCount} 張超過上限 ${limit}`);continue;}
+        if(!demo&&!opts.strong&&limit!==null&&result.leftoverCount>limit){rerun(`剩牌 ${result.leftoverCount} 張超過上限 ${limit}`);continue;}
+        if(B.SIGNAL_RETRY_ENABLED&&result.signal&&!result.signal.ok&&!demo&&!opts.strong){rerun('訊號調整失敗');continue;}
         cut=!opts.strong&&$('tvNine').checked?nineCut(result):null;
-        if(!demo&&!opts.strong&&sideLimit!==null&&sideDiff(result.cards,cut||0)>sideLimit){lastMiss=`莊閒差距超過 ${sideLimit}`;reruns++;continue;}
-        if(!demo&&!opts.strong&&tieMax!==null&&tieCount(result.cards,cut||0)>tieMax){lastMiss=`和局超過 ${tieMax} 局`;reruns++;continue;}
-        if(!demo&&!opts.strong){const miss=sizeMiss(result.cards,cut||0,sizes.limits);if(miss){lastMiss=miss;reruns++;continue;}}
+        if(!demo&&!opts.strong&&sideLimit!==null&&sideDiff(result.cards,cut||0)>sideLimit){rerun(`莊閒差距 ${sideDiff(result.cards,cut||0)} 超過 ${sideLimit}`);continue;}
+        if(!demo&&!opts.strong&&tieMax!==null&&tieCount(result.cards,cut||0)>tieMax){rerun(`和局 ${tieCount(result.cards,cut||0)} 局超過 ${tieMax} 局`);continue;}
+        if(!demo&&!opts.strong){const miss=sizeMiss(result.cards,cut||0,sizes.limits);if(miss){rerun(miss);continue;}}
         // Rotate before checking spacing: the limits apply to the displayed shoe.
         if(!demo)rotateResult(result,cut||0);
         if(!demo){
           const check=TraverseLimits.check(result,finalLimits);
-          if(!check.okCount){lastMiss=check.reason;reruns++;continue;}
+          if(!check.okCount){rerun(check.reason);continue;}
           if(!check.okSpacing){
             const repaired=await TraverseLimits.repairSpacing(result,{limits:finalLimits,policy:opts,preserveLastNine:$('tvNine').checked,shouldStop:()=>stopped});
             if(stopped){status('已停止，保留上次完成的牌靴');return;}
@@ -363,7 +365,7 @@
         if(!demo&&$('tvMixedColor').checked){const colored=B.reassignColors(result.cards);if(colored.ok){result.cards=colored.cards;result.colorOk=true;}else result.colorOk=false;}
         if(!demo){
           const final=TraverseLimits.check(result,finalLimits);
-          if(!final.okCount){lastMiss=final.reason;reruns++;continue;}
+          if(!final.okCount){rerun(`最後調整後${final.reason}`);continue;}
           if(!final.okSpacing){status(`最後逆轉間隔不符：${final.reason}；保留上次牌靴，不整副重跑`);return;}
         }
         if(!demo&&tsub==='red0'&&!opts.tripleTie){
