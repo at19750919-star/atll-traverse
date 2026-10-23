@@ -1,0 +1,557 @@
+[
+  {
+    "mode": "modeRed0",
+    "variant": 0,
+    "report": {
+      "before": {
+        "positions": [
+          1,
+          14
+        ],
+        "thirds": [
+          2,
+          0,
+          0
+        ],
+        "first7": 1,
+        "score": 1.124419
+      },
+      "after": {
+        "positions": [
+          14,
+          64
+        ],
+        "thirds": [
+          1,
+          0,
+          1
+        ],
+        "first7": 0,
+        "score": 0.143023
+      },
+      "checks": 30,
+      "moves": 2,
+      "limited": false,
+      "ms": 24,
+      "reason": "已在原規則內盡量分散",
+      "mode": "red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "sameInput": true,
+      "valid": true,
+      "ms": 25.299999982118607
+    },
+    "inventory": 416,
+    "generationMs": 451
+  },
+  {
+    "mode": "modeRed0",
+    "variant": 1,
+    "report": {
+      "before": {
+        "positions": [
+          3,
+          11
+        ],
+        "thirds": [
+          2,
+          0,
+          0
+        ],
+        "first7": 1,
+        "score": 1.202809
+      },
+      "after": {
+        "positions": [
+          3,
+          66
+        ],
+        "thirds": [
+          1,
+          0,
+          1
+        ],
+        "first7": 1,
+        "score": 0.274719
+      },
+      "checks": 54,
+      "moves": 1,
+      "limited": false,
+      "ms": 48,
+      "reason": "已在原規則內盡量分散",
+      "mode": "red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "sameInput": true,
+      "valid": true,
+      "ms": 48.5
+    },
+    "inventory": 416,
+    "generationMs": 311
+  },
+  {
+    "mode": "modeRed0",
+    "variant": 2,
+    "report": {
+      "before": {
+        "positions": [
+          45,
+          81
+        ],
+        "thirds": [
+          0,
+          1,
+          1
+        ],
+        "first7": 0,
+        "score": 0.46573
+      },
+      "after": {
+        "positions": [
+          24,
+          48
+        ],
+        "thirds": [
+          1,
+          1,
+          0
+        ],
+        "first7": 0,
+        "score": 0.280337
+      },
+      "checks": 99,
+      "moves": 2,
+      "limited": false,
+      "ms": 102,
+      "reason": "已在原規則內盡量分散",
+      "mode": "red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "sameInput": true,
+      "valid": true,
+      "ms": 102.30000001192093
+    },
+    "inventory": 416,
+    "generationMs": 550
+  },
+  {
+    "mode": "modeRed0",
+    "variant": 3,
+    "report": {
+      "before": {
+        "positions": [
+          19,
+          22
+        ],
+        "thirds": [
+          2,
+          0,
+          0
+        ],
+        "first7": 0,
+        "score": 0.932353
+      },
+      "after": {
+        "positions": [
+          19,
+          22
+        ],
+        "thirds": [
+          2,
+          0,
+          0
+        ],
+        "first7": 0,
+        "score": 0.932353
+      },
+      "checks": 126,
+      "moves": 0,
+      "limited": false,
+      "ms": 127,
+      "reason": "未找到合法改善，保留原分布",
+      "mode": "red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "sameInput": true,
+      "valid": true,
+      "ms": 128.09999999403954
+    },
+    "inventory": 416,
+    "generationMs": 398
+  },
+  {
+    "mode": "modeRed0",
+    "variant": 4,
+    "report": {
+      "before": {
+        "positions": [
+          1,
+          3,
+          5,
+          7,
+          25,
+          85
+        ],
+        "thirds": [
+          5,
+          0,
+          1
+        ],
+        "first7": 4,
+        "score": 2.193633
+      },
+      "after": {
+        "positions": [
+          8,
+          22,
+          39,
+          54,
+          67,
+          82
+        ],
+        "thirds": [
+          2,
+          2,
+          2
+        ],
+        "first7": 0,
+        "score": 0.061798
+      },
+      "checks": 26,
+      "moves": 5,
+      "limited": false,
+      "ms": 35,
+      "reason": "已在原規則內盡量分散",
+      "mode": "red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "sameInput": true,
+      "valid": true,
+      "ms": 36.30000001192093
+    },
+    "inventory": 416,
+    "generationMs": 303
+  },
+  {
+    "mode": "modeTraverse",
+    "variant": 0,
+    "report": {
+      "before": {
+        "positions": [
+          14,
+          36,
+          50
+        ],
+        "thirds": [
+          1,
+          2,
+          0
+        ],
+        "first7": 0,
+        "score": 0.34359
+      },
+      "after": {
+        "positions": [
+          14,
+          36,
+          64
+        ],
+        "thirds": [
+          1,
+          1,
+          1
+        ],
+        "first7": 0,
+        "score": 0.064103
+      },
+      "checks": 12,
+      "moves": 1,
+      "limited": false,
+      "ms": 16,
+      "reason": "已在原規則內盡量分散",
+      "mode": "traverse-red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "sameInput": true,
+      "valid": true,
+      "ms": 18.799999982118607
+    },
+    "inventory": 416,
+    "debug": {
+      "chains": true,
+      "stats": {
+        "signalViolations": 0,
+        "signalViolationRounds": [],
+        "fourCardViolations": 0,
+        "fourCardBlocks": [],
+        "streakViolations": 0,
+        "streakBlocks": [],
+        "cannotSwapViolations": 0,
+        "cannotSwapRounds": [],
+        "cardCountMismatchViolations": 0,
+        "cardCountMismatchRounds": [],
+        "cardColorViolations": 0,
+        "cardColorRounds": [],
+        "cardColorChecked": true
+      }
+    },
+    "generationMs": 46131
+  },
+  {
+    "mode": "modeTraverse",
+    "variant": 1,
+    "report": {
+      "before": {
+        "positions": [
+          10
+        ],
+        "thirds": [
+          1,
+          0,
+          0
+        ],
+        "first7": 0,
+        "score": 0.47013
+      },
+      "after": {
+        "positions": [
+          10
+        ],
+        "thirds": [
+          1,
+          0,
+          0
+        ],
+        "first7": 0,
+        "score": 0.47013
+      },
+      "checks": 0,
+      "moves": 0,
+      "ms": 0,
+      "mode": "traverse-red0",
+      "reason": "原牌靴仍有穿越／訊號限制未通過，略過分散並保留原分布"
+    },
+    "evidence": {
+      "skipped": true,
+      "valid": false
+    },
+    "inventory": 416,
+    "debug": {
+      "chains": true,
+      "stats": {
+        "signalViolations": 1,
+        "signalViolationRounds": [
+          77
+        ],
+        "fourCardViolations": 0,
+        "fourCardBlocks": [],
+        "streakViolations": 0,
+        "streakBlocks": [],
+        "cannotSwapViolations": 1,
+        "cannotSwapRounds": [
+          77
+        ],
+        "cardCountMismatchViolations": 0,
+        "cardCountMismatchRounds": [],
+        "cardColorViolations": 0,
+        "cardColorRounds": [],
+        "cardColorChecked": true
+      }
+    },
+    "generationMs": 1233
+  },
+  {
+    "mode": "modeTraverse",
+    "variant": 2,
+    "report": {
+      "before": {
+        "positions": [
+          1,
+          2,
+          5,
+          8,
+          11,
+          12,
+          18,
+          24,
+          26,
+          28,
+          30,
+          32,
+          33,
+          38,
+          39,
+          40,
+          42,
+          44,
+          48,
+          52,
+          56,
+          62,
+          66,
+          69,
+          72,
+          76,
+          80,
+          82
+        ],
+        "thirds": [
+          10,
+          11,
+          7
+        ],
+        "first7": 3,
+        "score": 1.216387
+      },
+      "after": {
+        "positions": [
+          1,
+          2,
+          5,
+          8,
+          11,
+          12,
+          18,
+          24,
+          26,
+          28,
+          30,
+          32,
+          33,
+          38,
+          39,
+          40,
+          42,
+          44,
+          48,
+          52,
+          56,
+          62,
+          66,
+          69,
+          72,
+          76,
+          80,
+          82
+        ],
+        "thirds": [
+          10,
+          11,
+          7
+        ],
+        "first7": 3,
+        "score": 1.216387
+      },
+      "checks": 0,
+      "moves": 0,
+      "ms": 0,
+      "mode": "traverse-red0",
+      "reason": "原牌靴仍有穿越／訊號限制未通過，略過分散並保留原分布"
+    },
+    "evidence": {
+      "skipped": true,
+      "valid": false
+    },
+    "inventory": 416,
+    "debug": {
+      "chains": true,
+      "stats": {
+        "signalViolations": 2,
+        "signalViolationRounds": [
+          83,
+          84
+        ],
+        "fourCardViolations": 0,
+        "fourCardBlocks": [],
+        "streakViolations": 0,
+        "streakBlocks": [],
+        "cannotSwapViolations": 2,
+        "cannotSwapRounds": [
+          83,
+          84
+        ],
+        "cardCountMismatchViolations": 0,
+        "cardCountMismatchRounds": [],
+        "cardColorViolations": 0,
+        "cardColorRounds": [],
+        "cardColorChecked": true
+      }
+    },
+    "generationMs": 820
+  },
+  {
+    "mode": "modeTraverse",
+    "variant": 3,
+    "report": {
+      "before": {
+        "positions": [
+          46,
+          74,
+          76,
+          77
+        ],
+        "thirds": [
+          0,
+          1,
+          3
+        ],
+        "first7": 0,
+        "score": 1.886538
+      },
+      "after": {
+        "positions": [
+          46,
+          74,
+          76,
+          77
+        ],
+        "thirds": [
+          0,
+          1,
+          3
+        ],
+        "first7": 0,
+        "score": 1.886538
+      },
+      "checks": 0,
+      "moves": 0,
+      "ms": 0,
+      "mode": "traverse-red0",
+      "reason": "原牌靴仍有穿越／訊號限制未通過，略過分散並保留原分布"
+    },
+    "evidence": {
+      "skipped": true,
+      "valid": false
+    },
+    "inventory": 416,
+    "debug": {
+      "chains": true,
+      "stats": {
+        "signalViolations": 1,
+        "signalViolationRounds": [
+          77
+        ],
+        "fourCardViolations": 0,
+        "fourCardBlocks": [],
+        "streakViolations": 0,
+        "streakBlocks": [],
+        "cannotSwapViolations": 1,
+        "cannotSwapRounds": [
+          78
+        ],
+        "cardCountMismatchViolations": 0,
+        "cardCountMismatchRounds": [],
+        "cardColorViolations": 0,
+        "cardColorRounds": [],
+        "cardColorChecked": true
+      }
+    },
+    "generationMs": 1203
+  }
+]

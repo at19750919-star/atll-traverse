@@ -179,7 +179,7 @@
       $(id).classList.toggle('active', on); $(id).setAttribute('aria-pressed', on);
     });
     for(const [panel,input,key] of [['standardControls','maxTwoThirteenReversal',sub],['traverseControls','tvRareReversalMax',tsub]]){
-      const spacing=key==='a2'?'不限間隔；次數依上限設定':'兩次之間須隔超過20局；不足時安全交換整局';
+      const spacing=key==='a2'||$(input).value.trim()===''?'不限間隔；次數依上限設定':'兩次之間須隔超過20局；不足時安全交換整局';
       $(panel).querySelector('.rare-reversal-note').textContent=`逆轉：1/13＋2/13，${spacing}`;
       $(input).closest('label').title=`1／13＋2／13補牌逆轉合計上限；留白局數不限、0禁止；${spacing}`;
     }
@@ -254,7 +254,7 @@
     if($('tvTieMax').value.trim()!=='')parts.push(`和局≤${$('tvTieMax').value}`);
     if($('tvSideLimit').value.trim()!=='')parts.push(`莊閒差距≤${$('tvSideLimit').value}`);
     for(const [id,name] of [['tvBankerSixMax','莊6贏'],['tvSevenReversalMax','七點逆轉'],['tvRareReversalMax','逆轉']])if($(id).value.trim()!=='')parts.push(`${name}≤${$(id).value}`);
-    parts.push(tsub==='a2'?'逆轉不限間隔':'逆轉間隔>20局');
+    parts.push(tsub==='a2'||$('tvRareReversalMax').value.trim()===''?'逆轉不限間隔':'逆轉間隔>20局');
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
     const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
@@ -270,6 +270,45 @@
     const candidates=E.dealRounds(cs).filter(r=>r.hand&&r.cards.at(-1).rank==='9').map(r=>(r.start+r.cards.length)%416).filter(c=>a.depths[c]===0);
     return candidates.length?candidates[Math.floor(Math.random()*candidates.length)]:null;
   }
+  async function spreadTraverseTies(result,policy,limits) {
+    const dealt=E.dealRounds(result.cards),rounds=dealt.filter(r=>r.hand),tail=dealt.filter(r=>!r.hand).flatMap(r=>r.cards);
+    const owners=new Map();
+    result.chains.forEach((ch,i)=>{for(let j=0;j<ch.length;j++)owners.set(result.cards[(ch.start-1+j)%result.cards.length],i);});
+    function rebuild(candidate) {
+      const cards=candidate.flatMap(r=>r.cards).concat(tail),n=cards.length,chainOwners=cards.map(c=>owners.get(c)??-1),chains=[];
+      for(let i=0;i<result.chains.length;i++){
+        const ch=result.chains[i],positions=chainOwners.flatMap((id,j)=>id===i?[j]:[]);
+        if(positions.length!==ch.length)return null;
+        const starts=positions.filter(j=>chainOwners[(j+n-1)%n]!==i);
+        if(starts.length>1)return null; // Never split a long chain or silently change its coverage.
+        const start=starts[0]??0;
+        chains.push({...ch,start:start+1});
+      }
+      return {...result,cards,chains};
+    }
+    const baseline=violationGroups(dealt),last=result.cards.at(-1);
+    if(['noSwap','same','triple','signal'].some(key=>baseline[key].length)||!TraverseLimits.chainsValid(result,policy)){
+      const before=TieSpread.metrics(rounds);
+      return {result,report:{before,after:before,targets:[],checks:0,moves:0,ms:0,mode:'traverse-red0',reason:'原牌靴未通過穿越／訊號驗收，略過和局定位'}};
+    }
+    const spread=await TieSpread.disperse(rounds,{
+      hasSignal: round=>B.isSignalHand(round.cards,policy.signalConfig),
+      shouldStop:()=>stopped,
+      validate:candidate=>{
+        const next=rebuild(candidate);if(!next)return {ok:false,reason:'會拆散穿越長段'};
+        if(policy.preserveLastNine&&next.cards.at(-1)!==last)return {ok:false,reason:'末張9限制不符'};
+        const groups=violationGroups(E.dealRounds(next.cards));
+        if(Object.keys(baseline).some(key=>groups[key].length>baseline[key].length))return {ok:false,reason:'訊號／敏感局／卡色驗收不符'};
+        const miss=sizeMiss(next.cards,0,policy.sizeLimits);if(miss)return {ok:false,reason:miss};
+        if(policy.sideLimit!==null&&sideDiff(next.cards)>policy.sideLimit)return {ok:false,reason:'莊閒差距不符'};
+        if(policy.tieMax!==null&&tieCount(next.cards)>policy.tieMax)return {ok:false,reason:'和局上限不符'};
+        const final=TraverseLimits.check(next,limits);if(!final.ok)return final;
+        return TraverseLimits.chainsValid(next,policy)?{ok:true}:{ok:false,reason:'穿越長段重驗不符'};
+      }
+    });
+    const next=spread.moves?rebuild(spread.rounds):result;
+    return {result:next,report:{...spread,rounds:undefined,mode:'traverse-red0'}};
+  }
   async function generateTraverse(demo=false) {
     if(busy||window.__isGeneratingShoe)return;
     // 先送出正在輸入的設定，避免排完收合設定時才觸發「條件已變更」蓋掉結果訊息
@@ -282,7 +321,7 @@
     if(Number.isNaN(sideLimit)){status('莊閒差距須為 0～104 的整數或留白');$('tvSideLimit').focus();return;}
     if(Number.isNaN(tieMax)){status('和局上限須為 0～104 的整數或留白');$('tvTieMax').focus();return;}
     const specialLimits={bankerSix:optLimit('tvBankerSixMax'),seven:optLimit('tvSevenReversalMax'),rare:optLimit('tvRareReversalMax')};
-    const finalLimits={...specialLimits,enforceSpacing:tsub!=='a2'};
+    const finalLimits={...specialLimits,enforceSpacing:tsub!=='a2'&&specialLimits.rare!==null};
     for(const [key,id,name] of [['bankerSix','tvBankerSixMax','莊6贏'],['seven','tvSevenReversalMax','七點逆轉'],['rare','tvRareReversalMax','逆轉']]){
       if(!demo&&Number.isNaN(specialLimits[key])){status(`${name}上限須為0～104整數或留白`);$(id).focus();return;}
     }
@@ -291,7 +330,7 @@
     if(limit!==null&&(!Number.isInteger(limit)||limit<0||limit>416)){status('剩牌上限須為 0～416 的整數或留白');lock(false);return;}
     const sizes=demo?{limits:null}:sizeLimits();
     if(sizes.error){status(sizes.error);$(sizes.focus).focus();lock(false);return;}
-    let lastMiss='';
+    let lastMiss='',spreadMessage='';
     try {
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
       if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvP7').checked=false;}
@@ -327,6 +366,15 @@
           if(!final.okCount){lastMiss=final.reason;reruns++;continue;}
           if(!final.okSpacing){status(`最後逆轉間隔不符：${final.reason}；保留上次牌靴，不整副重跑`);return;}
         }
+        if(!demo&&tsub==='red0'&&!opts.tripleTie){
+          const spread=await spreadTraverseTies(result,opts,finalLimits);
+          if(stopped){status('已停止，保留上次完成的牌靴');return;}
+          result=spread.result;window.__lastTieSpread=spread.report;
+          spreadMessage=TieSpread.summary(spread.report);
+          log(spreadMessage,'info');
+        }else if(!demo&&tsub==='red0'){
+          window.__lastTieSpread=null;spreadMessage='三條已開啟，略過和局分散';log(spreadMessage,'info');
+        }
         break;
       }
       result.reruns=reruns;result.totalMs=Date.now()-started;
@@ -337,7 +385,7 @@
       }
       states.traverse.result=result;states.traverse.cut=0;$('cutPos').value=0;
       if(!document.body.classList.contains('dashboard'))setSettingsCollapsed(true);document.querySelectorAll('#traverseTools details').forEach(d=>{d.open=false;});
-      renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}${$('tvMixedColor').checked&&!result.colorOk?'｜混色卡色配置失敗，請查看違規':''}`);
+      renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}${$('tvMixedColor').checked&&!result.colorOk?'｜混色卡色配置失敗，請查看違規':''}${spreadMessage?'｜'+spreadMessage:''}`);
       log($('tvProgress').textContent,'success');
     }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{lock(false);}
   }
@@ -511,6 +559,60 @@
       status(`已導出本機：${name}（${saved.where}，不讀取或上傳雲端）`);
     }catch(e){status(`導出失敗：${e.message}`);}finally{lock(false);}
   }
+  // Serialize generation commands. Latest user intent wins; an old job must finish
+  // its cancellation/finally (including restoring its snapshot) before clear/restart.
+  function clearTraverse() {clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;setSettingsCollapsed(false);status('已清空穿越牌靴');}
+  let generationTask = null, generationCommand = null, pendingClear = false;
+  function cancelGeneration() {
+    stopped = true;
+    stopGenerateShoe();
+  }
+  async function drainGenerationCommands() {
+    try {
+      while (pendingClear || generationCommand) {
+        const command = pendingClear ? 'clear' : generationCommand;
+        if (command === 'clear') pendingClear = false;
+        else generationCommand = null;
+        if (command === 'clear') {
+          if (mode === 'traverse') clearTraverse();
+          else original.clear();
+          document.body.classList.remove('running','finished');
+          syncDesignStats();
+        } else {
+          await (mode === 'traverse' ? generateTraverse() : generateShoe());
+        }
+      }
+    } catch (e) { console.error(e); log(`生成操作失敗：${e.message}`, 'error'); }
+    finally { generationTask = null; }
+  }
+  document.addEventListener('click', event => {
+    const id = event.target.closest('button')?.id;
+    const command = ({chipGen:'generate',generateBtn:'generate',chipStop:'stop',stopGenerateBtn:'stop',chipClear:'clear',clearBtn:'clear'})[id];
+    if (!command) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (command === 'stop') {
+      generationCommand = null;
+      cancelGeneration();
+      return;
+    }
+    // Export/optimization retain their existing lock; only generation is cancellable.
+    if (busy && !generationTask) return;
+    if (command === 'clear') { pendingClear = true; generationCommand = null; }
+    else generationCommand = command;
+    if (generationTask) cancelGeneration();
+    else {
+      // Install the task before starting the engine, which can synchronously update UI.
+      generationTask = true;
+      void drainGenerationCommands();
+    }
+  }, true);
+  ['maxTwoThirteenReversal','tvRareReversalMax'].forEach(id => {
+    $(id).addEventListener('input', () => {
+      refreshModeButtons();
+      if ($('standardControls').classList.contains('collapsed')) setStandardCollapsed(true);
+      if ($('traverseControls').classList.contains('collapsed')) setSettingsCollapsed(true);
+    });
+  });
   // Capture only mode-dependent actions; all standard-mode handlers run unchanged.
   document.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
@@ -522,7 +624,7 @@
     const handlers={chipStop:()=>{if(busy){stopped=true;status('停止中，整理目前結果…');}},generateBtn:()=>generateTraverse(),stopGenerateBtn:()=>{stopped=true;status('停止中，整理目前結果…');},btnCut:()=>cutTraverse(Number($('cutPos').value)),btnAutoColor:recolor,
       btnExportCombined:exportTraverse,btnRecordDeckOrder:()=>{absorbEdits();rotateResult(states.traverse.result,states.traverse.cut);states.traverse.cut=0;$('cutPos').value=0;clearOptimization();renderTraverse();status('已套用目前牌序，切牌起點歸零');},
       btnApplyChanges:()=>{absorbEdits();clearOptimization();renderTraverse();status('已套用編輯並重新檢查目前牌序');},
-      clearBtn:()=>{clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;setSettingsCollapsed(false);status('已清空穿越牌靴');}};
+      clearBtn:clearTraverse};
     if(handlers[id]){event.preventDefault();event.stopImmediatePropagation();if(!busy||id==='stopGenerateBtn'||id==='chipStop')handlers[id]();}
   },true);
   $('modeRed0').addEventListener('click',()=>switchMode('red0'));$('modeA2').addEventListener('click',()=>switchMode('a2'));$('modeTraverse').addEventListener('click',()=>switchMode('traverse-red0'));$('modeTraverseA2').addEventListener('click',()=>switchMode('traverse-a2'));
@@ -558,7 +660,7 @@
     if(v('maxSideLimit')!=='')parts.push(`莊閒差距≤${v('maxSideLimit')}`);
     if(v('maxBankerSixWin')!=='')parts.push(`莊6贏≤${v('maxBankerSixWin')}（禁補牌莊6）`);
     if(v('maxTwoThirteenReversal')!=='')parts.push(`1/13＋2/13逆轉≤${v('maxTwoThirteenReversal')}`);
-    parts.push(sub==='a2'?'逆轉不限間隔':'逆轉間隔>20局');
+    parts.push(sub==='a2'||v('maxTwoThirteenReversal')===''?'逆轉不限間隔':'逆轉間隔>20局');
     for(const n of [4,5,6]){const lo=v(`st${n}Min`),hi=v(`st${n}Max`);if(lo||hi)parts.push(`${n}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
     if((sub==='red0'||sub==='a2')&&window.TargetRoadmap&&TargetRoadmap.isActive('standard'))parts.push(TargetRoadmap.summarizeShort('standard'));
     const on=[['mixedCardColor','混色（同組≤3局）'],['tripleTieRule','三條'],['skipPlayer7Banker6','閒7'],['lastCardNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);

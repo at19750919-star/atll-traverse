@@ -3003,7 +3003,7 @@ function checkBankerSixWinLimit(rounds, limit) {
 }
 
 function standardRareSpacingEnabled() {
-    return typeof window === 'undefined' || window.StandardProfiles?.current !== 'a2';
+    return typeof window === 'undefined' || (window.StandardProfiles?.current !== 'a2' && document.getElementById('maxTwoThirteenReversal')?.value.trim() !== '');
 }
 
 function checkStandardRareReversals(rounds, limit) {
@@ -3726,6 +3726,26 @@ async function generateShoe() {
             throw new Error(`最終驗收失敗：${finalValidation.reason}；保留上次合格牌靴`);
         }
         if (ensureNotStopped()) return;
+        if (window.StandardProfiles?.current === 'red0' && window.TieSpread && !isTripleRuleOn()) {
+            const colorViolations = calculateCardColorViolations(currentRounds);
+            const spread = await TieSpread.disperse(currentRounds, {
+                hasSignal: round => round.cards.some(isSignalCardByConfig),
+                shouldStop: isStopRequested,
+                validate: candidate => {
+                    const validation = validateStandardGeneratedShoe(candidate);
+                    if (!validation.ok) return validation;
+                    return calculateCardColorViolations(candidate) <= colorViolations
+                        ? {ok:true} : {ok:false,reason:'卡色連續組限制不符'};
+                }
+            });
+            if (ensureNotStopped()) return;
+            currentRounds = spread.rounds;
+            window.__lastTieSpread = {...spread, rounds: undefined, mode:'red0'};
+            log(TieSpread.summary(spread), 'info');
+        } else if (window.StandardProfiles?.current === 'red0' && isTripleRuleOn()) {
+            window.__lastTieSpread = null;
+            log('⚙️ 三條已開啟，略過和局分散', 'info');
+        }
         if (requiresFinalValidation) {
             let acceptedPos = 0;
             currentRounds.forEach(round => {

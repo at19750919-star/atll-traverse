@@ -23,6 +23,7 @@ const rare = () => ({ cards:[0,0,3,6,5].map(n=>({rank:n===0?'K':String(n)})) });
     await page.goto(pathToFileURL(path.resolve(__dirname,'../integrated.html')).href);
     for(const [mode,scope,limited] of [['modeRed0','standardControls',true],['modeA2','standardControls',false],['modeTraverse','traverseControls',true],['modeTraverseA2','traverseControls',false]]){
       await page.click('#'+mode);
+      await page.fill('#'+(scope==='standardControls'?'maxTwoThirteenReversal':'tvRareReversalMax'),'2');
       const note=await page.locator('#'+scope+' .rare-reversal-note').textContent();
       assert(limited?note.includes('超過20局'):note.includes('不限間隔'),mode+': '+note);
       const out=await page.evaluate(({mode})=>{

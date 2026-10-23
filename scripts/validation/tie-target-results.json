@@ -1,0 +1,608 @@
+[
+  {
+    "mode": "modeRed0",
+    "triple": false,
+    "seed": 5,
+    "cards": 416,
+    "calls": 1,
+    "report": {
+      "before": {
+        "positions": [
+          1,
+          3,
+          5,
+          7,
+          25,
+          85
+        ],
+        "thirds": [
+          5,
+          0,
+          1
+        ],
+        "first7": 4
+      },
+      "after": {
+        "positions": [
+          1,
+          5,
+          20,
+          49,
+          72,
+          82
+        ],
+        "thirds": [
+          3,
+          1,
+          2
+        ],
+        "first7": 2
+      },
+      "targets": [
+        {
+          "original": 1,
+          "ideal": 7.416666666666667,
+          "target": 7,
+          "actual": 1,
+          "status": "unchanged",
+          "reason": "原位已是最近可用位置；較近位置不符候選條件",
+          "checks": 0,
+          "error": -6.417
+        },
+        {
+          "original": 3,
+          "ideal": 22.25,
+          "target": 22,
+          "actual": 20,
+          "status": "swapped",
+          "reason": "最近合法閒局，完整兩局互換",
+          "checks": 1,
+          "error": -2.25
+        },
+        {
+          "original": 5,
+          "ideal": 37.083333333333336,
+          "target": 37,
+          "actual": 5,
+          "status": "unchanged",
+          "reason": "較近候選未通過原驗收：連續四張局／莊閒超標",
+          "checks": 3,
+          "error": -32.083
+        },
+        {
+          "original": 7,
+          "ideal": 51.916666666666664,
+          "target": 52,
+          "actual": 49,
+          "status": "swapped",
+          "reason": "最近合法閒局，完整兩局互換",
+          "checks": 1,
+          "error": -2.917
+        },
+        {
+          "original": 25,
+          "ideal": 66.75,
+          "target": 67,
+          "actual": 72,
+          "status": "swapped",
+          "reason": "最近合法閒局，完整兩局互換",
+          "checks": 1,
+          "error": 5.25
+        },
+        {
+          "original": 85,
+          "ideal": 81.58333333333333,
+          "target": 82,
+          "actual": 82,
+          "status": "swapped",
+          "reason": "最近合法閒局，完整兩局互換",
+          "checks": 1,
+          "error": 0.417
+        }
+      ],
+      "checks": 7,
+      "moves": 4,
+      "cancelled": false,
+      "ms": 50,
+      "reason": "依理想位置完成4局互換，2局保留原位",
+      "mode": "red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "directSwaps": 4,
+      "valid": {
+        "ok": true
+      }
+    },
+    "totalMs": 617
+  },
+  {
+    "mode": "modeRed0",
+    "triple": false,
+    "seed": 139,
+    "cards": 416,
+    "calls": 1,
+    "report": {
+      "before": {
+        "positions": [
+          1,
+          14
+        ],
+        "thirds": [
+          2,
+          0,
+          0
+        ],
+        "first7": 1
+      },
+      "after": {
+        "positions": [
+          15,
+          25
+        ],
+        "thirds": [
+          2,
+          0,
+          0
+        ],
+        "first7": 0
+      },
+      "targets": [
+        {
+          "original": 1,
+          "ideal": 21.5,
+          "target": 22,
+          "actual": 25,
+          "status": "swapped",
+          "reason": "最近合法閒局，完整兩局互換",
+          "checks": 1,
+          "error": 3.5
+        },
+        {
+          "original": 14,
+          "ideal": 64.5,
+          "target": 65,
+          "actual": 15,
+          "status": "swapped",
+          "reason": "最近合法閒局，完整兩局互換",
+          "checks": 9,
+          "error": -49.5
+        }
+      ],
+      "checks": 10,
+      "moves": 2,
+      "cancelled": false,
+      "ms": 41,
+      "reason": "依理想位置完成2局互換，0局保留原位",
+      "mode": "red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "directSwaps": 2,
+      "valid": {
+        "ok": true
+      }
+    },
+    "totalMs": 411
+  },
+  {
+    "mode": "modeRed0",
+    "triple": true,
+    "seed": 332,
+    "cards": 416,
+    "calls": 0,
+    "report": null,
+    "totalMs": 332
+  },
+  {
+    "mode": "modeA2",
+    "triple": false,
+    "seed": 139,
+    "cards": 416,
+    "calls": 0,
+    "totalMs": 254
+  },
+  {
+    "mode": "modeA2",
+    "triple": true,
+    "seed": 332,
+    "cards": 416,
+    "calls": 0,
+    "totalMs": 514
+  },
+  {
+    "mode": "modeTraverse",
+    "triple": false,
+    "seed": 5,
+    "cards": 416,
+    "calls": 0,
+    "report": {
+      "before": {
+        "positions": [
+          2,
+          3,
+          5,
+          50,
+          99
+        ],
+        "thirds": [
+          3,
+          1,
+          1
+        ],
+        "first7": 3
+      },
+      "after": {
+        "positions": [
+          2,
+          3,
+          5,
+          50,
+          99
+        ],
+        "thirds": [
+          3,
+          1,
+          1
+        ],
+        "first7": 3
+      },
+      "targets": [],
+      "checks": 0,
+      "moves": 0,
+      "ms": 0,
+      "mode": "traverse-red0",
+      "reason": "原牌靴未通過穿越／訊號驗收，略過和局定位"
+    },
+    "totalMs": 455
+  },
+  {
+    "mode": "modeTraverse",
+    "triple": false,
+    "seed": 1,
+    "cards": 416,
+    "calls": 1,
+    "report": {
+      "before": {
+        "positions": [
+          2,
+          3,
+          14,
+          38,
+          52,
+          102
+        ],
+        "thirds": [
+          3,
+          2,
+          1
+        ],
+        "first7": 2
+      },
+      "after": {
+        "positions": [
+          2,
+          3,
+          14,
+          38,
+          52,
+          102
+        ],
+        "thirds": [
+          3,
+          2,
+          1
+        ],
+        "first7": 2
+      },
+      "targets": [
+        {
+          "original": 2,
+          "ideal": 8.5,
+          "target": 9,
+          "actual": 2,
+          "status": "unchanged",
+          "reason": "原和局後局不是閒，不符合交換前提",
+          "checks": 0,
+          "error": -6.5
+        },
+        {
+          "original": 3,
+          "ideal": 25.5,
+          "target": 26,
+          "actual": 3,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": -22.5
+        },
+        {
+          "original": 14,
+          "ideal": 42.5,
+          "target": 43,
+          "actual": 14,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": -28.5
+        },
+        {
+          "original": 38,
+          "ideal": 59.5,
+          "target": 60,
+          "actual": 38,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": -21.5
+        },
+        {
+          "original": 52,
+          "ideal": 76.5,
+          "target": 77,
+          "actual": 52,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": -24.5
+        },
+        {
+          "original": 102,
+          "ideal": 93.5,
+          "target": 94,
+          "actual": 102,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": 8.5
+        }
+      ],
+      "checks": 0,
+      "moves": 0,
+      "cancelled": false,
+      "ms": 0,
+      "reason": "依理想位置完成0局互換，6局保留原位",
+      "mode": "traverse-red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "directSwaps": 0,
+      "valid": {
+        "ok": true
+      }
+    },
+    "totalMs": 539
+  },
+  {
+    "mode": "modeTraverse",
+    "triple": false,
+    "seed": 2,
+    "cards": 416,
+    "calls": 1,
+    "report": {
+      "before": {
+        "positions": [
+          1,
+          2,
+          3,
+          5,
+          45,
+          85,
+          96,
+          101,
+          103
+        ],
+        "thirds": [
+          4,
+          1,
+          4
+        ],
+        "first7": 4
+      },
+      "after": {
+        "positions": [
+          1,
+          2,
+          3,
+          5,
+          45,
+          85,
+          96,
+          101,
+          103
+        ],
+        "thirds": [
+          4,
+          1,
+          4
+        ],
+        "first7": 4
+      },
+      "targets": [
+        {
+          "original": 1,
+          "ideal": 5.722222222222222,
+          "target": 6,
+          "actual": 1,
+          "status": "unchanged",
+          "reason": "原和局後局不是閒，不符合交換前提",
+          "checks": 0,
+          "error": -4.722
+        },
+        {
+          "original": 2,
+          "ideal": 17.166666666666668,
+          "target": 17,
+          "actual": 2,
+          "status": "unchanged",
+          "reason": "原和局後局不是閒，不符合交換前提",
+          "checks": 0,
+          "error": -15.167
+        },
+        {
+          "original": 3,
+          "ideal": 28.61111111111111,
+          "target": 29,
+          "actual": 3,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": -25.611
+        },
+        {
+          "original": 5,
+          "ideal": 40.05555555555556,
+          "target": 40,
+          "actual": 5,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": -35.056
+        },
+        {
+          "original": 45,
+          "ideal": 51.5,
+          "target": 52,
+          "actual": 45,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": -6.5
+        },
+        {
+          "original": 85,
+          "ideal": 62.94444444444444,
+          "target": 63,
+          "actual": 85,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": 22.056
+        },
+        {
+          "original": 96,
+          "ideal": 74.38888888888889,
+          "target": 74,
+          "actual": 96,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": 21.611
+        },
+        {
+          "original": 101,
+          "ideal": 85.83333333333333,
+          "target": 86,
+          "actual": 101,
+          "status": "unchanged",
+          "reason": "原和局含訊號牌，不符合交換前提",
+          "checks": 0,
+          "error": 15.167
+        },
+        {
+          "original": 103,
+          "ideal": 97.27777777777777,
+          "target": 97,
+          "actual": 103,
+          "status": "unchanged",
+          "reason": "原和局後局不是閒，不符合交換前提",
+          "checks": 0,
+          "error": 5.722
+        }
+      ],
+      "checks": 0,
+      "moves": 0,
+      "cancelled": false,
+      "ms": 0,
+      "reason": "依理想位置完成0局互換，9局保留原位",
+      "mode": "traverse-red0"
+    },
+    "evidence": {
+      "sameInventory": true,
+      "directSwaps": 0,
+      "valid": {
+        "ok": true
+      }
+    },
+    "totalMs": 447
+  },
+  {
+    "mode": "modeTraverse",
+    "triple": false,
+    "seed": 3,
+    "cards": 416,
+    "calls": 0,
+    "report": {
+      "before": {
+        "positions": [
+          2,
+          3,
+          4,
+          5,
+          33,
+          62,
+          89,
+          101,
+          102
+        ],
+        "thirds": [
+          5,
+          1,
+          3
+        ],
+        "first7": 4
+      },
+      "after": {
+        "positions": [
+          2,
+          3,
+          4,
+          5,
+          33,
+          62,
+          89,
+          101,
+          102
+        ],
+        "thirds": [
+          5,
+          1,
+          3
+        ],
+        "first7": 4
+      },
+      "targets": [],
+      "checks": 0,
+      "moves": 0,
+      "ms": 0,
+      "mode": "traverse-red0",
+      "reason": "原牌靴未通過穿越／訊號驗收，略過和局定位"
+    },
+    "totalMs": 396
+  },
+  {
+    "mode": "modeTraverse",
+    "triple": true,
+    "seed": 332,
+    "cards": 416,
+    "calls": 0,
+    "report": null,
+    "totalMs": 1379
+  },
+  {
+    "mode": "modeTraverseA2",
+    "triple": false,
+    "seed": 139,
+    "cards": 416,
+    "calls": 0,
+    "totalMs": 1218
+  },
+  {
+    "mode": "modeTraverseA2",
+    "triple": true,
+    "seed": 332,
+    "cards": 416,
+    "calls": 0,
+    "totalMs": 733
+  }
+]
