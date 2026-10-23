@@ -956,6 +956,57 @@ function multi_pass_candidates_from_cards_simple(card_pool) {
 }
 
 
+// 一般A2莊閒差距：莊局數約等於「含訊號牌的非三條局」數，而 A／2 最後一定全部用完，
+// 所以只能在挑局時控制每局含幾張訊號牌（集中→訊號局少、分散→訊號局多）。
+// 以目前已挑局數推估整副最終莊與閒＋和的差距，挑候選時選推估差距最小的。
+function createA2SideBalancer(deck) {
+    const sideLimit = typeof getMaxSideLimitSetting === 'function' ? getMaxSideLimitSetting() : null;
+    const active = window.StandardProfiles?.current === 'a2' && sideLimit !== null
+        && !(typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard'));
+    const isSig = c => typeof isSignalCardByConfig === 'function' && isSignalCardByConfig(c);
+    const total = deck.length, totalSig = deck.filter(isSig).length;
+    // 剩下的牌預估會再組成幾個訊號局：依剩牌中訊號牌比例算一局含至少一張的機率，
+    // 再乘上實測校正（敏感局、和局不含訊號等因素）；不能用已挑局的訊號密度外推，會自我強化。
+    const W = 10, priorLength = 4.88, calibration = 0.92;
+    let used = 0, usedSig = 0, rounds = 0, signalRounds = 0;
+    const effect = r => {
+        const m = r.cards.filter(isSig).length;
+        const triple = typeof isTripleRuleOn === 'function' && isTripleRuleOn() && typeof hasFullHouse === 'function' && hasFullHouse(r);
+        return { m, s: m > 0 && !triple ? 1 : 0, len: r.cards.length };
+    };
+    const projectedGap = (dm = 0, ds = 0, dLen = 0, dk = 0) => {
+        const u = usedSig + dm, s = signalRounds + ds, n = rounds + dk, c = used + dLen;
+        const length = (c + priorLength * W) / (n + W), restCards = Math.max(0, total - c);
+        const restRounds = restCards / length, q = restCards ? Math.max(0, totalSig - u) / restCards : 0;
+        const banker = s + calibration * restRounds * (1 - Math.pow(1 - q, length));
+        return 2 * banker - (n + restRounds);
+    };
+    const gapAfter = r => { const e = effect(r); return Math.abs(projectedGap(e.m, e.s, e.len, 1)); };
+    return {
+        active,
+        record(r) { const e = effect(r); used += e.len; usedSig += e.m; signalRounds += e.s; rounds++; },
+        // 依序掃描時：會讓推估差距變大且已超過 1 局就先跳過，牌留給後面的挑局
+        shouldSkip(r) {
+            if (!active) return false;
+            const now = Math.abs(projectedGap()), after = gapAfter(r);
+            return after > now && after > 1;
+        },
+        // 從前幾個合格候選中挑推估差距最小的（保留洗牌隨機性）
+        pick(cands, valid, limit = 8) {
+            if (!active) return cands.find(valid) || null;
+            let best = null, bestGap = Infinity, seen = 0;
+            for (const r of cands) {
+                if (!valid(r)) continue;
+                const g = gapAfter(r);
+                if (g < bestGap) { best = r; bestGap = g; }
+                if (++seen >= limit) break;
+            }
+            return best;
+        },
+        summary() { return { active, rounds, signalRounds, usedSig, totalSig, projectedGap: projectedGap() }; }
+    };
+}
+
 // 完整複製原系統的AC段排列邏輯
 function pack_all_sensitive_and_segment(deck) {
     log(`🔍 開始處理：總共 ${deck.length} 張牌`, 'info');
@@ -997,7 +1048,9 @@ function pack_all_sensitive_and_segment(deck) {
         const n = r?.cards?.length, min = sizeLimits?.[n]?.min;
         return min !== null && min !== undefined && sizeCounts[n] < min;
     };
+    const sideBalance = createA2SideBalancer(deck);
     const recordSize = r => {
+        sideBalance.record(r);
         const n = r.cards.length;
         if (sizeCounts[n] !== undefined) sizeCounts[n]++;
         if (n === 4) fourCardCount++;
@@ -1099,6 +1152,7 @@ function pack_all_sensitive_and_segment(deck) {
         if (swapB6Target > 0 && swapB6Count >= swapB6Target && isSwapBankerSix(r)) continue;
         // 三條+B6 重疊排除
         if (typeof hasFullHouse === 'function' && hasFullHouse(r) && isSwapBankerSix(r)) continue;
+        if (sideBalance.shouldSkip(r)) continue;
         r.segment = 'A';
         a_rounds.push(r);
         r.cards.forEach(c => used_pos.add(c.pos));
@@ -1184,10 +1238,10 @@ function pack_all_sensitive_and_segment(deck) {
                 picked = cands.find(r => isValidCandidate(r) && isSwapBankerSix(r) && r.cards.length > 4 && hasNoSignalCard(r) && !(typeof hasFullHouse === 'function' && hasFullHouse(r)));
             }
             if (!picked && sizeLimits) {
-                picked = cands.find(r => isValidCandidate(r) && needsSize(r));
+                picked = sideBalance.pick(cands, r => isValidCandidate(r) && needsSize(r));
             }
             if (!picked) {
-                picked = cands.find(r => isValidCandidate(r));
+                picked = sideBalance.pick(cands, isValidCandidate);
             }
         } else {
             picked = cands;
@@ -1224,6 +1278,10 @@ function pack_all_sensitive_and_segment(deck) {
     log('🔍 開始多重洗牌挑選敏感局', 'info');
     harvestAdditionalSensitiveRounds();
     log(`🔍 多重洗牌結束：A段 ${a_rounds.length} 局，已用牌 ${used_pos.size} 張`, 'info');
+    if (sideBalance.active) {
+        const b = sideBalance.summary();
+        log(`🔍 莊閒差距控制：訊號局 ${b.signalRounds}／${b.rounds} 局，訊號牌已用 ${b.usedSig}/${b.totalSig} 張，推估差距 ${b.projectedGap.toFixed(1)}`, 'info');
+    }
     if (max7PtLimit !== null) {
         log(`🔍 七點逆轉：${sevenPtReversalCount} 局（上限=${max7PtLimit}）`, 'info');
     }

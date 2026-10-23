@@ -3557,13 +3557,22 @@ async function generateShoe() {
             // 9. 連續莊/閒檢查（≥8 局違規；5-7 局最多 2 段；指定目標路單時依路單走）
             if (!(typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard'))) {
                 try {
-                    const allBlocks = findConsecutiveBankerPlayerBlocks(roundsToCheck);
-                    let bad = false;
-                    let allowed = 0;
-                    for (const block of allBlocks) {
-                        if (block.count >= 8) { bad = true; break; }
-                        allowed++;
-                        if (allowed > 2) { bad = true; break; }
+                    const streakBad = rounds => {
+                        let allowed = 0;
+                        for (const block of findConsecutiveBankerPlayerBlocks(rounds)) {
+                            if (block.count >= 8) return true;
+                            allowed++;
+                            if (allowed > 2) return true;
+                        }
+                        return false;
+                    };
+                    let bad = streakBad(roundsToCheck);
+                    // 末張9會在最後轉牌，接縫兩側可能接成新的連莊／連閒或連續4張局，
+                    // 最終驗收時已無法修正而停止；先用轉牌後的順序檢查，不合格就在這裡重新生成。
+                    if (!bad && document.getElementById('lastCardNine')?.checked) {
+                        const rotated = rotateShoeAfterEndingNine(roundsToCheck);
+                        bad = !!rotated && (streakBad(rotated.rounds)
+                            || findConsecutiveFourCardBlocks(rotated.rounds).length > findConsecutiveFourCardBlocks(roundsToCheck).length);
                     }
                     if (bad) {
                         log(`第 ${attempt} 次生成失敗：連續莊/閒超標，重新生成...`, 'warn');
