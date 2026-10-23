@@ -106,7 +106,8 @@ async function toolGroup(page,key){
     });
     await check('模式切換保留兩副不同牌靴，訊號使用同一份設定',async()=>{
       await page.locator('#modeRed0').click();assert.equal(await page.evaluate(signature),standard);
-      assert(await page.locator('#btnTraverseData').isHidden());
+      // 四模式都有分析明細（回復與安全切點）；穿越專屬摘要只在穿越模式顯示
+      assert(await page.locator('#btnTraverseData').isVisible());assert(await page.locator('#tvSummary').isHidden());
       await page.locator('#modeTraverse').click();assert.equal(await page.evaluate(signature),before);
       assert(await page.locator('#btnTraverseData').isVisible());
       await page.locator('#dashboardSettingsTab').click();

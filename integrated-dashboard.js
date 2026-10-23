@@ -72,8 +72,10 @@
     const oldToolbar = $('toolCats'), oldPanels = document.querySelector('.tool-panels');
     oldToolbar.hidden = oldPanels.hidden = true; $('compatLayer').append(oldToolbar,oldPanels);
     traverse.classList.remove('tool-panel'); traverse.querySelector('.mode-actions')?.remove();
+    const recoveryDetails = el('details','shared-recovery-details'); recoveryDetails.id = 'sharedRecoveryDetails';
+    recoveryDetails.innerHTML = '<summary>逐切點回復明細</summary><p class="mode-note">回復＝不對調發牌後接回原局起點；不是違規深度。張號依目前牌表；尾端未成局的牌保留參與模擬，但不視為局起點。</p><div id="sharedRecoveryRows"></div>';
     const moreData = el('div','dashboard-data-more'), diagnostics = $('tvDiagnostics').closest('details');
-    diagnostics.id = 'tvDiagnosticsPanel'; moreData.append($('tvBucketsDetail'),diagnostics); traverse.append(moreData);
+    diagnostics.id = 'tvDiagnosticsPanel'; moreData.append($('tvBucketsDetail'),recoveryDetails,diagnostics); traverse.append(moreData);
     const pit = document.querySelector('.pit'), tableBar = el('div','dashboard-table-bar');
     tableBar.append(el('span','dashboard-table-title','牌靴主表'),counts);
     const openData = button('btnTraverseData','穿越資料'), openTable = button('btnTableWindow','彈出主表 ↗');
@@ -111,20 +113,21 @@
     selectTab('settings');
     // A modeless window keeps the main table usable while diagnostics are open.
     const dataDialog = el('section','dashboard-data-dialog gframe'); dataDialog.id = 'traverseDataDialog'; dataDialog.hidden = true;
-    dataDialog.setAttribute('role','dialog'); dataDialog.setAttribute('aria-label','穿越資料');
-    const dialogHead = el('div','dashboard-dialog-head','<strong>穿越資料</strong>'), closeData = button('btnCloseTraverseData','關閉'); dialogHead.append(closeData);
+    dataDialog.setAttribute('role','dialog'); dataDialog.setAttribute('aria-label','分析明細');
+    const dialogHead = el('div','dashboard-dialog-head','<strong>分析明細</strong>'), closeData = button('btnCloseTraverseData','關閉'); dialogHead.append(closeData);
     const dialogBody = el('div','dashboard-dialog-body'); dataDialog.append(dialogHead,dialogBody); document.body.append(dataDialog);
     let floatingData = false, checkingPlacement = false;
     function closeDataDialog() { dataDialog.hidden = true; openData.setAttribute('aria-expanded','false'); }
     function updateDataPlacement() {
       if (checkingPlacement) return; checkingPlacement = true;
-      const isTraverse = document.body.dataset.mode === 'traverse'; openData.hidden = !isTraverse; progress.hidden = !isTraverse;
-      if (!isTraverse) closeDataDialog();
+      const isTraverse = document.body.dataset.mode === 'traverse'; openData.hidden = false; progress.hidden = !isTraverse; traverse.hidden = false;
+      $('tvSummary').hidden = !isTraverse; diagnostics.hidden = !isTraverse;
+      
       const expanded = Array.from(traverse.querySelectorAll('details')).some(d => d.open && d.id !== 'tvSafePanel');
       let shouldFloat = workspace.clientWidth < 1180 || innerHeight < 560 || expanded;
       // Judge the real inline height, including loaded fonts and wrapped summaries.
       // Keep at least the majority of the workspace available to the card table.
-      if (isTraverse && !shouldFloat) {
+      if (!shouldFloat) {
         if (traverse.parentElement !== traverseSlot) traverseSlot.append(traverse);
         traverseSlot.hidden = false; overview.classList.add('has-traverse');
         shouldFloat = overview.getBoundingClientRect().height > Math.min(280,innerHeight * .35);
@@ -133,8 +136,8 @@
       const parent = shouldFloat ? dialogBody : traverseSlot;
       if (traverse.parentElement !== parent) parent.append(traverse);
       if (!shouldFloat) closeDataDialog();
-      traverseSlot.hidden = !isTraverse || floatingData; overview.classList.toggle('has-traverse',isTraverse && !floatingData);
-      openData.textContent = floatingData ? '穿越資料 ↗' : '穿越資料'; checkingPlacement = false;
+      traverseSlot.hidden = floatingData; overview.classList.toggle('has-traverse',!floatingData);
+      openData.textContent = floatingData ? '分析明細 ↗' : '分析明細'; checkingPlacement = false;
     }
     openData.addEventListener('click',() => {
       updateDataPlacement(); if (!floatingData) { $('tvSafePanel').open = true; return; }
@@ -167,45 +170,55 @@
       });
       bar.setAttribute('role','img'); bar.setAttribute('aria-label',items.map(([name,count]) => `${name}${count}局`).join('，'));
     }
-    let lastCutAnalysis, lastCutResult;
-    function renderCutMap() {
-      const state = window.IntegratedModes.traversal, analysis = state.analysis, result = state.result;
-      if (lastCutAnalysis === analysis && lastCutResult === result) return;
-      lastCutAnalysis = analysis; lastCutResult = result;
-      const cuts = $('tvSafeCuts'); cuts.classList.add('cut-map'); cuts.replaceChildren();
-      const depths = result && analysis ? analysis.depths : Array(416).fill(null), maxDepth = Math.max(1,...depths.filter(Number.isFinite));
+    let analysisKey = '', shared = { safe:null, recovery:null };
+    function sharedAnalysis(rounds) {
+      const tv = document.body.dataset.mode === 'traverse';
+      const state = window.IntegratedModes.traversal;
+      const cards = tv && state.result ? TraverseOptimizer.prepare(state.result) : rounds.flatMap(r => r.cards);
+      const options = { tripleTie:$(tv ? 'tvTriple' : 'tripleTieRule').checked,
+        signalRule:tv ? $('tvSignal').checked : true, signalConfig:{suits:SIGNAL_CONFIG.suits.slice(),ranks:SIGNAL_CONFIG.ranks.slice()} };
+      const key = JSON.stringify([document.body.dataset.mode,document.body.dataset.sub,document.body.dataset.tsub,
+        options,cards.map(c=>[c.rank,c.suit,c.traverse]),rounds.map(r=>[r.result,r.cards.map(c=>[c.rank,c.suit])])]);
+      if (key !== analysisKey) {
+        analysisKey = key;
+        shared = { safe:rounds.length ? IntegratedAnalysis.safe(cards,options,tv) : null,
+          recovery:IntegratedAnalysis.recovery(rounds), excluded:tv ? cards.filter(c=>!c.traverse).length : 0 };
+        renderCutMap(tv);
+        renderRecoveryDetails();
+      }
+      if (!$('tvSafeCuts').querySelector('.cut-cell')) renderCutMap(tv);
+      return shared;
+    }
+    function renderCutMap(tv) {
+      const analysis = shared.safe, cuts = $('tvSafeCuts'); cuts.classList.add('cut-map'); cuts.replaceChildren();
+      const depths = analysis?.depths || Array(416).fill(null), total = depths.length;
+      const maxDepth = Math.max(1,...depths.filter(Number.isFinite));
+      $('tvSafeCount').textContent = analysis ? `${analysis.count}／${total}（${(analysis.count/total*100).toFixed(1)}%）` : '尚未排牌';
+      $('tvBucketSummary').textContent = analysis ? `${tv ? '原始牌序' : '目前牌表'}張號；違規深度＝最後違規局，不是回復局數。${shared.excluded ? `不檢查含剩牌的局（剩牌 ${shared.excluded} 張）。` : '全副完整局納入檢查。'}` : '';
+      const buckets = new Map(); depths.filter(Number.isFinite).forEach(d=>buckets.set(d,(buckets.get(d)||0)+1));
+      $('tvCutBuckets').replaceChildren(...[...buckets].sort((a,b)=>a[0]-b[0]).map(([d,n])=>el('div','cut-bucket',`<span>${d ? `最後違規第 ${d} 局` : '安全'}</span><strong>${n} 點</strong>`)));
+      if (analysis) { const unsafe=depths.filter(d=>d>0); $('tvCutBuckets').append(el('p','mode-note',`違規最深：${maxDepth === 1 && !unsafe.length ? '無' : `第 ${Math.max(0,...depths)} 局`}；非安全切點平均最後違規深度：${unsafe.length ? (unsafe.reduce((a,b)=>a+b,0)/unsafe.length).toFixed(1)+' 局' : '無'}`)); }
       depths.forEach((depth,index) => {
-        const cell = el('button','cut-cell'); cell.type = 'button'; cell.dataset.position = index + 1;
-        const safe = depth === 0, label = depth === null ? `第 ${index + 1} 張，尚未排牌` : `第 ${index + 1} 張，${safe ? '安全切點' : `第 ${depth} 局違規`}`;
-        cell.title = label; cell.setAttribute('aria-label',label); cell.disabled = depth === null;
+        const cell = el(tv ? 'button' : 'span','cut-cell'); if(tv) cell.type = 'button'; cell.dataset.position = index + 1;
+        const safe = depth === 0, label = depth === null ? `第 ${index + 1} 張，尚未排牌` : `第 ${index + 1} 張，${safe ? '安全切點' : `最後違規第 ${depth} 局`}`;
+        cell.title = label; cell.setAttribute('aria-label',label); if(tv) cell.disabled = depth === null;
         cell.classList.toggle('safe',safe); cell.classList.toggle('pending',depth === null);
-        if (depth !== null) cell.dataset.tvCut = index; if (!safe && depth !== null) cell.style.setProperty('--cut-light',(18 + depth / maxDepth * 40).toFixed(1) + '%');
+        if (tv && depth !== null) cell.dataset.tvCut = index;
+        if (!safe && depth !== null) cell.style.setProperty('--cut-light',(18 + depth / maxDepth * 40).toFixed(1) + '%');
         cuts.append(cell);
       });
       $('tvSafePanel').open = true;
-      if (!$('cutMapLegend')) { const legend = el('div','cut-map-legend','<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝越晚出現違規</span><span>滑過看張號・點任一格切牌</span>'); legend.id = 'cutMapLegend'; cuts.before(legend); }
+      if (!$('cutMapLegend')) { const legend = el('div','cut-map-legend'); legend.id = 'cutMapLegend'; cuts.before(legend); }
+      $('cutMapLegend').innerHTML = '<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝最後違規越深</span><span>' + (tv ? '滑過看張號・點任一格切牌' : '滑過看目前牌表張號・切牌請用切牌定位') + '</span>';
     }
-    // 穿越模式：回復卡與分布改顯示安全切點與違規深度（沿用 integrated.js 已算好的 analysis.depths）
-    function renderTraverseStats() {
-      const state = window.IntegratedModes.traversal, depths = state.result && state.analysis ? state.analysis.depths : null;
-      $('dashRecTitle').textContent = '穿越分析'; $('dashAvgLabel').textContent = '安全切點'; $('dashMaxLabel').textContent = '違規最深'; $('dashDistTitle').textContent = '違規深度分布';
-      $('dashB6').textContent = '';
-      if (!depths) { $('dashAvg').textContent = '—'; $('dashAvgCards').textContent = '／416'; $('dashMax').textContent = '—'; $('dashMaxCards').textContent = ''; $('dashMaxAt').textContent = '尚未排牌'; $('dashRecoveryBars').replaceChildren(); return; }
-      const total = depths.length, safe = depths.filter(d => d === 0).length, deepest = Math.max(0,...depths.filter(Number.isFinite));
-      const count = d => depths.filter(x => x === d).length;
-      $('dashAvg').textContent = safe + ' 點'; $('dashAvgCards').textContent = '／' + total;
-      $('dashMax').textContent = deepest ? `第 ${deepest} 局` : '—'; $('dashMaxCards').textContent = deepest ? count(deepest) + ' 點' : '';
-      $('dashMaxAt').textContent = `安全比例 ${(safe / total * 100).toFixed(1)}%（切在安全點，整副發完都不違規）`;
-      const between = (lo,hi) => depths.filter(d => d >= lo && d <= hi).length, unsafe = depths.filter(d => d > 0);
-      const rows = [['安全',safe],['1~2局',between(1,2)],['3~4局',between(3,4)],['5局以上',between(5,Infinity)]];
-      const bars = rows.map(([name,n])=>{ const pct = n / total * 100; return el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${n} 點</b>`); });
-      // 平均：非安全切點第一次違規的平均局數
-      const avg = unsafe.length ? unsafe.reduce((a,d) => a + d,0) / unsafe.length : 0;
-      bars.push(el('div','dash-range',`<span>平均</span><div style="background:none;border:0"></div><b>${unsafe.length ? '第 ' + avg.toFixed(1) + ' 局' : '—'}</b>`));
-      $('dashRecoveryBars').replaceChildren(...bars);
+    function renderRecoveryDetails() {
+      const recovery = shared.recovery;
+      $('sharedRecoveryRows').replaceChildren(...(recovery?.recoveryDetails || []).map(d=>el('div','shared-recovery-row',
+        `<span>第 ${d.cutPoint+1} 張</span><span>${d.immediate ? '立即回復' : `${d.roundsUsed} 局／${d.cardsUsed} 張${d.failed ? '（未回復）' : ''}`}</span>`)));
     }
     function refreshDashboard() {
       const rounds = typeof currentRounds === 'undefined' ? [] : currentRounds || [], full = rounds.filter(r => r.cards && [4,5,6].includes(r.cards.length)), has = full.length > 0;
+      const analysis = sharedAnalysis(rounds), recovery = analysis.recovery;
       const outcomeTotal = has ? Number(sourceText('totalRounds','0')) : 0;
       $('dashTotal').textContent = outcomeTotal; $('dashAvg').textContent = has ? sourceText('recoveryAvg') : '—'; $('dashAvgCards').textContent = has ? sourceText('recoveryAvgCards') : '— 張';
       $('dashMax').textContent = has ? sourceText('recoveryMaxRoundsLeft') + ' 局' : '—'; $('dashMaxCards').textContent = has ? sourceText('recoveryMaxCardsLeft') + ' 張' : '— 張';
@@ -213,12 +226,17 @@
       $('dashB6').textContent = has ? `對調莊6 ${sourceText('recoverySwapB6Count')}　莊6點贏 ${sourceText('recoveryBanker6Count')}` : '';
       proportional('dashOutcomeBar','dashOutcomeLegend',[['莊',has ? Number(sourceText('bankerCount','0')) : 0,'var(--banker)'],['閒',has ? Number(sourceText('playerCount','0')) : 0,'var(--player)'],['和',has ? Number(sourceText('tieCount','0')) : 0,'var(--tie)']],outcomeTotal);
       proportional('dashSizeBar','dashSizeLegend',[4,5,6].map((n,i)=>[`${n}張`,full.filter(r=>r.cards.length===n).length,['#cfe8d6','#62a683','#2f6e51'][i]]),full.length);
-      const imm = sourceText('recoveryImmediateDetail','').match(/\(([\d.]+)%\)/);
-      const ranges = [['立即',has && imm ? Number(imm[1]) : 0],...['1to5','6to10','11to15','16plus'].map((key,i)=>[['1–5局','6–10局','11–15局','16局以上'][i],has ? parseFloat(sourceText('recoveryRange'+key,'0')) || 0 : 0])];
-      $('dashRecoveryBars').replaceChildren(...ranges.map(([name,pct])=>el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${pct.toFixed(1)}%</b>`)));
-      if (document.body.dataset.mode === 'traverse') renderTraverseStats();
-      else { $('dashRecTitle').textContent = '回復分析'; $('dashAvgLabel').textContent = '平均回復'; $('dashMaxLabel').textContent = '最大消耗'; $('dashDistTitle').textContent = '回復間距分布'; }
-      renderCutMap(); if (window.IntegratedModes.traversal.result) openData.title = sourceText('tvSummary'); updateDataPlacement();
+      $('dashRecTitle').textContent = '回復分析'; $('dashAvgLabel').textContent = '平均回復'; $('dashMaxLabel').textContent = '最大消耗'; $('dashDistTitle').textContent = '回復間距分布';
+      $('dashAvg').textContent = recovery ? recovery.avgRounds + ' 局' : '—';
+      $('dashAvgCards').textContent = recovery ? recovery.avgCards + ' 張' : '— 張';
+      $('dashMax').textContent = recovery ? recovery.maxRounds + ' 局' : '—';
+      $('dashMaxCards').textContent = recovery ? recovery.maxCards + ' 張' : '— 張';
+      const failed = recovery?.recoveryDetails.filter(d=>d.failed).length || 0;
+      $('dashMaxAt').textContent = recovery ? (recovery.maxCardIdx >= 0 ? `最大張數消耗起點：第 ${recovery.maxCardIdx+1} 張` : (failed ? '無成功回復的非起點樣本' : '全部立即回復')) + (failed ? `；${failed} 點未回復（含於平均及16局以上）` : '') : '尚未生成牌靴';
+      const ranges = [['立即','immediate'],['1–5局','range1to5'],['6–10局','range6to10'],['11–15局','range11to15'],['16局以上*','range16plus']];
+      $('dashRecoveryBars').replaceChildren(...ranges.map(([name,key])=>{const pct=recovery ? recovery.distribution[key]/recovery.totalCards*100 : 0;return el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${pct.toFixed(1)}%</b>`);}));
+      $('dashDistTitle').title = '* 沿用原分析：未回復切點也列於16局以上，詳見逐切點明細';
+      updateDataPlacement();
     }
     // Keep the original rows and event handlers. Grid only changes where they
     // appear; all data-r/data-c indexes still refer to the original shoe.
@@ -325,6 +343,7 @@
       syncTableWindow(); opened.focus();
     }
     openTable.addEventListener('click',createTableWindow);
+    document.addEventListener('change',scheduleRefresh);
     const observer = new MutationObserver(scheduleRefresh);
     observer.observe(pit,{subtree:true,childList:true,attributes:true,characterData:true});
     observer.observe(legacy,{subtree:true,childList:true,characterData:true});
@@ -333,7 +352,7 @@
     new MutationObserver(scheduleRefresh).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     new ResizeObserver(updateDataPlacement).observe(workspace);
     window.addEventListener('pagehide',()=>{ if (liveWindow()) tableWindow.close(); });
-    window.DashboardUI = {refresh:scheduleRefresh,selectTab}; setDensity(tableDensity); layoutRoundTable(); refreshDashboard();
+    window.DashboardUI = {refresh:scheduleRefresh,selectTab,get analysis(){return shared;}}; setDensity(tableDensity); layoutRoundTable(); refreshDashboard();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',buildDashboard); else buildDashboard();
 })();

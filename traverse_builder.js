@@ -747,8 +747,7 @@
             // 已固定是訊號局（含不可調的訊號牌）且不是三條局：一定會讓下一局開莊
             let forced = 0;
             for (let k = 0; k < R; k++) if (fixedSig[k] > 0 && !rounds[k].trip) forced++;
-            const ties = rounds.filter(r => r.result === '和').length;
-            const want = Math.max(0, Math.round((R - ties) / 2) - forced);
+            const want = Math.max(0, Math.round(R / 2) - forced);
             const eligible = [];
             for (let k = 0; k < R; k++) {
                 if (rounds[k].trip || fixedSig[k] > 0 || flexOf[k] === 0 || nextTie(k)) continue;

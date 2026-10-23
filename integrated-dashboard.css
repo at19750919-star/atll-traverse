@@ -275,3 +275,8 @@ body:not([data-mode=traverse]) :is(#tvOptimize,#btnOptOpen,#tvDemo,a[href="trave
   body.dashboard .felt-head .arc-text{font-size:9px;letter-spacing:.08em}
 }
 @media(prefers-reduced-motion:reduce){body.dashboard *,body.table-window *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Shared analyses stay beside the existing metrics; long detail lists float. */
+body.dashboard #traverseTools [hidden]{display:none!important}
+.shared-recovery-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;padding:3px 0;border-bottom:1px solid #8a6a2f33}
+body.dashboard span.cut-cell{display:block;cursor:help}
