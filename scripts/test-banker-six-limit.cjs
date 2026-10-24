@@ -97,18 +97,18 @@ async function setLimit(page,value){await page.locator('#maxBankerSixWin').fill(
       assert.deepEqual(results.out.map(r=>r.enabled),[false,true,true]);
       assert.deepEqual(results.out.map(r=>r.skips),[[false,false,false],[false,true,true],[false,true,true]]);
     });
-    await check('實際挑敏感局在0／1／2上限停止加入莊6贏',async()=>{
+    await check('實際挑敏感局依訊號後方向守0／1／2上限，補第三張莊6仍雙向排除',async()=>{
       const counts=await page.evaluate(()=>{
         document.getElementById('tripleTieRule').checked=false;document.getElementById('swapBanker6Target').value='';
         const out=[];
         for(const cap of [0,1,2]) {
           document.getElementById('maxBankerSixWin').value=String(cap);
           const rounds=pack_all_sensitive_and_segment(build_shuffled_deck()).a_rounds;
-          out.push({cap,total:rounds.length,...checkBankerSixWinLimit(rounds,cap)});
+          out.push({cap,total:rounds.length,...checkBankerSixWinLimit(rounds,cap),projected:StandardGenerationBudget.create(rounds).measure(rounds).b6});
         }
         return out;
       });
-      for(const r of counts){assert(r.total>0);assert(r.count<=r.cap,JSON.stringify(r));assert.deepEqual(r.forbiddenRounds,[]);}
+      for(const r of counts){assert(r.total>0);assert(r.projected<=r.cap,JSON.stringify(r));assert.deepEqual(r.forbiddenRounds,[]);}
     });
     for(const [mode,cap] of [['modeRed0',0],['modeA2',2]])await check(mode+'完整生成符合上限，統計一致、生成鎖定與牌庫保留',async()=>{
       await page.locator('#'+mode).click();await setLimit(page,cap);

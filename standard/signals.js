@@ -3386,6 +3386,21 @@ async function generateShoe() {
                 TargetRoadmap.alignStandardRounds(roundsToCheck);
             }
 
+            // Account for the circular edge and changed adjacencies before committing signal swaps.
+            if (typeof StandardGenerationBudget !== 'undefined') {
+                const planned = await StandardGenerationBudget.repairOrder(roundsToCheck, { shouldStop: isStopRequested });
+                if (ensureNotStopped() || planned.cancelled) return;
+                if (!planned.ok) {
+                    log(`第 ${attempt} 次訊號預算無安全局部排法，重新生成...`, 'warn');
+                    result = null;
+                    continue;
+                }
+                roundsToCheck = planned.rounds;
+                if (planned.swaps) log(`訊號預算：局部交換 ${planned.swaps} 次，保留莊6與逆轉上限。`, 'info');
+                let p = 0;
+                roundsToCheck.forEach(r => { r.start_index = p; r.cards.forEach(c => { c.pos = p++; }); });
+            }
+
             // 4. 全段檢查原始莊6且閒≤5
             try {
                 analyze_signal_cards(roundsToCheck, { mutate: true });
@@ -5181,7 +5196,9 @@ function distributeRemainingCards(rounds, remainingCards) {
                 // 三條關閉時和局可放任何位置，但上一局有訊號牌就不行（和局無法對調成莊）
                 const prevHasSignal = !!(prevRound && Array.isArray(prevRound.cards) && prevRound.cards.some(c => c && isSignalCardByConfig(c)));
                 const tieBlocked = sensCandidate && sensCandidate.result === '和' && !prevIsT && (isTripleRuleOn() || prevHasSignal);
-                const candidateOk = sensCandidate && !tieBlocked && !b6Overflow && !tieOverflow;
+                const admission = typeof StandardGenerationBudget !== 'undefined' ? StandardGenerationBudget.create(rounds) : null;
+                const quotaOk = !admission || !sensCandidate || admission.canReplace(idx, { ...copiedRound, cards: sensCandidate.ordered });
+                const candidateOk = sensCandidate && !tieBlocked && !b6Overflow && !tieOverflow && quotaOk;
                 if (candidateOk) {
                     tailAccepted = true;
                     copiedRound.cards = sensCandidate.ordered.map((c, pos) => {
@@ -5237,6 +5254,8 @@ function distributeRemainingCards(rounds, remainingCards) {
 
     let distributed = 0;
 
+    const admission = typeof StandardGenerationBudget !== 'undefined' ? StandardGenerationBudget.create(updatedRounds) : null;
+
     // 核心邏輯：從後往前分配殘牌，補完後該局仍需符合敏感局條件
     const formatCardLabel = (card) => {
         if (!card) return '--';
@@ -5265,9 +5284,26 @@ function distributeRemainingCards(rounds, remainingCards) {
                 failedAttempts < allRemainingCards.length
             ) {
                 const cardToAdd = allRemainingCards.shift();
-                const candidate = findQualifiedSensitiveOrder([...round.cards, cardToAdd], { requireValidColor: true });
+                const cardsToAdd = [cardToAdd];
+                let candidate = findQualifiedSensitiveOrder([...round.cards, cardToAdd], { requireValidColor: true });
+                // A full five-card quota must not prevent a legal direct 4 -> 6 replacement.
+                if (admission && round.cards.length === 4 && candidate && !admission.canReplace(i, { ...round, cards: candidate.ordered })) {
+                    for (let j = 0; j < allRemainingCards.length; j++) {
+                        const pair = findQualifiedSensitiveOrder([...round.cards, cardToAdd, allRemainingCards[j]], { requireValidColor: true });
+                        if (pair && admission.canReplace(i, { ...round, cards: pair.ordered })) {
+                            candidate = pair;
+                            cardsToAdd.push(...allRemainingCards.splice(j, 1));
+                            break;
+                        }
+                    }
+                }
 
                 if (candidate) {
+                    if (admission && !admission.canReplace(i, { ...round, cards: candidate.ordered })) {
+                        allRemainingCards.push(...cardsToAdd);
+                        failedAttempts++;
+                        continue;
+                    }
                     // 和局檢查：補牌後不能產生和局（除非上一局是三條T局）
                     if (candidate.result === '和') {
                         const prevRound = i > 0 ? updatedRounds[i - 1] : null;
@@ -5277,7 +5313,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                             && updatedRounds.filter((rd, j) => j !== i && rd && rd.result === '和').length >= tieLimit_;
                         const prevHasSignal = !!(prevRound && Array.isArray(prevRound.cards) && prevRound.cards.some(c => c && isSignalCardByConfig(c)));
                         if ((!prevIsT && (isTripleRuleOn() || prevHasSignal)) || tieOverflow) {
-                            allRemainingCards.push(cardToAdd);
+                            allRemainingCards.push(...cardsToAdd);
                             failedAttempts++;
                             log(`  ✗ ${formatCardLabel(cardToAdd)} 補入後結果為和局但上一局非三條，改試下一張`, 'warn');
                             continue;
@@ -5288,7 +5324,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                     const hasSignal = candidate.ordered.some(c => c && isSignalCardByConfig(c));
                     const nextRound = updatedRounds[i + 1];
                     if (hasSignal && nextRound && nextRound.result !== '莊') {
-                        allRemainingCards.push(cardToAdd);
+                        allRemainingCards.push(...cardsToAdd);
                         failedAttempts++;
                         log(`  ✗ ${formatCardLabel(cardToAdd)} 補入後有訊號牌但下一局(${i + 2})非莊，改試下一張`, 'warn');
                         continue;
@@ -5314,7 +5350,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                                     if (_h2 && _h2.bankerTotal === 6 && _h2.playerTotal <= 5) _curB6++;
                                 }
                                 if (_curB6 >= _swapB6Target) {
-                                    allRemainingCards.push(cardToAdd);
+                                    allRemainingCards.push(...cardsToAdd);
                                     failedAttempts++;
                                     log(`  ✗ ${formatCardLabel(cardToAdd)} 補入後會讓 B6 超過目標 ${_swapB6Target}，改試下一張`, 'warn');
                                     continue;
@@ -5327,13 +5363,13 @@ function distributeRemainingCards(rounds, remainingCards) {
                     round.result = candidate.result;
                     round.sensitive = true;
                     round.swap_info = candidate.swap_info;
-                    distributed++;
-                    successfullyAdded++;
+                    distributed += cardsToAdd.length;
+                    successfullyAdded += cardsToAdd.length;
                     failedAttempts = 0;
 
                     log(`  ✓ 補入 ${formatCardLabel(cardToAdd)}：此局仍符合敏感局條件`, 'success');
                 } else {
-                    allRemainingCards.push(cardToAdd);
+                    allRemainingCards.push(...cardsToAdd);
                     failedAttempts++;
                     log(`  ✗ ${formatCardLabel(cardToAdd)} 無法讓第 ${i + 1} 局維持敏感局（含卡色/訊號牌），改試下一張`, 'warn');
                 }
