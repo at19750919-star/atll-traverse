@@ -5,55 +5,143 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>牌檔結果統計</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0b0d0c; --panel:#151a17; --line:#2c352f; --gold:#d8b45a; --text:#e9e4d4; --dim:#9a9483; --hit:#3b2f12; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 "Microsoft JhengHei", system-ui, sans-serif; }
-  main { max-width:1200px; margin:0 auto; padding:20px 16px 40px; }
-  h1 { margin:0 0 4px; color:var(--gold); font-size:22px; }
-  .sub { color:var(--dim); margin-bottom:16px; }
-  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:14px; }
-  .drop { border:2px dashed var(--line); border-radius:8px; padding:18px; text-align:center; color:var(--dim); }
-  .drop.over { border-color:var(--gold); color:var(--text); }
-  button, select { background:#1f2621; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font:inherit; cursor:pointer; }
-  button:hover, select:hover { border-color:var(--gold); }
-  button.gold { background:var(--gold); color:#1a1405; border-color:var(--gold); font-weight:bold; }
-  .filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
-  .filters label { display:flex; flex-direction:column; gap:4px; color:var(--dim); font-size:13px; }
-  .summary { font-size:18px; margin:4px 0 10px; }
-  .summary b { color:var(--gold); }
+  /* 沿用 integrated.html 黑金色票與元件 */
+  :root {
+    --ink:#07090b; --gold-1:#f4dfa4; --gold-2:#d9b568;
+    --gold-line:linear-gradient(135deg,#6b4c1d 0%,#e8c97a 25%,#8a6a2f 50%,#f4dfa4 75%,#6b4c1d 100%);
+    --txt:#e8e4d8; --txt-dim:#9a9584; --tie:#5cbf8a; --danger:#ff6b5e;
+    --serif:"Noto Serif TC","Cinzel",serif; --sans:"Noto Sans TC",sans-serif; --disp:"Cinzel","Noto Serif TC",serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { background:var(--ink); }
+  body {
+    font-family:var(--sans); color:var(--txt); min-height:100vh; font-size:14px; line-height:1.5;
+    background:
+      radial-gradient(1200px 500px at 50% -8%, rgba(38,84,68,.45), transparent 60%),
+      radial-gradient(900px 700px at 88% 110%, rgba(26,54,66,.35), transparent 60%),
+      linear-gradient(180deg,#0a0e10 0%, #07090b 100%);
+    background-attachment:fixed;
+    padding:0 clamp(12px,2.2vw,34px) 30px;
+  }
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:999; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+  }
+  main { max-width:1280px; margin:0 auto; }
+  header {
+    display:flex; align-items:center; gap:18px; padding:16px 4px 12px; margin-bottom:24px;
+    border-bottom:1px solid transparent;
+    border-image:linear-gradient(90deg,transparent,#8a6a2f 20%,#f4dfa4 50%,#8a6a2f 80%,transparent) 1;
+  }
+  .crest {
+    width:52px; height:52px; border-radius:50%; flex:none;
+    background:#080908 url("suit/at-spade-logo-current.png") center/cover no-repeat;
+    box-shadow:0 0 0 1px #8a6a2f, 0 0 0 4px #0c1110, 0 0 0 5px #5d431c, 0 6px 18px rgba(0,0,0,.6), inset 0 0 14px rgba(232,201,122,.15);
+  }
+  h1 {
+    font-family:var(--disp); font-size:clamp(20px,2.4vw,28px); font-weight:900; letter-spacing:.14em;
+    background:linear-gradient(180deg,#fbeec7 10%,#e2bd72 45%,#9c7434 70%,#f0d491 95%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.8));
+  }
+  h1 small {
+    display:block; font-family:var(--sans); font-weight:400; font-size:11px; letter-spacing:.5em;
+    color:var(--txt-dim); -webkit-text-fill-color:var(--txt-dim); margin-top:2px;
+  }
+  header .back { margin-left:auto; }
+  .gframe {
+    position:relative; padding:22px 18px 16px; margin-bottom:22px;
+    background:linear-gradient(160deg, rgba(24,32,33,.92), rgba(11,17,19,.94));
+    border:1px solid; border-image:var(--gold-line) 1;
+    box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.35);
+  }
+  .gframe::before, .gframe::after {
+    content:""; position:absolute; width:14px; height:14px; pointer-events:none;
+    border-color:var(--gold-1); border-style:solid;
+  }
+  .gframe::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
+  .gframe::after { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+  .frame-title {
+    position:absolute; top:-9px; left:18px; font-family:var(--serif); font-size:11px; font-weight:600;
+    letter-spacing:.4em; color:var(--gold-2); background:#0d1315; padding:0 10px;
+  }
+  .drop {
+    border:1px dashed #3a4340; border-radius:8px; padding:20px; text-align:center; color:var(--txt-dim);
+    background:radial-gradient(ellipse at 50% 0%, rgba(18,58,44,.55), rgba(10,36,27,.25) 70%);
+    transition:.2s;
+  }
+  .drop.over { border-color:#c9a25a; color:var(--gold-1); box-shadow:inset 0 0 20px rgba(212,176,106,.2); }
+  .tool-btn {
+    display:inline-flex; align-items:center; justify-content:center; text-decoration:none; vertical-align:middle;
+    cursor:pointer; user-select:none; min-width:88px; height:40px; padding:0 18px; border-radius:8px;
+    font-family:var(--serif); font-weight:600; font-size:13.5px; letter-spacing:.25em; text-indent:.25em;
+    color:var(--txt); background:linear-gradient(180deg,#161f21,#0d1315); border:1px solid #2c3634; transition:.2s;
+  }
+  .tool-btn:hover { border-color:#c9a25a; color:var(--gold-1); transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.5), 0 0 10px rgba(212,176,106,.2); }
+  .tool-btn:active { transform:translateY(0) scale(.97); }
+  .tool-btn.gold {
+    color:#120e04; border-color:#8a6a2f; background:linear-gradient(180deg,#f4dfa4,#c9a25a);
+    text-shadow:0 1px 0 rgba(255,255,255,.4); box-shadow:0 0 12px rgba(212,176,106,.35), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  select {
+    height:36px; min-width:86px; padding:0 10px; border-radius:6px; cursor:pointer; outline:none;
+    background:#0a100f; border:1px solid #33403d; color:var(--gold-1); font-family:var(--serif); font-size:14px; transition:.2s;
+  }
+  select:hover, select:focus { border-color:#c9a25a; box-shadow:0 0 10px rgba(212,176,106,.25); }
+  option { background:#0a100f; color:var(--txt); }
+  .filters { display:flex; flex-wrap:wrap; gap:14px; align-items:end; }
+  .filters label { display:flex; flex-direction:column; gap:5px; color:var(--txt-dim); font-size:12px; letter-spacing:.15em; }
+  .summary { font-family:var(--serif); font-size:17px; margin:2px 0 12px; }
+  .summary b { font-family:var(--disp); color:var(--gold-1); font-size:22px; text-shadow:0 0 10px rgba(244,223,164,.35); }
+  .hint { color:var(--txt-dim); font-size:12px; letter-spacing:.05em; margin-bottom:10px; }
   table { border-collapse:collapse; width:100%; }
-  th, td { border:1px solid var(--line); padding:5px 8px; text-align:center; }
-  th { color:var(--gold); background:#111512; font-weight:normal; }
-  td.hands { text-align:left; color:var(--dim); }
-  tr.zero td { color:#5d5a50; }
-  .matrix td { cursor:pointer; min-width:44px; }
-  .matrix td:hover { outline:1px solid var(--gold); }
-  .matrix td.sel { background:var(--hit); color:var(--gold); font-weight:bold; }
-  .matrix td.tie { color:#7fb3d5; }
+  th, td { border:1px solid #243030; padding:6px 8px; text-align:center; }
+  th { color:var(--gold-2); background:#0b1113; font-family:var(--serif); font-weight:600; letter-spacing:.1em; }
+  td { font-variant-numeric:tabular-nums; }
+  td.hands { text-align:left; color:var(--txt-dim); font-family:var(--sans); }
+  td.hit { color:var(--gold-1); font-weight:700; }
+  tr.zero td { color:#4f5652; }
+  .matrix { background:linear-gradient(160deg, rgba(18,58,44,.55), rgba(10,36,27,.7)); }
+  .matrix td { cursor:pointer; min-width:44px; transition:.15s; }
+  .matrix td.bk { color:#f0a097; }
+  .matrix td.pl { color:#93c8ea; }
+  .matrix td.tie { color:var(--tie); }
+  .matrix td:hover { outline:1px solid var(--gold-2); background:rgba(212,176,106,.08); }
+  .matrix td.sel { background:linear-gradient(180deg,#f4dfa4,#c9a25a); color:#120e04; font-weight:900; }
+  .legend { margin-top:8px; font-size:12px; color:var(--txt-dim); }
+  .legend span { margin-right:14px; }
   .wrap { overflow-x:auto; }
-  .row { display:flex; gap:14px; flex-wrap:wrap; }
-  .row > .panel { flex:1 1 420px; }
-  .err { color:#e07a6a; }
+  .row { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  .row > .gframe { flex:1 1 440px; min-width:0; }
+  .err { color:var(--danger); }
+  #loadMsg { margin-top:10px; color:var(--gold-2); letter-spacing:.1em; }
 </style>
 </head>
 <body>
 <main>
-  <h1>牌檔結果統計</h1>
-  <div class="sub">選一個資料夾（或多個導出的 Excel 牌檔），設定條件，看每副牌各有幾局、是第幾局。</div>
+  <header>
+    <div class="crest"></div>
+    <h1>DECK STATS<small>牌檔結果統計</small></h1>
+    <a class="tool-btn back" href="integrated.html">回主頁</a>
+  </header>
 
-  <div class="panel">
+  <section class="gframe">
+    <span class="frame-title">載入牌檔</span>
     <div class="drop" id="drop">
       把資料夾或 Excel 檔拖到這裡，或
-      <button id="pickDir">選資料夾</button>
-      <button id="pickFiles">選檔案</button>
+      <button class="tool-btn" id="pickDir">選資料夾</button>
+      <button class="tool-btn" id="pickFiles">選檔案</button>
       <input type="file" id="dirInput" webkitdirectory hidden>
       <input type="file" id="fileInput" accept=".xlsx" multiple hidden>
-      <div id="loadMsg" style="margin-top:8px"></div>
+      <div id="loadMsg"></div>
     </div>
-  </div>
+  </section>
 
-  <div class="panel">
+  <section class="gframe">
+    <span class="frame-title">篩選條件</span>
     <div class="filters">
       <label>結果<select id="fResult"><option value="">全部</option><option>莊</option><option>閒</option><option>和</option></select></label>
       <label>莊點<select id="fBanker"></select></label>
@@ -61,20 +149,23 @@
       <label>張數<select id="fCards"><option value="">全部</option><option>4</option><option>5</option><option>6</option></select></label>
       <label>訊號欄<select id="fSignal"><option value="">全部</option></select></label>
       <label>對調後結果<select id="fSwap"><option value="">全部</option><option>莊</option><option>閒</option><option>和</option></select></label>
-      <button id="reset">清除條件</button>
-      <button id="copy" class="gold">複製結果</button>
+      <button class="tool-btn" id="reset">清除條件</button>
+      <button class="tool-btn gold" id="copy">複製結果</button>
     </div>
-  </div>
+  </section>
 
   <div class="row">
-    <div class="panel">
+    <section class="gframe">
+      <span class="frame-title">每副統計</span>
       <div class="summary" id="summary">尚未載入牌檔</div>
       <div class="wrap"><table id="result"></table></div>
-    </div>
-    <div class="panel">
-      <div style="color:var(--dim);margin-bottom:6px">莊閒點數總表（套用左邊除點數外的條件，點格子直接查那個組合）</div>
+    </section>
+    <section class="gframe">
+      <span class="frame-title">莊閒點數總表</span>
+      <div class="hint">套用左邊除點數外的條件；點格子直接查那個組合，再點一次取消。空白＝0 局。</div>
       <div class="wrap"><table class="matrix" id="matrix"></table></div>
-    </div>
+      <div class="legend"><span style="color:#f0a097">■ 莊贏</span><span style="color:#93c8ea">■ 閒贏</span><span style="color:var(--tie)">■ 和局</span></div>
+    </section>
   </div>
 </main>
 
@@ -183,7 +274,7 @@
     const pct = allHands ? ((total / allHands) * 100).toFixed(2) : '0';
     $('summary').innerHTML = `${describe(f)}：共 <b>${total}</b> 局，${decks.length} 副平均每副 <b>${avg}</b> 局（佔 ${pct}%）`;
     $('result').innerHTML = '<tr><th>牌檔</th><th>總局數</th><th>符合</th><th>第幾局</th></tr>' +
-      rows.map((r) => `<tr class="${r.hit.length ? '' : 'zero'}"><td>${r.name}</td><td>${r.n}</td><td>${r.hit.length}</td><td class="hands">${r.hit.join('、')}</td></tr>`).join('') +
+      rows.map((r) => `<tr class="${r.hit.length ? '' : 'zero'}"><td>${r.name}</td><td>${r.n}</td><td class="${r.hit.length ? 'hit' : ''}">${r.hit.length}</td><td class="hands">${r.hit.join('、')}</td></tr>`).join('') +
       `<tr><th>合計</th><th>${allHands}</th><th>${total}</th><th></th></tr>`;
     lastText = `${describe(f)}：共 ${total} 局（${decks.length} 副，平均每副 ${avg} 局）\n` +
       rows.map((r) => `${r.name}\t${r.hit.length}\t${r.hit.join('、')}`).join('\n');
@@ -192,7 +283,7 @@
     for (const d of decks) for (const h of d.hands) if (match(h, f, true) && h.banker <= 9 && h.player <= 9) m[h.banker][h.player]++;
     $('matrix').innerHTML = '<tr><th>莊＼閒</th>' + [...Array(10).keys()].map((p) => `<th>${p}</th>`).join('') + '</tr>' +
       m.map((line, b) => `<tr><th>${b}</th>` + line.map((c, p) => {
-        const sel = String(b) === f.banker && String(p) === f.player ? 'sel' : b === p ? 'tie' : '';
+        const sel = String(b) === f.banker && String(p) === f.player ? 'sel' : b === p ? 'tie' : b > p ? 'bk' : 'pl';
         return `<td class="${sel}" data-b="${b}" data-p="${p}">${c || ''}</td>`;
       }).join('') + '</tr>').join('');
   }
