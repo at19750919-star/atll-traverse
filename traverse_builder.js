@@ -514,13 +514,58 @@
         return true;
     }
 
+    // 計算補排先查穿越範本庫：找剩牌湊得出的點數組成，依目前規則重驗（穿越／敏感／三條／第二張、0點比例、局數配額）後直接採用
+    async function templatePick(rest, opts, ctx) {
+        const groups = opts.templateIndex;
+        if (!groups?.length || rest.length < opts.minLen) return null;
+        if (!opts.templateOrder || opts.templateOrder.source !== groups || opts.templateOrder.length !== groups.length) {
+            // 0 點比例高、張數長的組成先試，與原本撿段偏好 0 點多的段相同
+            opts.templateOrder = groups.slice().sort((a, b) => b.zeros / b.length - a.zeros / a.length || b.length - a.length);
+            opts.templateOrder.source = groups;
+        }
+        const counts = countsOf(rest), quota = quotaActive(opts);
+        let best = null, found = 0, checked = 0;
+        for (const g of opts.templateOrder) {
+            if (g.length < opts.minLen || g.length > opts.maxLen || g.length > rest.length) continue;
+            let fit = true;
+            for (let k = 0; k < 10; k++) if (g.counts[k] > counts[k]) { fit = false; break; }
+            if (!fit) continue;
+            if (opts.computeQuota && g.zeros < Math.floor(counts[0] / rest.length * g.length * opts.quotaFactor)) continue;
+            for (const p of g.points) {
+                if (++checked % 256 === 0) { await tick(); if (ctx.cancelled()) return best; }
+                if (!qualifies(p, true) || !sizeLimitOk(p, opts)) continue;
+                if (!quota) return p.slice();
+                found++;
+                if (preferQuota(p, best, opts)) best = p.slice();
+                break;
+            }
+            if (quota && found >= 8) break;
+        }
+        return best;
+    }
+
     async function phaseCompute(rest, opts, ctx) {
         const hands = allSensitiveHands();
         const segs = [];
         let tries = 0;
         let idle = 0;
+        let templateDry = !opts.templateIndex;
         while (idle < opts.computeTries && rest.length >= opts.minLen) {
             if (ctx.cancelled()) break;
+            if (!templateDry) {
+                const t = await templatePick(rest, opts, ctx);
+                if (t) {
+                    sizeLimitAdd(t, opts);
+                    segs.push(t);
+                    const c = countsOf(t);
+                    rest = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
+                    opts.templateComputeHits = (opts.templateComputeHits || 0) + 1;
+                    idle = 0;
+                    ctx.progress(`階段 2 計算排列：範本庫補撿 ${opts.templateComputeHits} 段，剩 ${rest.length} 張`);
+                    continue;
+                }
+                templateDry = true;
+            }
             const counts = countsOf(rest);
             const usable = hands.filter(h => fits(h, counts));
             if (usable.length === 0) break;
@@ -557,6 +602,7 @@
                 const c = countsOf(found);
                 rest = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
                 idle = 0;
+                templateDry = !opts.templateIndex;
             }
             ctx.progress(`階段 2 計算排列：已試 ${tries} 組，補撿 ${segs.length} 段，剩 ${rest.length} 張`);
             await tick();
@@ -1025,6 +1071,10 @@
         for (let p = 1; p <= 9; p++) for (let k = 0; k < 32; k++) rest.push(p);
         for (let k = 0; k < 128; k++) rest.push(0);
 
+        opts.templateComputeHits = 0;
+        // 與剩牌範本查找相同，只在穿越紅0（紅心方塊10／J／Q／K）啟用
+        opts.templateIndex = options.templateCompute === false || !global.TraverseTemplates?.compositionIndex || !global.TraverseRed0Balance?.enabled(rules.signalConfig) ? null
+            : await global.TraverseTemplates.compositionIndex({ cancelled: ctx.cancelled });
         const p1 = await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
         const segs = p1.segs.concat(p2.segs);
@@ -1050,7 +1100,7 @@
         // 剩下的張數已超過上限：注定要重跑，跳過接段／A、2／卡色，省時間
         if (options.rejectAbove != null && restCards.length > options.rejectAbove && !ctx.cancelled()) {
             if(options.fillSensitiveTail===true&&!options.a2Tail)templateLog(`未查找｜剩牌 ${restCards.length} 張超過上限 ${options.rejectAbove}，先整副重跑`);
-            return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0 } };
+            return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits } };
         }
         let chains = await phaseChain(segs, opts, ctx);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
@@ -1252,6 +1302,7 @@
             balance,
             signalBalance,
             stats: {
+                templateComputeHits: opts.templateComputeHits,
                 shuffles: p1.shuffles,
                 phase1Segments: p1.segs.length,
                 phase1Rest: p1.rest.length,

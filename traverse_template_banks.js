@@ -22,6 +22,8 @@
   }
   async lookup(points,options={}){await this.refresh();if(options.cancelled?.())return [];const key=L.key(points),part=await this.part(points.length,bucket(key)),result=[];let until=performance.now()+8;for(const row of part.byKey?.get(key)||[]){if(options.cancelled?.())return [];const e=unpack(row,points.length);try{L.validate(e);result.push(e.points);}catch(_){}if(performance.now()>=until){await pause();until=performance.now()+8;}}return result;}
 
+  // 逐片讀出某張數庫的全部點數排列（已過分片校驗），給計算補排建點數組成索引用
+  async *allPoints(n,options={}){await this.refresh();for(const k of Object.keys(this.manifest.banks[n].parts)){if(options.cancelled?.())return;const part=await this.part(n,+k);for(const code of part.keys())yield [...code].map(Number);await pause();}}
   async refresh(){const raw=await text(this.dir,'index.json',true);if(raw===this.raw)return;const next=raw===null?null:check(JSON.parse(raw));if(!next||(this.raw!==null&&(next.id!==this.manifest.id||next.generation<this.manifest.generation)))throw Error('資料夾索引被替換或回退，待存資料保留，未覆寫');const previous=this.manifest;this.manifest=next;try{for(const n of LENGTHS)for(const [k,meta]of Object.entries(next.banks[n].parts)){if(previous.banks[n].parts[k]?.hash!==meta.hash)await this.part(n,+k);}this.raw=raw;}catch(e){this.manifest=previous;throw e;}}
   async merge(batch,cancelled=()=>false){const run=async()=>{if(this.locked)throw Error('分庫保存正在執行');this.locked=true;try{await this.refresh();return await this.commit(batch,cancelled);}finally{this.locked=false;}};return root.navigator?.locks?root.navigator.locks.request(NS,run):run();}
 
