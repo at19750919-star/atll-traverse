@@ -148,3 +148,7 @@ body[data-mode].running .chip-col,body[data-mode].finished .chip-col{grid-column
 
 /* 兩模式共用同一種設定區：各模式只顯示自己的那一塊 */
 body[data-mode="traverse"] #standardControls,body:not([data-mode="traverse"]) #traverseControls{display:none!important}
+
+/* The actual stop/save control stays above the progress shade, even when its panel is closed. */
+.collection-stop-floating{position:fixed!important;left:50%;bottom:32px;transform:translateX(-50%);z-index:960;pointer-events:auto!important;min-height:44px;background:#331e12;border:2px solid #d6ad5b;color:#ffe1a0;box-shadow:0 8px 30px #000b}
+.collection-stop-floating:disabled{pointer-events:none!important}

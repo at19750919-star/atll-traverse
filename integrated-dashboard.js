@@ -42,7 +42,7 @@
       <div><span id="dashAvgLabel">平均回復</span><strong id="dashAvg">—</strong><small id="dashAvgCards">—</small></div>
       <div><span id="dashMaxLabel">最大消耗</span><strong id="dashMax">—</strong><small id="dashMaxCards">—</small></div></div>
       <p id="dashMaxAt" class="dash-detail"></p><p id="dashB6" class="dash-detail b6-meta"></p></section>
-      <section class="dash-stat"><h2>本副牌靴 <strong id="dashTotal">0</strong><small> 局</small></h2>
+      <section class="dash-stat"><h2>本副牌靴 <strong id="dashTotal">0</strong><small> 局</small><small id="dashLeftLabel" hidden>｜剩牌 </small><strong id="dashLeftover" hidden>0</strong><small id="dashLeftUnit" hidden> 張</small></h2>
       <div id="dashOutcomeLegend" class="dash-legend"></div><div id="dashOutcomeBar" class="dash-proportion"></div>
       <div id="dashSizeLegend" class="dash-legend"></div><div id="dashSizeBar" class="dash-proportion"></div></section>
       <section class="dash-stat dash-distribution"><h2 id="dashDistTitle">回復間距分布</h2><div id="dashRecoveryBars"></div></section>`;
@@ -50,7 +50,7 @@
     const traverseSlot = el('div','dashboard-traverse-slot'), traverse = $('traverseTools');
     traverseSlot.append(traverse); overview.append(metrics,traverseSlot);
     const groups = [
-      ['牌序編修','edit',['btnSwap','btnRound','btnAutoReorder','btnAutoColor','btnAutoFix','btnCancelEdit','btnApplyChanges','tvOptimize','btnOptOpen']],
+      ['牌序編修','edit',['btnSwap','btnRound','btnAutoReorder','btnAutoColor','btnAutoFix','btnCancelEdit','btnApplyChanges','tvOptimize','tvRecoveryOptimize','btnOptOpen']],
       ['切牌定位','cut',['btnRecordDeckOrder']],
       ['分析與參考','analysis',['btnShoeMap','btnPointMatrix','btnPointStats','btnValidate','btnApplyTools']],
       ['檔案與輸入','files',['btnImport','importFileInput','btnManualInput']],
@@ -220,6 +220,11 @@
       const rounds = typeof currentRounds === 'undefined' ? [] : currentRounds || [], full = rounds.filter(r => r.cards && [4,5,6].includes(r.cards.length)), has = full.length > 0;
       const analysis = sharedAnalysis(rounds), recovery = analysis.recovery;
       const outcomeTotal = has ? Number(sourceText('totalRounds','0')) : 0;
+      const traverseResult = document.body.dataset.mode === 'traverse' ? window.IntegratedModes?.traversal?.result : null;
+      const leftover = traverseResult?.leftoverCount;
+      const showLeftover = has && Number.isInteger(leftover) && leftover >= 0 && leftover <= (traverseResult?.cards?.length || 0);
+      ['dashLeftLabel','dashLeftover','dashLeftUnit'].forEach(id => { $(id).hidden = !showLeftover; });
+      $('dashLeftover').textContent = showLeftover ? leftover : 0;
       $('dashTotal').textContent = outcomeTotal; $('dashAvg').textContent = has ? sourceText('recoveryAvg') : '—'; $('dashAvgCards').textContent = has ? sourceText('recoveryAvgCards') : '— 張';
       $('dashMax').textContent = has ? sourceText('recoveryMaxRoundsLeft') + ' 局' : '—'; $('dashMaxCards').textContent = has ? sourceText('recoveryMaxCardsLeft') + ' 張' : '— 張';
       $('dashMaxAt').textContent = has ? `最大消耗起點：第 ${sourceText('recoveryMaxIdxCards')} 張／第 ${sourceText('recoveryMaxIdxRounds')} 局` : '尚未生成牌靴';

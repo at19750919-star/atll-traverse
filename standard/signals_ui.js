@@ -1327,7 +1327,7 @@ function pack_all_sensitive_and_segment(deck) {
     const tripleRuleOff = typeof isTripleRuleOn === 'function' && !isTripleRuleOn();
     if (tripleRuleOff) {
         log('🔍 三條開關關閉：略過 T 局處理，和局可出現在任何位置。', 'info');
-        relocateTiesAfterSignal(final_rounds);
+        if (typeof isRed0BalanceEnabled !== 'function' || !isRed0BalanceEnabled()) relocateTiesAfterSignal(final_rounds);
     } else if (typeof applyTSignalLogic === 'function') {
         try {
             const processed = applyTSignalLogic(final_rounds.slice(), a_rounds, used_pos, c_cards);

@@ -1100,8 +1100,8 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
 .target-road-row .tool-btn{height:30px;min-height:30px;min-width:0;padding:0 8px;font-size:11.5px;letter-spacing:.04em;text-indent:0;flex:0 0 auto}
 .target-road-summary{font-size:11px;color:#c8b78f;line-height:1.45;overflow-wrap:anywhere;word-break:break-word}
 </style>
-<link rel="stylesheet" href="integrated.css?v=5">
-<link rel="stylesheet" href="integrated-dashboard.css?v=11">
+<link rel="stylesheet" href="integrated.css?v=14">
+<link rel="stylesheet" href="integrated-dashboard.css?v=12">
 </head>
 <body data-mode="standard">
 
@@ -1267,7 +1267,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
     <label hidden>補排次數 <input id="tvTries" class="numbox" type="number" min="1" value="20000"></label>
     <label hidden>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
     <label>剩牌上限 <input id="tvLeft" class="numbox" type="number" min="0" max="416" value="0" placeholder="不限"></label>
-    <label title="整副和局數上限；留白＝不限">和局上限 <input id="tvTieMax" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label title="挑段仍以原上限為目標；穿越最終局數驗收允差最多3局，上限0仍禁止；留白不限">和局上限 <input id="tvTieMax" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input id="tvSideLimit" class="numbox" type="number" min="0" max="104" value="8" placeholder="不限"></label>
   </div>
   <div class="mode-fields">
@@ -1340,8 +1340,9 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
   </div>
 </section>
 <section id="traverseTools" class="gframe mode-panel tool-panel" hidden>
-  <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
-  <p id="tvProgress" role="status">尚未排牌</p><div id="tvSummary"></div>
+  <p class="mode-note">穿越4／5／6張局數與和局：挑段按原目標；最終驗收允差最多3局，上限0仍禁止。其他規則不放寬。</p>
+  <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvRecoveryOptimize" class="tool-btn" disabled>回復優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
+  <div class="mode-actions" id="tvTemplateControls"><button id="tvTemplateConnect" class="tool-btn">選擇範本資料夾</button><button id="tvTemplateResume" class="tool-btn">恢復資料夾授權</button><button id="tvTemplateStart" class="tool-btn">開始累積範本</button><button id="tvTemplateStop" class="tool-btn" disabled>停止累積／保存</button><select id="tvTemplateExportLength" aria-label="匯出張數庫"><option value="8">8張庫</option><option value="9">9張庫</option><option value="10">10張庫</option><option value="11">11張庫</option><option value="12">12張庫</option></select><button id="tvTemplateExport" class="tool-btn">匯出所選張數庫</button><button id="tvTemplateExportPending" class="tool-btn">匯出待存備份（不合併磁碟）</button><button id="tvTemplateImport" class="tool-btn">匯入舊庫／分庫JSON</button><input id="tvTemplateFile" type="file" accept=".json,application/json" hidden><span id="tvTemplateStats" role="status"></span></div><div class="mode-actions" id="sensitiveControls"><button id="sensitiveConnect" class="tool-btn">選擇敏感局庫資料夾</button><button id="sensitiveResume" class="tool-btn">恢復敏感局庫授權</button><button id="sensitiveStart" class="tool-btn">開始累積4／5／6張敏感局</button><button id="sensitiveStop" class="tool-btn" disabled>停止敏感局累積／保存</button><select id="sensitiveLength" aria-label="匯出敏感局張數"><option value="4">4張敏感局庫</option><option value="5">5張敏感局庫</option><option value="6">6張敏感局庫</option></select><button id="sensitiveExport" class="tool-btn">匯出敏感局JSON</button><span id="sensitiveStats" role="status"></span><small>獨立單局點數庫，不套穿越鏈條或前後局條件；記錄設定及莊6／閒7相容性，未自動用於生成。</small></div><p id="tvProgress" role="status">尚未排牌</p><div id="tvSummary"></div>
   <details id="tvSafePanel"><summary>安全切牌點 <span id="tvSafeCount">尚未排牌</span>（不計卡色）</summary><p id="tvBucketSummary" class="mode-note"></p><details id="tvBucketsDetail"><summary>查看全部違規深度分布</summary><div id="tvCutBuckets"></div></details><div id="tvSafeCuts" class="mode-actions"></div></details>
   <details><summary>長段驗證與訊號檢查</summary><div id="tvDiagnostics"></div><div class="mode-scroll"><table id="tvChains"><thead><tr><th>段</th><th>起始</th><th>張數</th><th>局數</th><th>穿越</th><th>敏感</th><th>合格</th></tr></thead><tbody></tbody></table></div></details>
 </section>
@@ -1519,6 +1520,8 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <script src="standard/two_thirteen_reversals.js?v=5"></script>
 <script src="standard/export_filename.js?v=3"></script>
 <script src="standard/target_roadmap.js?v=2"></script>
+<script src="standard/red0_balance.js?v=1"></script>
+<script src="standard/recovery_search.js?v=2"></script>
 <script src="standard/signals.js?v=57"></script>
 <script src="standard/generation_budget.js?v=1"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
@@ -1884,8 +1887,8 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=26"></script><script src="traverse_export.js?v=7"></script><script src="traverse_limits.js?v=2"></script><script src="traverse_optimizer.js?v=8"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=29"></script>
+<script src="traverse_quota.js?v=1"></script><script src="traverse_templates.js?v=5"></script><script src="traverse_tail_fill.js?v=4"></script><script src="traverse_red0_balance.js?v=4"></script><script src="traverse_a2_tail.js?v=3"></script><script src="traverse_builder.js?v=39"></script><script src="traverse_template_banks.js?v=3"></script><script src="traverse_template_file.js?v=4"></script><script src="traverse_template_collector.js?v=5"></script><script src="traverse_export.js?v=8"></script><script src="traverse_limits.js?v=2"></script><script src="traverse_optimizer.js?v=9"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="sensitive_hand_library.js?v=2"></script><script src="integrated.js?v=45"></script>
 <script src="integrated-analysis.js?v=1"></script>
-<script src="integrated-dashboard.js?v=14"></script>
+<script src="integrated-dashboard.js?v=16"></script>
 </body>
 </html>
