@@ -105,6 +105,7 @@
   td.hit { color:var(--gold-1); font-weight:700; }
   tr.zero td { color:#4f5652; }
   .matrix { background:linear-gradient(160deg, rgba(18,58,44,.55), rgba(10,36,27,.7)); }
+  .matrix th { white-space:nowrap; }
   .matrix td { cursor:pointer; min-width:44px; transition:.15s; }
   .matrix td.bk { color:#f0a097; }
   .matrix td.pl { color:#93c8ea; }
@@ -117,7 +118,28 @@
   .row { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
   .row > .gframe { flex:1 1 440px; min-width:0; }
   .err { color:var(--danger); }
-  #loadMsg { margin-top:10px; color:var(--gold-2); letter-spacing:.1em; }
+  #loadMsg { min-height:1.6em; margin-top:10px; color:var(--gold-2); letter-spacing:.1em; }
+  /* 自由版面：卡片可拖曳、縮放 */
+  #board { position:relative; }
+  #board.free .card { position:absolute; margin:0; display:flex; flex-direction:column; }
+  #board.free .card-body { flex:1; min-height:0; overflow:auto; }
+  .card .frame-title { cursor:move; user-select:none; touch-action:none; }
+  .card .grip {
+    position:absolute; top:-11px; right:16px; padding:0 8px; background:#0d1315; color:var(--gold-2);
+    font-size:14px; line-height:20px; cursor:move; user-select:none; touch-action:none; display:none;
+  }
+  .card .sizer {
+    position:absolute; right:-7px; bottom:-7px; width:18px; height:18px; cursor:nwse-resize; z-index:2;
+    touch-action:none; display:none;
+  }
+  .card .sizer::before {
+    content:""; position:absolute; right:7px; bottom:7px; width:9px; height:9px;
+    border-right:2px solid var(--gold-1); border-bottom:2px solid var(--gold-1);
+  }
+  .card .grip, .card .sizer { display:block; }
+  @media (max-width:759px) { .card .grip, .card .sizer { display:none; } .card .frame-title { cursor:default; } }
+  #board.free .card.active { box-shadow:0 14px 40px rgba(0,0,0,.7), 0 0 18px rgba(212,176,106,.25); }
+  body.dragging, body.dragging * { user-select:none !important; }
 </style>
 </head>
 <body>
@@ -125,10 +147,12 @@
   <header>
     <div class="crest"></div>
     <h1>DECK STATS<small>牌檔結果統計</small></h1>
-    <a class="tool-btn back" href="integrated.html">回主頁</a>
+    <button class="tool-btn back" id="resetLayout" title="卡片回到預設位置與大小">重設版面</button>
+    <a class="tool-btn" href="integrated.html">回主頁</a>
   </header>
+  <div id="board">
 
-  <section class="gframe">
+  <section class="gframe card" id="cardLoad">
     <span class="frame-title">載入牌檔</span>
     <div class="drop" id="drop">
       把資料夾或 Excel 檔拖到這裡，或
@@ -140,7 +164,7 @@
     </div>
   </section>
 
-  <section class="gframe">
+  <section class="gframe card" id="cardFilter">
     <span class="frame-title">篩選條件</span>
     <div class="filters">
       <label>結果<select id="fResult"><option value="">全部</option><option>莊</option><option>閒</option><option>和</option></select></label>
@@ -155,18 +179,19 @@
   </section>
 
   <div class="row">
-    <section class="gframe">
+    <section class="gframe card" id="cardResult">
       <span class="frame-title">每副統計</span>
       <div class="summary" id="summary">尚未載入牌檔</div>
       <div class="wrap"><table id="result"></table></div>
     </section>
-    <section class="gframe">
+    <section class="gframe card" id="cardMatrix">
       <span class="frame-title">莊閒點數總表</span>
       <div class="hint">套用左邊除點數外的條件；點格子直接查那個組合，再點一次取消。空白＝0 局。</div>
       <div class="wrap"><table class="matrix" id="matrix"></table></div>
       <div class="legend"><span style="color:#f0a097">■ 莊贏</span><span style="color:#93c8ea">■ 閒贏</span><span style="color:var(--tie)">■ 和局</span></div>
     </section>
   </div>
+</div>
 </main>
 
 <script>
@@ -331,6 +356,112 @@
     if (entries.length) await Promise.all(entries.map(walk)); else files.push(...e.dataTransfer.files);
     load(files);
   });
+})();
+
+// 卡片自由版面：拖標題移動、拖右下角縮放，位置大小存在這台電腦的瀏覽器
+(() => {
+  const KEY = 'deck_stats_layout_v1';
+  const MIN_W = 240, MIN_H = 110, NARROW = 760;
+  const board = document.getElementById('board');
+  const cards = [...board.querySelectorAll('.card')];
+  let zTop = 10;
+
+  for (const card of cards) {
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    for (const node of [...card.childNodes]) if (!(node.classList && node.classList.contains('frame-title'))) body.appendChild(node);
+    card.appendChild(body);
+    card.insertAdjacentHTML('beforeend', '<span class="grip" title="拖曳移動">✥</span><span class="sizer" title="拖曳縮放"></span>');
+  }
+
+  const readSaved = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; } };
+  const save = () => {
+    const data = {};
+    for (const c of cards) data[c.id] = { x: c.offsetLeft, y: c.offsetTop, w: c.offsetWidth, h: c.dataset.sized ? c.offsetHeight : null };
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+  };
+  const fitBoard = () => {
+    board.style.height = Math.max(...cards.map((c) => c.offsetTop + c.offsetHeight)) + 24 + 'px';
+  };
+
+  function clearFree() {
+    board.classList.remove('free');
+    board.style.height = '';
+    for (const c of cards) { c.style.left = c.style.top = c.style.width = c.style.height = c.style.zIndex = ''; delete c.dataset.sized; }
+  }
+  // 沒存過版面時維持原本排列，第一次拖曳或縮放才把目前位置固定下來
+  function applyFree(force) {
+    clearFree();
+    if (window.innerWidth < NARROW) return; // 窄畫面維持原本排列
+    const saved = readSaved();
+    if (!saved && !force) return;
+    const origin = board.getBoundingClientRect();
+    const rects = cards.map((c) => {
+      const r = c.getBoundingClientRect();
+      return (saved && saved[c.id]) || { x: r.left - origin.left, y: r.top - origin.top, w: r.width, h: null };
+    });
+    board.classList.add('free');
+    cards.forEach((c, i) => {
+      const r = rects[i];
+      Object.assign(c.style, { left: r.x + 'px', top: r.y + 'px', width: Math.max(MIN_W, r.w) + 'px' });
+      if (r.h) { c.style.height = Math.max(MIN_H, r.h) + 'px'; c.dataset.sized = '1'; } // 沒手動縮放過的卡片高度隨內容
+    });
+    fitBoard();
+  }
+
+  function startDrag(e, card, mode) {
+    if (e.button > 0 || window.innerWidth < NARROW) return;
+    e.preventDefault();
+    if (!board.classList.contains('free')) applyFree(true);
+    card.style.zIndex = ++zTop;
+    card.classList.add('active');
+    document.body.classList.add('dragging');
+    const sx = e.clientX, sy = e.clientY;
+    const x0 = card.offsetLeft, y0 = card.offsetTop, w0 = card.offsetWidth, h0 = card.offsetHeight;
+    const move = (ev) => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      if (mode === 'move') {
+        card.style.left = Math.max(0, Math.min(board.clientWidth - 60, x0 + dx)) + 'px';
+        card.style.top = Math.max(0, y0 + dy) + 'px';
+      } else {
+        card.style.width = Math.max(MIN_W, Math.min(board.clientWidth - x0, w0 + dx)) + 'px';
+        card.style.height = Math.max(MIN_H, h0 + dy) + 'px';
+        card.dataset.sized = '1';
+      }
+      fitBoard();
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      card.classList.remove('active');
+      document.body.classList.remove('dragging');
+      save();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
+
+  for (const card of cards) {
+    card.querySelector('.frame-title').addEventListener('pointerdown', (e) => startDrag(e, card, 'move'));
+    card.querySelector('.grip').addEventListener('pointerdown', (e) => startDrag(e, card, 'move'));
+    card.querySelector('.sizer').addEventListener('pointerdown', (e) => startDrag(e, card, 'size'));
+    card.addEventListener('pointerdown', () => { if (board.classList.contains('free')) card.style.zIndex = ++zTop; });
+  }
+
+  document.getElementById('resetLayout').onclick = () => {
+    try { localStorage.removeItem(KEY); } catch {}
+    applyFree(false);
+  };
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const wantFree = window.innerWidth >= NARROW && !!readSaved();
+      if (wantFree !== board.classList.contains('free')) applyFree();
+    }, 150);
+  });
+  cards.forEach((c) => new ResizeObserver(() => { if (board.classList.contains('free')) fitBoard(); }).observe(c));
+  requestAnimationFrame(() => applyFree());
 })();
 </script>
 </body>
