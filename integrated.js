@@ -457,6 +457,14 @@
       const output=await O.optimize(copy(source),{...policy,objective,validate,isCancelled:()=>stopped,
         onProgress:p=>status(`${label} ${p.round}/${p.total} 局｜安全點 ${p.before} → ${p.best}｜平均回復 ${p.recoveryBefore.toFixed(6)} → ${p.recoveryBest.toFixed(6)}`)});
       if(output.cancelled||stopped){status(`${label}已停止，保留原牌`);return;}
+      // 點數優化完成後才配置混色，不把卡色當成安全切點搜尋條件。
+      if(policy.mixedColor && !output.after.colorOk){
+        setRules();
+        const colored=B.reassignColors(output.after.cards);
+        if(!colored.ok){status(`${label}後混色配置失敗，保留原牌`);return;}
+        output.after.cards=colored.cards;output.after.colorOk=true;
+        for(const change of output.changes)change.after=colored.cards.slice(change.start,change.start+change.size);
+      }
       optimization=output;lock(false);comparison();status(`${label}${output.accepted?'完成':'未找到合法改善，保留原牌'}：${O.summary(output)}${output.limited?'｜已達本次搜尋上限':''}`);
     }catch(e){status(`${label}：${e.message}`);}finally{lock(false);}
   }

@@ -52,7 +52,7 @@
     const groups = [
       ['牌序編修','edit',['btnSwap','btnRound','btnAutoReorder','btnAutoColor','btnAutoFix','btnCancelEdit','btnApplyChanges','tvOptimize','tvRecoveryOptimize','btnOptOpen']],
       ['切牌定位','cut',['btnRecordDeckOrder']],
-      ['分析與參考','analysis',['btnShoeMap','btnPointMatrix','btnPointStats','btnValidate','btnApplyTools']],
+      ['分析與參考','analysis',['btnShoeMap','btnPointMatrix','btnPointStats','btnApplyTools']],
       ['檔案與輸入','files',['btnImport','importFileInput','btnManualInput']],
       ['發牌與示範','demo',['btnDealer','btnSpeech','tvDemo']]
     ];
@@ -68,7 +68,7 @@
     $('btnApplyChanges').textContent = '套用編輯'; $('btnRecordDeckOrder').textContent = '記錄牌序';
     $('btnRecordDeckOrder').title = '記錄目前牌序，作為切牌起點';
     $('btnPointMatrix').textContent = '點數機率參考'; $('btnPointStats').textContent = 'Excel 點數統計';
-    $('btnValidate').textContent = 'Excel 驗算'; $('btnApplyTools').textContent = '計算工具'; $('tvDemo').textContent = '生成示範牌靴';
+    $('btnApplyTools').textContent = '計算工具'; $('tvDemo').textContent = '生成示範牌靴';
     const oldToolbar = $('toolCats'), oldPanels = document.querySelector('.tool-panels');
     oldToolbar.hidden = oldPanels.hidden = true; $('compatLayer').append(oldToolbar,oldPanels);
     traverse.classList.remove('tool-panel'); traverse.querySelector('.mode-actions')?.remove();

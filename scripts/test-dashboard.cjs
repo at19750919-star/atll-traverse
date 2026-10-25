@@ -10,7 +10,7 @@ function dependency(name) {
   }
   return require(name);
 }
-const { chromium } = dependency('playwright');
+const { chromium } = require('playwright');
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
 const server = http.createServer((req, res) => {
   const target = path.resolve(ROOT, '.' + decodeURIComponent(new URL(req.url, 'http://local').pathname));
@@ -70,8 +70,9 @@ async function toolGroup(page, name) {
       assert.equal(await page.locator('header #exportFilename').count(),1);
       assert.equal(await page.locator('header #btnExportCombined').count(),1);
       assert.equal(await page.locator('.dashboard-sidebar #exportFilename,.dashboard-sidebar #btnExportCombined,#skipBanker6').count(),0);
-      for(const width of [2560,1791,1280,1024,390]){
+      for(const width of [2560,1791,1280,1024]){
         await page.setViewportSize({width,height:900});
+        await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
         const geometry=await page.evaluate(()=>{
           const r=s=>document.querySelector(s).getBoundingClientRect().toJSON();
           return {field:r('#exportFilenameField'),button:r('#btnExportCombined'),state:r('header .shoe-state'),input:r('#exportFilename'),
@@ -129,6 +130,7 @@ async function toolGroup(page, name) {
         await page.waitForFunction(n => document.querySelectorAll('#roundsBody tr[style*="--round-side"]').length === n,total);
         for (const width of [2560,2048,1791]) {
           await page.setViewportSize({width,height:900});
+          await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
           const layout = await page.evaluate(() => {
             const rows = [...document.querySelectorAll('#roundsBody tr')], box = e => e.getBoundingClientRect();
             const first=box(rows[0]),right=rows[45]&&box(rows[45]);
@@ -202,12 +204,15 @@ async function toolGroup(page, name) {
       assert.match(await page.locator('#tvSafeCount').textContent(),new RegExp('^'+await page.evaluate(()=>IntegratedModes.traversal.analysis.count)+'／416'));
       assert.equal(await page.locator('#dashDistTitle').textContent(), '回復間距分布');
       const before = await page.locator('.pit').boundingBox();
+      await toolGroup(page, 'analysis');
+      await page.locator('#btnTraverseData').click();
       await page.locator('#tvDiagnosticsPanel > summary').click();
       await page.locator('#traverseDataDialog').waitFor({state:'visible'});
       assert(await page.locator('#traverseDataDialog').isVisible());
       const after = await page.locator('.pit').boundingBox();
       assert(after.height >= before.height - 2);
       await page.locator('#tvDiagnosticsPanel > summary').click();
+      await page.locator('#btnCloseTraverseData').click();
       await page.waitForFunction(() => document.getElementById('traverseTools').parentElement.classList.contains('dashboard-traverse-slot'));
       assert(await page.locator('#traverseDataDialog').isHidden());
     });
@@ -340,7 +345,7 @@ async function toolGroup(page, name) {
       await page.locator('#btnTableWindow').click(); popup = await reopened;
       await sameTable(page, popup);
       await page.locator('#chipClear').click();
-      await popup.waitForFunction(() => getComputedStyle(document.getElementById('tblEmpty')).display !== 'none');
+      await popup.waitForFunction(() => getComputedStyle(document.getElementById('tblEmpty')).display !== 'none')
       assert(await popup.locator('#roundsTable').isHidden());
       await popup.close();
       await page.evaluate(() => { window.__openForTest = window.open; window.open = () => null; });

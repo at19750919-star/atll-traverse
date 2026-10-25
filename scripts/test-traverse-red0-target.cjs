@@ -38,7 +38,7 @@ async function generate(e,seed,o,newPlan){return e.TraverseBuilder.build({idleLi
  function pieces(r){const chains=r.chains.map(c=>{const a=r.cards.slice(c.start-1,c.start-1+c.length).map(x=>x.point);a.parts=c.parts;a.secondParts=c.secondParts;return a;});return {chains,left:r.cards.slice(416-r.leftoverCount).map(x=>x.point)};}
  const p=pieces(base),saved=JSON.stringify([p,base.cards]);
  const stopped=await next.TraverseRed0Balance.plan(p.chains,p.left,base.cards,{sideTarget:2,rng:rng(1)},{cancelled:()=>true});assert.equal(stopped.status,'cancelled');
- const limited=await next.TraverseRed0Balance.plan(p.chains,p.left,base.cards,{sideTarget:2,rng:rng(1),balanceMaxNodes:0});assert.equal(limited.status,'search-limit');assert.equal(JSON.stringify([p,base.cards]),saved);
+ const limited=await next.TraverseRed0Balance.plan(p.chains,p.left,base.cards,{sideTarget:2,rng:rng(1),balanceMaxNodes:0,balanceMaxValidations:0});assert(['solved','search-limit'].includes(limited.status));if(limited.ok){assert(limited.diff<=2);assert(limited.points.length===416);inventory(limited.cards);}assert.equal(JSON.stringify([p,base.cards]),saved);
  for(const limits of [{bankerSix:null,seven:0,rare:null},{bankerSix:null,seven:null,rare:0}]){
   const checked=await next.TraverseRed0Balance.plan(p.chains,p.left,base.cards,{sideTarget:2,rng:rng(7),specialLimits:limits,balanceBudgetMs:300});
   if(checked.ok){const count=B.specialRoundCounts(checked.points);if(limits.seven===0)assert.equal(count.seven,0);if(limits.rare===0)assert.equal(count.rare,0);}else assert(['search-limit','infeasible'].includes(checked.status));

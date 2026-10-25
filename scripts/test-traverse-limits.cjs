@@ -6,7 +6,7 @@ const limits={bankerSix:null,seven:null,rare:null},policy={tripleTie:false,signa
 Object.assign(B.rules,policy);
 function shoe(){const cards=Array.from({length:30},(_,i)=>i===0||i===5?[7,5,7,0,2]:[7,3,9,7,0]).flat().map(card);return {cards,chains:[{start:1,length:cards.length}]};}
 function dependency(name){for(const base of [process.env.CODEX_NODE_MODULES,path.join(process.env.USERPROFILE||'','.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'),path.resolve(ROOT,'../百家3.0/node_modules')].filter(Boolean)){try{return require(path.join(base,name));}catch(_){}}return require(name);}
-const {chromium}=dependency('playwright');
+const {chromium}=require('playwright');
 const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname));if(!p.startsWith(ROOT+path.sep)||!fs.existsSync(p)||fs.statSync(p).isDirectory()){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'})[path.extname(p)]||'application/octet-stream');res.end(fs.readFileSync(p));});
 (async()=>{
   const source=shoe(),refs=source.cards.slice();assert(L.chainsValid(source,policy));
@@ -65,7 +65,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
     });assert.equal(mismatch,0);console.log('PASS 1500種完整牌局與非穿越判定一致');
     for(const mode of ['modeTraverse','modeTraverseA2']){
       await page.locator('#'+mode).click();await fill(['2','2','1']);
-      await page.evaluate(()=>{for(const id of ['tvLeft','tvSideLimit','tvTieMax'])document.getElementById(id).value='';document.getElementById('tvNine').checked=false;window.__traverseLimitLocked=false;new MutationObserver(()=>{if(document.getElementById('tvBankerSixMax').disabled)window.__traverseLimitLocked=true;}).observe(document.getElementById('tvBankerSixMax'),{attributes:true,attributeFilter:['disabled']});});
+      await page.evaluate(()=>{document.getElementById('tvTailFill').checked=true;for(const id of ['tvLeft','tvSideLimit','tvTieMax'])document.getElementById(id).value='';document.getElementById('tvNine').checked=false;window.__traverseLimitLocked=false;new MutationObserver(()=>{if(document.getElementById('tvBankerSixMax').disabled)window.__traverseLimitLocked=true;}).observe(document.getElementById('tvBankerSixMax'),{attributes:true,attributeFilter:['disabled']});});
       if(mode==='modeTraverseA2')await page.evaluate(()=>{document.getElementById('tvNine').checked=true;});
       await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result,{},{timeout:120000}).catch(async e=>{console.log(await page.locator('#tvProgress').textContent());throw e;});
       const actual=await page.evaluate(()=>{
@@ -81,7 +81,8 @@ const server=http.createServer((req,res)=>{const p=path.resolve(ROOT,'.'+decodeU
     await fill(['','','']);
     await page.evaluate(()=>{
       const originalBuild=TraverseBuilder.build,originalCheck=TraverseLimits.check;
-      window.__limitBuilds=0;TraverseBuilder.build=async function(opts){window.__limitBuilds++;return originalBuild({...opts,idleLimit:15,computeTries:300,chainAttempts:2});};
+      const fixture=JSON.parse(JSON.stringify(IntegratedModes.traversal.result));
+      window.__limitBuilds=0;TraverseBuilder.build=async function(){window.__limitBuilds++;return JSON.parse(JSON.stringify(fixture));};
       TraverseLimits.check=function(result,limits){const out=originalCheck(result,limits);return {...out,ok:false,okCount:true,okSpacing:false,reason:'注入間隔不足'};};
       TraverseLimits.repairSpacing=async()=>({ok:false,reason:'注入穿越驗證拒絕'});
     });

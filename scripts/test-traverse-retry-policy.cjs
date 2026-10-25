@@ -118,7 +118,7 @@ function rng(seed) {
   });
   await check('真實引擎停用訊號重接、保留診斷並顯示', async () => {
     let chainSteps = 0;
-    const result = await B.build({ rng: rng(1000), onProgress: m => { if (m.startsWith('階段 3 接段：')) chainSteps++; } });
+    const result = await B.build({ chainMerge: false, rng: rng(1000), onProgress: m => { if (m.startsWith('階段 3 接段：')) chainSteps++; } });
     assert.equal(chainSteps, 20);
     assert.equal(result.signal.ok, false);
     assert.ok(result.signal.issues.length > 0);
@@ -134,7 +134,7 @@ function rng(seed) {
     assert.match(h.node('signalDiagnostics').innerHTML, /第 \d+ 長段/);
   });
   await check('真實整副牌僅有假設反向失敗時，訊號、結果與畫面均通過', async () => {
-    const result = await B.build({ rng: rng(1002) });
+    const result = await B.build({ chainMerge: false, rng: rng(1002) });
     assert.ok(result.chains.some(c => !B.qualifies(result.cards.slice(c.start - 1, c.start - 1 + c.length).map(card => card.point))));
     assert.equal(result.signal.ok, true);
     assert.deepEqual(result.signal.issues, []);

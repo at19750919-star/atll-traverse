@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {chromium}=require(path.join(process.env.USERPROFILE,'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));
+const {chromium}=require('playwright');
 const ROOT=path.resolve(process.env.ATLL_ROOT||path.join(__dirname,'..'));
 const f=JSON.parse(fs.readFileSync(path.join(ROOT,'scripts/validation/safe-cuts-research-2026-10-08.json'))).shoes.find(x=>x.seed===1139);
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
@@ -19,7 +19,7 @@ const f=JSON.parse(fs.readFileSync(path.join(ROOT,'scripts/validation/safe-cuts-
  }
  await page.evaluate(()=>(IntegratedModes.switchMode('traverse-a2'),document.getElementById('tvTailFill').checked=true));
  const a2=await page.evaluate(async()=>{const saved=TraverseBuilder.build;let enabled;TraverseBuilder.build=async o=>{enabled=o.red0Balance;throw new Error('合成停止');};try{await IntegratedModes.generateTraverse();}finally{TraverseBuilder.build=saved;}return enabled;});assert.equal(a2,false);
- const cancel=await page.evaluate(async()=>{let requested=false,seed=101;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};const result=await TraverseBuilder.build({rng,red0Balance:true,sideLimit:2,tripleTie:false,signalConfig:{suits:['♥','♦'],ranks:['10','J','Q','K']},idleLimit:100,computeTries:1000,chainAttempts:2,onProgress:m=>{if(m.startsWith('穿越紅0目標規劃'))requested=true;},isCancelled:()=>requested});return {cancelled:requested,status:result.signalBalance?.status};});assert(cancel.cancelled);assert.equal(cancel.status,'cancelled');
+ const cancel=await page.evaluate(async()=>{let requested=false,seed=101;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};const result=await TraverseBuilder.build({rng,red0Balance:true,sideLimit:2,tripleTie:false,signalConfig:{suits:['♥','♦'],ranks:['10','J','Q','K']},idleLimit:100,computeTries:1000,chainAttempts:2,onProgress:m=>{if(/穿越紅0.*規劃/.test(m))requested=true;},isCancelled:()=>requested});return {cancelled:requested,status:result.cancelled?'cancelled':result.signalBalance?.status};});assert(cancel.cancelled);assert.equal(cancel.status,'cancelled');
  assert.deepEqual(errors,[]);console.log('PASS A2 gate, cooperative cancellation, no page errors');
  await page.evaluate(()=>(IntegratedModes.switchMode('traverse-red0'),document.getElementById('tvTailFill').checked=true));
  const generated=await page.evaluate(async()=>{

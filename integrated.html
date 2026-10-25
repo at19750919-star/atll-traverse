@@ -1372,7 +1372,6 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
   </div>
   <!-- 驗證 -->
   <div class="tool-panel gframe" id="tpVerify">
-    <button class="tool-btn" id="btnValidate">驗證</button>
   </div>
   <!-- 檢視（切牌／定位從頂部展開鈕移入：同屬「查看/定位牌靴」性質） -->
   <div class="tool-panel gframe" id="tpView">
@@ -1772,6 +1771,8 @@ function syncDesignStats(){
     }
     if (!has) resetStatsCards();
 }
+// 整合頁的清空命令也需要同步空牌提示與統計狀態。
+window.syncDesignStats = syncDesignStats;
 /* 清空後把雙卡歸零顯示（僅重置畫面文字與底色，不做任何計算） */
 function resetStatsCards(){
     const set = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
@@ -1889,8 +1890,8 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_quota.js?v=1"></script><script src="traverse_templates.js?v=6"></script><script src="traverse_tail_fill.js?v=5"></script><script src="traverse_red0_balance.js?v=4"></script><script src="traverse_a2_tail.js?v=3"></script><script src="traverse_builder.js?v=41"></script><script src="traverse_template_banks.js?v=4"></script><script src="traverse_template_file.js?v=4"></script><script src="traverse_template_collector.js?v=5"></script><script src="traverse_export.js?v=8"></script><script src="traverse_limits.js?v=2"></script><script src="traverse_optimizer.js?v=9"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="sensitive_hand_library.js?v=2"></script><script src="integrated.js?v=47"></script>
+<script src="traverse_quota.js?v=1"></script><script src="traverse_templates.js?v=6"></script><script src="traverse_tail_fill.js?v=5"></script><script src="traverse_red0_balance.js?v=4"></script><script src="traverse_a2_tail.js?v=3"></script><script src="traverse_builder.js?v=41"></script><script src="traverse_template_banks.js?v=4"></script><script src="traverse_template_file.js?v=4"></script><script src="traverse_template_collector.js?v=5"></script><script src="traverse_export.js?v=8"></script><script src="traverse_limits.js?v=2"></script><script src="traverse_optimizer.js?v=9"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="sensitive_hand_library.js?v=2"></script><script src="integrated.js?v=48"></script>
 <script src="integrated-analysis.js?v=1"></script>
-<script src="integrated-dashboard.js?v=17"></script>
+<script src="integrated-dashboard.js?v=18"></script>
 </body>
 </html>
