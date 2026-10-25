@@ -3910,6 +3910,13 @@ async function generateShoe() {
             validatedRecoveryResult = finalRecovery.recovery;
             log(`⚙️ 成品回復優化：${finalRecovery.before.toFixed(2)} → ${finalRecovery.after.toFixed(2)} 局；${finalRecovery.fromRetained ? '採用先前保留的最佳版本' : finalRecovery.adopted ? '已採用' : '保留原成品'}；兩局候選 ${finalRecovery.jointChecks}、改善 ${finalRecovery.jointImprovements}；同分分支 ${finalRecovery.equalBranches}、探索 ${finalRecovery.branchChecks}（搜尋 ${Math.round(finalRecovery.searchMs)}ms，卡色修復 ${Math.round(finalRecovery.colorMs)}ms）${finalRecovery.reason ? '；' + finalRecovery.reason : ''}`, 'info');
         }
+        if (['red0','a2'].includes(window.StandardProfiles?.current)) {
+            const swapped = await optimizeRecoveryRoundSwaps(currentRounds, {shouldStop:isStopRequested});
+            window.__lastRecoveryRoundSwaps = {...swapped,rounds:undefined};
+            if (ensureNotStopped() || swapped.cancelled) return;
+            currentRounds = swapped.rounds;
+            validatedRecoveryResult = analyzeShoeRecovery(currentRounds);
+        }
         if (requiresFinalValidation) {
             let acceptedPos = 0;
             currentRounds.forEach(round => {
@@ -6817,4 +6824,54 @@ function analyzeShoeRecovery(rounds) {
         distribution,
         recoveryDetails
     };
+}
+
+async function optimizeRecoveryRoundSwaps(rounds, options = {}) {
+    const started = performance.now(), deadline = started + 450;
+    const report = { rounds, checks: 0, adopted: 0, ms: 0 };
+    const stopped = () => options.shouldStop?.() === true;
+    const finish = () => ({ ...report, ms: performance.now() - started, cancelled: stopped() });
+    if (!window.RecoverySearch || stopped() || !validateStandardGeneratedShoe(rounds).ok) return finish();
+    const isA2 = window.StandardProfiles?.current === 'a2';
+    const rare = TwoThirteenReversals.read(document);
+    const spacingOK = rs => TwoThirteenReversals.check(rs, rare.limit, { enforceSpacing: !isA2 }).ok;
+    if (!spacingOK(rounds)) return finish();
+    const key = r => JSON.stringify([standardRoundOutcome(r), r.result,
+        r.cards.some(isSignalCardByConfig), Boolean(r.isT), hasFullHouse(r), r.segment || '', r.cards.length]);
+    const score = rs => { const r = analyzeShoeRecovery(rs); return r.recoveryDetails.reduce((s,c) => s+c.roundsUsed,0)/r.totalCards; };
+    let best = rounds, bestScore = score(rounds), until = performance.now()+8;
+    const keepNine = document.getElementById('lastCardNine')?.checked;
+    while (!stopped() && performance.now() < deadline) {
+        const evaluator = RecoverySearch.createEvaluator(best), keys = best.map(key), ranked = [];
+        for (let a=0;a<best.length;a++) for (let b=a+1;b<best.length;b++) {
+            if (stopped() || performance.now() >= deadline) return finish();
+            if (keys[a] !== keys[b] || (keepNine && b === best.length-1)) continue;
+            const candidate = best.slice(); [candidate[a],candidate[b]] = [candidate[b],candidate[a]];
+            if (!spacingOK(candidate)) continue;
+            const value = evaluator.evaluate(candidate,[a,b]).score; report.checks++;
+            if (value < bestScore) ranked.push({a,b,value});
+            if (performance.now() >= until) { await new Promise(r=>setTimeout(r,0)); until=performance.now()+8; }
+        }
+        ranked.sort((a,b)=>a.value-b.value);
+        let improved = false;
+        for (const {a,b} of ranked) {
+            // Reserve time for synchronous color repair and complete validation.
+            if (stopped() || performance.now() >= deadline-35) break;
+            const candidate = cloneRoundsDeep(best);
+            [candidate[a],candidate[b]] = [candidate[b],candidate[a]];
+            let pos=0; candidate.forEach(r=>{r.start_index=pos;r.cards.forEach(c=>{c.pos=pos++;});});
+            // A private stream keeps rejected candidates out of generation randomness.
+            let seed=2166136261; for(const r of candidate) for(const c of r.cards) for(const ch of `${c.rank}${c.suit}${c.back_color}`) seed=Math.imul(seed^ch.charCodeAt(0),16777619);
+            const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
+            if (calculateCardColorViolations(candidate) && !planBackColorsKeepFaces(candidate,rng).ok) continue;
+            if (calculateCardColorViolations(candidate) || !spacingOK(candidate)
+                || candidate.some((r,i)=>key(r)!==keys[i]) || !validateStandardGeneratedShoe(candidate).ok) continue;
+            const actual=score(candidate);
+            if (actual < bestScore && !stopped() && performance.now()<deadline) {
+                best=candidate;bestScore=actual;report.rounds=best;report.adopted++;improved=true;break;
+            }
+        }
+        if (!improved) break;
+    }
+    return finish();
 }
