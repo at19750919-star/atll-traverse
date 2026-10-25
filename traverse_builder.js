@@ -437,22 +437,6 @@
             const zerosInRest = rest.reduce((n, p) => n + (p === 0 ? 1 : 0), 0);
             const zeroShare = zerosInRest / rest.length;
             let sigLeft = sideSigCount(rest), lenLeft = rest.length;
-            // 收集範本時每個位置 8～12 張都檢查並收進範本庫，結果記下供撿段沿用；撿段順序與規則不變
-            const qStride = opts.maxLen + 1;
-            let qCache = null;
-            if (opts.collectTemplates && global.TraverseTemplates) {
-                qCache = new Int8Array(rest.length * qStride);
-                for (let at = 0; at < rest.length; at++) {
-                    if (at % 52 === 0) { await tick(); if (ctx.cancelled()) break; }
-                    for (const L of opts.scanLengths) {
-                        if (at + L > rest.length) continue;
-                        const a = rest.slice(at, at + L), ok = qualifies(a, true);
-                        qCache[at * qStride + L] = ok ? 1 : -1;
-                        if (ok) await rememberTemplate(a, opts);
-                    }
-                }
-            }
-            const okAt = (at, L, a) => { const v = qCache ? qCache[at * qStride + L] : 0; return v ? v > 0 : qualifies(a, true); };
             for (let s = 0; s < rest.length; s++) {
                 if(quotaActive(opts)&&s%24===0){await tick();if(ctx.cancelled())break;}
                 let pick = null;
@@ -462,7 +446,7 @@
                         if(ctx.cancelled())break scan;
                         if(at+L>rest.length)continue;
                         let overlap=false;for(let k=at;k<at+L;k++)if(used[k]){overlap=true;break;}if(overlap)continue;
-                        const a=rest.slice(at,at+L);if(!okAt(at,L,a))continue;
+                        const a=rest.slice(at,at+L);if(!qualifies(a,true))continue;await rememberTemplate(a,opts);
                         const z=a.filter(p=>p===0).length;if(opts.zeroPolicy==='quota'&&z<Math.floor(zeroShare*L*opts.quotaFactor))continue;
                         if(!sizeLimitOk(a,opts))continue;
                         candidates++;if(pickBetter(a,pick?.a,opts,true,sigLeft,lenLeft))pick={L,a,at};
@@ -476,7 +460,7 @@
                     for (let k = s; k < s + L; k++) if (used[k]) { overlap = true; break; }
                     if (overlap) continue;
                     const a = rest.slice(s, s + L);
-                    if (!okAt(s, L, a)) continue;
+                    if (!qualifies(a, true)) continue;await rememberTemplate(a,opts);
                     const z = a.filter(p => p === 0).length;
                     if (opts.zeroPolicy === 'quota' && z < Math.floor(zeroShare * L * opts.quotaFactor)) continue;
                     if (!sizeLimitOk(a, opts)) continue;
