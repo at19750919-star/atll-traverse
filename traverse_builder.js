@@ -366,8 +366,36 @@
         if(need(false)<=remaining&&need(true)>after)return false;
         return true;
     }
+    // 穿越A2莊閒控制：前一局有 A／2 這局就開莊，所以莊局數約等於「含 A／2、非三條、下一局不是和」的局數。
+    // sideDelta＝這段讓（莊－閒和）多出幾局；sideScore＝挑這段後，依剩牌 A／2 比例推估整副最終差距的絕對值。
+    const SIDE_HAND = 4.94;
+    const sideSigCount = seg => seg.reduce((n, p) => n + (p === 1 || p === 2 ? 1 : 0), 0);
+    function sideDelta(seg) {
+        const rs = roundsFromStart(seg);
+        if (!rs) return 0;
+        let banker = 0;
+        rs.forEach((r, i) => {
+            const hand = seg.slice(r.start, r.start + r.size);
+            if (!hand.some(p => p === 1 || p === 2) || rules.tripleTie && isTriple(hand) || rs[i + 1]?.result === '和') return;
+            banker++;
+        });
+        return 2 * banker - rs.length;
+    }
+    function sideScore(seg, opts, sigLeft, lenLeft) {
+        const sig = sigLeft - sideSigCount(seg), len = lenLeft - seg.length;
+        const q = len > 0 ? Math.max(0, sig) / len : 0, p = 1 - Math.pow(1 - q, SIDE_HAND);
+        return Math.abs(opts.sideE + sideDelta(seg) + len / SIDE_HAND * (2 * p - 1));
+    }
+    // 候選比較：有局數配額時配額優先，相同才看莊閒；沒有配額時開了莊閒控制才換成推估差距較小者
+    function pickBetter(a, b, opts, quota, sigLeft, lenLeft) {
+        if (!b) return true;
+        if (quota) { if (preferQuota(a, b, opts)) return true; if (preferQuota(b, a, opts)) return false; }
+        return !!opts.sideCtl && sideScore(a, opts, sigLeft, lenLeft) < sideScore(b, opts, sigLeft, lenLeft);
+    }
+
     // sign＝-1 時扣回（借回短段重排時用）
     function sizeLimitAdd(seg, opts, sign = 1) {
+        if (opts.sideCtl) opts.sideE += sign * sideDelta(seg);
         if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return;
         if (opts.specialLimits) {
             const special = specialRoundCounts(seg);
@@ -408,6 +436,7 @@
             let got = 0;
             const zerosInRest = rest.reduce((n, p) => n + (p === 0 ? 1 : 0), 0);
             const zeroShare = zerosInRest / rest.length;
+            let sigLeft = sideSigCount(rest), lenLeft = rest.length;
             for (let s = 0; s < rest.length; s++) {
                 if(quotaActive(opts)&&s%24===0){await tick();if(ctx.cancelled())break;}
                 let pick = null;
@@ -420,7 +449,7 @@
                         const a=rest.slice(at,at+L);if(!qualifies(a,true))continue;await rememberTemplate(a,opts);
                         const z=a.filter(p=>p===0).length;if(opts.zeroPolicy==='quota'&&z<Math.floor(zeroShare*L*opts.quotaFactor))continue;
                         if(!sizeLimitOk(a,opts))continue;
-                        candidates++;if(preferQuota(a,pick?.a,opts))pick={L,a,at};
+                        candidates++;if(pickBetter(a,pick?.a,opts,true,sigLeft,lenLeft))pick={L,a,at};
                         if(candidates>=8)break scan;
                     }
                 }else{
@@ -435,6 +464,7 @@
                     const z = a.filter(p => p === 0).length;
                     if (opts.zeroPolicy === 'quota' && z < Math.floor(zeroShare * L * opts.quotaFactor)) continue;
                     if (!sizeLimitOk(a, opts)) continue;
+                    if (opts.sideCtl) { const side = sideScore(a, opts, sigLeft, lenLeft); if (!pick || side < pick.side) pick = { L, a, side }; continue; }
                     if (opts.zeroPolicy === 'none') { pick = { L, a }; break; }
                     const score = z / L;
                     if (!pick || score > pick.score) pick = { L, a, score };
@@ -443,6 +473,7 @@
                 if(ctx.cancelled())break;
                 if (pick) {
                     sizeLimitAdd(pick.a, opts);
+                    sigLeft -= sideSigCount(pick.a); lenLeft -= pick.a.length;
                     segs.push(pick.a);
                     for (let k = (pick.at??s); k < (pick.at??s) + pick.L; k++) used[k] = 1;
                     got++;
@@ -524,7 +555,8 @@
             opts.templateOrder = groups.slice().sort((a, b) => b.zeros / b.length - a.zeros / a.length || b.length - a.length);
             opts.templateOrder.source = groups;
         }
-        const counts = countsOf(rest), quota = quotaActive(opts);
+        const counts = countsOf(rest), quota = quotaActive(opts), compare = quota || opts.sideCtl;
+        const sigLeft = counts[1] + counts[2], lenLeft = rest.length;
         let best = null, found = 0, checked = 0;
         for (const g of opts.templateOrder) {
             if (g.length < opts.minLen || g.length > opts.maxLen || g.length > rest.length) continue;
@@ -535,12 +567,12 @@
             for (const p of g.points) {
                 if (++checked % 256 === 0) { await tick(); if (ctx.cancelled()) return best; }
                 if (!qualifies(p, true) || !sizeLimitOk(p, opts)) continue;
-                if (!quota) return p.slice();
+                if (!compare) return p.slice();
                 found++;
-                if (preferQuota(p, best, opts)) best = p.slice();
+                if (pickBetter(p, best, opts, quota, sigLeft, lenLeft)) best = p.slice();
                 break;
             }
-            if (quota && found >= 8) break;
+            if (compare && found >= 8) break;
         }
         return best;
     }
@@ -606,9 +638,9 @@
             const usable = hands.filter(h => fits(h, counts));
             if (usable.length === 0) break;
             let found = null, candidates=0;
-            const quota=quotaActive(opts);
+            const quota=quotaActive(opts), compare=quota||opts.sideCtl, sigLeft=counts[1]+counts[2], lenLeft=rest.length;
             // 隨機挑敏感局一局一局接，長度落在範圍內就檢查整段
-            for (let t = 0; t < 2000 && (!found || quota&&candidates<8); t++) {
+            for (let t = 0; t < 2000 && (!found || compare&&candidates<8); t++) {
                 if(ctx.cancelled())break;
                 if(quota&&t%32===0)await tick();
                 tries++;
@@ -627,7 +659,7 @@
                         if (opts.computeQuota && seq.filter(p => p === 0).length < Math.floor(counts[0] / rest.length * seq.length * opts.quotaFactor)) continue;
                         if (!sizeLimitOk(seq, opts)) continue;
                         candidates++;
-                        if(!quota||preferQuota(seq,found,opts))found=seq;
+                        if(pickBetter(seq,found,opts,quota,sigLeft,lenLeft))found=seq;
                         break;
                     }
                 }
@@ -1141,6 +1173,10 @@
         for (let p = 1; p <= 9; p++) for (let k = 0; k < 32; k++) rest.push(p);
         for (let k = 0; k < 128; k++) rest.push(0);
 
+        // 穿越A2（全花色A、2訊號）有填莊閒差距時，挑段就控制推估的最終莊閒差距；紅0另有目標規劃
+        opts.sideCtl = options.sideControl !== false && opts.signalRule && Number.isInteger(opts.sideTarget)
+            && JSON.stringify(normalizeSignal(rules.signalConfig)) === JSON.stringify(defaultSignal());
+        opts.sideE = 0;
         opts.templateComputeHits = 0;
         opts.templateBorrowHits = 0;
         opts.borrowTries = Number.isInteger(options.borrowTries) ? options.borrowTries : 40;
