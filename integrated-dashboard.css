@@ -220,7 +220,7 @@ body.dashboard .logbox.closed .frozen-grid-wrapper{display:none}
 body.dashboard :is(button,select,summary):focus-visible,body.table-window :is(button,select):focus-visible{outline:2px solid var(--gold-1);outline-offset:2px}
 body.table-window{height:auto;min-height:100dvh;padding:10px;display:block;overflow:visible}
 body.table-window .pit{width:100%}
-body:not([data-mode=traverse]) :is(#tvOptimize,#btnOptOpen,#tvDemo,a[href="traverse_process.html"],a[href="traverse_scan.html"]){display:none!important}
+body:not([data-mode=traverse]) :is(#tvOptimize,#tvRecoveryOptimize,#btnOptOpen,#tvDemo,a[href="traverse_process.html"],a[href="traverse_scan.html"]){display:none!important}
 @media(min-width:2100px){.dashboard-layout{grid-template-columns:340px minmax(0,1fr)}.dashboard-sidebar-scroll{padding:14px 12px}body.dashboard>header h1{min-width:292px}}
 @media(min-width:901px) and (max-height:680px){
   .dashboard-workspace{gap:6px}.dashboard-layout{margin-top:8px}
@@ -279,4 +279,3 @@ body:not([data-mode=traverse]) :is(#tvOptimize,#btnOptOpen,#tvDemo,a[href="trave
 /* Shared analyses stay beside the existing metrics; long detail lists float. */
 body.dashboard #traverseTools [hidden]{display:none!important}
 .shared-recovery-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;padding:3px 0;border-bottom:1px solid #8a6a2f33}
-body.dashboard span.cut-cell{display:block;cursor:help}

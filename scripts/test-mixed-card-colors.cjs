@@ -19,7 +19,7 @@ assert.equal(policy.plan([0,4],Array(8).fill(0),impossible,8,{mixed:true,attempt
 assert.deepEqual(impossible,{R:[0],B:[8]});
 console.log('PASS 兩組最多3局、交錯牌型仍合併計數、關閉相容、100種種子與無解保留輸入');
 function dependency(name){for(const base of [process.env.CODEX_NODE_MODULES,path.join(process.env.USERPROFILE||'','.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'),path.resolve(ROOT,'../百家3.0/node_modules')].filter(Boolean)){try{return require(path.join(base,name));}catch(_){}}return require(name);}
-const {chromium}=dependency('playwright');
+const {chromium}=require('playwright');
 const ExcelJS=dependency('exceljs');
 const server=http.createServer((req,res)=>{
   const file=path.resolve(ROOT,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname));
@@ -74,8 +74,10 @@ async function inspect(page){return page.evaluate(()=>{
           document.getElementById('maxTwoThirteenReversal').value='0';
           for(const id of ['skipPlayer7Banker6','lastCardNine','tripleTieRule'])document.getElementById(id).checked=false;
         });
+        if(mode==='modeA2')await page.locator('#maxTwoThirteenReversal').fill('');
         await page.locator('#chipGen').click();
       }else if(mode==='modeTraverse'){
+        await page.evaluate(()=>document.getElementById('tvTailFill').checked=true);
         await page.locator('#tvLeft').fill('');await page.locator('#tvSideLimit').fill('');await page.locator('#tvTieMax').fill('');
         await page.locator('#tvRareReversalMax').fill('0');await page.locator('#tvSevenReversalMax').fill('');
         await page.locator('#chipGen').click();
@@ -92,7 +94,10 @@ async function inspect(page){return page.evaluate(()=>{
         if(process.env.MIXED_COLOR_SCREENSHOT)await page.locator('#traverseControls').screenshot({path:process.env.MIXED_COLOR_SCREENSHOT});
         await toolGroup(page,'analysis');await page.locator('#tvOptimize').click();
         await page.waitForFunction(()=>!IntegratedModes.busy,{},{timeout:120000});
-        assert.deepEqual((await inspect(page)).violations,[],'optimizer must preserve or restore mixed color runs');
+        assert(await page.locator('#optimizerPanel').isVisible(),'optimization must complete, not silently retain the old deck after an error');
+        const optimized=await inspect(page);
+        assert.deepEqual(optimized.inventory,after.inventory);
+        assert.deepEqual(optimized.violations,[],'optimizer must preserve or restore mixed color runs');
       }
       const exportState=await page.evaluate(()=>({colors:currentRounds.flatMap(r=>r.cards.map(c=>c.back_color)),sizes:IntegratedModes.mode==='traverse'?TraverseExport.dealRounds(currentRounds.flatMap(r=>r.cards.map(c=>({point:c.point()})))).filter(r=>r.hand).map(r=>r.cards.length):currentRounds.map(r=>r.cards.length)}));
       const downloaded=page.waitForEvent('download');await toolGroup(page,'files');await page.locator('#btnExportCombined').click();

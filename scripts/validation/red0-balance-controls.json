@@ -1,0 +1,5193 @@
+[
+  {
+    "cards": 416,
+    "packs": 4,
+    "opts": 1,
+    "post": [
+      {
+        "ok": true,
+        "before": 3.204326923076923,
+        "after": 2.8701923076923075,
+        "adopted": true,
+        "changed": 9,
+        "searchMs": 156.90000000037253,
+        "colorMs": 0.7999999988824129,
+        "jointChecks": 0,
+        "jointImprovements": 0,
+        "equalBranches": 0,
+        "branchChecks": 0,
+        "focus": [],
+        "reason": "",
+        "bestWorking": 2.8701923076923075,
+        "fromRetained": false,
+        "balance": {
+          "ok": true,
+          "total": 85,
+          "ties": 6,
+          "targetBanker": 42,
+          "targetPlayer": 37,
+          "signalRounds": 42,
+          "signals": 64,
+          "counts": {
+            "banker": 42,
+            "player": 37,
+            "tie": 6,
+            "total": 85
+          },
+          "nodes": 163257,
+          "truncated": true,
+          "ms": 79.79999999888241
+        },
+        "tieSpread": {
+          "before": {
+            "positions": [
+              4,
+              17,
+              41,
+              52,
+              54,
+              62
+            ],
+            "thirds": [
+              2,
+              3,
+              1
+            ],
+            "first7": 1
+          },
+          "after": {
+            "positions": [
+              9,
+              17,
+              38,
+              48,
+              62,
+              67
+            ],
+            "thirds": [
+              2,
+              2,
+              2
+            ],
+            "first7": 0
+          },
+          "targets": [
+            {
+              "original": 4,
+              "ideal": 7.083333333333333,
+              "target": 7,
+              "actual": 9,
+              "status": "swapped",
+              "reason": "最近合法閒局，完整兩局互換",
+              "checks": 1,
+              "error": 1.917
+            },
+            {
+              "original": 17,
+              "ideal": 21.25,
+              "target": 21,
+              "actual": 17,
+              "status": "unchanged",
+              "reason": "原和局含訊號牌，不符合交換前提",
+              "checks": 0,
+              "error": -4.25
+            },
+            {
+              "original": 41,
+              "ideal": 35.416666666666664,
+              "target": 35,
+              "actual": 38,
+              "status": "swapped",
+              "reason": "最近合法閒局，完整兩局互換",
+              "checks": 2,
+              "error": 2.583
+            },
+            {
+              "original": 52,
+              "ideal": 49.583333333333336,
+              "target": 50,
+              "actual": 48,
+              "status": "swapped",
+              "reason": "最近合法閒局，完整兩局互換",
+              "checks": 1,
+              "error": -1.583
+            },
+            {
+              "original": 54,
+              "ideal": 63.75,
+              "target": 64,
+              "actual": 67,
+              "status": "swapped",
+              "reason": "最近合法閒局，完整兩局互換",
+              "checks": 1,
+              "error": 3.25
+            },
+            {
+              "original": 62,
+              "ideal": 77.91666666666667,
+              "target": 78,
+              "actual": 62,
+              "status": "unchanged",
+              "reason": "原和局含訊號牌，不符合交換前提",
+              "checks": 0,
+              "error": -15.917
+            }
+          ],
+          "checks": 5,
+          "moves": 4,
+          "cancelled": false,
+          "ms": 28,
+          "reason": "依理想位置完成4局互換，2局保留原位",
+          "mode": "red0"
+        }
+      }
+    ],
+    "rng": 26918,
+    "signature": "[{\"start_index\":0,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":0,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":1,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":2,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":3,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":4,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":1,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":0,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":2,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":3,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":4,\"back_color\":\"R\"}]}},{\"start_index\":5,\"cards\":[{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":5,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":6,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":7,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":8,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":9,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":6,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":5,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":7,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":8,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":9,\"back_color\":\"B\"}]}},{\"start_index\":10,\"cards\":[{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":10,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":11,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":12,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":13,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":14,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":11,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":10,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":12,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":13,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":14,\"back_color\":\"R\"}]}},{\"start_index\":15,\"cards\":[{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":15,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":16,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":17,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":18,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":19,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":16,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":15,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":17,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":18,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":19,\"back_color\":\"R\"}]}},{\"start_index\":20,\"cards\":[{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":20,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":21,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":22,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":23,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":24,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":21,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":20,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":22,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":23,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":24,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":25,\"cards\":[{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":25,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":26,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":27,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":28,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":29,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":26,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":25,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":27,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":28,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":29,\"back_color\":\"R\"}]}},{\"start_index\":30,\"cards\":[{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":30,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":31,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":32,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":33,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":31,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":30,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":32,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":33,\"back_color\":\"B\"}]}},{\"start_index\":34,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":34,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":35,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":36,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":37,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":35,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":34,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":36,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":37,\"back_color\":\"R\"}]}},{\"start_index\":38,\"cards\":[{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":38,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":39,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":40,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":41,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":42,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":43,\"back_color\":\"R\"}],\"result\":\"和\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"和\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":39,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":38,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":40,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":41,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":42,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":43,\"back_color\":\"R\"}]}},{\"start_index\":44,\"cards\":[{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":44,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":45,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":46,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":47,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":48,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":45,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":44,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":46,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":47,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":48,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":49,\"cards\":[{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":49,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":50,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":51,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":52,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":53,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":50,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":49,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":51,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":52,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":53,\"back_color\":\"R\"}]}},{\"start_index\":54,\"cards\":[{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":54,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":55,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":56,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":57,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":58,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":55,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":54,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":56,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":57,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":58,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":59,\"cards\":[{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":59,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":60,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":61,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":62,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":60,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":59,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":61,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":62,\"back_color\":\"B\"}]}},{\"start_index\":63,\"cards\":[{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":63,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":64,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":65,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":66,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":67,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":64,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":63,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":65,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":66,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":67,\"back_color\":\"R\"}]}},{\"start_index\":68,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":68,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":69,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":70,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":71,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":72,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":73,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":69,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":68,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":70,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":71,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":72,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":73,\"back_color\":\"B\"}]}},{\"start_index\":74,\"cards\":[{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":74,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":75,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":76,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":77,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":78,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":75,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":74,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":76,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":77,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":78,\"back_color\":\"B\"}]}},{\"start_index\":79,\"cards\":[{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":79,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":80,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":81,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":82,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":83,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":84,\"back_color\":\"B\"}],\"result\":\"和\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"和\",\"cards\":[{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":80,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":79,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":81,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":82,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":83,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":84,\"back_color\":\"B\"}]}},{\"start_index\":85,\"cards\":[{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":85,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":86,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":87,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":88,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":86,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":85,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":87,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":88,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":89,\"cards\":[{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":89,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":90,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":91,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":92,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":93,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":90,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":89,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":91,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":92,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":93,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":94,\"cards\":[{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":94,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":95,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":96,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":97,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":95,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":94,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":96,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":97,\"back_color\":\"B\"}]}},{\"start_index\":98,\"cards\":[{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":98,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":99,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":100,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":101,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":99,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":98,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":100,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":101,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":102,\"cards\":[{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":102,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":103,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":104,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":105,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":106,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":107,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":103,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":102,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":104,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":105,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":106,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":107,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":108,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":108,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":109,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":110,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":111,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":112,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":109,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":108,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":110,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":111,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":112,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":113,\"cards\":[{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":113,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":114,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":115,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":116,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":114,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":113,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":115,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":116,\"back_color\":\"B\"}]}},{\"start_index\":117,\"cards\":[{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":117,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":118,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":119,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":120,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":118,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":117,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":119,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":120,\"back_color\":\"R\"}]}},{\"start_index\":121,\"cards\":[{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":121,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":122,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":123,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":124,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":122,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":121,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":123,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":124,\"back_color\":\"R\"}]}},{\"start_index\":125,\"cards\":[{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":125,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":126,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":127,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":128,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":129,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":126,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":125,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":127,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":128,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":129,\"back_color\":\"B\"}]}},{\"start_index\":130,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":130,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":131,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":132,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":133,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":131,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":130,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":132,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":133,\"back_color\":\"B\"}]}},{\"start_index\":134,\"cards\":[{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":134,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":135,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":136,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":137,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":138,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":139,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":135,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":134,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":136,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":137,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":138,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":139,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":140,\"cards\":[{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":140,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":141,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":142,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":143,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":141,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":140,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":142,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":143,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":144,\"cards\":[{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":144,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":145,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":146,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":147,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":145,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":144,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":146,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":147,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":148,\"cards\":[{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":148,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":149,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":150,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":151,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":149,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":148,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":150,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":151,\"back_color\":\"B\"}]}},{\"start_index\":152,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":152,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":153,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":154,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":155,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":153,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":152,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":154,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":155,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":156,\"cards\":[{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":156,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":157,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":158,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":159,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":160,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":157,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":156,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":158,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":159,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":160,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":161,\"cards\":[{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":161,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":162,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":163,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":164,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":162,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":161,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":163,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":164,\"back_color\":\"B\"}]}},{\"start_index\":165,\"cards\":[{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":165,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":166,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":167,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":168,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":166,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":165,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":167,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":168,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":169,\"cards\":[{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":169,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":170,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":171,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":172,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":170,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":169,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":171,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":172,\"back_color\":\"B\"}]}},{\"start_index\":173,\"cards\":[{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":173,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":174,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":175,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":176,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":177,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":178,\"back_color\":\"B\"}],\"result\":\"和\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"和\",\"cards\":[{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":174,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":173,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":175,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":176,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":177,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":178,\"back_color\":\"B\"}]}},{\"start_index\":179,\"cards\":[{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":179,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":180,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":181,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":182,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":183,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":180,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":179,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":181,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":182,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":183,\"back_color\":\"B\"}]}},{\"start_index\":184,\"cards\":[{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":184,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":185,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":186,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":187,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":188,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":185,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":184,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":186,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":187,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":188,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":189,\"cards\":[{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":189,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":190,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":191,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":192,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":193,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":194,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":190,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":189,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":191,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":192,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":193,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":194,\"back_color\":\"B\"}]}},{\"start_index\":195,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":195,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":196,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":197,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":198,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":196,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":195,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":197,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":198,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":199,\"cards\":[{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":199,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":200,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":201,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":202,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":200,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":199,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":201,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♦\",\"pos\":202,\"back_color\":\"R\"}]}},{\"start_index\":203,\"cards\":[{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":203,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":204,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":205,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":206,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":204,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":203,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":205,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":206,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":207,\"cards\":[{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":207,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":208,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":209,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":210,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":211,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":212,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":208,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":207,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":209,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":210,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":211,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":212,\"back_color\":\"R\"}]}},{\"start_index\":213,\"cards\":[{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":213,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":214,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":215,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":216,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":217,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":214,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":213,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":215,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":216,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":217,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":218,\"cards\":[{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":218,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":219,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":220,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":221,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":222,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":223,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":219,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":218,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":220,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":221,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":222,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":223,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":224,\"cards\":[{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":224,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":225,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":226,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":227,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":228,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":229,\"back_color\":\"R\"}],\"result\":\"和\",\"sensitive\":true,\"swap_info\":{\"result\":\"和\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":225,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":224,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":226,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":227,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":228,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":229,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":230,\"cards\":[{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":230,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":231,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":232,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":233,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":234,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":231,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":230,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":232,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":233,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":234,\"back_color\":\"B\"}]}},{\"start_index\":235,\"cards\":[{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":235,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":236,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":237,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":238,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":239,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":240,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"4\",\"suit\":\"♥\",\"pos\":236,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":235,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":237,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":238,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":239,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":240,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":241,\"cards\":[{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":241,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":242,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":243,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":244,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":245,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":246,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":242,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":241,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":243,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":244,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":245,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":246,\"back_color\":\"B\"}]}},{\"start_index\":247,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":247,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":248,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":249,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":250,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":248,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":247,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":249,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":250,\"back_color\":\"B\"}]}},{\"start_index\":251,\"cards\":[{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":251,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":252,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":253,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":254,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":255,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":252,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":251,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":253,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":254,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":255,\"back_color\":\"B\"}]}},{\"start_index\":256,\"cards\":[{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":256,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":257,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":258,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":259,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":260,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":261,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":257,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":256,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":258,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":259,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":260,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":261,\"back_color\":\"B\"}]}},{\"start_index\":262,\"cards\":[{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":262,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":263,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":264,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":265,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":266,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":263,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":262,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♥\",\"pos\":264,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":265,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":266,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":267,\"cards\":[{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":267,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":268,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":269,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":270,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":271,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":272,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":268,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":267,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":269,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":270,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":271,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":272,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":273,\"cards\":[{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":273,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":274,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":275,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":276,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":277,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":274,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♥\",\"pos\":273,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":275,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":276,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":277,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":278,\"cards\":[{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":278,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":279,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":280,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":281,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":282,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":279,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":278,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":280,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":281,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":282,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":283,\"cards\":[{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":283,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":284,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":285,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":286,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":284,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":283,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":285,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":286,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":287,\"cards\":[{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":287,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":288,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":289,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":290,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":291,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":288,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♣\",\"pos\":287,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":289,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":290,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":291,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":292,\"cards\":[{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":292,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":293,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":294,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":295,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":296,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":293,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":292,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":294,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":295,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":296,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":297,\"cards\":[{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":297,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":298,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":299,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":300,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":301,\"back_color\":\"R\"}],\"result\":\"和\",\"sensitive\":true,\"swap_info\":{\"result\":\"和\",\"cards\":[{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":298,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":297,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":299,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":300,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":301,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":302,\"cards\":[{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":302,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":303,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":304,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":305,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":306,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":307,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":303,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":302,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":304,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":305,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":306,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":307,\"back_color\":\"R\"}]}},{\"start_index\":308,\"cards\":[{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":308,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":309,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":310,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":311,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":309,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":308,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":310,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":311,\"back_color\":\"B\"}]}},{\"start_index\":312,\"cards\":[{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":312,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":313,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":314,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":315,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":313,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":312,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":314,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":315,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":316,\"cards\":[{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":316,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":317,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":318,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":319,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":317,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":316,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":318,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":319,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":320,\"cards\":[{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":320,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":321,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":322,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":323,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":324,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":325,\"back_color\":\"B\"}],\"result\":\"和\",\"sensitive\":true,\"swap_info\":{\"result\":\"和\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":321,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":320,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":322,\"back_color\":\"R\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":323,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♣\",\"pos\":324,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":325,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":326,\"cards\":[{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":326,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":327,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":328,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":329,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":327,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♠\",\"pos\":326,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♦\",\"pos\":328,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":329,\"back_color\":\"R\"}]}},{\"start_index\":330,\"cards\":[{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":330,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":331,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":332,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":333,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"10\",\"suit\":\"♥\",\"pos\":331,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":330,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":332,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":333,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":334,\"cards\":[{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":334,\"back_color\":\"R\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":335,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":336,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":337,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":338,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":339,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":335,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":334,\"back_color\":\"R\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":336,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":337,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♣\",\"pos\":338,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♦\",\"pos\":339,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":340,\"cards\":[{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":340,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":341,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":342,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":343,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":344,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♠\",\"pos\":341,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♠\",\"pos\":340,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":342,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":343,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":344,\"back_color\":\"B\"}]}},{\"start_index\":345,\"cards\":[{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":345,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":346,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":347,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":348,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":346,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":345,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♦\",\"pos\":347,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":348,\"back_color\":\"R\"}]}},{\"start_index\":349,\"cards\":[{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":349,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":350,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":351,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":352,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":350,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":349,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":351,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":352,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":353,\"cards\":[{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":353,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":354,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":355,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":356,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":357,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":354,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":353,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♣\",\"pos\":355,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":356,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♠\",\"pos\":357,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":358,\"cards\":[{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":358,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":359,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":360,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":361,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":362,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":363,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"5\",\"suit\":\"♠\",\"pos\":359,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":358,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♠\",\"pos\":360,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":361,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":362,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":363,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":364,\"cards\":[{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":364,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":365,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":366,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":367,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":368,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":369,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":365,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♣\",\"pos\":364,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":366,\"back_color\":\"B\"},{\"rank\":\"4\",\"suit\":\"♣\",\"pos\":367,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":368,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":369,\"back_color\":\"R\"}]},\"isT\":false},{\"start_index\":370,\"cards\":[{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":370,\"back_color\":\"R\"},{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":371,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":372,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":373,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"4\",\"suit\":\"♠\",\"pos\":371,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":370,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♠\",\"pos\":372,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":373,\"back_color\":\"B\"}]}},{\"start_index\":374,\"cards\":[{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":374,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":375,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":376,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":377,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":378,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":379,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":375,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♥\",\"pos\":374,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":376,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":377,\"back_color\":\"B\"},{\"rank\":\"7\",\"suit\":\"♥\",\"pos\":378,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♦\",\"pos\":379,\"back_color\":\"R\"}]}},{\"start_index\":380,\"cards\":[{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":380,\"back_color\":\"R\"},{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":381,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":382,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":383,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"2\",\"suit\":\"♣\",\"pos\":381,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":380,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♦\",\"pos\":382,\"back_color\":\"R\"},{\"rank\":\"6\",\"suit\":\"♥\",\"pos\":383,\"back_color\":\"B\"}]}},{\"start_index\":384,\"cards\":[{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":384,\"back_color\":\"R\"},{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":385,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":386,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":387,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":388,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♥\",\"pos\":385,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♠\",\"pos\":384,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♣\",\"pos\":386,\"back_color\":\"R\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":387,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":388,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":389,\"cards\":[{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":389,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":390,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":391,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":392,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♥\",\"pos\":390,\"back_color\":\"B\"},{\"rank\":\"8\",\"suit\":\"♥\",\"pos\":389,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♦\",\"pos\":391,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♥\",\"pos\":392,\"back_color\":\"R\"}]}},{\"start_index\":393,\"cards\":[{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":393,\"back_color\":\"B\"},{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":394,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":395,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":396,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":397,\"back_color\":\"B\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"6\",\"suit\":\"♣\",\"pos\":394,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♦\",\"pos\":393,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":395,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":396,\"back_color\":\"R\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":397,\"back_color\":\"B\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":398,\"cards\":[{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":398,\"back_color\":\"B\"},{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":399,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":400,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":401,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":402,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":403,\"back_color\":\"B\"}],\"result\":\"閒\",\"sensitive\":true,\"segment\":\"A\",\"isT\":false,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"A\",\"suit\":\"♠\",\"pos\":399,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":398,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♦\",\"pos\":400,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♣\",\"pos\":401,\"back_color\":\"R\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":402,\"back_color\":\"B\"},{\"rank\":\"Q\",\"suit\":\"♣\",\"pos\":403,\"back_color\":\"B\"}]}},{\"start_index\":404,\"cards\":[{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":404,\"back_color\":\"B\"},{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":405,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":406,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":407,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":408,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":409,\"back_color\":\"R\"}],\"result\":\"莊\",\"sensitive\":true,\"swap_info\":{\"result\":\"閒\",\"cards\":[{\"rank\":\"3\",\"suit\":\"♠\",\"pos\":405,\"back_color\":\"B\"},{\"rank\":\"5\",\"suit\":\"♦\",\"pos\":404,\"back_color\":\"B\"},{\"rank\":\"9\",\"suit\":\"♦\",\"pos\":406,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♣\",\"pos\":407,\"back_color\":\"R\"},{\"rank\":\"7\",\"suit\":\"♦\",\"pos\":408,\"back_color\":\"R\"},{\"rank\":\"5\",\"suit\":\"♥\",\"pos\":409,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false},{\"start_index\":410,\"cards\":[{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":410,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":411,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":412,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":413,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":414,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":415,\"back_color\":\"R\"}],\"result\":\"閒\",\"sensitive\":true,\"swap_info\":{\"result\":\"莊\",\"cards\":[{\"rank\":\"10\",\"suit\":\"♦\",\"pos\":411,\"back_color\":\"B\"},{\"rank\":\"2\",\"suit\":\"♥\",\"pos\":410,\"back_color\":\"B\"},{\"rank\":\"K\",\"suit\":\"♠\",\"pos\":412,\"back_color\":\"B\"},{\"rank\":\"10\",\"suit\":\"♣\",\"pos\":413,\"back_color\":\"R\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":414,\"back_color\":\"B\"},{\"rank\":\"J\",\"suit\":\"♠\",\"pos\":415,\"back_color\":\"R\"}]},\"segment\":\"A\",\"isT\":false}]",
+    "recovery": {
+      "totalCards": 416,
+      "validCount": 416,
+      "avgCards": "14.5",
+      "avgRounds": "2.9",
+      "maxCards": 63,
+      "maxRounds": 13,
+      "maxCardIdx": 378,
+      "immediateRecovery": 85,
+      "immediatePercent": "20.4",
+      "distribution": {
+        "immediate": 85,
+        "range1to5": 269,
+        "range6to10": 55,
+        "range11to15": 7,
+        "range16plus": 0
+      },
+      "recoveryDetails": [
+        {
+          "cutPoint": 0,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 1,
+          "roundsUsed": 7,
+          "cardsUsed": 37,
+          "immediate": false
+        },
+        {
+          "cutPoint": 2,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 3,
+          "roundsUsed": 7,
+          "cardsUsed": 35,
+          "immediate": false
+        },
+        {
+          "cutPoint": 4,
+          "roundsUsed": 6,
+          "cardsUsed": 30,
+          "immediate": false
+        },
+        {
+          "cutPoint": 5,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 6,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 7,
+          "roundsUsed": 6,
+          "cardsUsed": 31,
+          "immediate": false
+        },
+        {
+          "cutPoint": 8,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 9,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 10,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 11,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 12,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 13,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 14,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 15,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 16,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 17,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 18,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 19,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 20,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 21,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 22,
+          "roundsUsed": 6,
+          "cardsUsed": 32,
+          "immediate": false
+        },
+        {
+          "cutPoint": 23,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 24,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 25,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 26,
+          "roundsUsed": 5,
+          "cardsUsed": 28,
+          "immediate": false
+        },
+        {
+          "cutPoint": 27,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 28,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 29,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 30,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 31,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 32,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 33,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 34,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 35,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 36,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 37,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 38,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 39,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 40,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 41,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 42,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 43,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 44,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 45,
+          "roundsUsed": 6,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 46,
+          "roundsUsed": 6,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 47,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 48,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 49,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 50,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 51,
+          "roundsUsed": 5,
+          "cardsUsed": 28,
+          "immediate": false
+        },
+        {
+          "cutPoint": 52,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 53,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 54,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 55,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 56,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 57,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 58,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 59,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 60,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 61,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 62,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 63,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 64,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 65,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 66,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 67,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 68,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 69,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 70,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 71,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 72,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 73,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 74,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 75,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 76,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 77,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 78,
+          "roundsUsed": 7,
+          "cardsUsed": 30,
+          "immediate": false
+        },
+        {
+          "cutPoint": 79,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 80,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 81,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 82,
+          "roundsUsed": 6,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 83,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 84,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 85,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 86,
+          "roundsUsed": 5,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 87,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 88,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 89,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 90,
+          "roundsUsed": 4,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 91,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 92,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 93,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 94,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 95,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 96,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 97,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 98,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 99,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 100,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 101,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 102,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 103,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 104,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 105,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 106,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 107,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 108,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 109,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 110,
+          "roundsUsed": 7,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 111,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 112,
+          "roundsUsed": 6,
+          "cardsUsed": 32,
+          "immediate": false
+        },
+        {
+          "cutPoint": 113,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 114,
+          "roundsUsed": 6,
+          "cardsUsed": 30,
+          "immediate": false
+        },
+        {
+          "cutPoint": 115,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 116,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 117,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 118,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 119,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 120,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 121,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 122,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 123,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 124,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 125,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 126,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 127,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 128,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 129,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 130,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 131,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 132,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 133,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 134,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 135,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 136,
+          "roundsUsed": 5,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 137,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 138,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 139,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 140,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 141,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 142,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 143,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 144,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 145,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 146,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 147,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 148,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 149,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 150,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 151,
+          "roundsUsed": 11,
+          "cardsUsed": 52,
+          "immediate": false
+        },
+        {
+          "cutPoint": 152,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 153,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 154,
+          "roundsUsed": 10,
+          "cardsUsed": 49,
+          "immediate": false
+        },
+        {
+          "cutPoint": 155,
+          "roundsUsed": 10,
+          "cardsUsed": 48,
+          "immediate": false
+        },
+        {
+          "cutPoint": 156,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 157,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 158,
+          "roundsUsed": 9,
+          "cardsUsed": 45,
+          "immediate": false
+        },
+        {
+          "cutPoint": 159,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 160,
+          "roundsUsed": 9,
+          "cardsUsed": 43,
+          "immediate": false
+        },
+        {
+          "cutPoint": 161,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 162,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 163,
+          "roundsUsed": 8,
+          "cardsUsed": 40,
+          "immediate": false
+        },
+        {
+          "cutPoint": 164,
+          "roundsUsed": 8,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 165,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 166,
+          "roundsUsed": 7,
+          "cardsUsed": 37,
+          "immediate": false
+        },
+        {
+          "cutPoint": 167,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 168,
+          "roundsUsed": 7,
+          "cardsUsed": 35,
+          "immediate": false
+        },
+        {
+          "cutPoint": 169,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 170,
+          "roundsUsed": 7,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 171,
+          "roundsUsed": 6,
+          "cardsUsed": 32,
+          "immediate": false
+        },
+        {
+          "cutPoint": 172,
+          "roundsUsed": 6,
+          "cardsUsed": 31,
+          "immediate": false
+        },
+        {
+          "cutPoint": 173,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 174,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 175,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 176,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 177,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 178,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 179,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 180,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 181,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 182,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 183,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 184,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 185,
+          "roundsUsed": 7,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 186,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 187,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 188,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 189,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 190,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 191,
+          "roundsUsed": 6,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 192,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 193,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 194,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 195,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 196,
+          "roundsUsed": 5,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 197,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 198,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 199,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 200,
+          "roundsUsed": 4,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 201,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 202,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 203,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 204,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 205,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 206,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 207,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 208,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 209,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 210,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 211,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 212,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 213,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 214,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 215,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 216,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 217,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 218,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 219,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 220,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 221,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 222,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 223,
+          "roundsUsed": 5,
+          "cardsUsed": 24,
+          "immediate": false
+        },
+        {
+          "cutPoint": 224,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 225,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 226,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 227,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 228,
+          "roundsUsed": 8,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 229,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 230,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 231,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 232,
+          "roundsUsed": 7,
+          "cardsUsed": 35,
+          "immediate": false
+        },
+        {
+          "cutPoint": 233,
+          "roundsUsed": 7,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 234,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 235,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 236,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 237,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 238,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 239,
+          "roundsUsed": 7,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 240,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 241,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 242,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 243,
+          "roundsUsed": 5,
+          "cardsUsed": 24,
+          "immediate": false
+        },
+        {
+          "cutPoint": 244,
+          "roundsUsed": 6,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 245,
+          "roundsUsed": 6,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 246,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 247,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 248,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 249,
+          "roundsUsed": 5,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 250,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 251,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 252,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 253,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 254,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 255,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 256,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 257,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 258,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 259,
+          "roundsUsed": 8,
+          "cardsUsed": 43,
+          "immediate": false
+        },
+        {
+          "cutPoint": 260,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 261,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 262,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 263,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 264,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 265,
+          "roundsUsed": 7,
+          "cardsUsed": 37,
+          "immediate": false
+        },
+        {
+          "cutPoint": 266,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 267,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 268,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 269,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 270,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 271,
+          "roundsUsed": 6,
+          "cardsUsed": 31,
+          "immediate": false
+        },
+        {
+          "cutPoint": 272,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 273,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 274,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 275,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 276,
+          "roundsUsed": 6,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 277,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 278,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 279,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 280,
+          "roundsUsed": 5,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 281,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 282,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 283,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 284,
+          "roundsUsed": 4,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 285,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 286,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 287,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 288,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 289,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 290,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 291,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 292,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 293,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 294,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 295,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 296,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 297,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 298,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 299,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 300,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 301,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 302,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 303,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 304,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 305,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 306,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 307,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 308,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 309,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 310,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 311,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 312,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 313,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 314,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 315,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 316,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 317,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 318,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 319,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 320,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 321,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 322,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 323,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 324,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 325,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 326,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 327,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 328,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 329,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 330,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 331,
+          "roundsUsed": 6,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 332,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 333,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 334,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 335,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 336,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 337,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 338,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 339,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 340,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 341,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 342,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 343,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 344,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 345,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 346,
+          "roundsUsed": 5,
+          "cardsUsed": 24,
+          "immediate": false
+        },
+        {
+          "cutPoint": 347,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 348,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 349,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 350,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 351,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 352,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 353,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 354,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 355,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 356,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 357,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 358,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 359,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 360,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 361,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 362,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 363,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 364,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 365,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 366,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 367,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 368,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 369,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 370,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 371,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 372,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 373,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 374,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 375,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 376,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 377,
+          "roundsUsed": 3,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 378,
+          "roundsUsed": 13,
+          "cardsUsed": 63,
+          "immediate": false
+        },
+        {
+          "cutPoint": 379,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 380,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 381,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 382,
+          "roundsUsed": 12,
+          "cardsUsed": 59,
+          "immediate": false
+        },
+        {
+          "cutPoint": 383,
+          "roundsUsed": 12,
+          "cardsUsed": 58,
+          "immediate": false
+        },
+        {
+          "cutPoint": 384,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 385,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 386,
+          "roundsUsed": 11,
+          "cardsUsed": 55,
+          "immediate": false
+        },
+        {
+          "cutPoint": 387,
+          "roundsUsed": 11,
+          "cardsUsed": 54,
+          "immediate": false
+        },
+        {
+          "cutPoint": 388,
+          "roundsUsed": 11,
+          "cardsUsed": 53,
+          "immediate": false
+        },
+        {
+          "cutPoint": 389,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 390,
+          "roundsUsed": 10,
+          "cardsUsed": 51,
+          "immediate": false
+        },
+        {
+          "cutPoint": 391,
+          "roundsUsed": 10,
+          "cardsUsed": 50,
+          "immediate": false
+        },
+        {
+          "cutPoint": 392,
+          "roundsUsed": 10,
+          "cardsUsed": 49,
+          "immediate": false
+        },
+        {
+          "cutPoint": 393,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 394,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 395,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 396,
+          "roundsUsed": 9,
+          "cardsUsed": 45,
+          "immediate": false
+        },
+        {
+          "cutPoint": 397,
+          "roundsUsed": 9,
+          "cardsUsed": 44,
+          "immediate": false
+        },
+        {
+          "cutPoint": 398,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 399,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 400,
+          "roundsUsed": 10,
+          "cardsUsed": 54,
+          "immediate": false
+        },
+        {
+          "cutPoint": 401,
+          "roundsUsed": 10,
+          "cardsUsed": 53,
+          "immediate": false
+        },
+        {
+          "cutPoint": 402,
+          "roundsUsed": 8,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 403,
+          "roundsUsed": 8,
+          "cardsUsed": 38,
+          "immediate": false
+        },
+        {
+          "cutPoint": 404,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 405,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 406,
+          "roundsUsed": 9,
+          "cardsUsed": 48,
+          "immediate": false
+        },
+        {
+          "cutPoint": 407,
+          "roundsUsed": 9,
+          "cardsUsed": 47,
+          "immediate": false
+        },
+        {
+          "cutPoint": 408,
+          "roundsUsed": 7,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 409,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 410,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 411,
+          "roundsUsed": 8,
+          "cardsUsed": 43,
+          "immediate": false
+        },
+        {
+          "cutPoint": 412,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 413,
+          "roundsUsed": 8,
+          "cardsUsed": 41,
+          "immediate": false
+        },
+        {
+          "cutPoint": 414,
+          "roundsUsed": 7,
+          "cardsUsed": 36,
+          "immediate": false
+        },
+        {
+          "cutPoint": 415,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        }
+      ]
+    },
+    "display": {
+      "totalCards": 416,
+      "validCount": 416,
+      "avgCards": "14.5",
+      "avgRounds": "2.9",
+      "maxCards": 63,
+      "maxRounds": 13,
+      "maxCardIdx": 378,
+      "immediateRecovery": 85,
+      "immediatePercent": "20.4",
+      "distribution": {
+        "immediate": 85,
+        "range1to5": 269,
+        "range6to10": 55,
+        "range11to15": 7,
+        "range16plus": 0
+      },
+      "recoveryDetails": [
+        {
+          "cutPoint": 0,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 1,
+          "roundsUsed": 7,
+          "cardsUsed": 37,
+          "immediate": false
+        },
+        {
+          "cutPoint": 2,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 3,
+          "roundsUsed": 7,
+          "cardsUsed": 35,
+          "immediate": false
+        },
+        {
+          "cutPoint": 4,
+          "roundsUsed": 6,
+          "cardsUsed": 30,
+          "immediate": false
+        },
+        {
+          "cutPoint": 5,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 6,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 7,
+          "roundsUsed": 6,
+          "cardsUsed": 31,
+          "immediate": false
+        },
+        {
+          "cutPoint": 8,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 9,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 10,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 11,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 12,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 13,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 14,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 15,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 16,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 17,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 18,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 19,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 20,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 21,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 22,
+          "roundsUsed": 6,
+          "cardsUsed": 32,
+          "immediate": false
+        },
+        {
+          "cutPoint": 23,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 24,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 25,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 26,
+          "roundsUsed": 5,
+          "cardsUsed": 28,
+          "immediate": false
+        },
+        {
+          "cutPoint": 27,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 28,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 29,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 30,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 31,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 32,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 33,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 34,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 35,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 36,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 37,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 38,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 39,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 40,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 41,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 42,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 43,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 44,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 45,
+          "roundsUsed": 6,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 46,
+          "roundsUsed": 6,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 47,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 48,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 49,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 50,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 51,
+          "roundsUsed": 5,
+          "cardsUsed": 28,
+          "immediate": false
+        },
+        {
+          "cutPoint": 52,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 53,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 54,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 55,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 56,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 57,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 58,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 59,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 60,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 61,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 62,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 63,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 64,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 65,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 66,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 67,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 68,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 69,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 70,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 71,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 72,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 73,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 74,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 75,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 76,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 77,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 78,
+          "roundsUsed": 7,
+          "cardsUsed": 30,
+          "immediate": false
+        },
+        {
+          "cutPoint": 79,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 80,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 81,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 82,
+          "roundsUsed": 6,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 83,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 84,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 85,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 86,
+          "roundsUsed": 5,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 87,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 88,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 89,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 90,
+          "roundsUsed": 4,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 91,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 92,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 93,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 94,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 95,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 96,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 97,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 98,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 99,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 100,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 101,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 102,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 103,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 104,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 105,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 106,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 107,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 108,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 109,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 110,
+          "roundsUsed": 7,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 111,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 112,
+          "roundsUsed": 6,
+          "cardsUsed": 32,
+          "immediate": false
+        },
+        {
+          "cutPoint": 113,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 114,
+          "roundsUsed": 6,
+          "cardsUsed": 30,
+          "immediate": false
+        },
+        {
+          "cutPoint": 115,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 116,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 117,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 118,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 119,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 120,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 121,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 122,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 123,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 124,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 125,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 126,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 127,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 128,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 129,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 130,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 131,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 132,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 133,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 134,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 135,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 136,
+          "roundsUsed": 5,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 137,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 138,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 139,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 140,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 141,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 142,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 143,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 144,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 145,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 146,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 147,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 148,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 149,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 150,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 151,
+          "roundsUsed": 11,
+          "cardsUsed": 52,
+          "immediate": false
+        },
+        {
+          "cutPoint": 152,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 153,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 154,
+          "roundsUsed": 10,
+          "cardsUsed": 49,
+          "immediate": false
+        },
+        {
+          "cutPoint": 155,
+          "roundsUsed": 10,
+          "cardsUsed": 48,
+          "immediate": false
+        },
+        {
+          "cutPoint": 156,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 157,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 158,
+          "roundsUsed": 9,
+          "cardsUsed": 45,
+          "immediate": false
+        },
+        {
+          "cutPoint": 159,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 160,
+          "roundsUsed": 9,
+          "cardsUsed": 43,
+          "immediate": false
+        },
+        {
+          "cutPoint": 161,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 162,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 163,
+          "roundsUsed": 8,
+          "cardsUsed": 40,
+          "immediate": false
+        },
+        {
+          "cutPoint": 164,
+          "roundsUsed": 8,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 165,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 166,
+          "roundsUsed": 7,
+          "cardsUsed": 37,
+          "immediate": false
+        },
+        {
+          "cutPoint": 167,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 168,
+          "roundsUsed": 7,
+          "cardsUsed": 35,
+          "immediate": false
+        },
+        {
+          "cutPoint": 169,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 170,
+          "roundsUsed": 7,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 171,
+          "roundsUsed": 6,
+          "cardsUsed": 32,
+          "immediate": false
+        },
+        {
+          "cutPoint": 172,
+          "roundsUsed": 6,
+          "cardsUsed": 31,
+          "immediate": false
+        },
+        {
+          "cutPoint": 173,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 174,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 175,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 176,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 177,
+          "roundsUsed": 5,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 178,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 179,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 180,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 181,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 182,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 183,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 184,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 185,
+          "roundsUsed": 7,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 186,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 187,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 188,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 189,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 190,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 191,
+          "roundsUsed": 6,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 192,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 193,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 194,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 195,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 196,
+          "roundsUsed": 5,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 197,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 198,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 199,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 200,
+          "roundsUsed": 4,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 201,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 202,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 203,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 204,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 205,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 206,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 207,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 208,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 209,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 210,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 211,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 212,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 213,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 214,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 215,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 216,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 217,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 218,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 219,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 220,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 221,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 222,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 223,
+          "roundsUsed": 5,
+          "cardsUsed": 24,
+          "immediate": false
+        },
+        {
+          "cutPoint": 224,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 225,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 226,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 227,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 228,
+          "roundsUsed": 8,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 229,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 230,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 231,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 232,
+          "roundsUsed": 7,
+          "cardsUsed": 35,
+          "immediate": false
+        },
+        {
+          "cutPoint": 233,
+          "roundsUsed": 7,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 234,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 235,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 236,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 237,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 238,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 239,
+          "roundsUsed": 7,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 240,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 241,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 242,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 243,
+          "roundsUsed": 5,
+          "cardsUsed": 24,
+          "immediate": false
+        },
+        {
+          "cutPoint": 244,
+          "roundsUsed": 6,
+          "cardsUsed": 34,
+          "immediate": false
+        },
+        {
+          "cutPoint": 245,
+          "roundsUsed": 6,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 246,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 247,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 248,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 249,
+          "roundsUsed": 5,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 250,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 251,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 252,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 253,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 254,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 255,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 256,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 257,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 258,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 259,
+          "roundsUsed": 8,
+          "cardsUsed": 43,
+          "immediate": false
+        },
+        {
+          "cutPoint": 260,
+          "roundsUsed": 3,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 261,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 262,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 263,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 264,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 265,
+          "roundsUsed": 7,
+          "cardsUsed": 37,
+          "immediate": false
+        },
+        {
+          "cutPoint": 266,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 267,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 268,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 269,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 270,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 271,
+          "roundsUsed": 6,
+          "cardsUsed": 31,
+          "immediate": false
+        },
+        {
+          "cutPoint": 272,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 273,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 274,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 275,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 276,
+          "roundsUsed": 6,
+          "cardsUsed": 26,
+          "immediate": false
+        },
+        {
+          "cutPoint": 277,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 278,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 279,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 280,
+          "roundsUsed": 5,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 281,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 282,
+          "roundsUsed": 4,
+          "cardsUsed": 20,
+          "immediate": false
+        },
+        {
+          "cutPoint": 283,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 284,
+          "roundsUsed": 4,
+          "cardsUsed": 18,
+          "immediate": false
+        },
+        {
+          "cutPoint": 285,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 286,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 287,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 288,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 289,
+          "roundsUsed": 4,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 290,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 291,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 292,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 293,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 294,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 295,
+          "roundsUsed": 3,
+          "cardsUsed": 17,
+          "immediate": false
+        },
+        {
+          "cutPoint": 296,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 297,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 298,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 299,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 300,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 301,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 302,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 303,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 304,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 305,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 306,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 307,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 308,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 309,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 310,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 311,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 312,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 313,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 314,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 315,
+          "roundsUsed": 5,
+          "cardsUsed": 25,
+          "immediate": false
+        },
+        {
+          "cutPoint": 316,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 317,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 318,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 319,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 320,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 321,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 322,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 323,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 324,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 325,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 326,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 327,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 328,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 329,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 330,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 331,
+          "roundsUsed": 6,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 332,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 333,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 334,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 335,
+          "roundsUsed": 5,
+          "cardsUsed": 23,
+          "immediate": false
+        },
+        {
+          "cutPoint": 336,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 337,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 338,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 339,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 340,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 341,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 342,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 343,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 344,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 345,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 346,
+          "roundsUsed": 5,
+          "cardsUsed": 24,
+          "immediate": false
+        },
+        {
+          "cutPoint": 347,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 348,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 349,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 350,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 351,
+          "roundsUsed": 4,
+          "cardsUsed": 19,
+          "immediate": false
+        },
+        {
+          "cutPoint": 352,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        },
+        {
+          "cutPoint": 353,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 354,
+          "roundsUsed": 2,
+          "cardsUsed": 10,
+          "immediate": false
+        },
+        {
+          "cutPoint": 355,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 356,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 357,
+          "roundsUsed": 5,
+          "cardsUsed": 27,
+          "immediate": false
+        },
+        {
+          "cutPoint": 358,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 359,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 360,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 361,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 362,
+          "roundsUsed": 4,
+          "cardsUsed": 22,
+          "immediate": false
+        },
+        {
+          "cutPoint": 363,
+          "roundsUsed": 4,
+          "cardsUsed": 21,
+          "immediate": false
+        },
+        {
+          "cutPoint": 364,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 365,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 366,
+          "roundsUsed": 3,
+          "cardsUsed": 14,
+          "immediate": false
+        },
+        {
+          "cutPoint": 367,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 368,
+          "roundsUsed": 3,
+          "cardsUsed": 16,
+          "immediate": false
+        },
+        {
+          "cutPoint": 369,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 370,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 371,
+          "roundsUsed": 3,
+          "cardsUsed": 13,
+          "immediate": false
+        },
+        {
+          "cutPoint": 372,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 373,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 374,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 375,
+          "roundsUsed": 2,
+          "cardsUsed": 9,
+          "immediate": false
+        },
+        {
+          "cutPoint": 376,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 377,
+          "roundsUsed": 3,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 378,
+          "roundsUsed": 13,
+          "cardsUsed": 63,
+          "immediate": false
+        },
+        {
+          "cutPoint": 379,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 380,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 381,
+          "roundsUsed": 2,
+          "cardsUsed": 8,
+          "immediate": false
+        },
+        {
+          "cutPoint": 382,
+          "roundsUsed": 12,
+          "cardsUsed": 59,
+          "immediate": false
+        },
+        {
+          "cutPoint": 383,
+          "roundsUsed": 12,
+          "cardsUsed": 58,
+          "immediate": false
+        },
+        {
+          "cutPoint": 384,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 385,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 386,
+          "roundsUsed": 11,
+          "cardsUsed": 55,
+          "immediate": false
+        },
+        {
+          "cutPoint": 387,
+          "roundsUsed": 11,
+          "cardsUsed": 54,
+          "immediate": false
+        },
+        {
+          "cutPoint": 388,
+          "roundsUsed": 11,
+          "cardsUsed": 53,
+          "immediate": false
+        },
+        {
+          "cutPoint": 389,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 390,
+          "roundsUsed": 10,
+          "cardsUsed": 51,
+          "immediate": false
+        },
+        {
+          "cutPoint": 391,
+          "roundsUsed": 10,
+          "cardsUsed": 50,
+          "immediate": false
+        },
+        {
+          "cutPoint": 392,
+          "roundsUsed": 10,
+          "cardsUsed": 49,
+          "immediate": false
+        },
+        {
+          "cutPoint": 393,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 394,
+          "roundsUsed": 1,
+          "cardsUsed": 4,
+          "immediate": false
+        },
+        {
+          "cutPoint": 395,
+          "roundsUsed": 3,
+          "cardsUsed": 15,
+          "immediate": false
+        },
+        {
+          "cutPoint": 396,
+          "roundsUsed": 9,
+          "cardsUsed": 45,
+          "immediate": false
+        },
+        {
+          "cutPoint": 397,
+          "roundsUsed": 9,
+          "cardsUsed": 44,
+          "immediate": false
+        },
+        {
+          "cutPoint": 398,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 399,
+          "roundsUsed": 2,
+          "cardsUsed": 11,
+          "immediate": false
+        },
+        {
+          "cutPoint": 400,
+          "roundsUsed": 10,
+          "cardsUsed": 54,
+          "immediate": false
+        },
+        {
+          "cutPoint": 401,
+          "roundsUsed": 10,
+          "cardsUsed": 53,
+          "immediate": false
+        },
+        {
+          "cutPoint": 402,
+          "roundsUsed": 8,
+          "cardsUsed": 39,
+          "immediate": false
+        },
+        {
+          "cutPoint": 403,
+          "roundsUsed": 8,
+          "cardsUsed": 38,
+          "immediate": false
+        },
+        {
+          "cutPoint": 404,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 405,
+          "roundsUsed": 1,
+          "cardsUsed": 5,
+          "immediate": false
+        },
+        {
+          "cutPoint": 406,
+          "roundsUsed": 9,
+          "cardsUsed": 48,
+          "immediate": false
+        },
+        {
+          "cutPoint": 407,
+          "roundsUsed": 9,
+          "cardsUsed": 47,
+          "immediate": false
+        },
+        {
+          "cutPoint": 408,
+          "roundsUsed": 7,
+          "cardsUsed": 33,
+          "immediate": false
+        },
+        {
+          "cutPoint": 409,
+          "roundsUsed": 2,
+          "cardsUsed": 12,
+          "immediate": false
+        },
+        {
+          "cutPoint": 410,
+          "roundsUsed": 0,
+          "cardsUsed": 0,
+          "immediate": true
+        },
+        {
+          "cutPoint": 411,
+          "roundsUsed": 8,
+          "cardsUsed": 43,
+          "immediate": false
+        },
+        {
+          "cutPoint": 412,
+          "roundsUsed": 6,
+          "cardsUsed": 29,
+          "immediate": false
+        },
+        {
+          "cutPoint": 413,
+          "roundsUsed": 8,
+          "cardsUsed": 41,
+          "immediate": false
+        },
+        {
+          "cutPoint": 414,
+          "roundsUsed": 7,
+          "cardsUsed": 36,
+          "immediate": false
+        },
+        {
+          "cutPoint": 415,
+          "roundsUsed": 1,
+          "cardsUsed": 6,
+          "immediate": false
+        }
+      ]
+    },
+    "avgText": "2.9 局",
+    "validation": {
+      "ok": true,
+      "reason": "",
+      "retryable": false
+    },
+    "color": 0,
+    "ms": 509,
+    "case": {
+      "seed": 139,
+      "triple": false
+    },
+    "variant": "new"
+  }
+]

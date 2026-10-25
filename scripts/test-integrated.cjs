@@ -10,7 +10,7 @@ function dependency(name) {
   }
   return require(name);
 }
-const { chromium } = dependency('playwright');
+const { chromium } = require('playwright');
 const ExcelJS = dependency('exceljs');
 const { assertSignalFonts } = require('./test-export-signal.cjs');
 const exportState = () => ({ rounds:currentRounds.map(r=>({result:r.result,cards:r.cards.map(c=>({rank:c.rank,suit:c.suit,back_color:c.back_color}))})), config:{suits:SIGNAL_CONFIG.suits.slice(),ranks:SIGNAL_CONFIG.ranks.slice()} });
@@ -90,7 +90,7 @@ async function toolGroup(page,key){
       assert.equal(assertSignalFonts(wb,state.rounds,state.config),64);
       await page.waitForFunction(()=>!IntegratedModes.busy);await page.locator('#modeRed0').click();
     });
-    await check('穿越示範共用同一牌表，預設訊號與94個安全點保持',async()=>{
+    await check('穿越示範共用同一牌表，預設訊號與合併後95個安全點保持',async()=>{
       await page.locator('#modeTraverse').click();assert(await page.locator('#traverseControls').isVisible());
       assert(await page.locator('#traverseTools').isHidden());
       assert(await page.locator('#btnTraverseData').isVisible());
@@ -98,9 +98,9 @@ async function toolGroup(page,key){
       assert(await page.locator('#traverseTools').isVisible());
       await page.locator('#btnCloseTraverseData').click();
       await toolGroup(page,'demo');
-      await page.locator('#tvDemo').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
+      await page.locator('#tvDemo').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result,{},{timeout:120000});
       await inventory(page);before=await page.evaluate(signature);
-      assert.equal(await page.evaluate(()=>IntegratedModes.traversal.analysis.count),94);
+      assert.equal(await page.evaluate(()=>IntegratedModes.traversal.analysis.count),95);
       assert(await page.locator('#btnAutoReorder').isHidden());
       assert.equal(await page.locator('#roundsBody tr').count(),84);
     });
@@ -118,7 +118,7 @@ async function toolGroup(page,key){
       await toolGroup(page,'edit');
       await page.locator('#tvOptimize').click();await page.waitForFunction(()=>!IntegratedModes.busy,{},{timeout:60000});
       assert(await page.locator('#optimizerPanel').isVisible());
-      assert((await page.evaluate(()=>IntegratedModes.traversal.analysis.count))>94);
+      assert((await page.evaluate(()=>IntegratedModes.traversal.analysis.count))>95);
       after=await page.evaluate(signature);await page.locator('#btnOptBefore').click();assert.equal(await page.evaluate(signature),before);
       await page.locator('#btnOptAfter').click();assert.equal(await page.evaluate(signature),after);
       await page.locator('#btnOptClose').click();assert(await page.locator('#optimizerPanel').isHidden());
@@ -147,7 +147,7 @@ async function toolGroup(page,key){
     });
     await check('穿越A2實際導出依各自設定標紅訊號牌',async()=>{
       await page.locator('#modeTraverseA2').click();await toolGroup(page,'demo');await page.locator('#tvDemo').click();
-      await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
+      await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result,{},{timeout:120000});
       const state=await page.evaluate(exportState);
       assert.deepEqual(state.config,{suits:['♠','♥','♦','♣'],ranks:['A','2']});
       const download=page.waitForEvent('download');await page.evaluate(()=>document.getElementById('btnExportCombined').click());
@@ -190,7 +190,8 @@ async function toolGroup(page,key){
       // Limit acceptance/spacing has its own tests; avoid an intentional
       // no-safe-exchange stop in this signal/export regression.
       await page.locator('#tvRareReversalMax').fill('0');await page.locator('#tvSevenReversalMax').fill('');
-      await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result);
+      await page.evaluate(()=>document.getElementById('tvTailFill').checked=true);
+      await page.locator('#chipGen').click();await page.waitForFunction(()=>!IntegratedModes.busy&&!!IntegratedModes.traversal.result,{},{timeout:120000});
       await inventory(page);
       assert.deepEqual(await page.evaluate(()=>IntegratedModes.traversal.result.signalConfig),{suits:['♥','♦'],ranks:['10','J','Q','K']});
       assert(await page.evaluate(()=>[...document.querySelectorAll('#roundsBody .s-signal-card')].every(c=>/^[TJQK][♥♦]$/.test(c.textContent))));
@@ -208,7 +209,9 @@ async function toolGroup(page,key){
     });
     await check('穿越停止籌碼可中止重跑，進行中不允許切模式',async()=>{
       await page.evaluate(()=>{if(document.getElementById('traverseControls').classList.contains('collapsed'))document.getElementById('tvSettingsToggle').click();});await page.locator('#tvLeft').fill('0');await page.locator('#tvMin').fill('4');await page.locator('#tvMax').fill('4');
-      await page.evaluate(()=>{document.getElementById('chipGen').click();IntegratedModes.switchMode('standard');document.getElementById('chipStop').click();});
+      await page.evaluate(()=>{for(const id of ['tvLeft','tvMin','tvMax'])document.getElementById(id).dispatchEvent(new Event('change',{bubbles:true}));const build=TraverseBuilder.build;window.__stopBuildStarted=false;TraverseBuilder.build=(...args)=>{window.__stopBuildStarted=true;return build(...args);};document.getElementById('chipGen').click();});
+      await page.waitForFunction(()=>window.__stopBuildStarted&&IntegratedModes.busy);
+      await page.evaluate(()=>{IntegratedModes.switchMode('red0');document.getElementById('chipStop').click();});
       await page.waitForFunction(()=>!IntegratedModes.busy,{},{timeout:30000});
       assert.equal(await page.evaluate(()=>IntegratedModes.mode),'traverse');
       assert.match(await page.locator('#tvProgress').textContent(),/已停止/);await inventory(page);

@@ -447,7 +447,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <button id="btnCut" class="btn tool-btn" disabled>切牌</button>
       <button id="btnSwap" class="btn tool-btn" disabled>換牌</button>
       <button id="btnColor" class="btn tool-btn" disabled title="依目前切牌位置重新分配紅藍牌背，保留牌面順序">卡色</button>
-      <button id="btnOptimize" class="btn tool-btn" disabled>局內優化</button>
+      <button id="btnOptimize" class="btn tool-btn" disabled>局內優化</button><button id="btnRecoveryOptimize" class="btn tool-btn" disabled>回復優化</button>
       <button id="btnOptOpen" class="btn tool-btn" disabled>查看優化比較</button>
       <button id="btnOptimizeDemo" class="btn tool-btn">看一副示範</button>
       <span class="sep"></span>
@@ -460,7 +460,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
       <button id="btnOptClose" class="btn tool-btn" aria-label="關閉優化比較">關閉</button>
     </div>
     <div class="optimizer-body">
-    <p class="optimizer-note">把同一局內的牌換個順序，讓能安全切牌的位置變多。原本開莊仍開莊、用幾張仍用幾張，敏感局與穿越條件也要保留，不跨局換牌。安全切點只按點數規則計算；卡色違規另外檢查。</p>
+    <p class="optimizer-note">把同一局內的牌換個順序，局內優化要求安全切點增加且平均回復不升高；回復優化要求平均回復降低且安全切點不減少。原本開莊仍開莊、用幾張仍用幾張，敏感局與穿越條件也要保留，不跨局換牌。安全切點只按點數規則計算；卡色違規另外檢查。</p>
     <p class="optimizer-note">金框標出移動的牌，下方數字是它原本在這局的位置。下列按鈕會切換主頁牌表；可移開或關閉視窗查看，再按「查看優化比較」開回來。</p>
     <div id="optimizerSummary" class="optimizer-summary"></div>
     <div id="optimizerChecks" class="optimizer-checks"></div>
@@ -522,9 +522,10 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="traverse_builder.js?v=19"></script>
+<script src="traverse_builder.js?v=23"></script>
 <script src="traverse_export.js?v=7"></script>
-<script src="traverse_optimizer.js?v=5"></script>
+<script src="standard/recovery_search.js?v=2"></script>
+<script src="traverse_optimizer.js?v=9"></script>
 <script src="traverse_optimizer_dialog.js?v=2"></script>
 <script>
 (function () {
@@ -589,7 +590,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   }
   function renderOptimizerExample(cut) {
     if (!optimization || !optimization.gained.length) {
-      $('optimizerExample').innerHTML = '<h3>這次沒有找到更多安全切點，已保留原牌序。</h3>'; return;
+      $('optimizerExample').innerHTML = '<h3>這次沒有新增安全切點；回復改善及前後數值請看上方比較。</h3>'; return;
     }
     const c = cut ?? optimization.gained[0];
     const beforeCards = TraverseOptimizer.prepare(optimization.before), afterCards = TraverseOptimizer.prepare(optimization.after);
@@ -605,7 +606,8 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   }
   function renderOptimization() {
     const o = optimization, gain = o.final.count - o.initial.count;
-    $('optimizerSummary').innerHTML = `<div class="optimizer-count"><span>調整前安全切點</span><strong>${o.initial.count}</strong></div><span>→</span><div class="optimizer-count"><span>調整後安全切點</span><strong>${o.final.count}</strong></div><div class="optimizer-gain">增加 ${gain} 個</div><span class="optimizer-note">共 416 個切點・只按點數規則</span>`;
+    $('optimizerTitle').textContent=o.objective==='recovery'?'同一副牌・回復優化前後比較':'同一副牌・局內優化前後比較';
+    $('optimizerSummary').textContent = TraverseOptimizer.summary(o)+`｜調整 ${o.changes.length} 局${o.limited?'｜已達本次搜尋上限':''}`;
     $('optimizerChecks').textContent = `✓ 同一副 416 張牌　✓ 每局結果、張數與敏感局維持　✓ 訊號狀態維持　✓ 長段實際穿越通過｜共調整 ${o.changes.length} 局。新增 ${o.gained.length} 個安全起點、減少 ${o.lost.length} 個，淨增加 ${gain} 個。`;
     const first = o.changes.slice(0, 1), rest = o.changes.slice(1);
     $('optimizerChanges').innerHTML = first.map(optimizerChange).join('') + (rest.length ? `<details><summary>展開其餘 ${rest.length} 局的前後對照</summary><div class="optimizer-rows">${rest.map(optimizerChange).join('')}</div></details>` : '');
@@ -620,7 +622,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     [...signalIds,'signalDefault','tripleTie','signalRule','strongMode','secondStart','endingNine','sideRule','sideLimit','minLen','maxLen','idleLimit','computeTries','chainAttempts','maxLeftover'].forEach(id => { $(id).disabled = busy; });
     ['btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id => { $(id).disabled = busy; });
   }
-  $('btnOptimize').addEventListener('click', async () => {
+  async function optimizeCurrent(objective='safe') {
     if (!lastResult || optimizationBusy) return;
     const source = JSON.parse(JSON.stringify(lastResult));
     source.cards = baseCards.map(c => ({ ...c }));
@@ -628,14 +630,19 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
     cancelled = false; clearOptimization(); optimizerBusy(true);
     $('progress').textContent = '正在比較同一局內的不同排列…';
     try {
-      optimization = await TraverseOptimizer.optimize(source, { ...opts, isCancelled: () => cancelled,
-        onProgress: p => { $('progress').textContent = `局內優化：第 ${p.pass} 輪・${p.round}/${p.total} 局｜安全切點 ${p.before} → ${p.best}`; } });
+      optimization = await TraverseOptimizer.optimize(source, { ...opts, objective,
+        validate:r=> { if($('maxLeftover').value.trim()!==''&&TraverseOptimizer.prepare(r).filter(c=>!c.traverse).length>Number($('maxLeftover').value))return {ok:false,reason:'剩牌超過設定上限'};return $('sideRule').checked && sideDiffOf(r.cards,0) > (parseInt($('sideLimit').value,10)||0) ? {ok:false,reason:'莊閒差距超標'} : {ok:true}; },
+        isCancelled: () => cancelled,
+        onProgress: p => { $('progress').textContent = `${objective==='recovery'?'回復優化':'局內優化'}：第 ${p.pass} 輪・${p.round}/${p.total} 局｜安全切點 ${p.before} → ${p.best}｜回復 ${p.recoveryBefore.toFixed(6)} → ${p.recoveryBest.toFixed(6)}`; } });
+      if(optimization.cancelled||cancelled){$('progress').textContent='優化已停止，保留原牌';optimization=null;return;}
       cutPos = 0; $('cutPos').value = 0;
       optimizerBusy(false); renderOptimization();
-      $('progress').textContent = `${optimization.cancelled ? '已停止，保留目前最佳結果' : '局內優化完成'}｜安全切點 ${optimization.initial.count} → ${optimization.final.count}`;
+      $('progress').textContent = `${objective==='recovery'?'回復優化':'局內優化'}${optimization.accepted?'完成':'未找到合法改善，保留原牌'}｜${TraverseOptimizer.summary(optimization)}${optimization.limited?'｜已達本次搜尋上限':''}`;
     } catch (e) { $('progress').textContent = `局內優化：${e.message || e}`; }
     finally { optimizerBusy(false); }
-  });
+  }
+  $('btnOptimize').addEventListener('click',()=>optimizeCurrent('safe'));
+  $('btnRecoveryOptimize').addEventListener('click',()=>optimizeCurrent('recovery'));
   $('btnOptBefore').addEventListener('click', () => displayOptimizationVersion('before'));
   $('btnOptAfter').addEventListener('click', () => displayOptimizationVersion('after'));
   $('btnOptOriginalCut').addEventListener('click', () => { cutPos = 0; $('cutPos').value = 0; displayOptimizationVersion(optimizationView); });
@@ -1294,7 +1301,7 @@ thead th { font:600 12px var(--serif); color:var(--gold-1); background:#141c1d; 
   }
 
   function setReady(ready) {
-    ['cutPos', 'btnCut', 'btnSwap', 'btnColor', 'btnExport', 'btnOptimize'].forEach((id) => { $(id).disabled = !ready; });
+    ['cutPos', 'btnCut', 'btnSwap', 'btnColor', 'btnExport', 'btnOptimize', 'btnRecoveryOptimize'].forEach((id) => { $(id).disabled = !ready; });
   }
 
   $('btnRun').addEventListener('click', async () => {

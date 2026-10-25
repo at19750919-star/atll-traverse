@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>牌檔結果統計</title>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* 沿用 integrated.html 黑金色票與元件 */
+  :root {
+    --ink:#07090b; --gold-1:#f4dfa4; --gold-2:#d9b568;
+    --gold-line:linear-gradient(135deg,#6b4c1d 0%,#e8c97a 25%,#8a6a2f 50%,#f4dfa4 75%,#6b4c1d 100%);
+    --txt:#e8e4d8; --txt-dim:#9a9584; --tie:#5cbf8a; --danger:#ff6b5e;
+    --serif:"Noto Serif TC","Cinzel",serif; --sans:"Noto Sans TC",sans-serif; --disp:"Cinzel","Noto Serif TC",serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { background:var(--ink); }
+  body {
+    font-family:var(--sans); color:var(--txt); min-height:100vh; font-size:14px; line-height:1.5;
+    background:
+      radial-gradient(1200px 500px at 50% -8%, rgba(38,84,68,.45), transparent 60%),
+      radial-gradient(900px 700px at 88% 110%, rgba(26,54,66,.35), transparent 60%),
+      linear-gradient(180deg,#0a0e10 0%, #07090b 100%);
+    background-attachment:fixed;
+    padding:0 clamp(12px,2.2vw,34px) 30px;
+  }
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:999; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+  }
+  main { width:100%; } /* 不設最大寬度，21:9 寬螢幕整排都能放卡片 */
+  header {
+    display:flex; align-items:center; gap:18px; padding:16px 4px 12px; margin-bottom:24px;
+    border-bottom:1px solid transparent;
+    border-image:linear-gradient(90deg,transparent,#8a6a2f 20%,#f4dfa4 50%,#8a6a2f 80%,transparent) 1;
+  }
+  .crest {
+    width:52px; height:52px; border-radius:50%; flex:none;
+    background:#080908 url("suit/at-spade-logo-current.png") center/cover no-repeat;
+    box-shadow:0 0 0 1px #8a6a2f, 0 0 0 4px #0c1110, 0 0 0 5px #5d431c, 0 6px 18px rgba(0,0,0,.6), inset 0 0 14px rgba(232,201,122,.15);
+  }
+  h1 {
+    font-family:var(--disp); font-size:clamp(20px,2.4vw,28px); font-weight:900; letter-spacing:.14em;
+    background:linear-gradient(180deg,#fbeec7 10%,#e2bd72 45%,#9c7434 70%,#f0d491 95%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.8));
+  }
+  h1 small {
+    display:block; font-family:var(--sans); font-weight:400; font-size:11px; letter-spacing:.5em;
+    color:var(--txt-dim); -webkit-text-fill-color:var(--txt-dim); margin-top:2px;
+  }
+  header .back { margin-left:auto; }
+  .gframe {
+    position:relative; padding:22px 18px 16px; margin-bottom:22px;
+    background:linear-gradient(160deg, rgba(24,32,33,.92), rgba(11,17,19,.94));
+    border:1px solid; border-image:var(--gold-line) 1;
+    box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.35);
+  }
+  .gframe::before, .gframe::after {
+    content:""; position:absolute; width:14px; height:14px; pointer-events:none;
+    border-color:var(--gold-1); border-style:solid;
+  }
+  .gframe::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
+  .gframe::after { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+  .frame-title {
+    position:absolute; top:-9px; left:18px; font-family:var(--serif); font-size:11px; font-weight:600;
+    letter-spacing:.4em; color:var(--gold-2); background:#0d1315; padding:0 10px;
+  }
+  .drop {
+    border:1px dashed #3a4340; border-radius:8px; padding:20px; text-align:center; color:var(--txt-dim);
+    background:radial-gradient(ellipse at 50% 0%, rgba(18,58,44,.55), rgba(10,36,27,.25) 70%);
+    transition:.2s;
+  }
+  .drop.over { border-color:#c9a25a; color:var(--gold-1); box-shadow:inset 0 0 20px rgba(212,176,106,.2); }
+  .tool-btn {
+    display:inline-flex; align-items:center; justify-content:center; text-decoration:none; vertical-align:middle;
+    cursor:pointer; user-select:none; min-width:88px; height:40px; padding:0 18px; border-radius:8px;
+    font-family:var(--serif); font-weight:600; font-size:13.5px; letter-spacing:.25em; text-indent:.25em;
+    color:var(--txt); background:linear-gradient(180deg,#161f21,#0d1315); border:1px solid #2c3634; transition:.2s;
+  }
+  .tool-btn:hover { border-color:#c9a25a; color:var(--gold-1); transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.5), 0 0 10px rgba(212,176,106,.2); }
+  .tool-btn:active { transform:translateY(0) scale(.97); }
+  .tool-btn.gold {
+    color:#120e04; border-color:#8a6a2f; background:linear-gradient(180deg,#f4dfa4,#c9a25a);
+    text-shadow:0 1px 0 rgba(255,255,255,.4); box-shadow:0 0 12px rgba(212,176,106,.35), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  select {
+    height:36px; min-width:86px; padding:0 10px; border-radius:6px; cursor:pointer; outline:none;
+    background:#0a100f; border:1px solid #33403d; color:var(--gold-1); font-family:var(--serif); font-size:14px; transition:.2s;
+  }
+  select:hover, select:focus { border-color:#c9a25a; box-shadow:0 0 10px rgba(212,176,106,.25); }
+  option { background:#0a100f; color:var(--txt); }
+  .filters { display:flex; flex-wrap:wrap; gap:14px; align-items:end; }
+  .filters label { display:flex; flex-direction:column; gap:5px; color:var(--txt-dim); font-size:12px; letter-spacing:.15em; }
+  .summary { font-family:var(--serif); font-size:17px; margin:2px 0 12px; }
+  .summary b { font-family:var(--disp); color:var(--gold-1); font-size:22px; text-shadow:0 0 10px rgba(244,223,164,.35); }
+  .hint { color:var(--txt-dim); font-size:12px; letter-spacing:.05em; margin-bottom:10px; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { border:1px solid #243030; padding:6px 8px; text-align:center; }
+  th { color:var(--gold-2); background:#0b1113; font-family:var(--serif); font-weight:600; letter-spacing:.1em; }
+  td { font-variant-numeric:tabular-nums; }
+  td.hands { text-align:left; color:var(--txt-dim); font-family:var(--sans); }
+  td.hit { color:var(--gold-1); font-weight:700; }
+  tr.zero td { color:#4f5652; }
+  .matrix { background:linear-gradient(160deg, rgba(18,58,44,.55), rgba(10,36,27,.7)); }
+  .matrix th { white-space:nowrap; }
+  .matrix td { cursor:pointer; min-width:44px; transition:.15s; }
+  .matrix td.bk { color:#f0a097; }
+  .matrix td.pl { color:#93c8ea; }
+  .matrix td.tie { color:var(--tie); }
+  .matrix td:hover { outline:1px solid var(--gold-2); background:rgba(212,176,106,.08); }
+  .matrix td.sel { background:linear-gradient(180deg,#f4dfa4,#c9a25a); color:#120e04; font-weight:900; }
+  .legend { margin-top:8px; font-size:12px; color:var(--txt-dim); }
+  .legend span { margin-right:14px; }
+  .wrap { overflow-x:auto; }
+  .row { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  .row > .gframe { flex:1 1 440px; min-width:0; }
+  #cardFilter { flex:2 1 640px; }
+  #cardResult { flex:3 1 520px; }
+  #cardMatrix { flex:2 1 520px; }
+  .err { color:var(--danger); }
+  #loadMsg { min-height:1.6em; margin-top:10px; color:var(--gold-2); letter-spacing:.1em; }
+  /* 自由版面：卡片可拖曳、縮放 */
+  #board { position:relative; }
+  #board.free .card { position:absolute; margin:0; display:flex; flex-direction:column; }
+  #board.free .card-body { flex:1; min-height:0; overflow:auto; }
+  .card .frame-title { cursor:move; user-select:none; touch-action:none; }
+  .card .grip {
+    position:absolute; top:-11px; right:16px; padding:0 8px; background:#0d1315; color:var(--gold-2);
+    font-size:14px; line-height:20px; cursor:move; user-select:none; touch-action:none; display:none;
+  }
+  .card .sizer {
+    position:absolute; right:-7px; bottom:-7px; width:18px; height:18px; cursor:nwse-resize; z-index:2;
+    touch-action:none; display:none;
+  }
+  .card .sizer::before {
+    content:""; position:absolute; right:7px; bottom:7px; width:9px; height:9px;
+    border-right:2px solid var(--gold-1); border-bottom:2px solid var(--gold-1);
+  }
+  .card .grip, .card .sizer { display:block; }
+  @media (max-width:759px) { .card .grip, .card .sizer { display:none; } .card .frame-title { cursor:default; } }
+  #board.free .card.active { box-shadow:0 14px 40px rgba(0,0,0,.7), 0 0 18px rgba(212,176,106,.25); }
+  body.dragging, body.dragging * { user-select:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="crest"></div>
+    <h1>DECK STATS<small>牌檔結果統計</small></h1>
+    <button class="tool-btn back" id="resetLayout" title="卡片回到預設位置與大小">重設版面</button>
+    <a class="tool-btn" href="standard/validator.html" target="_blank">Excel 驗算</a>
+    <a class="tool-btn" href="integrated.html">回主頁</a>
+  </header>
+  <div id="board">
+
+  <div class="row">
+  <section class="gframe card" id="cardLoad">
+    <span class="frame-title">載入牌檔</span>
+    <div class="drop" id="drop">
+      把資料夾或 Excel 檔拖到這裡，或
+      <button class="tool-btn" id="pickDir">選資料夾</button>
+      <button class="tool-btn" id="pickFiles">選檔案</button>
+      <input type="file" id="dirInput" webkitdirectory hidden>
+      <input type="file" id="fileInput" accept=".xlsx" multiple hidden>
+      <div id="loadMsg"></div>
+    </div>
+  </section>
+
+  <section class="gframe card" id="cardFilter">
+    <span class="frame-title">篩選條件</span>
+    <div class="filters">
+      <label>結果<select id="fResult"><option value="">全部</option><option>莊</option><option>閒</option><option>和</option></select></label>
+      <label>莊點<select id="fBanker"></select></label>
+      <label>閒點<select id="fPlayer"></select></label>
+      <label>張數<select id="fCards"><option value="">全部</option><option>4</option><option>5</option><option>6</option></select></label>
+      <label>訊號欄<select id="fSignal"><option value="">全部</option></select></label>
+      <label>對調後結果<select id="fSwap"><option value="">全部</option><option>莊</option><option>閒</option><option>和</option></select></label>
+      <button class="tool-btn" id="reset">清除條件</button>
+      <button class="tool-btn gold" id="copy">複製結果</button>
+    </div>
+  </section>
+  </div>
+
+  <div class="row">
+    <section class="gframe card" id="cardResult">
+      <span class="frame-title">每副統計</span>
+      <div class="summary" id="summary">尚未載入牌檔</div>
+      <div class="wrap"><table id="result"></table></div>
+    </section>
+    <section class="gframe card" id="cardMatrix">
+      <span class="frame-title">莊閒點數總表</span>
+      <div class="hint">套用左邊除點數外的條件；點格子直接查那個組合，再點一次取消。空白＝0 局。</div>
+      <div class="wrap"><table class="matrix" id="matrix"></table></div>
+      <div class="legend"><span style="color:#f0a097">■ 莊贏</span><span style="color:#93c8ea">■ 閒贏</span><span style="color:var(--tie)">■ 和局</span></div>
+    </section>
+  </div>
+</div>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let decks = []; // { name, hands: [{ no, result, banker, player, cards, signal, swapResult }] }
+
+  for (const id of ['fBanker', 'fPlayer']) {
+    $(id).innerHTML = '<option value="">全部</option>' + [...Array(10).keys()].map((n) => `<option>${n}</option>`).join('');
+  }
+
+  const cellText = (v) => {
+    if (v == null) return '';
+    if (typeof v === 'object') {
+      if (v.richText) return v.richText.map((t) => t.text).join('');
+      if ('result' in v) return String(v.result ?? '');
+      if (v.text != null) return String(v.text);
+    }
+    return String(v).trim();
+  };
+  const outcome = (b, p) => (b > p ? '莊' : b < p ? '閒' : '和');
+
+  async function parseFile(file) {
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await file.arrayBuffer());
+    for (const ws of wb.worksheets) {
+      const header = (ws.getRow(1).values || []).map(cellText);
+      const col = (name) => header.indexOf(name);
+      if (col('局號') < 0 || col('莊') < 0 || col('閒') < 0) continue;
+      const cardCols = header.map((h, i) => (/^卡片\d$/.test(h) ? i : -1)).filter((i) => i >= 0);
+      const hands = [];
+      ws.eachRow((row, r) => {
+        if (r === 1) return;
+        const no = Number(cellText(row.getCell(col('局號')).value));
+        if (!Number.isFinite(no) || no <= 0) return;
+        const get = (name) => (col(name) < 0 ? '' : cellText(row.getCell(col(name)).value));
+        const banker = Number(get('莊'));
+        const player = Number(get('閒'));
+        const sb = get('對調莊'), sp = get('對調閒');
+        hands.push({
+          no, banker, player,
+          result: get('結果') || outcome(banker, player),
+          cards: cardCols.filter((i) => cellText(row.getCell(i).value) !== '').length,
+          signal: get('訊號'),
+          swapResult: sb !== '' && sp !== '' ? outcome(Number(sb), Number(sp)) : '',
+        });
+      });
+      return { name: file.name.replace(/\.xlsx$/i, ''), hands };
+    }
+    throw new Error('找不到含「局號／莊／閒」的分頁');
+  }
+
+  async function load(files) {
+    files = files.filter((f) => /\.xlsx$/i.test(f.name) && !f.name.startsWith('~$'));
+    if (!files.length) { $('loadMsg').innerHTML = '<span class="err">沒有找到 .xlsx 檔</span>'; return; }
+    $('loadMsg').textContent = `讀取中… 0／${files.length}`;
+    const out = [], bad = [];
+    for (const f of files) {
+      try { out.push(await parseFile(f)); } catch (e) { bad.push(`${f.name}（${e.message}）`); }
+      $('loadMsg').textContent = `讀取中… ${out.length + bad.length}／${files.length}`;
+    }
+    decks = out.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant', { numeric: true }));
+    const signals = [...new Set(decks.flatMap((d) => d.hands.map((h) => h.signal)))].sort();
+    $('fSignal').innerHTML = '<option value="">全部</option>' +
+      signals.map((s) => `<option value="${s === '' ? '__empty' : s}">${s === '' ? '（空白）' : s}</option>`).join('');
+    $('loadMsg').innerHTML = `已載入 ${decks.length} 副牌` + (bad.length ? `<div class="err">讀不到：${bad.join('、')}</div>` : '');
+    render();
+  }
+
+  const filters = () => ({
+    result: $('fResult').value, banker: $('fBanker').value, player: $('fPlayer').value,
+    cards: $('fCards').value, signal: $('fSignal').value, swap: $('fSwap').value,
+  });
+  function match(h, f, skipPoints) {
+    if (f.result && h.result !== f.result) return false;
+    if (!skipPoints && f.banker !== '' && h.banker !== Number(f.banker)) return false;
+    if (!skipPoints && f.player !== '' && h.player !== Number(f.player)) return false;
+    if (f.cards && h.cards !== Number(f.cards)) return false;
+    if (f.signal && h.signal !== (f.signal === '__empty' ? '' : f.signal)) return false;
+    if (f.swap && h.swapResult !== f.swap) return false;
+    return true;
+  }
+  function describe(f) {
+    const parts = [];
+    if (f.banker !== '') parts.push(`莊${f.banker}點`);
+    if (f.player !== '') parts.push(`閒${f.player}點`);
+    if (f.result) parts.push(`${f.result}贏`.replace('和贏', '和局'));
+    if (f.cards) parts.push(`${f.cards}張局`);
+    if (f.signal) parts.push(`訊號${f.signal === '__empty' ? '空白' : f.signal}`);
+    if (f.swap) parts.push(`對調後${f.swap}`);
+    return parts.join('、') || '全部局';
+  }
+
+  let lastText = '';
+  function render() {
+    if (!decks.length) return;
+    const f = filters();
+    let total = 0, allHands = 0;
+    const rows = decks.map((d) => {
+      const hit = d.hands.filter((h) => match(h, f)).map((h) => h.no);
+      total += hit.length; allHands += d.hands.length;
+      return { name: d.name, n: d.hands.length, hit };
+    });
+    const avg = (total / decks.length).toFixed(1);
+    const pct = allHands ? ((total / allHands) * 100).toFixed(2) : '0';
+    $('summary').innerHTML = `${describe(f)}：共 <b>${total}</b> 局，${decks.length} 副平均每副 <b>${avg}</b> 局（佔 ${pct}%）`;
+    $('result').innerHTML = '<tr><th>牌檔</th><th>總局數</th><th>符合</th><th>第幾局</th></tr>' +
+      rows.map((r) => `<tr class="${r.hit.length ? '' : 'zero'}"><td>${r.name}</td><td>${r.n}</td><td class="${r.hit.length ? 'hit' : ''}">${r.hit.length}</td><td class="hands">${r.hit.join('、')}</td></tr>`).join('') +
+      `<tr><th>合計</th><th>${allHands}</th><th>${total}</th><th></th></tr>`;
+    lastText = `${describe(f)}：共 ${total} 局（${decks.length} 副，平均每副 ${avg} 局）\n` +
+      rows.map((r) => `${r.name}\t${r.hit.length}\t${r.hit.join('、')}`).join('\n');
+
+    const m = Array.from({ length: 10 }, () => Array(10).fill(0));
+    for (const d of decks) for (const h of d.hands) if (match(h, f, true) && h.banker <= 9 && h.player <= 9) m[h.banker][h.player]++;
+    $('matrix').innerHTML = '<tr><th>莊＼閒</th>' + [...Array(10).keys()].map((p) => `<th>${p}</th>`).join('') + '</tr>' +
+      m.map((line, b) => `<tr><th>${b}</th>` + line.map((c, p) => {
+        const sel = String(b) === f.banker && String(p) === f.player ? 'sel' : b === p ? 'tie' : b > p ? 'bk' : 'pl';
+        return `<td class="${sel}" data-b="${b}" data-p="${p}">${c || ''}</td>`;
+      }).join('') + '</tr>').join('');
+  }
+
+  $('matrix').addEventListener('click', (e) => {
+    const td = e.target.closest('td[data-b]');
+    if (!td) return;
+    const same = $('fBanker').value === td.dataset.b && $('fPlayer').value === td.dataset.p;
+    $('fBanker').value = same ? '' : td.dataset.b;
+    $('fPlayer').value = same ? '' : td.dataset.p;
+    render();
+  });
+  document.querySelectorAll('.filters select').forEach((s) => s.addEventListener('change', render));
+  $('reset').onclick = () => { document.querySelectorAll('.filters select').forEach((s) => (s.value = '')); render(); };
+  $('copy').onclick = async () => {
+    if (!lastText) return;
+    await navigator.clipboard.writeText(lastText);
+    $('copy').textContent = '已複製';
+    setTimeout(() => ($('copy').textContent = '複製結果'), 1200);
+  };
+
+  $('pickDir').onclick = () => $('dirInput').click();
+  $('pickFiles').onclick = () => $('fileInput').click();
+  $('dirInput').onchange = (e) => load([...e.target.files]);
+  $('fileInput').onchange = (e) => load([...e.target.files]);
+
+  const drop = $('drop');
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', async (e) => {
+    e.preventDefault(); drop.classList.remove('over');
+    const files = [];
+    const walk = (entry) => new Promise((resolve) => {
+      if (entry.isFile) entry.file((f) => { files.push(f); resolve(); }, resolve);
+      else if (entry.isDirectory) {
+        const reader = entry.createReader(), all = [];
+        const next = () => reader.readEntries(async (batch) => {
+          if (!batch.length) { await Promise.all(all.map(walk)); resolve(); }
+          else { all.push(...batch); next(); }
+        }, resolve);
+        next();
+      } else resolve();
+    });
+    const entries = [...e.dataTransfer.items].map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+    if (entries.length) await Promise.all(entries.map(walk)); else files.push(...e.dataTransfer.files);
+    load(files);
+  });
+})();
+
+// 卡片自由版面：拖標題移動、拖右下角縮放，位置大小存在這台電腦的瀏覽器
+(() => {
+  const KEY = 'deck_stats_layout_v1';
+  const MIN_W = 240, MIN_H = 110, NARROW = 760;
+  const board = document.getElementById('board');
+  const cards = [...board.querySelectorAll('.card')];
+  let zTop = 10;
+
+  for (const card of cards) {
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    for (const node of [...card.childNodes]) if (!(node.classList && node.classList.contains('frame-title'))) body.appendChild(node);
+    card.appendChild(body);
+    card.insertAdjacentHTML('beforeend', '<span class="grip" title="拖曳移動">✥</span><span class="sizer" title="拖曳縮放"></span>');
+  }
+
+  const readSaved = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; } };
+  const save = () => {
+    const data = {};
+    for (const c of cards) data[c.id] = { x: c.offsetLeft, y: c.offsetTop, w: c.offsetWidth, h: c.dataset.sized ? c.offsetHeight : null };
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+  };
+  const fitBoard = () => {
+    board.style.height = Math.max(...cards.map((c) => c.offsetTop + c.offsetHeight)) + 24 + 'px';
+  };
+
+  function clearFree() {
+    board.classList.remove('free');
+    board.style.height = '';
+    for (const c of cards) { c.style.left = c.style.top = c.style.width = c.style.height = c.style.zIndex = ''; delete c.dataset.sized; }
+  }
+  // 沒存過版面時維持原本排列，第一次拖曳或縮放才把目前位置固定下來
+  function applyFree(force) {
+    clearFree();
+    if (window.innerWidth < NARROW) return; // 窄畫面維持原本排列
+    const saved = readSaved();
+    if (!saved && !force) return;
+    const origin = board.getBoundingClientRect();
+    const rects = cards.map((c) => {
+      const r = c.getBoundingClientRect();
+      return (saved && saved[c.id]) || { x: r.left - origin.left, y: r.top - origin.top, w: r.width, h: null };
+    });
+    board.classList.add('free');
+    cards.forEach((c, i) => {
+      const r = rects[i];
+      const w = Math.min(board.clientWidth, Math.max(MIN_W, r.w)); // 換到較窄螢幕時收回畫面內
+      Object.assign(c.style, { left: Math.max(0, Math.min(board.clientWidth - w, r.x)) + 'px', top: r.y + 'px', width: w + 'px' });
+      if (r.h) { c.style.height = Math.max(MIN_H, r.h) + 'px'; c.dataset.sized = '1'; } // 沒手動縮放過的卡片高度隨內容
+    });
+    fitBoard();
+  }
+
+  function startDrag(e, card, mode) {
+    if (e.button > 0 || window.innerWidth < NARROW) return;
+    e.preventDefault();
+    if (!board.classList.contains('free')) applyFree(true);
+    card.style.zIndex = ++zTop;
+    card.classList.add('active');
+    document.body.classList.add('dragging');
+    const sx = e.clientX, sy = e.clientY;
+    const x0 = card.offsetLeft, y0 = card.offsetTop, w0 = card.offsetWidth, h0 = card.offsetHeight;
+    const move = (ev) => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      if (mode === 'move') {
+        card.style.left = Math.max(0, Math.min(board.clientWidth - w0, x0 + dx)) + 'px';
+        card.style.top = Math.max(0, y0 + dy) + 'px';
+      } else {
+        card.style.width = Math.max(MIN_W, Math.min(board.clientWidth - x0, w0 + dx)) + 'px';
+        card.style.height = Math.max(MIN_H, h0 + dy) + 'px';
+        card.dataset.sized = '1';
+      }
+      fitBoard();
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      card.classList.remove('active');
+      document.body.classList.remove('dragging');
+      save();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
+
+  for (const card of cards) {
+    card.querySelector('.frame-title').addEventListener('pointerdown', (e) => startDrag(e, card, 'move'));
+    card.querySelector('.grip').addEventListener('pointerdown', (e) => startDrag(e, card, 'move'));
+    card.querySelector('.sizer').addEventListener('pointerdown', (e) => startDrag(e, card, 'size'));
+    card.addEventListener('pointerdown', () => { if (board.classList.contains('free')) card.style.zIndex = ++zTop; });
+  }
+
+  document.getElementById('resetLayout').onclick = () => {
+    try { localStorage.removeItem(KEY); } catch {}
+    applyFree(false);
+  };
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (window.innerWidth >= NARROW && readSaved() || board.classList.contains('free')) applyFree();
+    }, 150);
+  });
+  cards.forEach((c) => new ResizeObserver(() => { if (board.classList.contains('free')) fitBoard(); }).observe(c));
+  requestAnimationFrame(() => applyFree());
+})();
+</script>
+</body>
+</html>

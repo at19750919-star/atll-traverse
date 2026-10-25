@@ -566,21 +566,22 @@ tbody td.compare-cell{font-size:12.5px;color:var(--txt-dim)}
 .color-chip.unknown{background:#3a4340}
 /* 結果欄（終 / 調） */
 td.result-cell,td.compare-cell{font-weight:700;letter-spacing:.15em}
-td.outcome-banker{color:#ff9d8f;text-shadow:0 0 8px rgba(224,92,79,.35)}
-td.outcome-player{color:#7cc0ea;text-shadow:0 0 8px rgba(79,163,216,.35)}
-td.outcome-tie{color:#7fd8a8;text-shadow:0 0 8px rgba(92,191,138,.35)}
+/* 調欄與終欄同樣依莊／閒／和上色（蓋過調欄預設的灰字） */
+td.outcome-banker,tbody td.compare-cell.outcome-banker{color:#ff9d8f;text-shadow:0 0 8px rgba(224,92,79,.35)}
+td.outcome-player,tbody td.compare-cell.outcome-player{color:#7cc0ea;text-shadow:0 0 8px rgba(79,163,216,.35)}
+td.outcome-tie,tbody td.compare-cell.outcome-tie{color:#7fd8a8;text-shadow:0 0 8px rgba(92,191,138,.35)}
 td.banker-six-point{color:var(--gold-1);text-shadow:0 0 10px rgba(244,223,164,.7)}
-td.swap-banker-six-result{color:#0559ea !important;text-shadow:0 0 10px rgba(5,89,234,.8)}
 /* 列狀態 */
 tbody tr.round-row{animation:none}
+/* 對調莊6：整行藍色亮底，不改字色；違規列的紅底仍優先 */
+tbody tr.swap-banker-six-row td{background:rgba(40,110,255,.26);box-shadow:inset 0 1px 0 rgba(120,170,255,.45),inset 0 -1px 0 rgba(120,170,255,.45)}
 tbody tr.full-house-round td{background:rgba(122,92,190,.10)}
 tbody tr.violation-row td{background:rgba(224,92,79,.13);box-shadow:inset 0 0 0 .5px rgba(224,92,79,.25)}
 tbody tr.card-color-violation-row td{background:rgba(232,163,61,.12)}
 tbody tr.banker-six-win-row td{background:rgba(212,176,106,.10)}
 /* 1／13與2／13逆轉採青色，保留既有違規列的底色。 */
 tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row) td{background:rgba(59,190,181,.14)}
-tbody tr.two-thirteen-reversal td.result-cell{color:#7fe4d7}
-tbody tr.two-thirteen-reversal td.result-cell::after{content:attr(data-reversal-odds);display:block;font-size:10px;line-height:1.3;letter-spacing:0;color:#7fe4d7}
+/* 1／13與2／13逆轉只亮整行底色，不加文字、不改字色 */
 tbody tr.card-count-mismatch td{border-bottom:1px dashed rgba(255,107,94,.6)}
 tbody tr.selected-first td{background:rgba(244,223,164,.16);box-shadow:inset 0 0 0 1px rgba(244,223,164,.5)}
 tbody tr.selected-second td{background:rgba(79,163,216,.16);box-shadow:inset 0 0 0 1px rgba(79,163,216,.5)}
@@ -1100,8 +1101,8 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
 .target-road-row .tool-btn{height:30px;min-height:30px;min-width:0;padding:0 8px;font-size:11.5px;letter-spacing:.04em;text-indent:0;flex:0 0 auto}
 .target-road-summary{font-size:11px;color:#c8b78f;line-height:1.45;overflow-wrap:anywhere;word-break:break-word}
 </style>
-<link rel="stylesheet" href="integrated.css?v=5">
-<link rel="stylesheet" href="integrated-dashboard.css?v=11">
+<link rel="stylesheet" href="integrated.css?v=14">
+<link rel="stylesheet" href="integrated-dashboard.css?v=13">
 </head>
 <body data-mode="standard">
 
@@ -1116,7 +1117,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
   </div>
 </header>
 
-<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeRed0" aria-pressed="true">紅0模式</button><button class="tool-btn" id="modeA2" aria-pressed="false">A2模式</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越紅0</button><button class="tool-btn" id="modeTraverseA2" aria-pressed="false">穿越A2</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><span id="modeStatus" role="status">紅0模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
+<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeRed0" aria-pressed="true">紅0模式</button><button class="tool-btn" id="modeA2" aria-pressed="false">A2模式</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越紅0</button><button class="tool-btn" id="modeTraverseA2" aria-pressed="false">穿越A2</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><a id="deckStatsLink" class="tool-btn" href="deck_stats.html" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;grid-column:1/-1">牌檔統計</a><span id="modeStatus" role="status">紅0模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
 <!-- ═══════════ 控制甲板 ═══════════ -->
 <section class="deck">
 
@@ -1267,7 +1268,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
     <label hidden>補排次數 <input id="tvTries" class="numbox" type="number" min="1" value="20000"></label>
     <label hidden>接段嘗試 <input id="tvChain" class="numbox" type="number" min="1" value="20"></label>
     <label>剩牌上限 <input id="tvLeft" class="numbox" type="number" min="0" max="416" value="0" placeholder="不限"></label>
-    <label title="整副和局數上限；留白＝不限">和局上限 <input id="tvTieMax" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
+    <label title="挑段仍以原上限為目標；穿越最終局數驗收允差最多3局，上限0仍禁止；留白不限">和局上限 <input id="tvTieMax" class="numbox" type="number" min="0" max="104" placeholder="不限"></label>
     <label title="莊 與 閒＋和 的局數差距上限；留白＝不檢查">莊閒差距 <input id="tvSideLimit" class="numbox" type="number" min="0" max="104" value="8" placeholder="不限"></label>
   </div>
   <div class="mode-fields">
@@ -1290,6 +1291,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
     <label class="cond rule-control" title="開啟：BBBR／RRRB與BBRR／RRBB兩組，每組最多連續3局，之後須換另一組；關閉：只用BBBR／RRRB"><span class="name">混色模式</span><input type="checkbox" id="tvMixedColor"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="撿段時排除閒 7 點贏莊 6 點（原牌或對調後）"><span class="name">閒7</span><input type="checkbox" id="tvP7"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">末張9</span><input type="checkbox" id="tvNine" checked><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="開啟：範本庫也排不進的剩牌接在最後，排成只要求敏感的局；關閉：剩牌必須全部排進穿越段，否則整副重跑"><span class="name">敏感補排</span><input type="checkbox" id="tvTailFill"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" hidden><span class="name">強</span><input type="checkbox" id="tvStrong"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><span class="name">第二張敏感</span><input type="checkbox" id="tvSecond"><span class="switch" aria-hidden="true"></span></label>
@@ -1340,8 +1342,9 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
   </div>
 </section>
 <section id="traverseTools" class="gframe mode-panel tool-panel" hidden>
-  <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
-  <p id="tvProgress" role="status">尚未排牌</p><div id="tvSummary"></div>
+  <p class="mode-note">穿越4／5／6張局數與和局：挑段按原目標；最終驗收允差最多3局，上限0仍禁止。其他規則不放寬。</p>
+  <div class="mode-actions"><button id="tvOptimize" class="tool-btn" disabled>局內優化</button><button id="tvRecoveryOptimize" class="tool-btn" disabled>回復優化</button><button id="tvDemo" class="tool-btn">看一副示範</button><button id="btnOptOpen" class="tool-btn" disabled>查看優化比較</button><a class="tool-btn" href="traverse_process.html" target="_blank">排牌過程</a><a class="tool-btn" href="traverse_scan.html" target="_blank">動畫解說</a></div>
+  <div class="mode-actions" id="tvTemplateControls"><button id="tvTemplateConnect" class="tool-btn">選擇範本資料夾</button><button id="tvTemplateResume" class="tool-btn">恢復資料夾授權</button><button id="tvTemplateStart" class="tool-btn">開始累積範本</button><button id="tvTemplateStop" class="tool-btn" disabled>停止累積／保存</button><select id="tvTemplateExportLength" aria-label="匯出張數庫"><option value="8">8張庫</option><option value="9">9張庫</option><option value="10">10張庫</option><option value="11">11張庫</option><option value="12">12張庫</option></select><button id="tvTemplateExport" class="tool-btn">匯出所選張數庫</button><button id="tvTemplateExportPending" class="tool-btn">匯出待存備份（不合併磁碟）</button><button id="tvTemplateImport" class="tool-btn">匯入舊庫／分庫JSON</button><input id="tvTemplateFile" type="file" accept=".json,application/json" hidden><span id="tvTemplateStats" role="status"></span></div><div class="mode-actions" id="sensitiveControls"><button id="sensitiveConnect" class="tool-btn">選擇敏感局庫資料夾</button><button id="sensitiveResume" class="tool-btn">恢復敏感局庫授權</button><button id="sensitiveStart" class="tool-btn">開始累積4／5／6張敏感局</button><button id="sensitiveStop" class="tool-btn" disabled>停止敏感局累積／保存</button><select id="sensitiveLength" aria-label="匯出敏感局張數"><option value="4">4張敏感局庫</option><option value="5">5張敏感局庫</option><option value="6">6張敏感局庫</option></select><button id="sensitiveExport" class="tool-btn">匯出敏感局JSON</button><span id="sensitiveStats" role="status"></span><small>獨立單局點數庫，不套穿越鏈條或前後局條件；記錄設定及莊6／閒7相容性，未自動用於生成。</small></div><p id="tvProgress" role="status">尚未排牌</p><div id="tvSummary"></div>
   <details id="tvSafePanel"><summary>安全切牌點 <span id="tvSafeCount">尚未排牌</span>（不計卡色）</summary><p id="tvBucketSummary" class="mode-note"></p><details id="tvBucketsDetail"><summary>查看全部違規深度分布</summary><div id="tvCutBuckets"></div></details><div id="tvSafeCuts" class="mode-actions"></div></details>
   <details><summary>長段驗證與訊號檢查</summary><div id="tvDiagnostics"></div><div class="mode-scroll"><table id="tvChains"><thead><tr><th>段</th><th>起始</th><th>張數</th><th>局數</th><th>穿越</th><th>敏感</th><th>合格</th></tr></thead><tbody></tbody></table></div></details>
 </section>
@@ -1369,7 +1372,6 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
   </div>
   <!-- 驗證 -->
   <div class="tool-panel gframe" id="tpVerify">
-    <button class="tool-btn" id="btnValidate">驗證</button>
   </div>
   <!-- 檢視（切牌／定位從頂部展開鈕移入：同屬「查看/定位牌靴」性質） -->
   <div class="tool-panel gframe" id="tpView">
@@ -1519,9 +1521,12 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <script src="standard/two_thirteen_reversals.js?v=5"></script>
 <script src="standard/export_filename.js?v=3"></script>
 <script src="standard/target_roadmap.js?v=2"></script>
-<script src="standard/signals.js?v=55"></script>
+<script src="standard/red0_balance.js?v=1"></script>
+<script src="standard/recovery_search.js?v=2"></script>
+<script src="standard/signals.js?v=59"></script>
+<script src="standard/generation_budget.js?v=1"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
-<script src="standard/signals_ui.js?v=49"></script>
+<script src="standard/signals_ui.js?v=52"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
 <script src="standard/swap_preview.js?v=2"></script>
 <script src="standard/auto_fix_plugin.js?v=3"></script>
@@ -1766,6 +1771,8 @@ function syncDesignStats(){
     }
     if (!has) resetStatsCards();
 }
+// 整合頁的清空命令也需要同步空牌提示與統計狀態。
+window.syncDesignStats = syncDesignStats;
 /* 清空後把雙卡歸零顯示（僅重置畫面文字與底色，不做任何計算） */
 function resetStatsCards(){
     const set = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
@@ -1883,8 +1890,8 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_builder.js?v=26"></script><script src="traverse_export.js?v=7"></script><script src="traverse_limits.js?v=2"></script><script src="traverse_optimizer.js?v=8"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="integrated.js?v=29"></script>
+<script src="traverse_quota.js?v=1"></script><script src="traverse_templates.js?v=6"></script><script src="traverse_tail_fill.js?v=5"></script><script src="traverse_red0_balance.js?v=4"></script><script src="traverse_a2_tail.js?v=3"></script><script src="traverse_builder.js?v=43"></script><script src="traverse_template_banks.js?v=4"></script><script src="traverse_template_file.js?v=4"></script><script src="traverse_template_collector.js?v=5"></script><script src="traverse_export.js?v=8"></script><script src="traverse_limits.js?v=2"></script><script src="traverse_optimizer.js?v=9"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="sensitive_hand_library.js?v=2"></script><script src="integrated.js?v=48"></script>
 <script src="integrated-analysis.js?v=1"></script>
-<script src="integrated-dashboard.js?v=14"></script>
+<script src="integrated-dashboard.js?v=18"></script>
 </body>
 </html>

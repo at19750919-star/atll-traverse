@@ -88,13 +88,13 @@ const server=http.createServer((req,res)=>{
             currentAnalysis=null;renderRoundsTable(currentRounds,null);
         });
         assert.equal(await page.locator('#roundsBody .two-thirteen-reversal').count(),2);
-        assert.equal(await page.locator('#roundsBody tr:first-child td.result-cell').evaluate(e=>getComputedStyle(e,'::after').content),'"2／13"');
-        assert.equal(await page.locator('#roundsBody tr:nth-child(2) td.result-cell').evaluate(e=>getComputedStyle(e,'::after').content),'"1／13"');
+        assert.equal(await page.locator('#roundsBody tr:first-child td.result-cell').evaluate(e=>getComputedStyle(e,'::after').content),'none'); // 逆轉只亮整行底色，不再顯示機率文字
+        assert.equal(await page.locator('#roundsBody tr:nth-child(2) td.result-cell').evaluate(e=>getComputedStyle(e,'::after').content),'none'); // 逆轉只亮整行底色，不再顯示機率文字
         if(process.env.REVERSAL_TABLE_SCREENSHOT)await page.locator('#roundsTable').screenshot({path:process.env.REVERSAL_TABLE_SCREENSHOT});
         const popupEvent=page.waitForEvent('popup');await page.locator('#btnTableWindow').click();const popup=await popupEvent;
         await popup.waitForSelector('.two-thirteen-reversal');
         assert.equal(await popup.locator('.two-thirteen-reversal').count(),2);
-        assert.equal(await popup.locator('.two-thirteen-reversal td.result-cell').first().evaluate(e=>getComputedStyle(e,'::after').content),'"2／13"');
+        assert.equal(await popup.locator('.two-thirteen-reversal td.result-cell').first().evaluate(e=>getComputedStyle(e,'::after').content),'none'); // 逆轉只亮整行底色，不再顯示機率文字
         await popup.close();
         if(process.env.REVERSAL_SCREENSHOT)await page.locator('#standardControls').screenshot({path:process.env.REVERSAL_SCREENSHOT});
         console.log('PASS 欄位、兩模式保存、0/留白重載、四種寬度、無效輸入、主表與獨立視窗高亮');

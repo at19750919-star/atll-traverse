@@ -12,7 +12,7 @@ function dependency(name) {
   }
   return require(name);
 }
-const { chromium } = dependency('playwright');
+const { chromium } = require('playwright');
 
 const integratedUrl = pathToFileURL(path.resolve(__dirname, '..', 'integrated.html')).href;
 const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案-暫停\\百家樂路單\\index.html').href;
@@ -65,6 +65,21 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
       assert.strictEqual(await page.locator('#tvTargetRoadPanel').count(), 0, '穿越模式不設目標路單面板');
       console.log('PASS 整合頁：目標路單在紅0與A2模式顯示，穿越模式不顯示');
 
+      // 最終驗收可拒絕連續和局並保留舊牌；路單測試只接受驗收完成的牌靴。
+      async function generateTarget() {
+        for(let attempt=0;attempt<8;attempt++) {
+          const before=await page.evaluate(()=>JSON.stringify(currentRounds));
+          await page.click('#chipGen');
+          await page.waitForFunction(()=>!window.__isGeneratingShoe,null,{timeout:60000});
+          const state=await page.evaluate(()=>({signature:JSON.stringify(currentRounds),count:currentRounds?.length||0,log:document.getElementById('logArea').textContent}));
+          if(/生成完成!/.test(state.log)){assert(state.count>0);return;}
+          assert.match(state.log,/最終驗收失敗：連續和局；保留上次合格牌靴/);
+          assert.equal(state.signature,before,'拒絕的牌靴不得替換上次結果');
+          console.log('PASS 連續和局候選被拒且舊牌保留；重新生成路單候選');
+        }
+        assert.fail('八次候選皆未通過最終驗收');
+      }
+
       // 切回紅0模式，匯入 JSON 路單並生成牌靴
       await page.click('#modeRed0');
       const customRoad = {
@@ -81,10 +96,7 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
       // Road matching is independent of the protected spacing-stop policy;
       // prohibit rare reversals here, as in the integration/export tests.
       await page.fill('#maxTwoThirteenReversal', '0');
-      await page.click('#chipGen');
-      await page.waitForFunction(() => !window.__isGeneratingShoe, null, { timeout: 60000 });
-      assert(await page.evaluate(() => currentRounds?.length > 0), (await page.locator('#logArea').textContent()).slice(-1800));
-      assert(await page.evaluate(() => /生成完成!/.test(document.getElementById('logArea').textContent)), (await page.locator('#logArea').textContent()).slice(-1200));
+      await generateTarget();
 
       const stCheck = await page.evaluate(() => {
         const nonTie = currentRounds.map(r => r.result).filter(r => r === '莊' || r === '閒');
@@ -120,9 +132,7 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
 
       // 再測試選取內建「難打路1」生成牌靴
       await page.selectOption('#stTargetRoadSelect', 'preset-hard-1');
-      await page.click('#chipGen');
-      await page.waitForFunction(() => !window.__isGeneratingShoe && Array.isArray(currentRounds) && currentRounds.length > 0, null, { timeout: 60000 });
-      assert(await page.evaluate(() => /生成完成!/.test(document.getElementById('logArea').textContent)), (await page.locator('#logArea').textContent()).slice(-1200));
+      await generateTarget();
 
       const presetCheck = await page.evaluate(() => {
         const nonTie = currentRounds.map(r => r.result).filter(r => r === '莊' || r === '閒');
@@ -163,9 +173,7 @@ const roadmapAppUrl = pathToFileURL('C:\\Users\\at197\\OneDrive\\Desktop\\專案
 
       // A2 模式生成牌靴
       await page.fill('#maxTwoThirteenReversal', '0');
-      await page.click('#chipGen');
-      await page.waitForFunction(() => !window.__isGeneratingShoe && Array.isArray(currentRounds) && currentRounds.length > 0, null, { timeout: 60000 });
-      assert(await page.evaluate(() => /生成完成!/.test(document.getElementById('logArea').textContent)), (await page.locator('#logArea').textContent()).slice(-1200));
+      await generateTarget();
 
       const a2Check = await page.evaluate(() => {
         const nonTie = currentRounds.map(r => r.result).filter(r => r === '莊' || r === '閒');

@@ -70,7 +70,7 @@
                 result: d.result,
                 start: cur,
                 hand: d,
-                segment: roundCards.every(c => c.traverse) ? 'A' : '',
+                segment: roundCards.every(c => c.traverse) ? 'A' : roundCards.every(c=>c.sensitiveFill) ? '敏感補排' : '',
             });
             cur += d.size;
         }

@@ -1116,6 +1116,7 @@ function wouldFormFullHouseAfterReplacement(round, index, replacementRank) {
 
 // 日誌系統
 const LOG_ALLOW_PATTERNS = [
+    /^穿越範本：/,
     /^訊號牌測試系統初始化完成/,
     /^訊號設定已更新/,
     // 僅顯示關鍵檢測/結果，避免過多前置檢測細節刷屏
@@ -3033,7 +3034,7 @@ async function repairRareReversalSpacing(rounds, options = {}) {
         canMove: i => !lastNine || i !== rounds.length - 1,
         shouldStop: () => window.__stopGenerateRequested === true,
         validate: candidate => {
-            if (avgLimit <= 0 && rangeLimit === null) return true;
+            if (options.deferRecovery || (avgLimit <= 0 && rangeLimit === null)) return true;
             const recovery = analyzeShoeRecovery(candidate);
             return !!recovery && (avgLimit <= 0 || Number(recovery.avgRounds) <= avgLimit)
                 && (rangeLimit === null || (recovery.distribution?.range16plus || 0) <= rangeLimit);
@@ -3111,7 +3112,127 @@ function repairStandardRoundViolations(rounds) {
     return { ok: true, rounds: working, repaired };
 }
 
-function validateStandardGeneratedShoe(rounds) {
+function isRed0BalanceEnabled() {
+    return window.StandardProfiles?.current === 'red0' && getMaxSideLimitSetting() !== null
+        && !(typeof TargetRoadmap !== 'undefined' && TargetRoadmap.isActive('standard'));
+}
+
+async function planStandardRed0Balance(rounds, options = {}) {
+    if (!isRed0BalanceEnabled()) return { ok: true, skipped: true, rounds };
+    const started = performance.now(), candidate = cloneRoundsDeep(rounds), n = candidate.length;
+    const fail = reason => ({ ok: false, reason, ms: performance.now() - started });
+    if (candidate.flatMap(r => r.cards).length !== 416) return fail('訊號規劃需要完整416張骨架');
+    const signalPool = [], otherPool = [], zeros = [], triples = [];
+    for (const r of candidate) {
+        const slots = [];
+        r.cards.forEach((c, i) => {
+            if (isSignalCardByConfig(c) && c.point() !== 0) return;
+            if (c.point() === 0) { slots.push(i); (isSignalCardByConfig(c) ? signalPool : otherPool).push(c); }
+        });
+        if (r.cards.some(c => isSignalCardByConfig(c) && c.point() !== 0)) return fail('目前訊號含非0點牌，無法使用等點數配置');
+        zeros.push(slots); triples.push(hasFullHouse(r));
+    }
+    const ties = candidate.filter(r => standardRoundOutcome(r) === '和').length, d = getMaxSideLimitSetting();
+    if (candidate.some((r,i)=>standardRoundOutcome(r)==='和'&&standardRoundOutcome(candidate[(i+1)%n])==='和')) return fail('此骨架有連續和局，保留和局數與局序下不能只靠訊號配置修正；需重新挑局');
+    // This planner does not move whole rounds. A four-card run needs a different skeleton.
+    if (calculateViolationStats(candidate).fourCardViolations) return fail('此骨架有連續四張局，僅配置訊號不能移除；需重新挑局');
+    const minB = Math.max(0, Math.ceil((n-d)/2)), maxB = Math.min(n-ties, Math.floor((n+d)/2));
+    if (minB > maxB) return fail(`總${n}局、和${ties}局無符合差距${d}的莊局目標`);
+    const numeric = id => { const raw=document.getElementById(id)?.value; return raw===''||raw==null?null:Number(raw); };
+    const b6Max=readBankerSixWinLimit().limit, sevenMax=numeric('max7PtReversal'), rareMax=numeric('maxTwoThirteenReversal');
+    const exclude=isBankerSixDrawExclusionEnabled(), swapTarget=numeric('swapBanker6Target');
+    const swapMin=!exclude&&swapTarget>0?swapTarget:0, swapMax=exclude||swapTarget===0?0:null;
+    const rows=[];
+    for(let i=0;i<n;i++){
+        const prev=(i+n-1)%n, row=[], original=candidate[i];
+        for(const flip of [0,1]){
+            const cards=original.cards.slice();if(flip)[cards[0],cards[1]]=[cards[1],cards[0]];
+            const simulated=new Simulator(cards).simulate_round(0);
+            if(!simulated||simulated.cards.length!==cards.length||!simulated.sensitive||shouldSkipSensitiveRound(simulated))continue;
+            const result=simulated.result;
+            if(flip&&result==='和')continue;
+            if(triples[prev] ? result!=='和' : isTripleRuleOn()&&result==='和')continue;
+            if(!triples[prev]&&result==='莊'&&!zeros[prev].length)continue;
+            const r={...original,cards,result}, swapped=cards.slice();[swapped[0],swapped[1]]=[swapped[1],swapped[0]];
+            const h=computeRoundHands(swapped), swap=Number(h.bankerTotal===6&&h.playerTotal<=5&&(!exclude||h.bankerCards.length===3));
+            row.push({flip,result,cap:!triples[prev]&&result==='莊'?zeros[prev].length:0,
+                b6:Number(isBankerSixWinRound(r)),seven:count7PtReversals([r]).count,
+                rare:Number(Boolean(TwoThirteenReversals.classify(r))),swap});
+        }
+        if(!row.length)return fail(`第${i+1}局沒有符合原敏感局／三條規則的方向`);
+        rows.push(row);
+    }
+    const free=zeros.reduce((s,z,i)=>s+(triples[i]?z.length:0),0);
+    const solved=await Red0Balance.solve(rows,{signals:signalPool.length,free,minB,maxB,b6Max,sevenMax,rareMax,swapMin,swapMax,shouldStop:options.shouldStop});
+    if(solved.cancelled)return {cancelled:true};
+    if(!solved.ok)return fail(`${solved.reason}${solved.truncated?'（已達保留狀態上限，不能據此斷言無解）':''}`);
+    solved.choices.forEach((x,i)=>{if(x.flip)executeCardSwap(candidate[i]);candidate[i].result=x.result;});
+    // Every required signal round first receives one; remaining signals use real extra slots.
+    const redSlots=new Set(),extra=[],freeSlots=[];
+    for(let i=0;i<n;i++){
+        const slots=[];candidate[i].cards.forEach((c,k)=>{if(c.point()===0)slots.push(`${i}:${k}`);});
+        if(triples[i])freeSlots.push(...slots);
+        else if(solved.choices[(i+1)%n].result==='莊') {redSlots.add(slots[0]);extra.push(...slots.slice(1));}
+    }
+    for(const key of [...extra,...freeSlots]){if(redSlots.size===signalPool.length)break;redSlots.add(key);}
+    if(redSlots.size!==signalPool.length)return fail('訊號局0點容量不足，未採用配置');
+    let pos=0;
+    for(let i=0;i<n;i++){
+        const r=candidate[i];r.start_index=pos;r.isT=triples[i];
+        for(let k=0;k<r.cards.length;k++){
+            if(r.cards[k].point()===0){const pool=redSlots.has(`${i}:${k}`)?signalPool:otherPool;if(!pool.length)return fail('0點牌庫不足，未採用配置');r.cards[k]=pool.pop();}
+            r.cards[k].pos=pos++;
+        }
+        const simulated=new Simulator(r.cards).simulate_round(0);r.result=simulated.result;r.sensitive=simulated.sensitive;r.swap_info=simulated.swap_info;
+    }
+    if(signalPool.length||otherPool.length)return fail('0點牌庫未完整分配');
+    if(candidate.some((r,i)=>standardRoundOutcome(r)!==standardExpectedResult(candidate,i)))return fail('配置後首尾訊號／三條驗收未通過');
+    const checked=validateStandardGeneratedShoe(candidate,{deferRecovery:true,deferLastNine:true});
+    if(!checked.ok)return fail(`訊號配置未通過原驗收：${checked.reason}`);
+    const counts=countBankerPlayerTie(candidate);
+    if(Math.abs(counts.banker-counts.player-counts.tie)>d)return fail('配置後莊閒差距未達標');
+    return {ok:true,rounds:candidate,total:n,ties,targetBanker:solved.banker,targetPlayer:n-ties-solved.banker,
+        signalRounds:candidate.filter(r=>r.cards.some(isSignalCardByConfig)).length,signals:redSlots.size,
+        counts,nodes:solved.nodes,truncated:solved.truncated,ms:performance.now()-started};
+}
+
+function checkStandardAggregateCandidate(rounds, sizeLimits) {
+
+    if (sizeLimits) {
+        const sizes = RoundSizeLimits.check(rounds, sizeLimits);
+        if (!sizes.ok) {
+            log(`局數上下限不符：${sizes.reason}，重新生成...`, 'warn');
+            return false;
+        }
+    }
+    // 預先模擬 S 局調整後的局數上限檢查（必須在 finalize 前做，因為 S 調整會改變比例）
+    const preflightLimits = preflightCheckMaxSideLimit(rounds, { alreadyAdjusted: true });
+    if (preflightLimits.enabled) {
+        const c = preflightLimits.counts;
+        const four = preflightLimits.fourCardStats || { fourCardCount: 0, totalRounds: 0, rate: 0 };
+        const sideDiff = Math.abs(c.banker - (c.player + c.tie));
+        const sideText = preflightLimits.sideLimit ? `莊閒差距上限=${preflightLimits.sideLimit}` : '莊閒差距不檢查';
+        const tieText = preflightLimits.tieLimit !== null ? `和局上限=${preflightLimits.tieLimit}` : '和局不檢查';
+        const fourText = preflightLimits.fourCardRateLimit ? `4張局上限=${preflightLimits.fourCardRateLimit}%` : '4張局不檢查';
+        log(`🔍 檢測到：莊=${c.banker}、閒=${c.player}、和=${c.tie}、差距=${sideDiff}、4張=${four.fourCardCount}/${four.totalRounds} (${four.rate.toFixed(1)}%)（${sideText}，${tieText}，${fourText}）`, 'info');
+        if (!preflightLimits.ok) {
+            if (!preflightLimits.okSide && preflightLimits.sideLimit) {
+                log(`🔍 ⚠️ 莊閒差距超標（莊=${c.banker} vs 閒+和=${c.player + c.tie}，差距=${sideDiff} > ${preflightLimits.sideLimit}），重新生成...`, 'warn');
+            }
+            if (!preflightLimits.okTie && preflightLimits.tieLimit !== null) {
+                log(`🔍 ⚠️ 和局超過上限（和=${c.tie} > ${preflightLimits.tieLimit}），重新生成...`, 'warn');
+            }
+            if (!preflightLimits.okFourCard && preflightLimits.fourCardRateLimit) {
+                log(`🔍 ⚠️ 4張局比例超過上限（${four.rate.toFixed(1)}% > ${preflightLimits.fourCardRateLimit}%），重新生成...`, 'warn');
+            }
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function validateStandardGeneratedShoe(rounds, options = {}) {
     const failures = [];
     let roundIssues = false, spacingFailure = false;
     if (!Array.isArray(rounds) || !rounds.length) return { ok: false, reason: '沒有完整牌靴' };
@@ -3151,7 +3272,7 @@ function validateStandardGeneratedShoe(rounds) {
         if ((excludeDrawSix || Number(swapTarget) === 0) ? count > 0 : count < Number(swapTarget)) failures.push('對調莊6局數不符');
     }
     const seven = document.getElementById('max7PtReversal');
-    if (seven && seven.value !== '' && count7PtReversals(rounds).count > Number(seven.value)) failures.push('七點逆轉超標');
+    if (seven && seven.value !== '' && count7PtReversals(rounds).count > allowedFinal7PtReversals(Number(seven.value))) failures.push('七點逆轉超標');
     const rare = typeof TwoThirteenReversals !== 'undefined' ? TwoThirteenReversals.read(document) : {};
     if (rare.enabled) {
         const c = checkStandardRareReversals(rounds, rare.limit);
@@ -3160,11 +3281,11 @@ function validateStandardGeneratedShoe(rounds) {
     }
     const stats = calculateViolationStats(rounds);
     if (stats.fourCardViolations || stats.streakViolations) failures.push('連續四張局／莊閒超標');
-    if (document.getElementById('lastCardNine')?.checked && String(rounds.at(-1)?.cards.at(-1)?.rank) !== '9') failures.push('末張不是9');
+    if (!options.deferLastNine && document.getElementById('lastCardNine')?.checked && String(rounds.at(-1)?.cards.at(-1)?.rank) !== '9') failures.push('末張不是9');
     const recoveryLimit = Number(document.getElementById('avgRecoveryLimit')?.value) || 0;
     const rangeInput = document.getElementById('range16Limit');
-    if (recoveryLimit || rangeInput?.value) {
-        const recovery = analyzeShoeRecovery(rounds);
+    if (!options.deferRecovery && (recoveryLimit || rangeInput?.value)) {
+        const recovery = options.recovery || analyzeShoeRecovery(rounds);
         if (!recovery || (recoveryLimit > 0 && Number(recovery.avgRounds) > recoveryLimit)
             || (rangeInput?.value !== '' && rangeInput?.value != null && recovery.distribution.range16plus > Number(rangeInput.value))) failures.push('回復限制不符');
     }
@@ -3232,6 +3353,7 @@ async function generateShoe() {
     }
     // 每次生成都隔離候選；即使所有數字限制留白，也必須驗訊號與對調。
     const requiresFinalValidation = true;
+    const isRed0 = window.StandardProfiles?.current === 'red0';
     const previousSizeShoe = requiresFinalValidation ? {
         rounds: currentRounds, analysis: currentAnalysis, imported: window.__importedShoeMode,
         violations: new Set(violationRoundIndexes), swapSix: new Set(swapBankerSixIndexes),
@@ -3239,8 +3361,9 @@ async function generateShoe() {
     } : null;
     let sizeAccepted = !requiresFinalValidation;
     let roundRetryCount = 0;
-    const retryRoundCandidate = reason => {
-        log(`訊號／對調未通過：${reason}；自動重新排牌（第 ${++roundRetryCount} 次，可按停止）。`, 'warn');
+    const recoveryWork = {};
+    const retryRoundCandidate = (reason, label = '訊號／對調未通過') => {
+        log(`${label}：${reason}；自動重新排牌（第 ${++roundRetryCount} 次，可按停止）。`, 'warn');
         if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
         // 沿用同一次生成與隔離狀態；下輪重新洗牌，未通過的候選不發布。
         currentRounds = previousSizeShoe.rounds;
@@ -3359,8 +3482,23 @@ async function generateShoe() {
                 log(`⚠️ 自動分配已關閉，跳過殘牌處理`, 'warn');
             }
 
+            let balancePlanned = false;
+            if (isRed0BalanceEnabled()) {
+                const balance = await planStandardRed0Balance(roundsToCheck, { shouldStop: isStopRequested });
+                if (ensureNotStopped() || balance.cancelled) return;
+                window.__lastRed0Balance = { ...balance, rounds: undefined };
+                if (!balance.ok) {
+                    log(`⚙️ 訊號規劃未採用：${balance.reason}；重新挑局。`, 'warn');
+                    result = null;
+                    continue;
+                }
+                roundsToCheck = balance.rounds;
+                balancePlanned = true;
+                log(`⚙️ 訊號規劃：${balance.total}局、保留和${balance.ties}；目標莊${balance.targetBanker}／閒${balance.targetPlayer}；實際莊${balance.counts.banker}／閒${balance.counts.player}／和${balance.counts.tie}，${balance.signals}張訊號分配於${balance.signalRounds}局（${Math.round(balance.ms)}ms）`, 'info');
+            }
+
             // 3.5 三條關閉：殘牌分配後再確認和局不在有訊號牌那局的後面（和局無法對調成莊）
-            if (!isTripleRuleOn() && typeof relocateTiesAfterSignal === 'function') {
+            if (!balancePlanned && !isTripleRuleOn() && typeof relocateTiesAfterSignal === 'function') {
                 try {
                     relocateTiesAfterSignal(roundsToCheck);
                     let p = 0;
@@ -3386,6 +3524,21 @@ async function generateShoe() {
                 TargetRoadmap.alignStandardRounds(roundsToCheck);
             }
 
+            // Account for the circular edge and changed adjacencies before committing signal swaps.
+            if (typeof StandardGenerationBudget !== 'undefined') {
+                const planned = await StandardGenerationBudget.repairOrder(roundsToCheck, { shouldStop: isStopRequested });
+                if (ensureNotStopped() || planned.cancelled) return;
+                if (!planned.ok) {
+                    log(`第 ${attempt} 次訊號預算無安全局部排法，重新生成...`, 'warn');
+                    result = null;
+                    continue;
+                }
+                roundsToCheck = planned.rounds;
+                if (planned.swaps) log(`訊號預算：局部交換 ${planned.swaps} 次，保留莊6與逆轉上限。`, 'info');
+                let p = 0;
+                roundsToCheck.forEach(r => { r.start_index = p; r.cards.forEach(c => { c.pos = p++; }); });
+            }
+
             // 4. 全段檢查原始莊6且閒≤5
             try {
                 analyze_signal_cards(roundsToCheck, { mutate: true });
@@ -3393,6 +3546,11 @@ async function generateShoe() {
                 log(`第 ${attempt} 次 S局/T局 處理失敗，重新生成... (${e && e.message ? e.message : e})`, 'warn');
                 result = null;
                 continue;
+            }
+
+            // Red 0: aggregate failures cannot be rescued by within-round permutations.
+            if (isRed0) {
+                if (!checkStandardAggregateCandidate(roundsToCheck, sizeSettings.limits)) { result = null; continue; }
             }
 
             // 4.5 局內優化：每局只換自己的牌順序，降低平均回復局數（結果與各項規則不變）
@@ -3405,78 +3563,51 @@ async function generateShoe() {
                 log(`第 ${attempt} 次局內優化失敗，沿用原牌序 (${e && e.message ? e.message : e})`, 'warn');
             }
 
-            // 5. 檢查牌靴回復速度（這是檢查S局調整前的原始結果）
-            try {
-                const recoveryResult = analyzeShoeRecovery(roundsToCheck);
-                if (recoveryResult) {
-                    const avg = parseFloat(recoveryResult.avgRounds);
-                    const range16plus = (recoveryResult.distribution && recoveryResult.distribution.range16plus) || 0;
+            // A2 keeps the original recovery gate; red0 is checked after its final search.
+            if (!isRed0) {
+                try {
+                    const recoveryResult = analyzeShoeRecovery(roundsToCheck);
+                    if (recoveryResult) {
+                        const avg = parseFloat(recoveryResult.avgRounds);
+                        const range16plus = (recoveryResult.distribution && recoveryResult.distribution.range16plus) || 0;
 
-                    // 讀取用戶設定的檢查條件
-                    const avgLimitInput = document.getElementById('avgRecoveryLimit');
-                    const range16LimitInput = document.getElementById('range16Limit');
-                    const avgLimit = avgLimitInput ? (parseFloat(avgLimitInput.value) || 0) : 0;
-                    const range16Limit = range16LimitInput && range16LimitInput.value !== '' ? parseInt(range16LimitInput.value) : null;
+                        // 讀取用戶設定的檢查條件
+                        const avgLimitInput = document.getElementById('avgRecoveryLimit');
+                        const range16LimitInput = document.getElementById('range16Limit');
+                        const avgLimit = avgLimitInput ? (parseFloat(avgLimitInput.value) || 0) : 0;
+                        const range16Limit = range16LimitInput && range16LimitInput.value !== '' ? parseInt(range16LimitInput.value) : null;
 
-                    const avgCheckStatus = avgLimit > 0 ? `檢查≤${avgLimit}` : '不檢查';
-                    const range16CheckStatus = range16Limit !== null ? `檢查≤${range16Limit}張` : '不檢查';
-                    log(`第 ${attempt} 次生成回復分析：平均 ${avg} 局(${avgCheckStatus})，16局以上 ${range16plus} 張(${range16CheckStatus})`, 'info');
+                        const avgCheckStatus = avgLimit > 0 ? `檢查≤${avgLimit}` : '不檢查';
+                        const range16CheckStatus = range16Limit !== null ? `檢查≤${range16Limit}張` : '不檢查';
+                        log(`第 ${attempt} 次生成回復分析：平均 ${avg} 局(${avgCheckStatus})，16局以上 ${range16plus} 張(${range16CheckStatus})`, 'info');
 
-                    // 平均回復局數檢查
-                    if (avgLimit > 0 && avg > avgLimit) {
-                        log(`第 ${attempt} 次生成失敗：平均回復局數 ${avg} > ${avgLimit}，重新生成...`, 'warn');
-                        result = null;
-                        continue;
+                        // 平均回復局數檢查
+                        if (avgLimit > 0 && avg > avgLimit) {
+                            log(`第 ${attempt} 次生成失敗：平均回復局數 ${avg} > ${avgLimit}，重新生成...`, 'warn');
+                            result = null;
+                            continue;
+                        }
+
+                        // 16局以上檢查
+                        if (range16Limit !== null && range16plus > range16Limit) {
+                            log(`第 ${attempt} 次生成失敗：有 ${range16plus} 張切牌點需要 16 局以上回復 (上限=${range16Limit})，重新生成...`, 'warn');
+                            result = null;
+                            continue;
+                        }
+
+                        // 保存通過檢查的回復結果
+                        validatedRecoveryResult = recoveryResult;
                     }
-
-                    // 16局以上檢查
-                    if (range16Limit !== null && range16plus > range16Limit) {
-                        log(`第 ${attempt} 次生成失敗：有 ${range16plus} 張切牌點需要 16 局以上回復 (上限=${range16Limit})，重新生成...`, 'warn');
-                        result = null;
-                        continue;
-                    }
-
-                    // 保存通過檢查的回復結果
-                    validatedRecoveryResult = recoveryResult;
-                }
-            } catch (e) {
-                log(`第 ${attempt} 次回復分析失敗，重新生成... (${e.message})`, 'warn');
-                result = null;
-                continue;
-            }
-
-            // 6. 局數上下限在殘牌分配、訊號與局內優化後檢查。
-            if (sizeSettings.limits) {
-                const sizes = RoundSizeLimits.check(roundsToCheck, sizeSettings.limits);
-                if (!sizes.ok) {
-                    log(`局數上下限不符：${sizes.reason}，重新生成...`, 'warn');
+                } catch (e) {
+                    log(`第 ${attempt} 次回復分析失敗，重新生成... (${e.message})`, 'warn');
                     result = null;
                     continue;
                 }
             }
-            // 預先模擬 S 局調整後的局數上限檢查（必須在 finalize 前做，因為 S 調整會改變比例）
-            const preflightLimits = preflightCheckMaxSideLimit(roundsToCheck, { alreadyAdjusted: true });
-            if (preflightLimits.enabled) {
-                const c = preflightLimits.counts;
-                const four = preflightLimits.fourCardStats || { fourCardCount: 0, totalRounds: 0, rate: 0 };
-                const sideDiff = Math.abs(c.banker - (c.player + c.tie));
-                const sideText = preflightLimits.sideLimit ? `莊閒差距上限=${preflightLimits.sideLimit}` : '莊閒差距不檢查';
-                const tieText = preflightLimits.tieLimit !== null ? `和局上限=${preflightLimits.tieLimit}` : '和局不檢查';
-                const fourText = preflightLimits.fourCardRateLimit ? `4張局上限=${preflightLimits.fourCardRateLimit}%` : '4張局不檢查';
-                log(`🔍 檢測到：莊=${c.banker}、閒=${c.player}、和=${c.tie}、差距=${sideDiff}、4張=${four.fourCardCount}/${four.totalRounds} (${four.rate.toFixed(1)}%)（${sideText}，${tieText}，${fourText}）`, 'info');
-                if (!preflightLimits.ok) {
-                    if (!preflightLimits.okSide && preflightLimits.sideLimit) {
-                        log(`🔍 ⚠️ 莊閒差距超標（莊=${c.banker} vs 閒+和=${c.player + c.tie}，差距=${sideDiff} > ${preflightLimits.sideLimit}），重新生成...`, 'warn');
-                    }
-                    if (!preflightLimits.okTie && preflightLimits.tieLimit !== null) {
-                        log(`🔍 ⚠️ 和局超過上限（和=${c.tie} > ${preflightLimits.tieLimit}），重新生成...`, 'warn');
-                    }
-                    if (!preflightLimits.okFourCard && preflightLimits.fourCardRateLimit) {
-                        log(`🔍 ⚠️ 4張局比例超過上限（${four.rate.toFixed(1)}% > ${preflightLimits.fourCardRateLimit}%），重新生成...`, 'warn');
-                    }
-                    result = null;
-                    continue;
-                }
+
+            // A2 retains its original aggregate-check timing.
+            if (!isRed0) {
+                if (!checkStandardAggregateCandidate(roundsToCheck, sizeSettings.limits)) { result = null; continue; }
             }
 
             // 含非敏感局及訊號對調後的實際莊6點贏。
@@ -3495,10 +3626,13 @@ async function generateShoe() {
             if (max7PtLimit !== null) {
                 const rev7 = count7PtReversals(roundsToCheck);
                 log(`🔍 七點逆轉檢查：${rev7.count} 局（上限=${max7PtLimit}）`, 'info');
-                if (rev7.count > max7PtLimit) {
+                if (rev7.count > allowedFinal7PtReversals(max7PtLimit)) {
                     log(`第 ${attempt} 次生成失敗：七點逆轉 ${rev7.count} 局 > 上限 ${max7PtLimit}，重新生成...`, 'warn');
                     result = null;
                     continue;
+                }
+                if (rev7.count > max7PtLimit) {
+                    log(`七點逆轉 ${rev7.count} 局，超過上限 ${max7PtLimit} 一局，屬挑局後調動造成，依規則豁免`, 'info');
                 }
             }
 
@@ -3511,7 +3645,7 @@ async function generateShoe() {
                     continue;
                 }
                 if (!reversalCheck.okSpacing) {
-                    const repaired = await repairRareReversalSpacing(roundsToCheck, { preserveLastNine: false });
+                    const repaired = await repairRareReversalSpacing(roundsToCheck, { preserveLastNine: false, deferRecovery: isRed0 });
                     if (ensureNotStopped()) return;
                     if (!repaired.ok) {
                         if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
@@ -3685,7 +3819,7 @@ async function generateShoe() {
                 continue;
             }
             if (!reversalCheck.okSpacing) {
-                const repaired = await repairRareReversalSpacing(currentRounds);
+                const repaired = await repairRareReversalSpacing(currentRounds, { deferRecovery: isRed0 });
                 if (ensureNotStopped()) return;
                 if (!repaired.ok) {
                     if (typeof cancelPendingAutoRegenerate === 'function') cancelPendingAutoRegenerate();
@@ -3731,7 +3865,7 @@ async function generateShoe() {
         if (CARD_COLOR_MIXED_MODE && calculateCardColorViolations(currentRounds) > 0) {
             runAutoColorSwap_Signal(currentRounds);
         }
-        const finalValidation = validateStandardGeneratedShoe(currentRounds);
+        const finalValidation = validateStandardGeneratedShoe(currentRounds, { deferRecovery: isRed0 });
         if (!finalValidation.ok) {
             if (finalValidation.retryable) {
                 retryRoundCandidate(finalValidation.reason);
@@ -3747,7 +3881,7 @@ async function generateShoe() {
                 hasSignal: round => round.cards.some(isSignalCardByConfig),
                 shouldStop: isStopRequested,
                 validate: candidate => {
-                    const validation = validateStandardGeneratedShoe(candidate);
+                    const validation = validateStandardGeneratedShoe(candidate, { deferRecovery: isRed0 });
                     if (!validation.ok) return validation;
                     return calculateCardColorViolations(candidate) <= colorViolations
                         ? {ok:true} : {ok:false,reason:'卡色連續組限制不符'};
@@ -3760,6 +3894,28 @@ async function generateShoe() {
         } else if (window.StandardProfiles?.current === 'red0' && isTripleRuleOn()) {
             window.__lastTieSpread = null;
             log('⚙️ 三條已開啟，略過和局分散', 'info');
+        }
+        if (isRed0) {
+            if (overlayText) overlayText.textContent = '成品局內排列搜尋中…';
+            const finalRecovery = await finalizeRed0Recovery(currentRounds, { shouldStop: isStopRequested, work: recoveryWork });
+            if (ensureNotStopped() || finalRecovery.cancelled) return;
+            window.__lastRed0Recovery = { ...finalRecovery, rounds: undefined, recovery: undefined };
+            if (!finalRecovery.ok) {
+                retryRoundCandidate(finalRecovery.reason, '⚙️ 成品回復／卡色未通過');
+                continue;
+            }
+            currentRounds = finalRecovery.rounds;
+            if (finalRecovery.balance) window.__lastRed0Balance = finalRecovery.balance;
+            if (finalRecovery.tieSpread !== undefined) window.__lastTieSpread = finalRecovery.tieSpread;
+            validatedRecoveryResult = finalRecovery.recovery;
+            log(`⚙️ 成品回復優化：${finalRecovery.before.toFixed(2)} → ${finalRecovery.after.toFixed(2)} 局；${finalRecovery.fromRetained ? '採用先前保留的最佳版本' : finalRecovery.adopted ? '已採用' : '保留原成品'}；兩局候選 ${finalRecovery.jointChecks}、改善 ${finalRecovery.jointImprovements}；同分分支 ${finalRecovery.equalBranches}、探索 ${finalRecovery.branchChecks}（搜尋 ${Math.round(finalRecovery.searchMs)}ms，卡色修復 ${Math.round(finalRecovery.colorMs)}ms）${finalRecovery.reason ? '；' + finalRecovery.reason : ''}`, 'info');
+        }
+        if (['red0','a2'].includes(window.StandardProfiles?.current)) {
+            const swapped = await optimizeRecoveryRoundSwaps(currentRounds, {shouldStop:isStopRequested});
+            window.__lastRecoveryRoundSwaps = {...swapped,rounds:undefined};
+            if (ensureNotStopped() || swapped.cancelled) return;
+            currentRounds = swapped.rounds;
+            validatedRecoveryResult = analyzeShoeRecovery(currentRounds);
         }
         if (requiresFinalValidation) {
             let acceptedPos = 0;
@@ -3842,7 +3998,7 @@ async function generateShoe() {
 
         // 更新回復分析顯示
         try {
-            const finalRecoveryCheck = analyzeShoeRecovery(currentRounds);
+            const finalRecoveryCheck = isRed0 ? validatedRecoveryResult : analyzeShoeRecovery(currentRounds);
             if (finalRecoveryCheck && typeof updateRecoveryDisplay === 'function') {
                 updateRecoveryDisplay(finalRecoveryCheck);
             }
@@ -4871,6 +5027,12 @@ function updateRecoveryDisplay(result) {
 // 七點逆轉計算
 // ════════════════════════════════════════════════════════════════
 
+/** 最終驗收的七點逆轉允許值：A2 上限>0 時多容許 1 局（挑局後調動造成）；0、紅0、其他維持原上限 */
+function allowedFinal7PtReversals(limit) {
+    const isA2 = typeof window !== 'undefined' && window.StandardProfiles?.current === 'a2';
+    return isA2 && limit > 0 ? limit + 1 : limit;
+}
+
 /**
  * 計算牌靴中七點逆轉的局數
  * 七點逆轉：一方初始7點，但對方補牌後反而贏了
@@ -5181,7 +5343,9 @@ function distributeRemainingCards(rounds, remainingCards) {
                 // 三條關閉時和局可放任何位置，但上一局有訊號牌就不行（和局無法對調成莊）
                 const prevHasSignal = !!(prevRound && Array.isArray(prevRound.cards) && prevRound.cards.some(c => c && isSignalCardByConfig(c)));
                 const tieBlocked = sensCandidate && sensCandidate.result === '和' && !prevIsT && (isTripleRuleOn() || prevHasSignal);
-                const candidateOk = sensCandidate && !tieBlocked && !b6Overflow && !tieOverflow;
+                const admission = typeof StandardGenerationBudget !== 'undefined' ? StandardGenerationBudget.create(rounds) : null;
+                const quotaOk = !admission || !sensCandidate || admission.canReplace(idx, { ...copiedRound, cards: sensCandidate.ordered });
+                const candidateOk = sensCandidate && !tieBlocked && !b6Overflow && !tieOverflow && quotaOk;
                 if (candidateOk) {
                     tailAccepted = true;
                     copiedRound.cards = sensCandidate.ordered.map((c, pos) => {
@@ -5237,6 +5401,8 @@ function distributeRemainingCards(rounds, remainingCards) {
 
     let distributed = 0;
 
+    const admission = typeof StandardGenerationBudget !== 'undefined' ? StandardGenerationBudget.create(updatedRounds) : null;
+
     // 核心邏輯：從後往前分配殘牌，補完後該局仍需符合敏感局條件
     const formatCardLabel = (card) => {
         if (!card) return '--';
@@ -5265,9 +5431,26 @@ function distributeRemainingCards(rounds, remainingCards) {
                 failedAttempts < allRemainingCards.length
             ) {
                 const cardToAdd = allRemainingCards.shift();
-                const candidate = findQualifiedSensitiveOrder([...round.cards, cardToAdd], { requireValidColor: true });
+                const cardsToAdd = [cardToAdd];
+                let candidate = findQualifiedSensitiveOrder([...round.cards, cardToAdd], { requireValidColor: true });
+                // A full five-card quota must not prevent a legal direct 4 -> 6 replacement.
+                if (admission && round.cards.length === 4 && candidate && !admission.canReplace(i, { ...round, cards: candidate.ordered })) {
+                    for (let j = 0; j < allRemainingCards.length; j++) {
+                        const pair = findQualifiedSensitiveOrder([...round.cards, cardToAdd, allRemainingCards[j]], { requireValidColor: true });
+                        if (pair && admission.canReplace(i, { ...round, cards: pair.ordered })) {
+                            candidate = pair;
+                            cardsToAdd.push(...allRemainingCards.splice(j, 1));
+                            break;
+                        }
+                    }
+                }
 
                 if (candidate) {
+                    if (admission && !admission.canReplace(i, { ...round, cards: candidate.ordered })) {
+                        allRemainingCards.push(...cardsToAdd);
+                        failedAttempts++;
+                        continue;
+                    }
                     // 和局檢查：補牌後不能產生和局（除非上一局是三條T局）
                     if (candidate.result === '和') {
                         const prevRound = i > 0 ? updatedRounds[i - 1] : null;
@@ -5277,7 +5460,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                             && updatedRounds.filter((rd, j) => j !== i && rd && rd.result === '和').length >= tieLimit_;
                         const prevHasSignal = !!(prevRound && Array.isArray(prevRound.cards) && prevRound.cards.some(c => c && isSignalCardByConfig(c)));
                         if ((!prevIsT && (isTripleRuleOn() || prevHasSignal)) || tieOverflow) {
-                            allRemainingCards.push(cardToAdd);
+                            allRemainingCards.push(...cardsToAdd);
                             failedAttempts++;
                             log(`  ✗ ${formatCardLabel(cardToAdd)} 補入後結果為和局但上一局非三條，改試下一張`, 'warn');
                             continue;
@@ -5288,7 +5471,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                     const hasSignal = candidate.ordered.some(c => c && isSignalCardByConfig(c));
                     const nextRound = updatedRounds[i + 1];
                     if (hasSignal && nextRound && nextRound.result !== '莊') {
-                        allRemainingCards.push(cardToAdd);
+                        allRemainingCards.push(...cardsToAdd);
                         failedAttempts++;
                         log(`  ✗ ${formatCardLabel(cardToAdd)} 補入後有訊號牌但下一局(${i + 2})非莊，改試下一張`, 'warn');
                         continue;
@@ -5314,7 +5497,7 @@ function distributeRemainingCards(rounds, remainingCards) {
                                     if (_h2 && _h2.bankerTotal === 6 && _h2.playerTotal <= 5) _curB6++;
                                 }
                                 if (_curB6 >= _swapB6Target) {
-                                    allRemainingCards.push(cardToAdd);
+                                    allRemainingCards.push(...cardsToAdd);
                                     failedAttempts++;
                                     log(`  ✗ ${formatCardLabel(cardToAdd)} 補入後會讓 B6 超過目標 ${_swapB6Target}，改試下一張`, 'warn');
                                     continue;
@@ -5327,13 +5510,13 @@ function distributeRemainingCards(rounds, remainingCards) {
                     round.result = candidate.result;
                     round.sensitive = true;
                     round.swap_info = candidate.swap_info;
-                    distributed++;
-                    successfullyAdded++;
+                    distributed += cardsToAdd.length;
+                    successfullyAdded += cardsToAdd.length;
                     failedAttempts = 0;
 
                     log(`  ✓ 補入 ${formatCardLabel(cardToAdd)}：此局仍符合敏感局條件`, 'success');
                 } else {
-                    allRemainingCards.push(cardToAdd);
+                    allRemainingCards.push(...cardsToAdd);
                     failedAttempts++;
                     log(`  ✗ ${formatCardLabel(cardToAdd)} 無法讓第 ${i + 1} 局維持敏感局（含卡色/訊號牌），改試下一張`, 'warn');
                 }
@@ -6218,7 +6401,7 @@ async function exportRoundsAsExcelWithDrive() {
 // 局內優化（比照穿越排牌）：每局只在自己的牌之間換順序，不跨局換牌，
 // 挑讓「平均回復局數」最低的排法。每局的張數、結果、對調後結果、敏感性、
 // 禁止組合、莊6／閒7、七點逆轉、三條與訊號牌都保持不變。直接修改傳入的牌局。
-function optimizeRecoveryInRounds(rounds, maxPasses = 4) {
+function* recoveryPermutationSteps(rounds, maxPasses = 4) {
     if (!Array.isArray(rounds) || !rounds.length) return { ok: false, changed: 0 };
     if (rounds.some(r => !r || !Array.isArray(r.cards))) return { ok: false, changed: 0 };
     const starts = [];
@@ -6305,18 +6488,22 @@ function optimizeRecoveryInRounds(rounds, maxPasses = 4) {
     const before = totalRounds();
     let best = before, changed = 0;
     const touched = new Set();
+    let examined = 0;
     for (let pass = 0; pass < maxPasses; pass++) {
         let passChanged = 0;
-        rounds.forEach((round, ri) => {
+        for (let ri = 0; ri < rounds.length; ri++) {
+            const round = rounds[ri];
+            yield;
             const st = starts[ri], n = round.cards.length;
-            if (n < 4) return;
+            if (n < 4) continue;
             // 對調後用牌數不同的局（swap_info 牽涉後面的牌）不動
-            if (round.swap_info && Array.isArray(round.swap_info.cards) && round.swap_info.cards.length !== n) return;
+            if (round.swap_info && Array.isArray(round.swap_info.cards) && round.swap_info.cards.length !== n) continue;
             const sig0 = signature(round.cards);
-            if (!sig0) return;
+            if (!sig0) continue;
             const keepNine = ri === rounds.length - 1 && round.cards[n - 1].rank === '9';
             let bestAlt = null;
             for (const alt of perms(round.cards)) {
+                if (++examined % 32 === 0) yield;
                 if (alt.every((c, k) => c === round.cards[k])) continue;
                 if (keepNine && alt[n - 1].rank !== '9') continue;
                 if (signature(alt) !== sig0) continue;
@@ -6337,7 +6524,7 @@ function optimizeRecoveryInRounds(rounds, maxPasses = 4) {
                 touched.add(ri);
                 passChanged++;
             }
-        });
+        }
         if (!passChanged) break;
     }
     if (touched.size) {
@@ -6346,6 +6533,141 @@ function optimizeRecoveryInRounds(rounds, maxPasses = 4) {
     }
     changed = touched.size;
     return { ok: true, changed, before: +(before / N).toFixed(2), after: +(best / N).toFixed(2) };
+}
+
+function optimizeRecoveryInRounds(rounds, maxPasses = 4) {
+    const steps = recoveryPermutationSteps(rounds, maxPasses);
+    let step;
+    do { step = steps.next(); } while (!step.done);
+    return step.value;
+}
+
+async function optimizeRecoveryInRoundsAsync(rounds, options = {}) {
+    const steps = recoveryPermutationSteps(rounds, 4);
+    let deadline = performance.now() + 8;
+    await new Promise(resolve => setTimeout(resolve, 0));
+    while (true) {
+        if (options.shouldStop?.()) { steps.return(); return { cancelled: true }; }
+        const step = steps.next();
+        if (step.done) return step.value;
+        if (performance.now() >= deadline) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+            deadline = performance.now() + 8;
+        }
+    }
+}
+
+// Legal alternatives reuse the same per-hand invariants as the existing local optimizer.
+async function targetedRecoveryOrders(round, keepNine, options, deadline) {
+    const facts = cards => {
+        const r = new Simulator(cards).simulate_round(0, { no_swap: true });
+        if (!r || r.cards.length !== cards.length) return null;
+        const h = computeRoundHands(cards);
+        return [r.result, count7PtReversals([r]).count, Boolean(TwoThirteenReversals.classify(r)),
+            h.bankerTotal === 6 && h.playerTotal <= 5, h.playerTotal === 7 && h.bankerTotal === 6,
+            isBannedThirdCardPatternOnCards(cards)].join('|');
+    };
+    const signature = cards => { const t=cards.slice(); [t[0],t[1]]=[t[1],t[0]]; return facts(cards)+'#'+facts(t); };
+    const expected=signature(round.cards),seen=new Set(),orders=[],used=new Set(),cur=[];
+    function* visit(){
+        if(cur.length===round.cards.length){yield cur.slice();return;}
+        const faces=new Set();
+        for(let i=0;i<round.cards.length;i++){
+            const c=round.cards[i],key=c.rank+c.suit;if(used.has(i)||faces.has(key))continue;
+            faces.add(key);used.add(i);cur.push(c);yield* visit();cur.pop();used.delete(i);
+        }
+    }
+    let until=performance.now()+8;
+    for(const cards of visit()){
+        if(options.shouldStop?.()||performance.now()>=deadline)break;
+        const key=cards.map(c=>c.point()).join(',');if(seen.has(key))continue;seen.add(key);
+        if(keepNine&&cards.at(-1).rank!=='9')continue;
+        const swapped=cards.slice();[swapped[0],swapped[1]]=[swapped[1],swapped[0]];
+        if(signature(cards)===expected&&!shouldSkipSensitiveRound({cards,swap_info:{cards:swapped}}))orders.push(cards);
+        if(orders.length>=40)break;
+        if(performance.now()>=until){await new Promise(r=>setTimeout(r,0));until=performance.now()+8;}
+    }
+    return orders;
+}
+
+// The incumbent belongs to one generate command only; it is never a published shoe until eligible.
+async function finalizeRed0Recovery(rounds, options = {}) {
+    const work=options.work||{},beforeRecovery=analyzeShoeRecovery(rounds);
+    const origin=work.sequence=(work.sequence||0)+1;
+    const score=r=>r.recoveryDetails.reduce((sum,cut)=>sum+cut.roundsUsed,0)/r.totalCards;
+    const before=score(beforeRecovery),report={ok:false,rounds,recovery:beforeRecovery,before,after:before,
+        adopted:false,changed:0,searchMs:0,colorMs:0,jointChecks:0,jointImprovements:0,equalBranches:0,branchChecks:0,focus:[],reason:''};
+    const stopped=()=>options.shouldStop?.()===true,cancelled=()=>({...report,cancelled:true});
+    if(stopped())return cancelled();
+    if(work.best&&!validateStandardGeneratedShoe(work.best.rounds,{deferRecovery:true}).ok)delete work.best;
+    const remember=(candidate,recovery)=>{
+        const value=score(recovery);
+        if(!work.best||value<work.best.score)work.best={rounds:candidate,recovery,score:value,batches:0,visited:new Set(),plateau:{},exhausted:false,origin,
+            balance:isRed0BalanceEnabled()?window.__lastRed0Balance:null,tieSpread:window.__lastTieSpread};
+    };
+    const accept=async(source,stepBase,searchContext)=>{
+        const candidate=cloneRoundsDeep(source);
+        candidate.forEach(r=>{const sim=new Simulator(r.cards).simulate_round(0);if(sim){r.swap_info=sim.swap_info;r.result=sim.result;r.sensitive=sim.sensitive;}});
+        await new Promise(r=>setTimeout(r,0));if(stopped())return null;
+        if(calculateCardColorViolations(candidate)){
+            // Speculative equal layouts use a private reproducible repair stream, so
+            // discarded branches do not consume the next shoe's generation randomness.
+            let rng=Math.random;
+            if(searchContext?.equal||searchContext?.branch){
+                let seed=2166136261;for(const r of candidate)for(const c of r.cards)for(const ch of `${c.rank}${c.suit}${c.back_color}`)seed=Math.imul(seed^ch.charCodeAt(0),16777619);
+                rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
+            }
+            const start=performance.now(),color=planBackColorsKeepFaces(candidate,rng);report.colorMs+=performance.now()-start;
+            if(!color.ok||calculateCardColorViolations(candidate))return null;
+        }
+        await new Promise(r=>setTimeout(r,0));if(stopped())return null;
+        if(!validateStandardGeneratedShoe(candidate,{deferRecovery:true}).ok)return null;
+        return candidate;
+    };
+    // Repair the unoptimized fallback too; repairable color never discards an otherwise useful incumbent.
+    const base=await accept(rounds);if(stopped())return cancelled();
+    if(base)remember(base,analyzeShoeRecovery(base));
+    try{
+        const candidate=cloneRoundsDeep(rounds),start=performance.now();
+        const optimized=await optimizeRecoveryInRoundsAsync(candidate,options);report.searchMs+=performance.now()-start;
+        if(optimized.cancelled||stopped())return cancelled();report.changed=optimized.changed||0;
+        if(optimized.changed){const repaired=await accept(candidate);if(stopped())return cancelled();if(repaired)remember(repaired,analyzeShoeRecovery(repaired));}
+        const limit=Number(document.getElementById('avgRecoveryLimit')?.value)||0;
+        const needsMore=()=>work.best&&limit>0&&Number(work.best.recovery.avgRounds)>limit;
+        // At most two bounded batches per incumbent. Visited pairs persist across batch boundaries.
+        while(needsMore()&&!work.best.exhausted&&work.best.batches<2&&window.RecoverySearch){
+            const incumbent=work.best;incumbent.batches++;
+            const start=performance.now(),result=await RecoverySearch.search(incumbent.rounds,{
+                budgetMs:90,maxChecks:128,visited:incumbent.visited,state:incumbent.plateau,shouldStop:options.shouldStop,
+                orders:(r,i,deadline)=>targetedRecoveryOrders(r,Boolean(document.getElementById('lastCardNine')?.checked&&i===incumbent.rounds.length-1),options,deadline),
+                accept
+            });
+            report.searchMs+=performance.now()-start;report.jointChecks+=result.checks||0;report.jointImprovements+=result.improvements||0;report.focus=result.focus?.worst||[];
+            report.equalBranches+=result.equalBranches||0;report.branchChecks+=result.branchChecks||0;
+            if(result.cancelled||stopped())return cancelled();
+            if(result.improvements){
+                const recovery=analyzeShoeRecovery(result.rounds);
+                // Ranking is point-only; acceptance always uses all original cut statistics.
+                if(score(recovery)<incumbent.score){
+                    if(report.jointBefore==null)report.jointBefore=incumbent.score;
+                    report.jointAfter=score(recovery);
+                    incumbent.rounds=result.rounds;incumbent.recovery=recovery;incumbent.score=score(recovery);incumbent.exhausted=result.exhausted;
+                    incumbent.plateau={};
+                }
+            }else incumbent.exhausted=result.exhausted;
+        }
+    }catch(error){report.reason=`工作搜尋未採用：${error.message}`;}
+    if(stopped())return cancelled();
+    if(work.best){
+        report.bestWorking=work.best.score;
+        const validation=validateStandardGeneratedShoe(work.best.rounds,{recovery:work.best.recovery});
+        if(validation.ok&&!calculateCardColorViolations(work.best.rounds))return {...report,ok:true,rounds:work.best.rounds,recovery:work.best.recovery,
+            after:work.best.score,adopted:work.best.score<before,fromRetained:work.best.origin!==origin,
+            balance:work.best.balance,tieSpread:work.best.tieSpread,reason:report.reason};
+        report.reason=validation.reason||'最佳工作版本卡色未通過';
+        report.reason+=`；已保留最佳工作版本 ${work.best.score.toFixed(3)} 局，尚未達標，不發布`;
+    }else report.reason=report.reason||'沒有通過原規則與卡色的工作版本';
+    return report;
 }
 
 // 牌靴回復分析 V3 - 支援切牌旋轉
@@ -6502,4 +6824,54 @@ function analyzeShoeRecovery(rounds) {
         distribution,
         recoveryDetails
     };
+}
+
+async function optimizeRecoveryRoundSwaps(rounds, options = {}) {
+    const started = performance.now(), deadline = started + 450;
+    const report = { rounds, checks: 0, adopted: 0, ms: 0 };
+    const stopped = () => options.shouldStop?.() === true;
+    const finish = () => ({ ...report, ms: performance.now() - started, cancelled: stopped() });
+    if (!window.RecoverySearch || stopped() || !validateStandardGeneratedShoe(rounds).ok) return finish();
+    const isA2 = window.StandardProfiles?.current === 'a2';
+    const rare = TwoThirteenReversals.read(document);
+    const spacingOK = rs => TwoThirteenReversals.check(rs, rare.limit, { enforceSpacing: !isA2 }).ok;
+    if (!spacingOK(rounds)) return finish();
+    const key = r => JSON.stringify([standardRoundOutcome(r), r.result,
+        r.cards.some(isSignalCardByConfig), Boolean(r.isT), hasFullHouse(r), r.segment || '', r.cards.length]);
+    const score = rs => { const r = analyzeShoeRecovery(rs); return r.recoveryDetails.reduce((s,c) => s+c.roundsUsed,0)/r.totalCards; };
+    let best = rounds, bestScore = score(rounds), until = performance.now()+8;
+    const keepNine = document.getElementById('lastCardNine')?.checked;
+    while (!stopped() && performance.now() < deadline) {
+        const evaluator = RecoverySearch.createEvaluator(best), keys = best.map(key), ranked = [];
+        for (let a=0;a<best.length;a++) for (let b=a+1;b<best.length;b++) {
+            if (stopped() || performance.now() >= deadline) return finish();
+            if (keys[a] !== keys[b] || (keepNine && b === best.length-1)) continue;
+            const candidate = best.slice(); [candidate[a],candidate[b]] = [candidate[b],candidate[a]];
+            if (!spacingOK(candidate)) continue;
+            const value = evaluator.evaluate(candidate,[a,b]).score; report.checks++;
+            if (value < bestScore) ranked.push({a,b,value});
+            if (performance.now() >= until) { await new Promise(r=>setTimeout(r,0)); until=performance.now()+8; }
+        }
+        ranked.sort((a,b)=>a.value-b.value);
+        let improved = false;
+        for (const {a,b} of ranked) {
+            // Reserve time for synchronous color repair and complete validation.
+            if (stopped() || performance.now() >= deadline-35) break;
+            const candidate = cloneRoundsDeep(best);
+            [candidate[a],candidate[b]] = [candidate[b],candidate[a]];
+            let pos=0; candidate.forEach(r=>{r.start_index=pos;r.cards.forEach(c=>{c.pos=pos++;});});
+            // A private stream keeps rejected candidates out of generation randomness.
+            let seed=2166136261; for(const r of candidate) for(const c of r.cards) for(const ch of `${c.rank}${c.suit}${c.back_color}`) seed=Math.imul(seed^ch.charCodeAt(0),16777619);
+            const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
+            if (calculateCardColorViolations(candidate) && !planBackColorsKeepFaces(candidate,rng).ok) continue;
+            if (calculateCardColorViolations(candidate) || !spacingOK(candidate)
+                || candidate.some((r,i)=>key(r)!==keys[i]) || !validateStandardGeneratedShoe(candidate).ok) continue;
+            const actual=score(candidate);
+            if (actual < bestScore && !stopped() && performance.now()<deadline) {
+                best=candidate;bestScore=actual;report.rounds=best;report.adopted++;improved=true;break;
+            }
+        }
+        if (!improved) break;
+    }
+    return finish();
 }

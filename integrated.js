@@ -13,8 +13,8 @@
   const original = { refresh: refreshAnalysisAndRender, violations: calculateViolationStats,
     cannotSwap: calculateCannotSwapViolations, verify: verifyShoeRules, clear: clearAll, export: exportRoundsAsExcelWithDrive, stats: updateStats };
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
-  let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null;
-  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvMixedColor','tvBankerSixMax','tvSevenReversalMax','tvRareReversalMax','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null, templateCollectionTask=null, sensitiveCollectionTask=null;
+  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvMixedColor','tvBankerSixMax','tvSevenReversalMax','tvRareReversalMax','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvTailFill','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const standardSizeControlIds = [4,5,6].flatMap(n=>[`st${n}Min`,`st${n}Max`]);
   // 穿越紅0／穿越A2：同一個穿越引擎，各自保存設定、訊號牌與牌靴；states.traverse 永遠指向目前的穿越牌靴
   const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
@@ -50,11 +50,11 @@
     strong: $('tvStrong').checked, secondStart: $('tvSecond').checked, skipBanker6: $('tvBankerSixMax').value.trim()!=='', skipPlayer7: $('tvP7').checked, signalConfig: config(), preserveLastNine: $('tvNine').checked }; }
   function setRules() { Object.assign(B.rules, rules()); }
   function plain(card) { return { rank: card.rank, suit: card.suit, point: typeof card.point === 'function' ? card.point() : card.point,
-    back_color: card.back_color, traverse: !!card.traverse }; }
+    back_color: card.back_color, ...(card.sensitiveFill?{sensitiveFill:true}:{}), traverse: !!card.traverse }; }
   function toRounds(cards) {
     return E.dealRounds(cards).map(r => ({ start_index: r.start, result: r.result, segment: r.segment,
       sensitive: !!r.hand && B.handSensitive(r.cards.map(c => c.point)),
-      cards: r.cards.map((c,i) => Object.assign(new Card(c.rank,c.suit,r.start+i), {back_color:c.back_color,traverse:c.traverse})),
+      cards: r.cards.map((c,i) => Object.assign(new Card(c.rank,c.suit,r.start+i), {back_color:c.back_color,traverse:c.traverse,...(c.sensitiveFill?{sensitiveFill:true}:{})})),
       isT: !!r.hand && B.isTriple(r.cards.map(c => c.point)) }));
   }
   function baseCards() { return states.traverse.result ? O.prepare(states.traverse.result) : []; }
@@ -129,9 +129,12 @@
     recheckChains();
     currentRounds=toRounds(displayedCards());
     refreshSharedTable();
+    const segmentColumn=typeof ROUNDS_TABLE_COLUMNS==='undefined'?-1:ROUNDS_TABLE_COLUMNS.findIndex(c=>c.key==='segment');
+    currentRounds.forEach((round,i)=>{if(round.segment!=='敏感補排')return;const row=$('roundsBody').querySelector(`tr[data-r="${i}"]`);if(!row)return;row.dataset.tailFill='true';row.title='敏感補排（非穿越段；不宣稱第二張敏感）';if(segmentColumn>=0&&row.children[segmentColumn])row.children[segmentColumn].textContent='敏感補排';});
     t.analysis=O.analyze(baseCards(),rules());
+    updateTemplateStats();
     const s=result.stats, g=violationGroups(E.dealRounds(displayedCards()));
-    $('tvSummary').textContent=`穿越段 ${416-result.leftoverCount} 張｜剩牌 ${result.leftoverCount} 張｜長段 ${result.chains.length} 段｜長段驗證 ${result.chains.every(c=>c.qualified)?'通過':'有問題'}｜重跑 ${result.reruns||0} 次｜卡色違規 ${g.color.length} 局｜敏感局違規 ${g.noSwap.length+g.same.length} 局｜三條 ${g.triple.length} 局｜訊號 ${g.signal.length} 局｜${((result.totalMs??s.ms)/1000).toFixed(1)} 秒`;
+    $('tvSummary').textContent=`穿越段 ${416-result.leftoverCount} 張｜剩牌 ${result.leftoverCount} 張${result.tailFill?`｜原序敏感補排 ${result.tailFill.roundCount||0} 局｜原序未處理 ${result.tailFill.unprocessed} 張`:''}｜長段 ${result.chains.length} 段｜長段驗證 ${result.chains.every(c=>c.qualified)?'通過':'有問題'}｜重跑 ${result.reruns||0} 次｜卡色違規 ${g.color.length} 局｜敏感局違規 ${g.noSwap.length+g.same.length} 局｜三條 ${g.triple.length} 局｜訊號 ${g.signal.length} 局｜${((result.totalMs??s.ms)/1000).toFixed(1)} 秒`;
     $('tvSafeCount').textContent=`${t.analysis.count}／416`;
     const buckets=new Map();t.analysis.depths.forEach(d=>buckets.set(d,(buckets.get(d)||0)+1));
     const sortedBuckets=[...buckets].sort((a,b)=>a[0]-b[0]);
@@ -142,7 +145,7 @@
     $('tvChains').querySelector('tbody').innerHTML=result.chains.map((c,i)=>`<tr><td>${i+1}</td><td>${c.start}</td><td>${c.length}</td><td>${c.rounds}</td><td>${c.traverse?'✓':'✗'}</td><td>${c.allSensitive?'✓':'✗'}</td><td>${c.qualified?'✓':'✗'}</td></tr>`).join('');
     const issues=result.signal?.issues||[];
     $('tvDiagnostics').innerHTML=(issues.length?'<p>生成時訊號調整檢查（保留當時紀錄）：</p>'+issues.map(i=>`<p>${esc(i.message||JSON.stringify(i))}</p>`).join(''):'<p>生成時沒有訊號調整診斷。</p>')+'<p>長段驗證及上方違規統計依目前牌表重新計算。</p>';
-    $('tvOptimize').disabled=busy; $('btnRecordDeckOrder').disabled=false;
+    $('tvOptimize').disabled=busy; $('tvRecoveryOptimize').disabled=busy; $('btnRecordDeckOrder').disabled=false;
     document.body.classList.add('finished');
   }
   function snapshot() { return { rounds:currentRounds,analysis:currentAnalysis,deck:originalDeckOrder,originalRounds,
@@ -174,6 +177,7 @@
     setSettingsCollapsed(document.body.classList.contains('dashboard') ? $('traverseControls').classList.contains('collapsed') : !!tstates[t].result);
   }
   function refreshModeButtons() {
+    $('tvTemplateControls').hidden=mode!=='traverse'||tsub!=='red0';$('sensitiveControls').hidden=mode!=='traverse';
     [['modeRed0','standard','red0'],['modeA2','standard','a2'],['modeTraverse','traverse','red0'],['modeTraverseA2','traverse','a2']].forEach(([id,m,s]) => {
       const on = mode === m && (m === 'standard' ? sub : tsub) === s;
       $(id).classList.toggle('active', on); $(id).setAttribute('aria-pressed', on);
@@ -192,7 +196,7 @@
     if(busy||window.__isGeneratingShoe||(isTr?(mode==='traverse'&&nextSub===tsub):(mode==='standard'&&nextSub===sub)))return;
     if(mode==='standard'){states[sub]=snapshot();StandardProfiles.save(sub,currentSignal());}else{absorbEdits();OptimizerDialog.reset();tstates[tsub].optimization=optimization;optimization=null;tstates[tsub].live=tvCollect(currentSignal());}
     mode=isTr?'traverse':'standard';document.body.dataset.mode=mode;
-    if(isTr){tsub=nextSub;applyTraverseProfile(tsub);optimization=tstates[tsub].optimization||null;$('tvOptimize').disabled=!tstates[tsub].result;$('btnOptOpen').disabled=!optimization;}
+    if(isTr){tsub=nextSub;applyTraverseProfile(tsub);optimization=tstates[tsub].optimization||null;$('tvOptimize').disabled=!tstates[tsub].result;$('tvRecoveryOptimize').disabled=!tstates[tsub].result;$('btnOptOpen').disabled=!optimization;}
     else{sub=nextSub;applyProfile(sub);}
     refreshModeButtons();
     $('traverseControls').hidden=$('traverseTools').hidden=mode!=='traverse';$('standardControls').hidden=mode==='traverse';
@@ -222,10 +226,10 @@
     $('generateBtn').disabled=value;$('stopGenerateBtn').disabled=!value;
     $('btnExportCombined').disabled=value;$('btnExportCombined').textContent=value?'處理中…':'導出';
     $('generatingOverlay').classList.toggle('active',value);document.body.classList.toggle('running',value);
-    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings','exportFilename',...controlIds,'tvDemo','tvOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
+    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','sharedSignalSettings','exportFilename',...controlIds,'sensitiveConnect','sensitiveResume','sensitiveStart','sensitiveLength','sensitiveExport','tvTemplateConnect','tvTemplateResume','tvTemplateStart','tvTemplateExportLength','tvTemplateExport','tvTemplateExportPending','tvTemplateImport','tvDemo','tvOptimize','tvRecoveryOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
     document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>{el.style.pointerEvents=value?'none':'';el.setAttribute('aria-disabled',value);});
     document.querySelectorAll('.suit-checkbox,.rank-checkbox').forEach(el=>el.disabled=value);
-    if(!value)$('tvOptimize').disabled=!states.traverse.result;
+    if(!value){$('tvOptimize').disabled=!states.traverse.result;$('tvRecoveryOptimize').disabled=!states.traverse.result;updateSensitiveStats();}
   }
   function status(message) { $('tvProgress').textContent=message;$('generatingText').textContent=message; }
   function rotateResult(result,k) { if(!k)return;result.cards=E.cutDeck(result.cards,k);result.chains.forEach(c=>c.start=(c.start-1-k+416)%416+1); }
@@ -242,12 +246,10 @@
     return {limits:any?out:null};
   }
   // 整副（依實際發牌起點）不符合上下限時回傳說明，符合回傳空字串
-  function sizeMiss(cards,cut,limits){
-    if(!limits)return '';
-    const rs=E.dealRounds(E.cutDeck(cards,cut)).filter(r=>r.hand),c={4:0,5:0,6:0};rs.forEach(r=>{if(c[r.cards.length]!==undefined)c[r.cards.length]++;});
-    for(const k of [4,5,6]){const {min,max}=limits[k];if(min!==null&&c[k]<min)return `${k}張局 ${c[k]} 局，低於下限 ${min}`;if(max!==null&&c[k]>max)return `${k}張局 ${c[k]} 局，超過上限 ${max}`;}
-    return '';
-  }
+  function quotaReport(cards,cut,limits,tieMax=null){return TraverseQuota.check(B.roundSizeCounts(E.cutDeck(cards,cut).map(c=>c.point)),limits,tieMax);}
+  function sizeMiss(cards,cut,limits){return quotaReport(cards,cut,limits).reason;}
+  function tieMiss(cards,cut,max){return quotaReport(cards,cut,null,max).reason;}
+
   // 排好牌後把設定收成一行摘要，主表格往上移；點「展開設定」可再展開
   function settingsSummary() {
     const parts=[`${$('tvMin').value}～${$('tvMax').value}張`,`剩牌${$('tvLeft').value.trim()===''?'不限':'≤'+$('tvLeft').value}`];
@@ -256,7 +258,8 @@
     for(const [id,name] of [['tvBankerSixMax','莊6贏'],['tvSevenReversalMax','七點逆轉'],['tvRareReversalMax','逆轉']])if($(id).value.trim()!=='')parts.push(`${name}≤${$(id).value}`);
     parts.push(tsub==='a2'||$('tvRareReversalMax').value.trim()===''?'逆轉不限間隔':'逆轉間隔>20局');
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
-    const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9'],['tvTailFill','敏感補排']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    parts.push('局數驗收允差≤3局（上限0仍禁止）');
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
   function setSettingsCollapsed(value) {
@@ -282,6 +285,7 @@
         const starts=positions.filter(j=>chainOwners[(j+n-1)%n]!==i);
         if(starts.length>1)return null; // Never split a long chain or silently change its coverage.
         const start=starts[0]??0;
+        if(result.tailFill&&start!==ch.start-1)return null; // Tail filling never moves an original chain boundary.
         chains.push({...ch,start:start+1});
       }
       return {...result,cards,chains};
@@ -301,7 +305,7 @@
         if(Object.keys(baseline).some(key=>groups[key].length>baseline[key].length))return {ok:false,reason:'訊號／敏感局／卡色驗收不符'};
         const miss=sizeMiss(next.cards,0,policy.sizeLimits);if(miss)return {ok:false,reason:miss};
         if(policy.sideLimit!==null&&sideDiff(next.cards)>policy.sideLimit)return {ok:false,reason:'莊閒差距不符'};
-        if(policy.tieMax!==null&&tieCount(next.cards)>policy.tieMax)return {ok:false,reason:'和局上限不符'};
+        if(tieMiss(next.cards,0,policy.tieMax))return {ok:false,reason:tieMiss(next.cards,0,policy.tieMax)};
         const final=TraverseLimits.check(next,limits);if(!final.ok)return final;
         return TraverseLimits.chainsValid(next,policy)?{ok:true}:{ok:false,reason:'穿越長段重驗不符'};
       }
@@ -330,24 +334,32 @@
     if(limit!==null&&(!Number.isInteger(limit)||limit<0||limit>416)){status('剩牌上限須為 0～416 的整數或留白');lock(false);return;}
     const sizes=demo?{limits:null}:sizeLimits();
     if(sizes.error){status(sizes.error);$(sizes.focus).focus();lock(false);return;}
-    let lastMiss='',spreadMessage='';
+    let lastMiss='',spreadMessage='',activeTemplate=null,pendingTemplate=null;
     // 每次重跑都把原因寫進日誌，方便看出卡在哪一項
-    const rerun=reason=>{reruns++;lastMiss=reason;log(`第 ${reruns} 次穿越重跑：${reason}，重新生成...`,'warn');};
+    const rerun=reason=>{if(activeTemplate&&B.hasTemplateContinuation(activeTemplate)){log(`穿越範本：${activeTemplate.templateLibrary?.length?`候選 ${activeTemplate.templateLibrary.selectedIndex}`:`敏感補排第 ${activeTemplate.tailFill?.solutionIndex||1} 種（非穿越段）`} 未通過完整驗收｜${reason}｜續試同池下一筆；本次失敗不永久排除範本`,'info');pendingTemplate=activeTemplate;activeTemplate=null;lastMiss=reason;return;}reruns++;lastMiss=reason;log(`第 ${reruns} 次穿越重跑：${reason}，重新生成...`,'warn');};
+    const retryTail=reason=>{rerun(reason);return true;};
     try {
+      await TraverseTemplateFile.ready;if(stopped)return;
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
       if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvP7').checked=false;}
       for(;;){
-        const opts={...rules(),specialLimits:demo?null:specialLimits,minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,sideLimit:demo?null:sideLimit,tieMax:demo?null:tieMax,
-          onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次${lastMiss?`｜上一副${lastMiss}`:''}］`:''}${m}`),isCancelled:()=>stopped};
-        if(demo){opts.rng=rng;opts.skipBanker6=false;}else if(limit!==null&&!opts.strong)opts.rejectAbove=limit;
-        result=await B.build(opts);
+        const opts={...rules(),red0Balance:!demo&&tsub==='red0',fillSensitiveTail:!demo,sensitiveTail:$('tvTailFill').checked,a2Tail:!demo&&tsub==='a2',specialLimits:demo?null:specialLimits,minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,sideLimit:demo?null:sideLimit,tieMax:demo?null:tieMax,
+          onTemplateLog:m=>log(m,'info'),onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次${lastMiss?`｜上一副${lastMiss}`:''}］`:''}${m}`),isCancelled:()=>stopped};
+        if(demo){opts.rng=rng;opts.skipBanker6=false;}else if(limit!==null&&(!opts.strong||opts.fillSensitiveTail))opts.rejectAbove=limit;
+        if(pendingTemplate){const previous=pendingTemplate;pendingTemplate=null;result=await B.nextTemplate(previous);}else result=await B.build(opts);
+        activeTemplate=B.hasTemplateContinuation(result)?result:null;cut=null;spreadMessage='';
         if(stopped){status('已停止，保留上次完成的牌靴');return;}
+        if(result.tailFill&&(!result.tailFill.ok||!result.tailFill.fullOk)){
+          if(result.tailFill.status==='unsupported'){if(activeTemplate){rerun(result.tailFill.reason);continue;}status(result.tailFill.reason+'；保留上次牌靴');return;}
+          if(!retryTail(`敏感補排／全靴驗收未通過：${result.tailFill.reason||result.signalBalance?.reason||'無合法配置'}`))return;continue;
+        }
+        if(result.signalBalance?.kind==='traverse-red0-target'&&!result.signalBalance.ok){if(activeTemplate){rerun(result.signalBalance.reason||'本次規劃未成功');continue;}status(`穿越紅0差距規劃${result.signalBalance.status==='search-limit'?'達搜尋上限':'未找到合法配置'}：${result.signalBalance.reason}；保留上次牌靴`);log($('tvProgress').textContent,'warn');return;}
         if(result.rejected){rerun(`剩牌 ${result.leftoverCount} 張超過上限 ${limit}`);continue;}
         if(!demo&&!opts.strong&&limit!==null&&result.leftoverCount>limit){rerun(`剩牌 ${result.leftoverCount} 張超過上限 ${limit}`);continue;}
         if(B.SIGNAL_RETRY_ENABLED&&result.signal&&!result.signal.ok&&!demo&&!opts.strong){rerun('訊號調整失敗');continue;}
         cut=!opts.strong&&$('tvNine').checked?nineCut(result):null;
         if(!demo&&!opts.strong&&sideLimit!==null&&sideDiff(result.cards,cut||0)>sideLimit){rerun(`莊閒差距 ${sideDiff(result.cards,cut||0)} 超過 ${sideLimit}`);continue;}
-        if(!demo&&!opts.strong&&tieMax!==null&&tieCount(result.cards,cut||0)>tieMax){rerun(`和局 ${tieCount(result.cards,cut||0)} 局超過 ${tieMax} 局`);continue;}
+        if(!demo&&!opts.strong){const miss=tieMiss(result.cards,cut||0,tieMax);if(miss){rerun(miss);continue;}}
         if(!demo&&!opts.strong){const miss=sizeMiss(result.cards,cut||0,sizes.limits);if(miss){rerun(miss);continue;}}
         // Rotate before checking spacing: the limits apply to the displayed shoe.
         if(!demo)rotateResult(result,cut||0);
@@ -357,7 +369,7 @@
           if(!check.okSpacing){
             const repaired=await TraverseLimits.repairSpacing(result,{limits:finalLimits,policy:opts,preserveLastNine:$('tvNine').checked,shouldStop:()=>stopped});
             if(stopped){status('已停止，保留上次完成的牌靴');return;}
-            if(!repaired.ok){status(`逆轉間隔交換失敗：${repaired.reason}；保留上次牌靴，不整副重跑`);log($('tvProgress').textContent,'warn');return;}
+            if(!repaired.ok){if(activeTemplate){rerun(`逆轉間隔交換失敗：${repaired.reason}`);continue;}status(`逆轉間隔交換失敗：${repaired.reason}；保留上次牌靴，不整副重跑`);log($('tvProgress').textContent,'warn');return;}
             result=repaired.result;
             if(repaired.swaps.length)log(`穿越逆轉間隔整局交換：${repaired.swaps.map(x=>`第${x.from}局 ↔ 第${x.to}局`).join('、')}`,'success');
           }
@@ -366,7 +378,7 @@
         if(!demo){
           const final=TraverseLimits.check(result,finalLimits);
           if(!final.okCount){rerun(`最後調整後${final.reason}`);continue;}
-          if(!final.okSpacing){status(`最後逆轉間隔不符：${final.reason}；保留上次牌靴，不整副重跑`);return;}
+          if(!final.okSpacing){if(activeTemplate){rerun(`最後逆轉間隔不符：${final.reason}`);continue;}status(`最後逆轉間隔不符：${final.reason}；保留上次牌靴，不整副重跑`);return;}
         }
         if(!demo&&tsub==='red0'&&!opts.tripleTie){
           const spread=await spreadTraverseTies(result,opts,finalLimits);
@@ -377,8 +389,12 @@
         }else if(!demo&&tsub==='red0'){
           window.__lastTieSpread=null;spreadMessage='三條已開啟，略過和局分散';log(spreadMessage,'info');
         }
+        if(result.tailFill){const full=TraverseTailFill.validate(result.cards,rules());if(!full.ok||!TraverseLimits.chainsValid(result,opts)){if(!retryTail(`敏感補排最終全靴驗收：${full.reason||'穿越段不合格'}`))return;continue;}}
+        if(!demo){const q=quotaReport(result.cards,0,sizes.limits,tieMax);if(!q.ok){if(activeTemplate){rerun(`穿越局數驗收未通過：${q.reason}`);continue;}status(`穿越局數驗收未通過：${q.reason}；保留上次牌靴`);log($('tvProgress').textContent,'warn');return;}}
         break;
       }
+
+      if(result.templateLibrary){result.templateLibrary.finalAdopted=result.templateLibrary.length&&result.tailFill?.fullOk?1:0;log(`穿越範本：最終驗收完成｜候選命中 ${result.templateLibrary.candidateHits}／實體重驗 ${result.templateLibrary.physicalPassed}／最終採用 ${result.templateLibrary.finalAdopted}${result.templateLibrary.finalAdopted?'，已採用為穿越段':'，本副未使用範本'}`,'info');}
       result.reruns=reruns;result.totalMs=Date.now()-started;
       if(demo)rotateResult(result,cut||0);
       if (demo&&$('tvMixedColor').checked) {
@@ -388,8 +404,9 @@
       states.traverse.result=result;states.traverse.cut=0;$('cutPos').value=0;
       if(!document.body.classList.contains('dashboard'))setSettingsCollapsed(true);document.querySelectorAll('#traverseTools details').forEach(d=>{d.open=false;});
       renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}${$('tvMixedColor').checked&&!result.colorOk?'｜混色卡色配置失敗，請查看違規':''}${spreadMessage?'｜'+spreadMessage:''}`);
+      if(!demo){const q=quotaReport(result.cards,0,sizes.limits,tieMax);if(q.summary)status($('tvProgress').textContent+'｜'+q.summary);}
       log($('tvProgress').textContent,'success');
-    }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{lock(false);}
+    }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{await B.releaseTemplateContinuation(activeTemplate||pendingTemplate);if(result?.templateLibrary?.length&&!result.templateLibrary.finalAdopted)log(`穿越範本：本次未最終採用｜${$('tvProgress').textContent}`,'info');await TraverseTemplateFile.flush();updateTemplateStats();lock(false);}
   }
   function cutTraverse(cut) {
     if(!states.traverse.result)return;
@@ -411,15 +428,45 @@
   }
   function comparison() {
     const o=optimization;
-    $('optimizerSummary').textContent=`安全切點 ${o.initial.count} → ${o.final.count}（增加 ${o.final.count-o.initial.count}）｜調整 ${o.changes.length} 局`;
-    $('optimizerChecks').textContent='同副 416 張牌；每局結果、張數、敏感局與訊號狀態保留；長段實際穿越驗證通過。';
-    $('optimizerChanges').innerHTML=o.changes.map(c=>`<article class="optimizer-change"><h3>原序第 ${c.round} 局｜${c.result}｜${c.size} 張</h3><div class="optimizer-pair"><div>調整前<div class="optimizer-cards">${comparisonRow(c.before,c.moved)}</div></div><div>調整後<div class="optimizer-cards">${comparisonRow(c.after,c.moved,c.from)}</div></div></div><p>${c.from.map((p,i)=>`局內第 ${p} 張 → 第 ${i+1} 張`).join('；')}</p></article>`).join('')||'<p>未找到更多安全切點，保留原牌序。</p>';
+    $('optimizerTitle').textContent=o.objective==='recovery'?'同一副牌・回復優化前後比較':'同一副牌・局內優化前後比較';
+    $('optimizerSummary').textContent=O.summary(o)+`｜調整 ${o.changes.length} 局${o.limited?'｜已達本次搜尋上限':''}`;
+    $('optimizerChecks').textContent='同副 416 張牌；每局原牌、結果、張數、敏感局與訊號狀態保留；長段與已啟用的第二張敏感驗收通過。卡色依牌表另行檢查。';
+    $('optimizerChanges').innerHTML=o.changes.map(c=>`<article class="optimizer-change"><h3>原序第 ${c.round} 局｜${c.result}｜${c.size} 張</h3><div class="optimizer-pair"><div>調整前<div class="optimizer-cards">${comparisonRow(c.before,c.moved)}</div></div><div>調整後<div class="optimizer-cards">${comparisonRow(c.after,c.moved,c.from)}</div></div></div><p>${c.from.map((p,i)=>`局內第 ${p} 張 → 第 ${i+1} 張`).join('；')}</p></article>`).join('')||'<p>未找到符合本次目標的合法改善，保留原牌序。</p>';
     $('optimizerExample').innerHTML='<h3>新增安全起點</h3>'+o.gained.map(c=>`<button class="tool-btn" data-opt-example="${c}">${c+1}</button>`).join('')+'<div id="tvCutExample"></div>';
     showVersion('after');OptimizerDialog.show();
   }
-  async function optimize() {
+  async function optimize(objective='safe') {
     if(!states.traverse.result||busy)return;absorbEdits();clearOptimization();stopped=false;lock(true);
-    try{optimization=await O.optimize(copy(states.traverse.result),{...rules(),isCancelled:()=>stopped,onProgress:p=>status(`局內優化 ${p.round}/${p.total} 局｜安全點 ${p.before} → ${p.best}`)});lock(false);comparison();status(`優化${optimization.cancelled?'已停止':'完成'}：${optimization.initial.count} → ${optimization.final.count} 個安全切點`);}catch(e){status(`局內優化：${e.message}`);}finally{lock(false);}
+    const source=states.traverse.result, label=objective==='recovery'?'回復優化':'局內優化';
+    const optional=id=>$(id).value.trim()===''?null:Number($(id).value);
+    const limits={bankerSix:optional('tvBankerSixMax'),seven:optional('tvSevenReversalMax'),rare:optional('tvRareReversalMax'),enforceSpacing:tsub!=='a2'&&optional('tvRareReversalMax')!==null};
+    const sizes=sizeLimits(),policy=rules();
+    const validate=result=>{
+      if(sizes.error)return {ok:false,reason:sizes.error};
+      const left=optional('tvLeft');if(left!==null&&O.prepare(result).filter(c=>!c.traverse).length>left)return {ok:false,reason:'剩牌超過設定上限'};
+      const groups=violationGroups(E.dealRounds(result.cards));
+      if(['noSwap','same','triple','signal'].some(k=>groups[k].length))return {ok:false,reason:'敏感局／三條／訊號規則不符'};
+      const miss=sizeMiss(result.cards,0,sizes.limits);if(miss)return {ok:false,reason:miss};
+      const side=optional('tvSideLimit'),tie=optional('tvTieMax');
+      if(side!==null&&sideDiff(result.cards)>side)return {ok:false,reason:'莊閒差距超標'};
+      if(tieMiss(result.cards,0,tie))return {ok:false,reason:tieMiss(result.cards,0,tie)};
+      return TraverseLimits.check(result,limits);
+    };
+    try{
+      status(`${label}：正在檢查原牌及完整 416 切點…`);
+      const output=await O.optimize(copy(source),{...policy,objective,validate,isCancelled:()=>stopped,
+        onProgress:p=>status(`${label} ${p.round}/${p.total} 局｜安全點 ${p.before} → ${p.best}｜平均回復 ${p.recoveryBefore.toFixed(6)} → ${p.recoveryBest.toFixed(6)}`)});
+      if(output.cancelled||stopped){status(`${label}已停止，保留原牌`);return;}
+      // 點數優化完成後才配置混色，不把卡色當成安全切點搜尋條件。
+      if(policy.mixedColor && !output.after.colorOk){
+        setRules();
+        const colored=B.reassignColors(output.after.cards);
+        if(!colored.ok){status(`${label}後混色配置失敗，保留原牌`);return;}
+        output.after.cards=colored.cards;output.after.colorOk=true;
+        for(const change of output.changes)change.after=colored.cards.slice(change.start,change.start+change.size);
+      }
+      optimization=output;lock(false);comparison();status(`${label}${output.accepted?'完成':'未找到合法改善，保留原牌'}：${O.summary(output)}${output.limited?'｜已達本次搜尋上限':''}`);
+    }catch(e){status(`${label}：${e.message}`);}finally{lock(false);}
   }
   // 整合頁只存本機；雲端helper保留但不由導出或編號流程呼叫。
   // 本機目錄授權與Excel內容沿用既有流程。
@@ -563,10 +610,12 @@
   }
   // Serialize generation commands. Latest user intent wins; an old job must finish
   // its cancellation/finally (including restoring its snapshot) before clear/restart.
-  function clearTraverse() {clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;setSettingsCollapsed(false);status('已清空穿越牌靴');}
+  function clearTraverse() {clearOptimization();states.traverse.result=null;states.traverse.cut=0;original.clear();$('tvSummary').textContent='';$('tvSafeCount').textContent='尚未排牌';$('tvSafeCuts').innerHTML='';$('tvCutBuckets').textContent='';$('tvChains').querySelector('tbody').innerHTML='';$('tvDiagnostics').innerHTML='';$('tvOptimize').disabled=true;$('tvRecoveryOptimize').disabled=true;setSettingsCollapsed(false);status('已清空穿越牌靴');}
   let generationTask = null, generationCommand = null, pendingClear = false;
   function cancelGeneration() {
     stopped = true;
+    TraverseTemplateCollector.stop();
+    if(sensitiveCollectionTask)void SensitiveHandLibrary.stopAndSave();
     stopGenerateShoe();
   }
   async function drainGenerationCommands() {
@@ -592,6 +641,8 @@
     const command = ({chipGen:'generate',generateBtn:'generate',chipStop:'stop',stopGenerateBtn:'stop',chipClear:'clear',clearBtn:'clear'})[id];
     if (!command) return;
     event.preventDefault(); event.stopImmediatePropagation();
+    if(sensitiveCollectionTask){if(command==='stop')requestSensitiveStop();else status('請先停止敏感局累積並等待保存，再操作牌靴');return;}
+    if(templateCollectionTask){if(command==='stop'){requestTemplateStop();}else status('請先停止範本累積並等待保存，再操作牌靴');return;}
     if (command === 'stop') {
       generationCommand = null;
       cancelGeneration();
@@ -621,7 +672,7 @@
     if(mode==='standard'&&window.__pendingSizeShoe&&!['chipStop','stopGenerateBtn'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
     if(mode==='standard'&&button.id==='btnExportCombined'){event.preventDefault();event.stopImmediatePropagation();if(!busy&&!window.__isGeneratingShoe){lock(true);$('generatingText').textContent='正在建立本機Excel檔案…';Promise.resolve(original.export()).catch(e=>log(`導出失敗：${e.message}`,'error')).finally(()=>lock(false));}return;}
     if(mode!=='traverse')return;
-    if(busy&&!['stopGenerateBtn','chipStop','logHead','btnTableWindow'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
+    if(busy&&!['stopGenerateBtn','chipStop','tvTemplateStop','sensitiveStop','logHead','btnTableWindow'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
     const id=button.id;
     const handlers={chipStop:()=>{if(busy){stopped=true;status('停止中，整理目前結果…');}},generateBtn:()=>generateTraverse(),stopGenerateBtn:()=>{stopped=true;status('停止中，整理目前結果…');},btnCut:()=>cutTraverse(Number($('cutPos').value)),btnAutoColor:recolor,
       btnExportCombined:exportTraverse,btnRecordDeckOrder:()=>{absorbEdits();rotateResult(states.traverse.result,states.traverse.cut);states.traverse.cut=0;$('cutPos').value=0;clearOptimization();renderTraverse();status('已套用目前牌序，切牌起點歸零');},
@@ -631,8 +682,37 @@
   },true);
   $('modeRed0').addEventListener('click',()=>switchMode('red0'));$('modeA2').addEventListener('click',()=>switchMode('a2'));$('modeTraverse').addEventListener('click',()=>switchMode('traverse-red0'));$('modeTraverseA2').addEventListener('click',()=>switchMode('traverse-a2'));
   $('tvSettingsToggle').addEventListener('click',()=>setSettingsCollapsed(!$('traverseControls').classList.contains('collapsed')));
-  $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',optimize);
-  $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));});
+  function updateTemplateStats(){const s=TraverseTemplates.stats(),f=TraverseTemplateFile.status();const file=f.saving?'分批保存中':!f.ready?'載入索引中':f.needsPermission?'待恢復資料夾授權':!f.connected?'未選資料夾：僅在瀏覽器待存／快取，不算電腦檔案；請選 D:\\穿越點數範本庫或匯出備份':f.dirty?'有待合併資料':`已寫入本機資料夾 ${f.name}`;$('tvTemplateStats').textContent=`${[8,9,10,11,12].map(n=>`${n}張 ${s.banks[n].count}/1000000`).join('｜')}｜${f.connected?'磁碟已存':'記憶體'} ${s.templates} 個／${s.keys} 種組合｜待合併 ${s.pending} 個｜本頁已保存淨新增 ${f.totals.added} 個／磁碟重複 ${f.totals.duplicates} 個／待存重複 ${s.counters.duplicates} 個／容量滿未收錄 ${f.totals.full+s.counters.full} 個／驗證拒絕 ${s.counters.invalid} 個｜${file}${f.fileError?'｜'+f.fileError:''}${f.cacheError?'｜'+f.cacheError:''}${s.storageError?'｜'+s.storageError:''}`;}
+
+  let templateStatusTimer=null;TraverseTemplateFile.onChange(()=>{if(!templateStatusTimer)templateStatusTimer=setTimeout(()=>{templateStatusTimer=null;updateTemplateStats();},150);});
+  $('tvTemplateExport').addEventListener('click',async()=>{if(busy)return;lock(true);try{const n=Number($('tvTemplateExportLength').value),blob=await TraverseTemplateFile.exportJSON(n),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=TraverseTemplateFile.status().connected?`ATLL-穿越點數範本-${n}張.json`:'ATLL-穿越點數範本-暫存.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){status('匯出未完成：'+e.message);}finally{lock(false);}});
+  $('tvTemplateExportPending').addEventListener('click',async()=>{if(busy)return;lock(true);try{const b=await TraverseTemplateFile.exportPendingJSON();if(!b.count){status('目前沒有待存範本，不需匯出');return;}const a=document.createElement('a'),url=URL.createObjectURL(b.blob);a.href=url;a.download=`ATLL-穿越範本-待存-${b.count}筆-${b.hash.slice(0,12)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status(`已送出 ${b.count} 筆待存備份下載｜SHA256 ${b.hash}｜原待存資料保留${b.validationRejected?`；其中 ${b.validationRejected} 筆重驗未過，已原樣備份但未合併`:''}；未合併磁碟，請確認瀏覽器下載完成`);}catch(e){status('待存備份未完成：'+e.message);}finally{lock(false);}});
+  $('tvTemplateImport').addEventListener('click',()=>{if(!busy)$('tvTemplateFile').click();});
+  $('tvTemplateFile').addEventListener('change',async()=>{const input=$('tvTemplateFile'),file=input.files[0];if(!file||busy)return;stopped=false;lock(true);try{await TraverseTemplateFile.ready;const merged=await TraverseTemplateFile.importJSON(await file.text(),{cancelled:()=>stopped});await TraverseTemplateFile.flush();updateTemplateStats();status(`範本已重驗合併；新增 ${merged.added??'見庫數'} 個${merged.skipped?`／因該張數庫一百萬容量未收錄 ${merged.skipped} 個（原檔保留）`:''}；實體檔案是否保存請看範本狀態`);}catch(e){status('範本未匯入：'+e.message);}finally{input.value='';lock(false);}});
+  for(const [id,action]of [['tvTemplateConnect','connect'],['tvTemplateResume','resume']])$(id).addEventListener('click',async()=>{if(busy)return;lock(true);try{await TraverseTemplateFile[action]();updateTemplateStats();}catch(e){status(e.message);}finally{lock(false);}});
+  let templateStopHome=null;
+  function floatTemplateStop(active){const b=$('tvTemplateStop');if(active){templateStopHome=document.createComment('範本停止按鈕原位');b.before(templateStopHome);$('generatingOverlay').append(b);b.classList.add('collection-stop-floating');}else{templateStopHome?.replaceWith(b);templateStopHome=null;b.classList.remove('collection-stop-floating');b.textContent='停止累積／保存';}}
+  function requestTemplateStop(){if(!templateCollectionTask)return;stopped=true;TraverseTemplateCollector.stop();$('tvTemplateStop').disabled=true;$('tvTemplateStop').textContent='停止中／等待保存…';status('停止範本累積，等待本機檔案保存完成…');}
+  $('tvTemplateStart').addEventListener('click',async()=>{if(busy||templateCollectionTask||mode!=='traverse'||tsub!=='red0')return;const policy=rules(),min=num('tvMin'),max=num('tvMax');stopped=false;lock(true);$('tvTemplateStop').disabled=false;floatTemplateStop(true);
+    templateCollectionTask=(async()=>{try{await TraverseTemplateFile.ready;const result=await TraverseTemplateCollector.run({rules:policy,minLen:min,maxLen:max,cancelled:()=>stopped,progress:r=>{status(`專門累積：已保存淨新增 ${r.added} 個｜待合併 ${r.pending} 個｜真正重複 ${r.duplicates} 個｜容量滿未收錄 ${r.full} 個｜${(r.added/Math.max(.001,r.ms/1000)).toFixed(1)} 已存個/秒`);updateTemplateStats();}});status(`累積${result.reason}：已保存淨新增 ${result.keys} 種組合／${result.added} 個排列｜待合併 ${result.pending} 個｜真正重複 ${result.duplicates} 個｜容量滿未收錄 ${result.full} 個；等待批次保存…`);}catch(e){status('範本累積停止：'+e.message);}finally{await TraverseTemplateFile.flush();updateTemplateStats();$('tvTemplateStop').disabled=true;floatTemplateStop(false);templateCollectionTask=null;lock(false);status($('tvProgress').textContent.replace('；等待批次保存…','；保存處理完成，請查看本機檔案狀態'));}})();await templateCollectionTask;
+  });
+  $('tvTemplateStop').addEventListener('click',async()=>{if(!templateCollectionTask)return;requestTemplateStop();await templateCollectionTask;});
+  void TraverseTemplateFile.ready.then(updateTemplateStats);updateTemplateStats();
+  let sensitiveStopHome=null,sensitiveUiTimer=null;
+  function updateSensitiveStats(){const s=SensitiveHandLibrary.status(),p=s.progress,total=[4,5,6].reduce((n,k)=>n+s.banks[k].saved,0),state=s.saving?'正在寫入本機':s.error?'未保存／錯誤：'+s.error:s.needsPermission?'待恢復資料夾授權':s.complete?`全部枚舉完成，已保存 ${total} 個不同敏感局排列，不需再次累積`:s.connected?'已連接獨立敏感局資料夾':'未連接資料夾，只在記憶體，關閉前請匯出JSON';$('sensitiveStats').textContent=`${[4,5,6].map(n=>`${n}張：已存${s.banks[n].saved}個／${s.banks[n].keys}種組合`).join('｜')}｜待合併${s.pending}個｜${state}${s.handleError?'｜'+s.handleError:''}${p?`｜本次已保存淨新增${p.saved}個／已確認重複${p.duplicates}個｜已枚舉${p.tested}種${p.reason?'／'+p.reason:''}`:''}`;const b=$('sensitiveStart');b.textContent=!s.ready?'正在載入敏感局庫…':s.complete?`敏感局已全部完成（${total}個）`:s.enumerationComplete?'枚舉完成，請保存／恢復授權':'開始累積4／5／6張敏感局';b.title=s.enumerationComplete?'有限4／5／6張點數排列已檢查完；已有資料不需重跑；未保存可恢復授權或匯出備份':'';if(!busy)b.disabled=!s.ready||s.enumerationComplete||s.saving;}
+
+  SensitiveHandLibrary.onChange(()=>{if(!sensitiveUiTimer)sensitiveUiTimer=setTimeout(()=>{sensitiveUiTimer=null;updateSensitiveStats();},120);});
+  function floatSensitiveStop(active){const b=$('sensitiveStop');if(active){sensitiveStopHome=document.createComment('敏感局停止按鈕原位');b.before(sensitiveStopHome);$('generatingOverlay').append(b);b.classList.add('collection-stop-floating');}else{sensitiveStopHome?.replaceWith(b);sensitiveStopHome=null;b.classList.remove('collection-stop-floating');b.textContent='停止敏感局累積／保存';}}
+  function requestSensitiveStop(){if(!sensitiveCollectionTask)return;stopped=true;$('sensitiveStop').disabled=true;$('sensitiveStop').textContent='停止中／等待敏感局保存…';status('停止敏感局累積，等待本機保存…');void SensitiveHandLibrary.stopAndSave();}
+  for(const [id,action]of [['sensitiveConnect','connect'],['sensitiveResume','resume']])$(id).addEventListener('click',async()=>{if(busy)return;lock(true);try{await SensitiveHandLibrary[action]();updateSensitiveStats();status('敏感局庫獨立保存；建議選 D:\\穿越點數範本庫，程式使用其中「敏感局」子資料夾');}catch(e){status('敏感局資料夾未完成：'+e.message);}finally{lock(false);}});
+  $('sensitiveStart').addEventListener('click',async()=>{if(busy||sensitiveCollectionTask)return;stopped=false;lock(true);$('sensitiveStop').disabled=false;floatSensitiveStop(true);sensitiveCollectionTask=(async()=>{try{await SensitiveHandLibrary.run({profile:{capturedSettings:rules(),definition:'完整用完4/5/6張；對調首兩張後同張數，莊閒互換或和仍和；三條與訊號僅記錄設定，不當成局間條件'},cancelled:()=>stopped,progress:s=>status(`敏感局累積：已保存淨新增 ${s.progress.saved} 個｜待合併 ${s.pending} 個｜已確認重複 ${s.progress.duplicates} 個｜可按停止／保存`)});}catch(e){status('敏感局收集未完成：'+e.message);}finally{updateSensitiveStats();$('sensitiveStop').disabled=true;floatSensitiveStop(false);sensitiveCollectionTask=null;lock(false);const s=SensitiveHandLibrary.status();status(`敏感局${s.progress?.reason||'已停止'}｜已保存淨新增 ${s.progress?.saved||0} 個｜待合併 ${s.pending} 個${s.error?'｜未保存：'+s.error:!s.connected?'｜僅在記憶體，請匯出JSON備份':'｜本機保存完成'}`);}})();await sensitiveCollectionTask;});
+  $('sensitiveStop').addEventListener('click',requestSensitiveStop);
+  $('sensitiveExport').addEventListener('click',async()=>{if(busy)return;lock(true);try{const n=Number($('sensitiveLength').value),blob=await SensitiveHandLibrary.exportJSON(n),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`ATLL-敏感局點數範本-${n}張.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){status('敏感局匯出失敗：'+e.message);}finally{lock(false);}});
+  void SensitiveHandLibrary.ready.then(updateSensitiveStats);
+
+  $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',()=>optimize('safe'));$('tvRecoveryOptimize').addEventListener('click',()=>optimize('recovery'));
+  $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));
+    const s=e.target.closest('[data-std-cut]');if(s&&!busy&&!window.__isGeneratingShoe&&typeof cutStandardAtTablePosition==='function')cutStandardAtTablePosition(Number(s.dataset.stdCut));});
   $('btnOptBefore').addEventListener('click',()=>showVersion('before'));$('btnOptAfter').addEventListener('click',()=>showVersion('after'));$('btnOptOriginalCut').addEventListener('click',()=>cutTraverse(0));
   $('optimizerExample').addEventListener('click',e=>{
     const b=e.target.closest('[data-opt-example]');if(!b||!optimization)return;const c=Number(b.dataset.optExample);

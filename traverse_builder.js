@@ -295,9 +295,8 @@
         await yieldNow();
     }
 
-    // ===== 4／5／6 張局上下限（撿段時計數） =====
-    // 上限：收下後會超過就不收。下限：進度落後（已撿局數 < 下限 × 已用張數 / 416）時，
-    // 不收沒有該張數局的段。剩牌不在撿段範圍，最終整副是否達標由頁面判斷重跑。
+    // ===== 穿越挑段原目標：上限不放寬；下限依缺額優先挑選，避免剩餘牌數無法補足 =====
+    // 最終整副的3局允差僅由 TraverseQuota 驗收；挑段不使用放寬後界限。
     const SIZE_KEYS = [4, 5, 6];
     function normalizeSizeLimits(limits) {
         if (!limits) return null;
@@ -344,8 +343,7 @@
         return out;
     }
 
-    // 和局上限（tieMax，只在三條關閉時用）：三條關閉時和局可出現在任何局、撿段會撿到很多和局，
-    // 所以撿段時已收和局數＋本段和局數超過上限就不收；三條開啟時和局只跟在三條後面，維持排完再檢查
+    // 三條開／關都按原和局上限撿段；三條與和的相鄰要求仍由 qualifies 驗證。
     function sizeLimitOk(seg, opts) {
         if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return true;
         if (opts.specialLimits) {
@@ -361,23 +359,70 @@
         for (const k of SIZE_KEYS) {
             const { min, max } = opts.sizeLimits[k];
             if (max !== null && t[k] + c[k] > max) return false;
-            if (min !== null && c[k] === 0 && t[k] < min * opts.sizeUsedCards / 416) return false;
+
         }
+        const remaining=416-opts.sizeUsedCards,after=remaining-seg.length;
+        const need=extra=>SIZE_KEYS.reduce((n,k)=>n+Math.max(0,(opts.sizeLimits[k].min??0)-t[k]-(extra?c[k]:0))*k,0);
+        if(need(false)<=remaining&&need(true)>after)return false;
         return true;
     }
-    function sizeLimitAdd(seg, opts) {
+    // 穿越A2莊閒控制：前一局有 A／2 這局就開莊，所以莊局數約等於「含 A／2、非三條、下一局不是和」的局數。
+    // sideDelta＝這段讓（莊－閒和）多出幾局；sideScore＝挑這段後，依剩牌 A／2 比例推估整副最終差距的絕對值。
+    const SIDE_HAND = 4.94;
+    const sideSigCount = seg => seg.reduce((n, p) => n + (p === 1 || p === 2 ? 1 : 0), 0);
+    function sideDelta(seg) {
+        const rs = roundsFromStart(seg);
+        if (!rs) return 0;
+        let banker = 0;
+        rs.forEach((r, i) => {
+            const hand = seg.slice(r.start, r.start + r.size);
+            if (!hand.some(p => p === 1 || p === 2) || rules.tripleTie && isTriple(hand) || rs[i + 1]?.result === '和') return;
+            banker++;
+        });
+        return 2 * banker - rs.length;
+    }
+    function sideScore(seg, opts, sigLeft, lenLeft) {
+        const sig = sigLeft - sideSigCount(seg), len = lenLeft - seg.length;
+        const q = len > 0 ? Math.max(0, sig) / len : 0, p = 1 - Math.pow(1 - q, SIDE_HAND);
+        return Math.abs(opts.sideE + sideDelta(seg) + len / SIDE_HAND * (2 * p - 1));
+    }
+    // 候選比較：有局數配額時配額優先，相同才看莊閒；沒有配額時開了莊閒控制才換成推估差距較小者
+    function pickBetter(a, b, opts, quota, sigLeft, lenLeft) {
+        if (!b) return true;
+        if (quota) { if (preferQuota(a, b, opts)) return true; if (preferQuota(b, a, opts)) return false; }
+        return !!opts.sideCtl && sideScore(a, opts, sigLeft, lenLeft) < sideScore(b, opts, sigLeft, lenLeft);
+    }
+
+    // sign＝-1 時扣回（借回短段重排時用）
+    function sizeLimitAdd(seg, opts, sign = 1) {
+        if (opts.sideCtl) opts.sideE += sign * sideDelta(seg);
         if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return;
         if (opts.specialLimits) {
             const special = specialRoundCounts(seg);
-            for (const k of ['bankerSix','seven','rare']) opts.specialTally[k] += special[k];
+            for (const k of ['bankerSix','seven','rare']) opts.specialTally[k] += sign * special[k];
         }
         const c = roundSizeCounts(seg);
-        opts.tieTally += c.tie;
-        if (!opts.sizeLimits) return;
-        for (const k of SIZE_KEYS) opts.sizeTally[k] += c[k];
-        opts.sizeUsedCards += seg.length;
+        opts.tieTally += sign * c.tie;
+        for (const k of SIZE_KEYS) opts.sizeTally[k] += sign * c[k];
+        opts.sizeUsedCards += sign * seg.length;
     }
 
+    const quotaActive=opts=>!!opts.sizeLimits||opts.tieMax!==null;
+    function segmentStats(seg){return roundSizeCounts(seg);}
+    // Lexicographic priorities: reduce cards still required for minima, then
+    // preserve proportional upper budgets, then lower-bound progress and zeros.
+    function quotaPriority(seg,opts){
+        const c=segmentStats(seg),used=opts.sizeUsedCards+seg.length,ratio=used/416;
+        let upper=0,lag=0,neededCards=0;
+        for(const k of SIZE_KEYS){const bound=opts.sizeLimits?.[k];if(!bound)continue;
+            if(bound.max!==null)upper=Math.max(upper,opts.sizeTally[k]+c[k]-bound.max*ratio);
+            if(bound.min!==null){lag+=Math.max(0,bound.min*ratio-opts.sizeTally[k]-c[k]);neededCards+=Math.max(0,bound.min-opts.sizeTally[k]-c[k])*k;}}
+        if(opts.tieMax!==null)upper=Math.max(upper,opts.tieTally+c.tie-opts.tieMax*ratio);
+        return [neededCards,Math.max(0,upper),lag,-seg.filter(p=>p===0).length/seg.length];
+    }
+    function preferQuota(a,b,opts){if(!b)return true;const x=quotaPriority(a,opts),y=quotaPriority(b,opts);for(let i=0;i<x.length;i++){if(x[i]!==y[i])return x[i]<y[i];}return false;}
+
+    async function rememberTemplate(seg,opts){if(opts.collectTemplates&&global.TraverseTemplates){const L=global.TraverseTemplates;if(L.collectAsync)await L.collectAsync([seg]);else L.collect([seg]);}}
     // ===== 階段 1：洗牌撿段 =====
     async function phaseShuffle(rest, opts, ctx) {
         const segs = [];
@@ -391,29 +436,49 @@
             let got = 0;
             const zerosInRest = rest.reduce((n, p) => n + (p === 0 ? 1 : 0), 0);
             const zeroShare = zerosInRest / rest.length;
+            let sigLeft = sideSigCount(rest), lenLeft = rest.length;
             for (let s = 0; s < rest.length; s++) {
+                if(quotaActive(opts)&&s%24===0){await tick();if(ctx.cancelled())break;}
                 let pick = null;
+                if(quotaActive(opts)){
+                    let candidates=0;
+                    scan:for(let at=s;at<Math.min(rest.length,s+24);at++)for(const L of opts.scanLengths){
+                        if(ctx.cancelled())break scan;
+                        if(at+L>rest.length)continue;
+                        let overlap=false;for(let k=at;k<at+L;k++)if(used[k]){overlap=true;break;}if(overlap)continue;
+                        const a=rest.slice(at,at+L);if(!qualifies(a,true))continue;await rememberTemplate(a,opts);
+                        const z=a.filter(p=>p===0).length;if(opts.zeroPolicy==='quota'&&z<Math.floor(zeroShare*L*opts.quotaFactor))continue;
+                        if(!sizeLimitOk(a,opts))continue;
+                        candidates++;if(pickBetter(a,pick?.a,opts,true,sigLeft,lenLeft))pick={L,a,at};
+                        if(candidates>=8)break scan;
+                    }
+                }else{
+
                 for (const L of opts.scanLengths) {
                     if (s + L > rest.length) continue;
                     let overlap = false;
                     for (let k = s; k < s + L; k++) if (used[k]) { overlap = true; break; }
                     if (overlap) continue;
                     const a = rest.slice(s, s + L);
-                    if (!qualifies(a, true)) continue;
+                    if (!qualifies(a, true)) continue;await rememberTemplate(a,opts);
                     const z = a.filter(p => p === 0).length;
                     if (opts.zeroPolicy === 'quota' && z < Math.floor(zeroShare * L * opts.quotaFactor)) continue;
                     if (!sizeLimitOk(a, opts)) continue;
+                    if (opts.sideCtl) { const side = sideScore(a, opts, sigLeft, lenLeft); if (!pick || side < pick.side) pick = { L, a, side }; continue; }
                     if (opts.zeroPolicy === 'none') { pick = { L, a }; break; }
                     const score = z / L;
                     if (!pick || score > pick.score) pick = { L, a, score };
                 }
+                }
+                if(ctx.cancelled())break;
                 if (pick) {
                     sizeLimitAdd(pick.a, opts);
+                    sigLeft -= sideSigCount(pick.a); lenLeft -= pick.a.length;
                     segs.push(pick.a);
-                    for (let k = s; k < s + pick.L; k++) used[k] = 1;
+                    for (let k = (pick.at??s); k < (pick.at??s) + pick.L; k++) used[k] = 1;
                     got++;
-                    s += pick.L - 1;
-                }
+                    if(!quotaActive(opts))s += pick.L - 1;
+                }else if(quotaActive(opts)){s+=23;}
             }
             if (got) rest = rest.filter((_, i) => !used[i]);
             idle = got ? 0 : idle + 1;
@@ -481,19 +546,103 @@
         return true;
     }
 
+    // 計算補排先查穿越範本庫：找剩牌湊得出的點數組成，依目前規則重驗（穿越／敏感／三條／第二張、0點比例、局數配額）後直接採用
+    async function templatePick(rest, opts, ctx) {
+        const groups = opts.templateIndex;
+        if (!groups?.length || rest.length < opts.minLen) return null;
+        if (!opts.templateOrder || opts.templateOrder.source !== groups || opts.templateOrder.length !== groups.length) {
+            // 0 點比例高、張數長的組成先試，與原本撿段偏好 0 點多的段相同
+            opts.templateOrder = groups.slice().sort((a, b) => b.zeros / b.length - a.zeros / a.length || b.length - a.length);
+            opts.templateOrder.source = groups;
+        }
+        const counts = countsOf(rest), quota = quotaActive(opts), compare = quota || opts.sideCtl;
+        const sigLeft = counts[1] + counts[2], lenLeft = rest.length;
+        let best = null, found = 0, checked = 0;
+        for (const g of opts.templateOrder) {
+            if (g.length < opts.minLen || g.length > opts.maxLen || g.length > rest.length) continue;
+            let fit = true;
+            for (let k = 0; k < 10; k++) if (g.counts[k] > counts[k]) { fit = false; break; }
+            if (!fit) continue;
+            if (opts.computeQuota && g.zeros < Math.floor(counts[0] / rest.length * g.length * opts.quotaFactor)) continue;
+            for (const p of g.points) {
+                if (++checked % 256 === 0) { await tick(); if (ctx.cancelled()) return best; }
+                if (!qualifies(p, true) || !sizeLimitOk(p, opts)) continue;
+                if (!compare) return p.slice();
+                found++;
+                if (pickBetter(p, best, opts, quota, sigLeft, lenLeft)) best = p.slice();
+                break;
+            }
+            if (compare && found >= 8) break;
+        }
+        return best;
+    }
+
+    // 剩牌太少湊不出範本時，借回一段已撿的短段和剩牌合併，改用範本重新分段；剩牌真的變少才採用，否則原樣還回
+    async function borrowWithTemplates(segs, rest, opts, ctx) {
+        // 範本庫是空的就不借段，也不動到亂數，維持原本排牌結果
+        if (!opts.templateIndex?.length || !rest.length || !segs.length) return rest;
+        let improved = true, tries = 0;
+        while (improved && rest.length && !ctx.cancelled()) {
+            improved = false;
+            const order = shuffleInPlace(segs.map((_, i) => i), opts.rng);
+            for (const i of order) {
+                if (++tries > opts.borrowTries || ctx.cancelled()) return rest;
+                const seg = segs[i];
+                sizeLimitAdd(seg, opts, -1);
+                let pool = rest.concat(seg);
+                const picks = [];
+                for (let t; pool.length >= opts.minLen && (t = await templatePick(pool, opts, ctx));) {
+                    picks.push(t);
+                    sizeLimitAdd(t, opts);
+                    const c = countsOf(t);
+                    pool = pool.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
+                }
+                if (pool.length < rest.length) {
+                    segs.splice(i, 1, ...picks);
+                    opts.templateBorrowHits = (opts.templateBorrowHits || 0) + 1;
+                    ctx.progress(`階段 2 計算排列：借回短段改用範本，剩 ${pool.length} 張`);
+                    rest = pool;
+                    improved = true;
+                    break;
+                }
+                picks.forEach(t => sizeLimitAdd(t, opts, -1));
+                sizeLimitAdd(seg, opts);
+            }
+        }
+        return rest;
+    }
+
     async function phaseCompute(rest, opts, ctx) {
         const hands = allSensitiveHands();
         const segs = [];
         let tries = 0;
         let idle = 0;
+        let templateDry = !opts.templateIndex;
         while (idle < opts.computeTries && rest.length >= opts.minLen) {
             if (ctx.cancelled()) break;
+            if (!templateDry) {
+                const t = await templatePick(rest, opts, ctx);
+                if (t) {
+                    sizeLimitAdd(t, opts);
+                    segs.push(t);
+                    const c = countsOf(t);
+                    rest = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
+                    opts.templateComputeHits = (opts.templateComputeHits || 0) + 1;
+                    idle = 0;
+                    ctx.progress(`階段 2 計算排列：範本庫補撿 ${opts.templateComputeHits} 段，剩 ${rest.length} 張`);
+                    continue;
+                }
+                templateDry = true;
+            }
             const counts = countsOf(rest);
             const usable = hands.filter(h => fits(h, counts));
             if (usable.length === 0) break;
-            let found = null;
+            let found = null, candidates=0;
+            const quota=quotaActive(opts), compare=quota||opts.sideCtl, sigLeft=counts[1]+counts[2], lenLeft=rest.length;
             // 隨機挑敏感局一局一局接，長度落在範圍內就檢查整段
-            for (let t = 0; t < 2000 && !found; t++) {
+            for (let t = 0; t < 2000 && (!found || compare&&candidates<8); t++) {
+                if(ctx.cancelled())break;
+                if(quota&&t%32===0)await tick();
                 tries++;
                 idle++;
                 const c = counts.slice();
@@ -505,10 +654,12 @@
                     for (const p of cand) c[p]--;
                     seq = seq.concat(cand);
                     if (seq.length >= opts.minLen && qualifies(seq, true)) {
+                        await rememberTemplate(seq,opts);
                         // 第二張敏感開啟時補排也照 0 點比例，否則 0 點會堆到最後排不進去
                         if (opts.computeQuota && seq.filter(p => p === 0).length < Math.floor(counts[0] / rest.length * seq.length * opts.quotaFactor)) continue;
                         if (!sizeLimitOk(seq, opts)) continue;
-                        found = seq;
+                        candidates++;
+                        if(pickBetter(seq,found,opts,quota,sigLeft,lenLeft))found=seq;
                         break;
                     }
                 }
@@ -519,6 +670,7 @@
                 const c = countsOf(found);
                 rest = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
                 idle = 0;
+                templateDry = !opts.templateIndex;
             }
             ctx.progress(`階段 2 計算排列：已試 ${tries} 組，補撿 ${segs.length} 段，剩 ${rest.length} 張`);
             await tick();
@@ -564,7 +716,40 @@
             await tick();
         }
         // 中途停止且一次都沒接完：原段照放，確保牌數仍是 416
-        return best ? best.chains : segs.slice().sort((a, b) => b.length - a.length);
+        if (!best) return segs.slice().sort((a, b) => b.length - a.length);
+        return opts.chainMerge ? await mergeChains(best.chains, ctx) : best.chains;
+    }
+
+    // 長段與長段之間的交界沒有穿越保證，切牌溢出會一段接一段延長；同一長段內則有保證。
+    // 貪心接段後再試著把長段兩兩合併（前接或後接，整條須重新通過穿越檢查），減少沒有保證的交界。
+    function joinChains(a, b) {
+        const joined = a.concat(b);
+        joined.parts = (a.parts || [a.length]).concat(b.parts || [b.length]);
+        joined.secondParts = (a.secondParts || [a.secondStart !== false]).concat(b.secondParts || [b.secondStart !== false]);
+        return qualifies(joined) ? joined : null;
+    }
+    async function mergeChains(chains, ctx) {
+        const list = chains.slice().sort((a, b) => a.length - b.length);
+        let merged = true;
+        while (merged && list.length > 1 && !ctx.cancelled()) {
+            merged = false;
+            outer: for (let i = 0; i < list.length; i++) {
+                for (let j = 0; j < list.length; j++) {
+                    if (i === j) continue;
+                    const joined = joinChains(list[i], list[j]);
+                    if (joined) {
+                        const keep = list.filter((_, k) => k !== i && k !== j);
+                        keep.push(joined);
+                        list.splice(0, list.length, ...keep.sort((a, b) => a.length - b.length));
+                        merged = true;
+                        break outer;
+                    }
+                }
+                await tick();
+            }
+            ctx.progress(`階段 3 接段：合併長段，剩 ${list.length} 條`);
+        }
+        return list.sort((a, b) => b.length - a.length);
     }
 
     // 點數 → 實際牌（每個點數從 8 副牌的牌池隨機取）
@@ -813,6 +998,31 @@
     // 做法：排好後由前往後，把不符合的局對調前兩張（敏感局對調必定莊閒互換、張數不變），
     // 對調後只驗證實際牌序（任一張當起點都穿越、每局敏感、三條規則），不再假設另一次反向。
     // 直接改 chains / leftover 內的點數；回傳 { ok, flips, conflicts }
+    // A2 membership is invariant under a within-round first-two swap. Test each
+    // possible tail->head requirement on a COPY, then retain only fully legal chains.
+    function planA2TailBoundaries(chains) {
+        const plans=[];
+        for(const incoming of ['莊','閒','和']){
+            const seq=chains.flat(),rounds=roundsFromStart(seq);if(!rounds?.length)continue;
+            let ok=true,flips=0;
+            for(let k=0;k<rounds.length;k++){
+                const cur=rounds[k],prev=rounds[k-1],need=k?neededAfter(seq.slice(prev.start,prev.start+prev.size)):incoming;
+                const hand=seq.slice(cur.start,cur.start+cur.size),h=simulateHand(hand,0,hand.length);
+                if(h.result===need||tieAllowed(need,h.result))continue;
+                if(h.result==='和'||need==='和'){ok=false;break;}
+                [seq[cur.start],seq[cur.start+1]]=[seq[cur.start+1],seq[cur.start]];
+                const after=simulateHand(seq,cur.start,cur.start+cur.size);
+                if(!after||after.size!==cur.size||after.result!==need||!handSensitive(seq.slice(cur.start,cur.start+cur.size))){ok=false;break;}flips++;
+            }
+            if(!ok)continue;
+            let offset=0;const proposed=chains.map(ch=>{const copy=Object.assign(ch.slice(),{parts:ch.parts?.slice(),secondParts:ch.secondParts?.slice()});for(let i=0;i<copy.length;i++)copy[i]=seq[offset+i];offset+=copy.length;return copy;});
+            if(!proposed.every(ch=>qualifiesFinal(ch)))continue;
+            const last=rounds.at(-1),first=rounds[0],lastHand=seq.slice(last.start,last.start+last.size);
+            plans.push({chains:proposed,points:seq,flips,firstResult:simulateHand(seq,0,first.size).result,previousTrip:rules.tripleTie&&isTriple(lastHand),previousSignal:isSignalHand(lastHand)});
+        }
+        return plans;
+    }
+
     function applySignalRule(chains, leftover, physicalCards = null) {
         const seq = chains.flat().concat(leftover);
         // 從頭發到不足一局為止（排不進去的牌最後可能剩殘牌）
@@ -913,7 +1123,7 @@
         return { flips, diff };
     }
 
-    async function build(options = {}) {
+    async function* buildCandidates(options = {}) {
         const opts = {
             idleLimit: options.idleLimit ?? 1000,
             computeTries: options.computeTries ?? 20000,
@@ -926,11 +1136,12 @@
             strong: options.strong === true,
             secondStart: options.secondStart === true,
             zeroPolicy: options.zeroPolicy || 'quota',
+            chainMerge: options.chainMerge !== false,
             quotaFactor: options.quotaFactor ?? 1,
             sizeLimits: normalizeSizeLimits(options.sizeLimits),
             sizeTally: { 4: 0, 5: 0, 6: 0 },
             sizeUsedCards: 0,
-            tieMax: options.tripleTie === false && Number.isInteger(options.tieMax) && options.tieMax >= 0 ? options.tieMax : null,
+            tieMax: Number.isInteger(options.tieMax) && options.tieMax >= 0 ? options.tieMax : null,
             tieTally: 0,
             sideTarget: Number.isInteger(options.sideLimit) && options.sideLimit >= 0 ? options.sideLimit : null,
         };
@@ -955,12 +1166,23 @@
             progress: options.onProgress || (() => {}),
             cancelled: options.isCancelled || (() => false),
         };
+        opts.collectTemplates=options.templateLibrary!==false&&options.fillSensitiveTail===true&&!options.a2Tail&&global.TraverseRed0Balance?.enabled(rules.signalConfig);
         const t0 = Date.now();
 
         let rest = [];
         for (let p = 1; p <= 9; p++) for (let k = 0; k < 32; k++) rest.push(p);
         for (let k = 0; k < 128; k++) rest.push(0);
 
+        // 穿越A2（全花色A、2訊號）有填莊閒差距時，挑段就控制推估的最終莊閒差距；紅0另有目標規劃
+        opts.sideCtl = options.sideControl !== false && opts.signalRule && Number.isInteger(opts.sideTarget)
+            && JSON.stringify(normalizeSignal(rules.signalConfig)) === JSON.stringify(defaultSignal());
+        opts.sideE = 0;
+        opts.templateComputeHits = 0;
+        opts.templateBorrowHits = 0;
+        opts.borrowTries = Number.isInteger(options.borrowTries) ? options.borrowTries : 40;
+        // 範本只存點數排列，取用前依目前規則重驗，穿越紅0與穿越A2都適用
+        opts.templateIndex = options.templateCompute === false || !global.TraverseTemplates?.compositionIndex ? null
+            : await global.TraverseTemplates.compositionIndex({ cancelled: ctx.cancelled });
         const p1 = await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
         const segs = p1.segs.concat(p2.segs);
@@ -982,17 +1204,151 @@
             fallbackSegs.forEach(s => { s.secondStart = false; });
             segs.push(...fallbackSegs);
         }
+        restCards = await borrowWithTemplates(segs, restCards, opts, ctx);
+        const templateLog=message=>options.onTemplateLog?.('穿越範本：'+message);
+        // 敏感補排關閉時，剩牌只能整段換成範本（穿越紅0、8～12 張且在段長範圍內），否則注定重跑
+        const tailOff = options.fillSensitiveTail === true && options.sensitiveTail === false;
+        if (tailOff && restCards.length > 0 && !ctx.cancelled()) {
+            const n = restCards.length, templateable = !options.a2Tail && global.TraverseRed0Balance?.enabled(rules.signalConfig) && options.templateLibrary !== false
+                && n >= 8 && n <= 12 && n >= opts.minLen && n <= opts.maxLen;
+            if (!templateable) {
+                templateLog(`未查找｜敏感補排關閉，剩牌 ${n} 張無法整段換成範本，先整副重跑`);
+                return { rejected: true, rejectionKind: 'sensitive-tail', leftoverCount: n, tailFill: { ok: false, status: 'disabled', reason: `敏感補排關閉，剩牌 ${n} 張未能排進穿越段` }, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits, templateBorrowHits: opts.templateBorrowHits } };
+            }
+        }
         // 剩下的張數已超過上限：注定要重跑，跳過接段／A、2／卡色，省時間
         if (options.rejectAbove != null && restCards.length > options.rejectAbove && !ctx.cancelled()) {
-            return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0 } };
+            if(options.fillSensitiveTail===true&&!options.a2Tail)templateLog(`未查找｜剩牌 ${restCards.length} 張超過上限 ${options.rejectAbove}，先整副重跑`);
+            return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits, templateBorrowHits: opts.templateBorrowHits } };
         }
         let chains = await phaseChain(segs, opts, ctx);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
 
+        let templateLibrary=null;
+        const library=options.templateLibrary===false?null:global.TraverseTemplates;
+        const useLibrary=options.fillSensitiveTail===true&&!options.a2Tail&&global.TraverseRed0Balance?.enabled(rules.signalConfig)&&library;
+        const cloneChains=xs=>xs.map(ch=>{const out=ch.slice();for(const k of Object.keys(ch))if(!/^\d+$/.test(k))out[k]=Array.isArray(ch[k])?ch[k].slice():ch[k];return out;});
+        const baseChains=cloneChains(chains),baseLeftover=leftover.slice(),baseRules={...rules,signalConfig:normalizeSignal(rules.signalConfig)};
+        const quotaSnapshot={sizeTally:{...opts.sizeTally},sizeUsedCards:opts.sizeUsedCards,tieTally:opts.tieTally,specialTally:{...opts.specialTally}};
+        const restore=()=>{chains=cloneChains(baseChains);leftover=baseLeftover.slice();opts.sizeTally={...quotaSnapshot.sizeTally};opts.sizeUsedCards=quotaSnapshot.sizeUsedCards;opts.tieTally=quotaSnapshot.tieTally;opts.specialTally={...quotaSnapshot.specialTally};Object.assign(rules,baseRules,{signalConfig:normalizeSignal(baseRules.signalConfig)});};
+        let candidates=[],lookupInfo=null,pointPassed=0,attempted=0;
+        if(options.fillSensitiveTail===true&&!options.a2Tail&&!useLibrary&&!ctx.cancelled())templateLog(`未查找｜剩牌 ${leftover.length} 張｜${!library?'庫模組未載入':'目前訊號設定不適用標準紅0範本'}`);
+        if(useLibrary){
+            lookupInfo={candidateHits:0,pointPassed:0,physicalPassed:0,finalAdopted:0,start:null,length:0,...library.stats()};
+            if(leftover.length>=8&&leftover.length<=12&&leftover.length>=opts.minLen&&leftover.length<=opts.maxLen&&!ctx.cancelled()){
+                try{candidates=library.lookupAsync?await library.lookupAsync(leftover,{cancelled:ctx.cancelled}):library.lookup(leftover);}catch(e){lookupInfo.lookupError=e.message;templateLog(`查找失敗｜${e.message}｜未採用範本，改走原剩牌敏感補排`);}lookupInfo.candidateHits=candidates.length;
+                const loading=global.TraverseTemplateFile?.status().ready===false;
+                templateLog(`查找｜剩牌 ${leftover.length} 張｜庫${loading?'檔案／快取仍載入中，使用目前記憶體':'已載入'} ${lookupInfo.templates} 個排列／${lookupInfo.keys} 種組合｜命中候選 ${candidates.length} 筆`);
+            }else if(!ctx.cancelled())templateLog(`未查找｜剩牌 ${leftover.length} 張不在8～12張且符合目前段長 ${opts.minLen}～${opts.maxLen} 的範圍`);
+        }
+        const red0PrefixCache={};
+        let candidateYield=performance.now()+8,tailSource=null;
+        try{for(let candidateIndex=0;candidateIndex<=candidates.length;candidateIndex++){
+            if(performance.now()>=candidateYield){await new Promise(resolve=>setTimeout(resolve,0));candidateYield=performance.now()+8;}
+            if(ctx.cancelled())return {cancelled:true,stats:{ms:Date.now()-t0}};
+            restore();
+            templateLibrary=lookupInfo?{...lookupInfo,pointPassed,attempted,selectedIndex:0,physicalPassed:0,finalAdopted:0,start:null,length:0}:null;
+            const candidate=candidates[candidateIndex];
+            if(candidate){
+                attempted++;templateLibrary.attempted=attempted;templateLibrary.selectedIndex=candidateIndex+1;
+                // 範本命中即豁免候選檢查（使用者要求），只記下原本會擋的項目；後續整靴驗收照舊
+                const waived=[!qualifies(candidate,true)&&'短段穿越／敏感／三條／第二張條件',!sizeLimitOk(candidate,opts)&&'局數／和局／特殊局配額'].filter(Boolean);
+                if(waived.length)templateLog(`候選 ${candidateIndex+1} 命中豁免｜原本未過：${waived.join('、')}`);
+                templateLibrary.pointPassed=++pointPassed;
+                let attached=false,offset=0;
+                for(let i=0;i<chains.length;i++){
+                    const ch=chains[i],joined=ch.concat(candidate);joined.parts=(ch.parts||[ch.length]).concat(candidate.length);joined.secondParts=(ch.secondParts||[ch.secondStart!==false]).concat(opts.secondStart);
+                    if(qualifies(joined)){chains[i]=joined;templateLibrary.start=offset+ch.length;attached=true;break;}offset+=ch.length;
+                }
+                if(!attached){const independent=candidate.slice();independent.parts=[candidate.length];independent.secondParts=[opts.secondStart];templateLibrary.start=chains.reduce((n,c)=>n+c.length,0);chains.push(independent);}
+                templateLibrary.length=candidate.length;leftover=[];sizeLimitAdd(candidate,opts);
+                templateLog(`候選 ${candidateIndex+1}/${candidates.length} 暫採用為 ${candidate.length} 張穿越短段｜等待實體牌、訊號及整靴驗收，尚非最終成功`);
+            }else if(lookupInfo){
+                templateLibrary.exhausted=true;
+                if(candidates.length)templateLog(`同池 ${candidates.length} 筆範本已逐筆檢查／續試完畢｜恢復原段、剩牌與配額，改走原剩牌敏感補排；不把本次規劃預算失敗當永久無解`);
+                else templateLog(lookupInfo.lookupError?'查找失敗，未當作未命中｜未採用範本':'未命中｜未採用範本，改走原剩牌敏感補排');
+            }
+            const result=await finishCandidate();
+            if(ctx.cancelled())return {cancelled:true,stats:{ms:Date.now()-t0}};
+            if(!candidate){
+                if(!tailSource)return result;
+                let current=result;
+                for(;;){
+                    if(ctx.cancelled())return {cancelled:true,stats:{ms:Date.now()-t0}};
+                    yield current;
+                    await new Promise(resolve=>setTimeout(resolve,0));
+                    const step=await tailSource.next();
+                    if(step.done){const terminal=step.value||{status:'exhausted',reason:'本剩牌敏感點數分局已遍歷'};return {rejected:true,rejectionKind:'sensitive-tail-final',leftoverCount:baseLeftover.length,tailFill:{...terminal,rounds:undefined,ok:false,fullOk:false},templateLibrary:lookupInfo?{...lookupInfo,length:0,exhausted:true,pointPassed,attempted}:null,stats:{ms:Date.now()-t0}};}
+                    restore();templateLibrary=lookupInfo?{...lookupInfo,length:0,exhausted:true,pointPassed,attempted,finalAdopted:0}:null;
+                    current=await finishCandidate(step.value);
+                }
+            }
+            if(!result.templateLibrary)result.templateLibrary=templateLibrary;
+            yield result;
+            // The caller resumes only after all of its final checks reject this candidate.
+            await new Promise(resolve=>setTimeout(resolve,0));
+        }}finally{if(tailSource)await tailSource.return();}
+        async function finishCandidate(resumedTail=null){
+        let tailFill=null;
+        const a2Tail=options.a2Tail===true&&leftover.length>0;
+        const fillTail=options.fillSensitiveTail===true&&(!options.a2Tail||a2Tail);
+        if(fillTail&&options.sensitiveTail===false&&leftover.length)return {rejected:true,rejectionKind:'sensitive-tail',leftoverCount:leftover.length,tailFill:{ok:false,status:'disabled',reason:`敏感補排關閉，範本未能接走剩牌 ${leftover.length} 張`},templateLibrary,stats:{ms:Date.now()-t0}};
+        if(fillTail){
+            if(!global.TraverseTailFill||(!global.TraverseRed0Balance?.enabled(rules.signalConfig)&&!a2Tail))return {rejected:true,rejectionKind:'sensitive-tail',leftoverCount:leftover.length,tailFill:{ok:false,status:'unsupported',reason:'敏感補排需要支援的訊號設定與補排模組'},stats:{ms:Date.now()-t0}};
+            const prefix=chains.flat(),before=JSON.stringify(chains);
+            const originalRounds=roundsFromStart(prefix)||[];
+            const last=originalRounds.at(-1),previousTrip=!!last&&opts.tripleTie&&isTriple(prefix.slice(last.start,last.start+last.size));
+            const fillOptions={rng:opts.rng,tripleTie:opts.tripleTie,previousTrip,firstTie:originalRounds[0]?.result==='和',
+                baseCounts:roundSizeCounts(prefix),baseSpecial:specialRoundCounts(prefix),sizeLimits:opts.sizeLimits,tieMax:opts.tieMax,specialLimits:opts.specialLimits};
+            let selected=null;
+            if(a2Tail){
+                if(opts.signalRule&&JSON.stringify(normalizeSignal(rules.signalConfig))!==JSON.stringify(defaultSignal()))return {rejected:true,rejectionKind:'sensitive-tail',leftoverCount:leftover.length,tailFill:{ok:false,status:'unsupported',reason:'A2敏感補排目前只支援全花色A／2訊號'},stats:{ms:Date.now()-t0}};
+                if(!global.TraverseA2Tail)throw new Error('缺少A2剩牌敏感分局模組，請重新載入完整頁面');
+                const planPrefix=()=>!prefix.length?[{chains:[],points:[],firstResult:null,previousTrip:false,previousSignal:false}]:opts.signalRule?planA2TailBoundaries(chains):[{chains,points:prefix,firstResult:originalRounds[0]?.result,previousTrip,previousSignal:false}];
+                tailFill=await global.TraverseA2Tail.fill(leftover,{...opts,signalConfig:rules.signalConfig,sideLimit:opts.sideTarget,baseCounts:roundSizeCounts(prefix),planPrefix,
+                    accept:(plan,tailRounds)=>global.TraverseTailFill.validate(plan.points.concat(tailRounds.flat()),{tripleTie:opts.tripleTie,signalRule:opts.signalRule,signalConfig:rules.signalConfig}).ok&&plan.chains.every(ch=>qualifiesFinal(ch))},ctx);
+                if(tailFill.prefixChains){selected={chains:tailFill.prefixChains,flips:tailFill.a2BoundaryFlips};delete tailFill.prefixChains;}
+            }else if(resumedTail)tailFill={...resumedTail,rounds:resumedTail.rounds.map(h=>h.slice())};
+            else if(leftover.length&&global.TraverseTailFill.search){tailSource=global.TraverseTailFill.search(leftover,fillOptions,ctx);const first=await tailSource.next();tailFill=first.value;if(first.done)tailSource=null;}
+            else tailFill=await global.TraverseTailFill.fill(leftover,fillOptions,ctx);
+            if(tailFill.finiteTail)tailFill.solutionIndex=tailFill.solutions;
+            if(JSON.stringify(chains)!==before)throw new Error('敏感補排不應修改原穿越段');
+            if(selected&&tailFill.ok){chains=selected.chains;tailFill.a2BoundaryFlips=selected.flips;}
+            if(a2Tail)tailFill.mode='a2';
+            if(!tailFill.ok)return {rejected:true,rejectionKind:'sensitive-tail',leftoverCount:leftover.length,tailFill,templateLibrary,stats:{ms:Date.now()-t0}};
+            leftover=tailFill.rounds.flat();tailFill.roundCount=tailFill.rounds.length;delete tailFill.rounds;
+        }
         const customSignal = opts.signalRule && JSON.stringify(rules.signalConfig) !== JSON.stringify(defaultSignal());
         let physicalCards = customSignal ? assignCards(chains.flat().concat(leftover), opts.rng).cards : null;
-        let signalBalance = physicalCards ? arrangeSignalCards(chains.flat().concat(leftover), physicalCards, opts) : null;
-        let signal = opts.signalRule ? applySignalRule(chains, leftover, physicalCards) : null;
+        let templateMapped=true;
+        if(templateLibrary?.length&&physicalCards){
+            const desired=chains.flat().slice(templateLibrary.start,templateLibrary.start+templateLibrary.length);
+            const mapped=library.mapPhysical(desired,physicalCards.slice(templateLibrary.start,templateLibrary.start+templateLibrary.length));
+            templateMapped=!!mapped;if(mapped)physicalCards.splice(templateLibrary.start,templateLibrary.length,...mapped);
+        }
+        if(options.red0Balance===true&&opts.signalRule&&(opts.sideTarget!==null||fillTail)&&JSON.stringify(rules.signalConfig)===JSON.stringify({suits:['♥','♦'],ranks:['10','J','Q','K']})&&!global.TraverseRed0Balance)throw new Error('缺少穿越紅0目標規劃模組');
+        const targetEnabled=(options.red0Balance===true||fillTail)&&opts.signalRule&&(opts.sideTarget!==null||fillTail)&&global.TraverseRed0Balance?.enabled(rules.signalConfig);
+        let signalBalance,signal;
+        if(targetEnabled){
+            signalBalance=await global.TraverseRed0Balance.plan(chains,leftover,physicalCards,{...opts,strictTail:fillTail,prefixPlanCache:red0PrefixCache,
+                balanceBudgetMs:options.balanceBudgetMs,balanceMaxStates:options.balanceMaxStates,balanceMaxNodes:options.balanceMaxNodes,balanceMaxValidations:options.balanceMaxValidations},ctx);
+            if(signalBalance.ok){
+                physicalCards=signalBalance.cards;
+                let offset=0;for(const ch of chains){for(let j=0;j<ch.length;j++)ch[j]=signalBalance.points[offset+j];offset+=ch.length;}
+                for(let j=0;j<leftover.length;j++)leftover[j]=signalBalance.points[offset+j];
+                // Keep the existing actual-direction signal and long-chain final check.
+                signal=applySignalRule(chains,leftover,physicalCards);
+                let count=0,banker=0;const actual=chains.flat().concat(leftover);
+                for(let at=0;at<actual.length;){const hand=simulateHand(actual,at,actual.length);if(!hand)break;count++;banker+=hand.result==='莊'?1:0;at+=hand.size;}
+                if(!signal.ok||count!==signalBalance.rounds||banker!==signalBalance.banker||opts.sideTarget!==null&&Math.abs(2*banker-count)>opts.sideTarget){
+                    signalBalance.ok=false;signalBalance.status='invalid';signalBalance.reason='既有訊號／穿越／實際莊局目標最終驗收未通過';signal.ok=false;
+                }
+                delete signalBalance.cards;delete signalBalance.points;
+            }else signal={ok:false,flips:0,conflicts:0,issues:[{kind:'red0-balance',message:signalBalance.reason}]};
+        }else{
+            signalBalance=physicalCards?arrangeSignalCards(chains.flat().concat(leftover),physicalCards,opts):null;
+            signal=opts.signalRule?applySignalRule(chains,leftover,physicalCards):null;
+        }
         // 訊號牌對調後長段不合格：段不變，只換接段順序再試，省掉整副重排
         for (let t = 0; SIGNAL_RETRY_ENABLED && signal && !signal.ok && t < 30 && !ctx.cancelled(); t++) {
             chains = await phaseChain(segs, { ...opts, chainAttempts: 1 }, ctx);
@@ -1004,10 +1360,35 @@
         const balance = opts.signalRule ? null : balanceSides(chains, opts.rng);
         const points = chains.flat().concat(leftover);
         let { cards, colorOk } = physicalCards ? { cards: physicalCards, colorOk: false } : assignCards(points, opts.rng);
+        if(templateLibrary?.length&&!physicalCards){
+            const desired=points.slice(templateLibrary.start,templateLibrary.start+templateLibrary.length);
+            const mapped=library.mapPhysical(desired,cards.slice(templateLibrary.start,templateLibrary.start+templateLibrary.length));
+            templateMapped=!!mapped;if(mapped)cards.splice(templateLibrary.start,templateLibrary.length,...mapped);
+        }
         if (physicalCards && opts.signalRule) {
             const colored = reassignColors(physicalCards, opts.rng);
             cards = colored.ok ? colored.cards : physicalCards;
             colorOk = colored.ok;
+        }
+
+        if(templateLibrary?.length){
+            const part=cards.slice(templateLibrary.start,templateLibrary.start+templateLibrary.length),pts=part.map(c=>c.point);
+            const mapped=library.mapPhysical(pts,part);
+            templateLibrary.physicalPassed=templateMapped&&!!mapped&&qualifiesFinal(pts)?1:0;
+            if(!templateLibrary.physicalPassed){templateLog('暫採用候選拒絕｜實體牌／訊號調整後短段驗收失敗，未最終採用');if(tailFill){tailFill.ok=false;tailFill.reason='穿越範本實體牌／訊號調整後短段重驗失敗';}}
+        }
+        if(tailFill){
+            const full=global.TraverseTailFill.validate(cards,{tripleTie:opts.tripleTie,signalRule:opts.signalRule,signalConfig:rules.signalConfig});
+            tailFill.fullOk=full.ok&&(!signal||signal.ok)&&chains.every(ch=>qualifiesFinal(ch))&&(!templateLibrary?.length||!!templateLibrary.physicalPassed);tailFill.unprocessed=full.ok?0:(full.unprocessed??tailFill.initialCount);
+            if(!tailFill.fullOk){
+                tailFill.fullValidationReason=full.reason||null;
+                const plannerFailed=signalBalance&&signalBalance.ok===false;
+                tailFill.failureStage=plannerFailed?'red0-planning':!full.ok?'full-tail-validation':'traverse-final-validation';
+                tailFill.plannerStatus=plannerFailed?signalBalance.status:null;
+                tailFill.reason=plannerFailed?('紅0規劃階段'+(signalBalance.status==='search-limit'?'（本次預算未找到方案，非永久無解）':'')+'：'+signalBalance.reason):(full.reason||'穿越段或全靴訊號驗收失敗');
+            }
+            if(templateLibrary?.length)templateLog(tailFill.fullOk?'暫採用候選通過生成器驗收｜仍待介面最後驗收，尚未記為最終採用':`暫採用後整靴驗收失敗｜未最終採用｜${tailFill.reason}`);
+            const start=chains.reduce((n,ch)=>n+ch.length,0);cards=cards.map((c,i)=>i>=start?{...c,sensitiveFill:true}:c);
         }
 
         // 每條長段的驗證結果
@@ -1029,15 +1410,20 @@
         });
 
         return {
+            ...(tailFill&&!tailFill.fullOk?{rejected:true,rejectionKind:'sensitive-tail-final'}:{}),
             cards,
             signalConfig: normalizeSignal(rules.signalConfig),
             chains: chainReports,
             leftoverCount: leftover.length,
+            tailFill,
+            templateLibrary,
             colorOk,
             signal,
             balance,
             signalBalance,
             stats: {
+                templateComputeHits: opts.templateComputeHits,
+                templateBorrowHits: opts.templateBorrowHits,
                 shuffles: p1.shuffles,
                 phase1Segments: p1.segs.length,
                 phase1Rest: p1.rest.length,
@@ -1045,13 +1431,23 @@
                 fallbackSegments: fallbackSegs.length,
                 fallbackCards: fallbackSegs.reduce((n, s) => n + s.length, 0),
                 sizeTally: opts.sizeLimits ? { ...opts.sizeTally } : null,
+                tiePicked: opts.tieMax !== null ? opts.tieTally : null,
                 specialPicked: opts.specialLimits ? { ...opts.specialTally } : null,
                 totalCards: points.length,
                 ms: Date.now() - t0,
             },
         };
+        }
     }
 
-    global.TraverseBuilder = { specialRoundCounts, roundSizeCounts, normalizeSizeLimits, allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
+    // Continuations stay outside result serialization and published shoe state.
+    const templateContinuations=new WeakMap();
+    async function advanceTemplate(iterator){const step=await iterator.next();if(!step.done&&step.value&&typeof step.value==='object')templateContinuations.set(step.value,iterator);return step.value;}
+    async function build(options={}){return advanceTemplate(buildCandidates(options));}
+    function hasTemplateContinuation(result){return !!result&&templateContinuations.has(result);}
+    async function nextTemplate(result){const iterator=templateContinuations.get(result);if(!iterator)throw Error('此候選已無同池續試工作');templateContinuations.delete(result);return advanceTemplate(iterator);}
+    async function releaseTemplateContinuation(result){const iterator=result&&templateContinuations.get(result);if(iterator){templateContinuations.delete(result);await iterator.return();}}
+
+    global.TraverseBuilder = { segmentStats, quotaPriority, preferQuota, sizeLimitOk, specialRoundCounts, roundSizeCounts, normalizeSizeLimits, allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, hasTemplateContinuation, nextTemplate, releaseTemplateContinuation, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);

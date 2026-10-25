@@ -23,7 +23,7 @@ const median = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
 
   // 2. 上限：撿段計數不超過上限
   for (let i = 0; i < 10; i++) {
-    const r = await B.build({ sizeLimits: { 4: { max: 30 }, 6: { max: 25 } } });
+    const r = await B.build({ rng: seeded(300+i), sizeLimits: { 4: { max: 30 }, 6: { max: 25 } } });
     assert(r.stats.sizeTally[4] <= 30 && r.stats.sizeTally[6] <= 25, JSON.stringify(r.stats.sizeTally));
   }
   console.log('PASS 上限：撿段計數不超過上限（10 副）');
@@ -33,7 +33,7 @@ const median = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
     const all = { 4: 0, 5: 0, 6: 0 }, five = [], left = [];
     let hit = 0;
     for (let i = 0; i < N; i++) {
-      const r = await B.build(limits ? { sizeLimits: limits } : {});
+      const r = await B.build({ rng: seeded(1000+i), ...(limits ? { sizeLimits: limits } : {}) });
       const c = B.roundSizeCounts(r.cards.map(x => x.point));
       [4, 5, 6].forEach(k => { all[k] += c[k]; });
       five.push(c[5]); left.push(r.leftoverCount);

@@ -4,21 +4,85 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Signals XLSX 驗算器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; margin: 20px; line-height: 1.5; }
-    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom: 16px; }
-    .box { padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-top: 12px; }
-    .ok { color: #0a7; font-weight: 700; }
-    .bad { color: #d33; font-weight: 700; }
-    table { width:100%; border-collapse:collapse; margin-top: 8px; }
-    th, td { border:1px solid #ddd; padding:8px; font-size: 13px; vertical-align: top; }
-    th { background:#f6f6f6; text-align:left; }
-    .muted { color:#666; font-size: 13px; }
-    code { background:#f3f3f3; padding:2px 6px; border-radius:6px; }
+    /* 沿用主頁黑金色票與元件（與 deck_stats.html 相同） */
+    :root {
+      --ink:#07090b; --gold-1:#f4dfa4; --gold-2:#d9b568;
+      --gold-line:linear-gradient(135deg,#6b4c1d 0%,#e8c97a 25%,#8a6a2f 50%,#f4dfa4 75%,#6b4c1d 100%);
+      --txt:#e8e4d8; --txt-dim:#9a9584; --ok:#67c98f; --danger:#ff6b5e;
+      --serif:"Noto Serif TC","Cinzel",serif; --sans:"Noto Sans TC",sans-serif; --disp:"Cinzel","Noto Serif TC",serif;
+    }
+    * { box-sizing:border-box; }
+    html { background:var(--ink); }
+    body {
+      margin:0; font-family:var(--sans); color:var(--txt); line-height:1.5; min-height:100vh;
+      background:
+        radial-gradient(1200px 500px at 50% -8%, rgba(38,84,68,.45), transparent 60%),
+        radial-gradient(900px 700px at 88% 110%, rgba(26,54,66,.35), transparent 60%),
+        linear-gradient(180deg,#0a0e10 0%, #07090b 100%);
+      background-attachment:fixed; padding:0 clamp(12px,2.2vw,34px) 30px;
+    }
+    main { width:100%; }
+    header {
+      display:flex; align-items:center; gap:18px; padding:16px 4px 12px; margin-bottom:18px; flex-wrap:wrap;
+      border-bottom:1px solid transparent;
+      border-image:linear-gradient(90deg,transparent,#8a6a2f 20%,#f4dfa4 50%,#8a6a2f 80%,transparent) 1;
+    }
+    .crest {
+      width:52px; height:52px; border-radius:50%; flex:none;
+      background:#080908 url("../suit/at-spade-logo-current.png") center/cover no-repeat;
+      box-shadow:0 0 0 1px #8a6a2f, 0 0 0 4px #0c1110, 0 0 0 5px #5d431c, 0 6px 18px rgba(0,0,0,.6);
+    }
+    h1 {
+      margin:0; font-family:var(--disp); font-size:clamp(20px,2.4vw,28px); font-weight:900; letter-spacing:.14em;
+      background:linear-gradient(180deg,#fbeec7 10%,#e2bd72 45%,#9c7434 70%,#f0d491 95%);
+      -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 2px 3px rgba(0,0,0,.8));
+    }
+    h1 small { display:block; font-family:var(--sans); font-weight:400; font-size:11px; letter-spacing:.5em; color:var(--txt-dim); -webkit-text-fill-color:var(--txt-dim); margin-top:2px; }
+    .nav { margin-left:auto; display:flex; gap:10px; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+    .box {
+      position:relative; padding:16px 18px; margin-top:14px;
+      background:linear-gradient(160deg, rgba(24,32,33,.92), rgba(11,17,19,.94));
+      border:1px solid; border-image:var(--gold-line) 1;
+      box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.35);
+    }
+    .box b { font-family:var(--serif); color:var(--gold-2); letter-spacing:.2em; }
+    .ok { color:var(--ok); font-weight:700; }
+    .bad { color:var(--danger); font-weight:700; }
+    .muted { color:var(--txt-dim); font-size:13px; }
+    code { background:#0a100f; border:1px solid #33403d; color:var(--gold-1); padding:2px 6px; border-radius:6px; }
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th, td { border:1px solid #243030; padding:8px; font-size:13px; vertical-align:top; }
+    th { background:#0b1113; color:var(--gold-2); text-align:left; font-family:var(--serif); font-weight:600; letter-spacing:.1em; }
+    button, .tool-btn {
+      display:inline-flex; align-items:center; justify-content:center; text-decoration:none; cursor:pointer;
+      min-height:36px; padding:0 16px; border-radius:8px; font-family:var(--serif); font-weight:600; font-size:13.5px; letter-spacing:.15em;
+      color:var(--txt); background:linear-gradient(180deg,#161f21,#0d1315); border:1px solid #2c3634; transition:.2s;
+    }
+    button:hover, .tool-btn:hover { border-color:#c9a25a; color:var(--gold-1); box-shadow:0 0 10px rgba(212,176,106,.2); }
+    #run, #runDrive { color:#120e04; border-color:#8a6a2f; background:linear-gradient(180deg,#f4dfa4,#c9a25a); }
+    select, input[type=file] {
+      background:#0a100f; border:1px solid #33403d; border-radius:6px; color:var(--gold-1); font-family:var(--sans); padding:6px 8px;
+    }
+    input[type=file]::file-selector-button {
+      margin-right:10px; padding:4px 12px; border-radius:6px; border:1px solid #2c3634; cursor:pointer;
+      background:linear-gradient(180deg,#161f21,#0d1315); color:var(--txt); font-family:var(--serif);
+    }
+    label { color:var(--txt); }
+    input[type=radio] { accent-color:#c9a25a; }
+    a { color:var(--gold-2); }
   </style>
 </head>
 <body>
-  <h2>Signals 匯出 XLSX 驗算器</h2>
+<main>
+  <header>
+    <div class="crest"></div>
+    <h1>VALIDATOR<small>Excel 牌檔驗算</small></h1>
+    <nav class="nav"><a class="tool-btn" href="../deck_stats.html">牌檔統計</a><a class="tool-btn" href="../integrated.html">回主頁</a></nav>
+  </header>
   <p class="muted">完整驗證：補牌規則 + 結果計算 + 敏感局 + 用牌張數 + 莊家6點 + 三條/和局配對</p>
 
   <div class="row">
@@ -55,6 +119,7 @@
     <div id="issues" class="muted">尚未驗算</div>
   </div>
 
+</main>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script>
     const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypt3_PnEL5TgdDPaBwg1M5bWAjQMR9dD5Jslicn3eZCtuNSTtqO35RafhQpuX-l9_m/exec';
