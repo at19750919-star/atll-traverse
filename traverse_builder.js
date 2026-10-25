@@ -648,7 +648,40 @@
             await tick();
         }
         // 中途停止且一次都沒接完：原段照放，確保牌數仍是 416
-        return best ? best.chains : segs.slice().sort((a, b) => b.length - a.length);
+        if (!best) return segs.slice().sort((a, b) => b.length - a.length);
+        return opts.chainMerge ? await mergeChains(best.chains, ctx) : best.chains;
+    }
+
+    // 長段與長段之間的交界沒有穿越保證，切牌溢出會一段接一段延長；同一長段內則有保證。
+    // 貪心接段後再試著把長段兩兩合併（前接或後接，整條須重新通過穿越檢查），減少沒有保證的交界。
+    function joinChains(a, b) {
+        const joined = a.concat(b);
+        joined.parts = (a.parts || [a.length]).concat(b.parts || [b.length]);
+        joined.secondParts = (a.secondParts || [a.secondStart !== false]).concat(b.secondParts || [b.secondStart !== false]);
+        return qualifies(joined) ? joined : null;
+    }
+    async function mergeChains(chains, ctx) {
+        const list = chains.slice().sort((a, b) => a.length - b.length);
+        let merged = true;
+        while (merged && list.length > 1 && !ctx.cancelled()) {
+            merged = false;
+            outer: for (let i = 0; i < list.length; i++) {
+                for (let j = 0; j < list.length; j++) {
+                    if (i === j) continue;
+                    const joined = joinChains(list[i], list[j]);
+                    if (joined) {
+                        const keep = list.filter((_, k) => k !== i && k !== j);
+                        keep.push(joined);
+                        list.splice(0, list.length, ...keep.sort((a, b) => a.length - b.length));
+                        merged = true;
+                        break outer;
+                    }
+                }
+                await tick();
+            }
+            ctx.progress(`階段 3 接段：合併長段，剩 ${list.length} 條`);
+        }
+        return list.sort((a, b) => b.length - a.length);
     }
 
     // 點數 → 實際牌（每個點數從 8 副牌的牌池隨機取）
@@ -1035,6 +1068,7 @@
             strong: options.strong === true,
             secondStart: options.secondStart === true,
             zeroPolicy: options.zeroPolicy || 'quota',
+            chainMerge: options.chainMerge !== false,
             quotaFactor: options.quotaFactor ?? 1,
             sizeLimits: normalizeSizeLimits(options.sizeLimits),
             sizeTally: { 4: 0, 5: 0, 6: 0 },
@@ -1097,6 +1131,16 @@
             segs.push(...fallbackSegs);
         }
         const templateLog=message=>options.onTemplateLog?.('穿越範本：'+message);
+        // 敏感補排關閉時，剩牌只能整段換成範本（穿越紅0、8～12 張且在段長範圍內），否則注定重跑
+        const tailOff = options.fillSensitiveTail === true && options.sensitiveTail === false;
+        if (tailOff && restCards.length > 0 && !ctx.cancelled()) {
+            const n = restCards.length, templateable = !options.a2Tail && global.TraverseRed0Balance?.enabled(rules.signalConfig) && options.templateLibrary !== false
+                && n >= 8 && n <= 12 && n >= opts.minLen && n <= opts.maxLen;
+            if (!templateable) {
+                templateLog(`未查找｜敏感補排關閉，剩牌 ${n} 張無法整段換成範本，先整副重跑`);
+                return { rejected: true, rejectionKind: 'sensitive-tail', leftoverCount: n, tailFill: { ok: false, status: 'disabled', reason: `敏感補排關閉，剩牌 ${n} 張未能排進穿越段` }, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits } };
+            }
+        }
         // 剩下的張數已超過上限：注定要重跑，跳過接段／A、2／卡色，省時間
         if (options.rejectAbove != null && restCards.length > options.rejectAbove && !ctx.cancelled()) {
             if(options.fillSensitiveTail===true&&!options.a2Tail)templateLog(`未查找｜剩牌 ${restCards.length} 張超過上限 ${options.rejectAbove}，先整副重跑`);
@@ -1173,6 +1217,7 @@
         let tailFill=null;
         const a2Tail=options.a2Tail===true&&leftover.length>0;
         const fillTail=options.fillSensitiveTail===true&&(!options.a2Tail||a2Tail);
+        if(fillTail&&options.sensitiveTail===false&&leftover.length)return {rejected:true,rejectionKind:'sensitive-tail',leftoverCount:leftover.length,tailFill:{ok:false,status:'disabled',reason:`敏感補排關閉，範本未能接走剩牌 ${leftover.length} 張`},templateLibrary,stats:{ms:Date.now()-t0}};
         if(fillTail){
             if(!global.TraverseTailFill||(!global.TraverseRed0Balance?.enabled(rules.signalConfig)&&!a2Tail))return {rejected:true,rejectionKind:'sensitive-tail',leftoverCount:leftover.length,tailFill:{ok:false,status:'unsupported',reason:'敏感補排需要支援的訊號設定與補排模組'},stats:{ms:Date.now()-t0}};
             const prefix=chains.flat(),before=JSON.stringify(chains);

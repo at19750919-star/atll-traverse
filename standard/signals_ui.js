@@ -145,6 +145,24 @@ function freezeCurrentGrid() {
     frozenContainer.style.display = 'block';
 }
 
+// 安全切點圖點格切牌：格號是目前牌表張號，換算成相對原始牌序的切牌張數（#cutPos 記著目前已切的張數）
+function cutStandardAtTablePosition(index) {
+    if (!editEnabled) {
+        log('請先生成牌靴', 'error');
+        return false;
+    }
+    const input = document.getElementById('cutPos');
+    if (!originalDeckOrder || originalDeckOrder.length === 0) {
+        saveOriginalDeckOrder();
+        if (!originalDeckOrder || originalDeckOrder.length === 0) return false;
+        if (input) input.value = 0;
+    }
+    const total = originalDeckOrder.length, applied = input ? (parseInt(input.value, 10) || 0) : 0;
+    const cut = ((applied + index) % total + total) % total;
+    if (input) input.value = cut;
+    return performCut(cut);
+}
+
 // 清除凍結網格
 function clearFrozenGrid() {
     const frozenContainer = document.getElementById('frozenGridContainer');
@@ -3095,8 +3113,19 @@ function renderRoundsTableHeader() {
 }
 
 // 根據上一輪分析渲染 table 的身體
+// 目前表格畫的是哪一份局資料；對調莊6依這份實際牌面判斷，避免切牌或移局後沿用舊局號而標錯
+let lastRenderedRounds = null;
+function isSwapBankerSixRound(round) {
+    if (!round || !Array.isArray(round.cards) || round.cards.length < 2 || !round.cards[0] || !round.cards[1]) return false;
+    const swapped = round.cards.slice();
+    [swapped[0], swapped[1]] = [swapped[1], swapped[0]];
+    const info = computeRoundHands(swapped);
+    return typeof info.playerTotal === 'number' && info.bankerTotal === 6 && info.playerTotal <= 5;
+}
+
 function renderRoundsTable(rounds, analysis) {
     if (typeof window !== 'undefined' && window.__pendingSizeShoe) return;
+    lastRenderedRounds = rounds;
     const table = document.getElementById('roundsTable');
     const tbody = document.getElementById('roundsBody');
 
@@ -3283,18 +3312,12 @@ function runViolationHighlightNow() {
         const hasRuleViolation = (typeof violationRoundIndexes !== 'undefined') && violationRoundIndexes.has(idx);
         const hasStatsViolation = (typeof statsViolationRoundIndexes !== 'undefined') && statsViolationRoundIndexes.has(idx);
         const isViolation = hasRuleViolation || hasStatsViolation;
-        const isSwapBankerSix = swapBankerSixIndexes.has(idx);
+        const isSwapBankerSix = isSwapBankerSixRound(lastRenderedRounds?.[idx]);
         const isBankerSix = (typeof bankerSixIndexes !== 'undefined') && bankerSixIndexes.has(idx);
         const isCardColorViolation = (typeof cardColorViolationIndexes !== 'undefined') && cardColorViolationIndexes.has(idx);
         row.classList.toggle('violation-row', isViolation);
-        // 對調莊6：只亮結果欄的字，不亮整行
-        const resultCell = isSwapBankerSix ? row.querySelector('td.result-cell') : null;
-        if (resultCell) {
-            resultCell.classList.add('swap-banker-six-result');
-        } else if (!isSwapBankerSix) {
-            const prevResult = row.querySelector('td.swap-banker-six-result');
-            if (prevResult) prevResult.classList.remove('swap-banker-six-result');
-        }
+        // 對調莊6：整行亮底，字色維持原本的莊／閒／和
+        row.classList.toggle('swap-banker-six-row', isSwapBankerSix);
         row.classList.toggle('banker-six-win-row', isBankerSix);
         row.classList.toggle('card-color-violation-row', isCardColorViolation);
     });

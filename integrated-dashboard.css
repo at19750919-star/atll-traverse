@@ -279,4 +279,3 @@ body:not([data-mode=traverse]) :is(#tvOptimize,#tvRecoveryOptimize,#btnOptOpen,#
 /* Shared analyses stay beside the existing metrics; long detail lists float. */
 body.dashboard #traverseTools [hidden]{display:none!important}
 .shared-recovery-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;padding:3px 0;border-bottom:1px solid #8a6a2f33}
-body.dashboard span.cut-cell{display:block;cursor:help}

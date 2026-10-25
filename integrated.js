@@ -14,7 +14,7 @@
     cannotSwap: calculateCannotSwapViolations, verify: verifyShoeRules, clear: clearAll, export: exportRoundsAsExcelWithDrive, stats: updateStats };
   updateStats=function(data){original.stats(data);const rs=(currentRounds||[]).filter(r=>r.cards&&[4,5,6].includes(r.cards.length));$('sharedCardCounts').textContent=rs.length?[4,5,6].map(n=>{const count=rs.filter(r=>r.cards.length===n).length;return `${n}張 ${count}局（${(count/rs.length*100).toFixed(1)}%）`;}).join('／'):'';};
   let mode = 'standard', sub = (window.StandardProfiles&&StandardProfiles.current)||'red0', busy = false, stopped = false, optimization = null, templateCollectionTask=null, sensitiveCollectionTask=null;
-  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvMixedColor','tvBankerSixMax','tvSevenReversalMax','tvRareReversalMax','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
+  const controlIds = ['tvMin','tvMax','tvIdle','tvTries','tvChain','tvLeft','tvTriple','tvMixedColor','tvBankerSixMax','tvSevenReversalMax','tvRareReversalMax','tvP7','tvSignal','tvStrong','tvSecond','tvNine','tvTailFill','tvSide','tvSideLimit','tvTieMax','tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max'];
   const standardSizeControlIds = [4,5,6].flatMap(n=>[`st${n}Min`,`st${n}Max`]);
   // 穿越紅0／穿越A2：同一個穿越引擎，各自保存設定、訊號牌與牌靴；states.traverse 永遠指向目前的穿越牌靴
   const TV_NAME = { red0:'穿越紅0', a2:'穿越A2' };
@@ -258,7 +258,7 @@
     for(const [id,name] of [['tvBankerSixMax','莊6贏'],['tvSevenReversalMax','七點逆轉'],['tvRareReversalMax','逆轉']])if($(id).value.trim()!=='')parts.push(`${name}≤${$(id).value}`);
     parts.push(tsub==='a2'||$('tvRareReversalMax').value.trim()===''?'逆轉不限間隔':'逆轉間隔>20局');
     for(const k of [4,5,6]){const lo=$(`tv${k}Min`).value.trim(),hi=$(`tv${k}Max`).value.trim();if(lo||hi)parts.push(`${k}張局${lo?'≥'+lo:''}${lo&&hi?'、':''}${hi?'≤'+hi:''}`);}
-    const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9']].filter(([id])=>$(id).checked).map(([,n])=>n);
+    const on=[['tvMixedColor','混色（同組≤3局）'],['tvTriple','三條'],['tvP7','閒7'],['tvSignal','訊號牌'],['tvStrong','強'],['tvSecond','第二張敏感'],['tvNine','末張9'],['tvTailFill','敏感補排']].filter(([id])=>$(id).checked).map(([,n])=>n);
     parts.push('局數驗收允差≤3局（上限0仍禁止）');
     return parts.join('｜')+'｜'+(on.length?on.join('・'):'規則全關');
   }
@@ -343,7 +343,7 @@
       let seed=1139;const rng=()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
       if(demo){persistSignalConfig({suits:['♠','♥','♦','♣'],ranks:['A','2']});syncUiFromSignalConfig();updateSignalConfigDisplay();$('tvTriple').checked=$('tvSignal').checked=$('tvNine').checked=true;$('tvStrong').checked=$('tvSecond').checked=$('tvP7').checked=false;}
       for(;;){
-        const opts={...rules(),red0Balance:!demo&&tsub==='red0',fillSensitiveTail:!demo,a2Tail:!demo&&tsub==='a2',specialLimits:demo?null:specialLimits,minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,sideLimit:demo?null:sideLimit,tieMax:demo?null:tieMax,
+        const opts={...rules(),red0Balance:!demo&&tsub==='red0',fillSensitiveTail:!demo,sensitiveTail:$('tvTailFill').checked,a2Tail:!demo&&tsub==='a2',specialLimits:demo?null:specialLimits,minLen:demo?8:min,maxLen:demo?12:max,idleLimit:num('tvIdle'),computeTries:num('tvTries'),chainAttempts:num('tvChain'),sizeLimits:sizes.limits,sideLimit:demo?null:sideLimit,tieMax:demo?null:tieMax,
           onTemplateLog:m=>log(m,'info'),onProgress:m=>status(`${reruns?`［重跑 ${reruns} 次${lastMiss?`｜上一副${lastMiss}`:''}］`:''}${m}`),isCancelled:()=>stopped};
         if(demo){opts.rng=rng;opts.skipBanker6=false;}else if(limit!==null&&(!opts.strong||opts.fillSensitiveTail))opts.rejectAbove=limit;
         if(pendingTemplate){const previous=pendingTemplate;pendingTemplate=null;result=await B.nextTemplate(previous);}else result=await B.build(opts);
@@ -703,7 +703,8 @@
   void SensitiveHandLibrary.ready.then(updateSensitiveStats);
 
   $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',()=>optimize('safe'));$('tvRecoveryOptimize').addEventListener('click',()=>optimize('recovery'));
-  $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));});
+  $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));
+    const s=e.target.closest('[data-std-cut]');if(s&&!busy&&!window.__isGeneratingShoe&&typeof cutStandardAtTablePosition==='function')cutStandardAtTablePosition(Number(s.dataset.stdCut));});
   $('btnOptBefore').addEventListener('click',()=>showVersion('before'));$('btnOptAfter').addEventListener('click',()=>showVersion('after'));$('btnOptOriginalCut').addEventListener('click',()=>cutTraverse(0));
   $('optimizerExample').addEventListener('click',e=>{
     const b=e.target.closest('[data-opt-example]');if(!b||!optimization)return;const c=Number(b.dataset.optExample);

@@ -116,15 +116,19 @@
     dataDialog.setAttribute('role','dialog'); dataDialog.setAttribute('aria-label','分析明細');
     const dialogHead = el('div','dashboard-dialog-head','<strong>分析明細</strong>'), closeData = button('btnCloseTraverseData','關閉'); dialogHead.append(closeData);
     const dialogBody = el('div','dashboard-dialog-body'); dataDialog.append(dialogHead,dialogBody); document.body.append(dataDialog);
-    let floatingData = false, checkingPlacement = false;
-    function closeDataDialog() { dataDialog.hidden = true; openData.setAttribute('aria-expanded','false'); }
+    let floatingData = false, checkingPlacement = false, forceDialog = false;
+    function closeDataDialog() { dataDialog.hidden = true; openData.setAttribute('aria-expanded','false'); if (forceDialog) { forceDialog = false; updateDataPlacement(); } }
     function updateDataPlacement() {
       if (checkingPlacement) return; checkingPlacement = true;
       const isTraverse = document.body.dataset.mode === 'traverse'; openData.hidden = false; progress.hidden = !isTraverse; traverse.hidden = false;
-      $('tvSummary').hidden = !isTraverse; diagnostics.hidden = !isTraverse;
-      
+      if (!isTraverse) forceDialog = false;
+      const note = traverse.querySelector(':scope > p.mode-note'); if (note) note.hidden = !isTraverse;
+      // 內嵌在統計區時兩模式同一排版；穿越摘要、長段驗證、範本庫與敏感局庫按鈕只放在分析明細視窗
+      const dialogOnly = [$('tvSummary'),diagnostics,$('tvTemplateControls'),$('sensitiveControls')].filter(Boolean);
+      dialogOnly.forEach(n => { n.hidden = true; });
+
       const expanded = Array.from(traverse.querySelectorAll('details')).some(d => d.open && d.id !== 'tvSafePanel');
-      let shouldFloat = workspace.clientWidth < 1180 || innerHeight < 560 || expanded;
+      let shouldFloat = forceDialog || workspace.clientWidth < 1180 || innerHeight < 560 || expanded;
       // Judge the real inline height, including loaded fonts and wrapped summaries.
       // Keep at least the majority of the workspace available to the card table.
       if (!shouldFloat) {
@@ -133,13 +137,16 @@
         shouldFloat = overview.getBoundingClientRect().height > Math.min(280,innerHeight * .35);
       }
       floatingData = shouldFloat;
+      dialogOnly.forEach(n => { n.hidden = !(isTraverse && floatingData); });
       const parent = shouldFloat ? dialogBody : traverseSlot;
       if (traverse.parentElement !== parent) parent.append(traverse);
-      if (!shouldFloat) closeDataDialog();
+      if (!shouldFloat) { dataDialog.hidden = true; openData.setAttribute('aria-expanded','false'); }
       traverseSlot.hidden = floatingData; overview.classList.toggle('has-traverse',!floatingData);
       openData.textContent = floatingData ? '分析明細 ↗' : '分析明細'; checkingPlacement = false;
     }
     openData.addEventListener('click',() => {
+      // 穿越模式內嵌時，按分析明細改開視窗看完整穿越摘要與長段驗證
+      if (document.body.dataset.mode === 'traverse' && !floatingData) { forceDialog = true; updateDataPlacement(); dataDialog.hidden = false; openData.setAttribute('aria-expanded','true'); return; }
       updateDataPlacement(); if (!floatingData) { $('tvSafePanel').open = true; return; }
       dataDialog.hidden = !dataDialog.hidden; openData.setAttribute('aria-expanded',String(!dataDialog.hidden));
     });
@@ -199,17 +206,17 @@
       $('tvCutBuckets').replaceChildren(...[...buckets].sort((a,b)=>a[0]-b[0]).map(([d,n])=>el('div','cut-bucket',`<span>${d ? `最後違規第 ${d} 局` : '安全'}</span><strong>${n} 點</strong>`)));
       if (analysis) { const unsafe=depths.filter(d=>d>0); $('tvCutBuckets').append(el('p','mode-note',`違規最深：${maxDepth === 1 && !unsafe.length ? '無' : `第 ${Math.max(0,...depths)} 局`}；非安全切點平均最後違規深度：${unsafe.length ? (unsafe.reduce((a,b)=>a+b,0)/unsafe.length).toFixed(1)+' 局' : '無'}`)); }
       depths.forEach((depth,index) => {
-        const cell = el(tv ? 'button' : 'span','cut-cell'); if(tv) cell.type = 'button'; cell.dataset.position = index + 1;
+        const cell = el('button','cut-cell'); cell.type = 'button'; cell.dataset.position = index + 1;
         const safe = depth === 0, label = depth === null ? `第 ${index + 1} 張，尚未排牌` : `第 ${index + 1} 張，${safe ? '安全切點' : `最後違規第 ${depth} 局`}`;
-        cell.title = label; cell.setAttribute('aria-label',label); if(tv) cell.disabled = depth === null;
+        cell.title = label; cell.setAttribute('aria-label',label); cell.disabled = depth === null;
         cell.classList.toggle('safe',safe); cell.classList.toggle('pending',depth === null);
-        if (tv && depth !== null) cell.dataset.tvCut = index;
+        if (depth !== null) cell.dataset[tv ? 'tvCut' : 'stdCut'] = index;
         if (!safe && depth !== null) cell.style.setProperty('--cut-light',(18 + depth / maxDepth * 40).toFixed(1) + '%');
         cuts.append(cell);
       });
       $('tvSafePanel').open = true;
       if (!$('cutMapLegend')) { const legend = el('div','cut-map-legend'); legend.id = 'cutMapLegend'; cuts.before(legend); }
-      $('cutMapLegend').innerHTML = '<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝最後違規越深</span><span>' + (tv ? '滑過看張號・點任一格切牌' : '滑過看目前牌表張號・切牌請用切牌定位') + '</span>';
+      $('cutMapLegend').innerHTML = '<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝最後違規越深</span><span>' + (tv ? '滑過看張號・點任一格切牌' : '滑過看目前牌表張號・點任一格切牌') + '</span>';
     }
     function renderRecoveryDetails() {
       const recovery = shared.recovery;

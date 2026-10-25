@@ -73,7 +73,7 @@ function verifyParts(result) {
   assert.equal(B.rules.secondStart, true, '續排結束後要恢復第二張檢查');
   console.log(`PASS 原條件續排排滿整副（原條件 ${fbCards} 張）`);
 
-  const result = await B.build({ minLen: 8, maxLen: 12, secondStart: true, signalRule: false, rng: rng(1002) });
+  const result = await B.build({ minLen: 8, maxLen: 12, secondStart: true, signalRule: false, chainMerge: false, rng: rng(1002) }); // 測短段邊界與切牌，固定用原本接段方式
   assert.equal(result.cards.length, 416);
   for (let p = 0; p < 10; p++) assert.equal(result.cards.filter(c => c.point === p).length, p ? 32 : 128);
   assert.ok(result.chains.length > 0 && result.chains.every(ch => ch.qualified));

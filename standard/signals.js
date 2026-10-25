@@ -3272,7 +3272,7 @@ function validateStandardGeneratedShoe(rounds, options = {}) {
         if ((excludeDrawSix || Number(swapTarget) === 0) ? count > 0 : count < Number(swapTarget)) failures.push('對調莊6局數不符');
     }
     const seven = document.getElementById('max7PtReversal');
-    if (seven && seven.value !== '' && count7PtReversals(rounds).count > Number(seven.value)) failures.push('七點逆轉超標');
+    if (seven && seven.value !== '' && count7PtReversals(rounds).count > allowedFinal7PtReversals(Number(seven.value))) failures.push('七點逆轉超標');
     const rare = typeof TwoThirteenReversals !== 'undefined' ? TwoThirteenReversals.read(document) : {};
     if (rare.enabled) {
         const c = checkStandardRareReversals(rounds, rare.limit);
@@ -3626,10 +3626,13 @@ async function generateShoe() {
             if (max7PtLimit !== null) {
                 const rev7 = count7PtReversals(roundsToCheck);
                 log(`🔍 七點逆轉檢查：${rev7.count} 局（上限=${max7PtLimit}）`, 'info');
-                if (rev7.count > max7PtLimit) {
+                if (rev7.count > allowedFinal7PtReversals(max7PtLimit)) {
                     log(`第 ${attempt} 次生成失敗：七點逆轉 ${rev7.count} 局 > 上限 ${max7PtLimit}，重新生成...`, 'warn');
                     result = null;
                     continue;
+                }
+                if (rev7.count > max7PtLimit) {
+                    log(`七點逆轉 ${rev7.count} 局，超過上限 ${max7PtLimit} 一局，屬挑局後調動造成，依規則豁免`, 'info');
                 }
             }
 
@@ -5016,6 +5019,12 @@ function updateRecoveryDisplay(result) {
 // ════════════════════════════════════════════════════════════════
 // 七點逆轉計算
 // ════════════════════════════════════════════════════════════════
+
+/** 最終驗收的七點逆轉允許值：A2 上限>0 時多容許 1 局（挑局後調動造成）；0、紅0、其他維持原上限 */
+function allowedFinal7PtReversals(limit) {
+    const isA2 = typeof window !== 'undefined' && window.StandardProfiles?.current === 'a2';
+    return isA2 && limit > 0 ? limit + 1 : limit;
+}
 
 /**
  * 計算牌靴中七點逆轉的局數

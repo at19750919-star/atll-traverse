@@ -8,7 +8,7 @@ const fixture={cards:row.baselineCards,chains:row.baselineChains,leftoverCount:0
  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://**',r=>r.fulfill({status:200,body:'',contentType:'text/plain'}));
  await page.goto(require('node:url').pathToFileURL(path.join(ROOT,'integrated.html')).href);await page.waitForFunction(()=>!!window.IntegratedModes);
- await page.evaluate(()=>IntegratedModes.switchMode('traverse-a2'));
+ await page.evaluate(()=>(IntegratedModes.switchMode('traverse-a2'),document.getElementById('tvTailFill').checked=true));
  const load=async()=>page.evaluate(f=>{currentRounds=null;const s=IntegratedModes.traversal;s.result=JSON.parse(JSON.stringify(f));s.cut=0;for(const id of ['tvSideLimit','tvTieMax','tvBankerSixMax','tvSevenReversalMax','tvRareReversalMax'])document.getElementById(id).value='';document.getElementById('tvNine').checked=false;document.getElementById('tvP7').checked=false;document.getElementById('tvSecond').checked=false;IntegratedModes.cutTraverse(0);},fixture);
  await load();assert.equal(await page.locator('#tvRecoveryOptimize').isDisabled(),false);
  for(const id of ['tvOptimize','tvRecoveryOptimize']){

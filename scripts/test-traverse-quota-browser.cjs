@@ -4,7 +4,7 @@ const ROOT=path.resolve(process.env.ATLL_ROOT||path.join(__dirname,'..'));
 const row=JSON.parse(fs.readFileSync(path.join(ROOT,'scripts/validation/safe-cuts-research-2026-10-08.json'))).shoes.find(r=>r.seed===1139);
 const fixture={cards:row.baselineCards,chains:row.baselineChains,leftoverCount:0,stats:{ms:0,shuffles:1,phase2Segments:0},signal:{ok:true,issues:[]},colorOk:true};
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
- const p=await browser.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.route('https://**',r=>r.fulfill({body:''}));await p.goto(require('node:url').pathToFileURL(path.join(ROOT,'integrated.html')).href);await p.waitForFunction(()=>!!window.IntegratedModes);await p.evaluate(()=>IntegratedModes.switchMode('traverse-a2'));
+ const p=await browser.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.route('https://**',r=>r.fulfill({body:''}));await p.goto(require('node:url').pathToFileURL(path.join(ROOT,'integrated.html')).href);await p.waitForFunction(()=>!!window.IntegratedModes);await p.evaluate(()=>(IntegratedModes.switchMode('traverse-a2'),document.getElementById('tvTailFill').checked=true));
  async function run(max,min,tie){return p.evaluate(async({fixture,max,min,tie})=>{
   for(const id of ['tv4Min','tv4Max','tv5Min','tv5Max','tv6Min','tv6Max','tvSideLimit','tvTieMax','tvSevenReversalMax','tvRareReversalMax','tvBankerSixMax'])document.getElementById(id).value='';
   for(const id of ['tvNine','tvStrong','tvSecond','tvP7'])document.getElementById(id).checked=false;
