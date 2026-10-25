@@ -366,16 +366,17 @@
         if(need(false)<=remaining&&need(true)>after)return false;
         return true;
     }
-    function sizeLimitAdd(seg, opts) {
+    // sign＝-1 時扣回（借回短段重排時用）
+    function sizeLimitAdd(seg, opts, sign = 1) {
         if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return;
         if (opts.specialLimits) {
             const special = specialRoundCounts(seg);
-            for (const k of ['bankerSix','seven','rare']) opts.specialTally[k] += special[k];
+            for (const k of ['bankerSix','seven','rare']) opts.specialTally[k] += sign * special[k];
         }
         const c = roundSizeCounts(seg);
-        opts.tieTally += c.tie;
-        for (const k of SIZE_KEYS) opts.sizeTally[k] += c[k];
-        opts.sizeUsedCards += seg.length;
+        opts.tieTally += sign * c.tie;
+        for (const k of SIZE_KEYS) opts.sizeTally[k] += sign * c[k];
+        opts.sizeUsedCards += sign * seg.length;
     }
 
     const quotaActive=opts=>!!opts.sizeLimits||opts.tieMax!==null;
@@ -542,6 +543,41 @@
             if (quota && found >= 8) break;
         }
         return best;
+    }
+
+    // 剩牌太少湊不出範本時，借回一段已撿的短段和剩牌合併，改用範本重新分段；剩牌真的變少才採用，否則原樣還回
+    async function borrowWithTemplates(segs, rest, opts, ctx) {
+        // 範本庫是空的就不借段，也不動到亂數，維持原本排牌結果
+        if (!opts.templateIndex?.length || !rest.length || !segs.length) return rest;
+        let improved = true, tries = 0;
+        while (improved && rest.length && !ctx.cancelled()) {
+            improved = false;
+            const order = shuffleInPlace(segs.map((_, i) => i), opts.rng);
+            for (const i of order) {
+                if (++tries > opts.borrowTries || ctx.cancelled()) return rest;
+                const seg = segs[i];
+                sizeLimitAdd(seg, opts, -1);
+                let pool = rest.concat(seg);
+                const picks = [];
+                for (let t; pool.length >= opts.minLen && (t = await templatePick(pool, opts, ctx));) {
+                    picks.push(t);
+                    sizeLimitAdd(t, opts);
+                    const c = countsOf(t);
+                    pool = pool.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
+                }
+                if (pool.length < rest.length) {
+                    segs.splice(i, 1, ...picks);
+                    opts.templateBorrowHits = (opts.templateBorrowHits || 0) + 1;
+                    ctx.progress(`階段 2 計算排列：借回短段改用範本，剩 ${pool.length} 張`);
+                    rest = pool;
+                    improved = true;
+                    break;
+                }
+                picks.forEach(t => sizeLimitAdd(t, opts, -1));
+                sizeLimitAdd(seg, opts);
+            }
+        }
+        return rest;
     }
 
     async function phaseCompute(rest, opts, ctx) {
@@ -1106,8 +1142,10 @@
         for (let k = 0; k < 128; k++) rest.push(0);
 
         opts.templateComputeHits = 0;
-        // 與剩牌範本查找相同，只在穿越紅0（紅心方塊10／J／Q／K）啟用
-        opts.templateIndex = options.templateCompute === false || !global.TraverseTemplates?.compositionIndex || !global.TraverseRed0Balance?.enabled(rules.signalConfig) ? null
+        opts.templateBorrowHits = 0;
+        opts.borrowTries = Number.isInteger(options.borrowTries) ? options.borrowTries : 40;
+        // 範本只存點數排列，取用前依目前規則重驗，穿越紅0與穿越A2都適用
+        opts.templateIndex = options.templateCompute === false || !global.TraverseTemplates?.compositionIndex ? null
             : await global.TraverseTemplates.compositionIndex({ cancelled: ctx.cancelled });
         const p1 = await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
@@ -1130,6 +1168,7 @@
             fallbackSegs.forEach(s => { s.secondStart = false; });
             segs.push(...fallbackSegs);
         }
+        restCards = await borrowWithTemplates(segs, restCards, opts, ctx);
         const templateLog=message=>options.onTemplateLog?.('穿越範本：'+message);
         // 敏感補排關閉時，剩牌只能整段換成範本（穿越紅0、8～12 張且在段長範圍內），否則注定重跑
         const tailOff = options.fillSensitiveTail === true && options.sensitiveTail === false;
@@ -1138,13 +1177,13 @@
                 && n >= 8 && n <= 12 && n >= opts.minLen && n <= opts.maxLen;
             if (!templateable) {
                 templateLog(`未查找｜敏感補排關閉，剩牌 ${n} 張無法整段換成範本，先整副重跑`);
-                return { rejected: true, rejectionKind: 'sensitive-tail', leftoverCount: n, tailFill: { ok: false, status: 'disabled', reason: `敏感補排關閉，剩牌 ${n} 張未能排進穿越段` }, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits } };
+                return { rejected: true, rejectionKind: 'sensitive-tail', leftoverCount: n, tailFill: { ok: false, status: 'disabled', reason: `敏感補排關閉，剩牌 ${n} 張未能排進穿越段` }, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits, templateBorrowHits: opts.templateBorrowHits } };
             }
         }
         // 剩下的張數已超過上限：注定要重跑，跳過接段／A、2／卡色，省時間
         if (options.rejectAbove != null && restCards.length > options.rejectAbove && !ctx.cancelled()) {
             if(options.fillSensitiveTail===true&&!options.a2Tail)templateLog(`未查找｜剩牌 ${restCards.length} 張超過上限 ${options.rejectAbove}，先整副重跑`);
-            return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits } };
+            return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits, templateBorrowHits: opts.templateBorrowHits } };
         }
         let chains = await phaseChain(segs, opts, ctx);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
@@ -1348,6 +1387,7 @@
             signalBalance,
             stats: {
                 templateComputeHits: opts.templateComputeHits,
+                templateBorrowHits: opts.templateBorrowHits,
                 shuffles: p1.shuffles,
                 phase1Segments: p1.segs.length,
                 phase1Rest: p1.rest.length,

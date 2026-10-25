@@ -8,10 +8,10 @@ const rng=seed=>()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.
 (async()=>{
  const c=vm.createContext({console,setTimeout,clearTimeout,performance,TextEncoder,crypto:webcrypto,structuredClone,localStorage:{getItem:()=>null},navigator:{}});
  for(const f of ['standard/two_thirteen_reversals.js','card_color_rules.js','traverse_quota.js','traverse_builder.js','traverse_red0_balance.js','traverse_tail_fill.js','traverse_a2_tail.js','traverse_templates.js','traverse_template_banks.js'])vm.runInContext(fs.readFileSync(path.join(ROOT,f),'utf8'),c);
- c.TraverseTemplateFile={flush:async()=>({}),status:()=>({ready:true})};if(MODE==='red0'&&fs.existsSync(DIR)){c.TraverseTemplates.attachStore(await new c.TraverseTemplateBanks.BankStore(directory(DIR)).open());await c.TraverseTemplates.compositionIndex();}
+ c.TraverseTemplateFile={flush:async()=>({}),status:()=>({ready:true})};if(process.env.BENCH_TC!=='0'&&fs.existsSync(DIR)){c.TraverseTemplates.attachStore(await new c.TraverseTemplateBanks.BankStore(directory(DIR)).open());await c.TraverseTemplates.compositionIndex();}
  const B=c.TraverseBuilder;
  // 主頁預設規則（integrated.js TV_RULES）
- const base={idleLimit:1000,computeTries:20000,chainAttempts:20,minLen:8,maxLen:12,tripleTie:true,signalRule:true,skipPlayer7:MODE==='red0',fillSensitiveTail:true,sensitiveTail:false,
+ const base={idleLimit:1000,computeTries:20000,chainAttempts:20,minLen:8,maxLen:12,tripleTie:true,signalRule:true,skipPlayer7:MODE==='red0',fillSensitiveTail:true,sensitiveTail:false,templateCompute:process.env.BENCH_TC!=='0',
   red0Balance:MODE==='red0',a2Tail:MODE==='a2',sideLimit:8,tieMax:MODE==='red0'?4:null,specialLimits:{bankerSix:null,seven:2,rare:null},
   signalConfig:MODE==='red0'?{suits:['♥','♦'],ranks:['10','J','Q','K']}:{suits:['♠','♥','♦','♣'],ranks:['A','2']}};
  if(process.env.BENCH_PROFILE)Object.assign(base,JSON.parse(process.env.BENCH_PROFILE));
