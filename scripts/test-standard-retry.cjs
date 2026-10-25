@@ -32,12 +32,12 @@ const root = path.resolve(__dirname, '..');
       await page.evaluate(() => {
         window.__retryOriginal = { pack:pack_all_sensitive_and_segment, repair:repairStandardRoundViolations,
           validate:validateStandardGeneratedShoe, rare:TwoThirteenReversals.check, spacing:repairRareReversalSpacing,
-          plan:planBackColorsKeepFaces };
+          plan:planBackColorsKeepFaces, swaps:optimizeRecoveryRoundSwaps };
         window.__retryFixture = currentRounds.map(r => ({...r,cards:r.cards.map(c=>c.clone())}));
         window.__retryReset = () => {
           pack_all_sensitive_and_segment=__retryOriginal.pack;repairStandardRoundViolations=__retryOriginal.repair;
           validateStandardGeneratedShoe=__retryOriginal.validate;TwoThirteenReversals.check=__retryOriginal.rare;
-          repairRareReversalSpacing=__retryOriginal.spacing;planBackColorsKeepFaces=__retryOriginal.plan;
+          repairRareReversalSpacing=__retryOriginal.spacing;planBackColorsKeepFaces=__retryOriginal.plan;optimizeRecoveryRoundSwaps=__retryOriginal.swaps;
           window.__retryPacks=0;window.__retryRepairs=0;window.__retryValidations=0;window.__retryDecks=[];
           window.__retryBad=false;window.__retryProtected=false;
         };
@@ -86,6 +86,8 @@ const root = path.resolve(__dirname, '..');
       if (mode === 'modeRed0') continue;
       await page.evaluate(() => {
         __retryUseFixture();
+        // 整局互換會先驗原成品及候選；此項只測最後驗收，不讓注入落在互換的驗收呼叫。
+        optimizeRecoveryRoundSwaps = async rounds => ({rounds});
         validateStandardGeneratedShoe = rounds => {
           __retryValidations++;
           if (__retryValidations===1) {
