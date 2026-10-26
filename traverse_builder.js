@@ -1132,6 +1132,46 @@
         return plans;
     }
 
+    // 全敏紅0：不對調任何局（對調會破壞段內全敏），只決定紅0（訊號牌）放在哪幾局。
+    // 依每局實際結果：下一局開莊 → 這局要有訊號牌；下一局開閒或和 → 這局不能有；三條局下一局本來就看三條，放不放都行。
+    // 只在同點數（0 點）的實體牌之間交換位置，點數、勝負、張數都不變；配不到的局就留著當訊號違規。
+    function arrangeRed0ByResult(seq, physicalCards) {
+        const rounds = [];
+        for (let cur = 0; cur < seq.length;) { const h = simulateHand(seq, cur, seq.length); if (!h) break; rounds.push({ start: cur, size: h.size, result: h.result }); cur += h.size; }
+        const R = rounds.length, owner = new Int32Array(seq.length).fill(-1);
+        rounds.forEach((r, i) => { for (let k = 0; k < r.size; k++) owner[r.start + k] = i; });
+        const want = rounds.map((r, i) => {
+            if (rules.tripleTie && isTriple(seq.slice(r.start, r.start + r.size))) return null;
+            return rounds[(i + 1) % R].result === '莊';
+        });
+        const pos = [], sig = [], plain = [];
+        physicalCards.forEach((c, i) => { if (c.point !== 0) return; pos.push(i); (isSignalCard(c) ? sig : plain).push(c); });
+        if (!sig.length) return null;
+        let reds = sig.length;
+        const chosen = new Set();
+        const take = i => { if (reds > 0 && !chosen.has(i)) { chosen.add(i); reds--; } };
+        const zerosOf = r => pos.filter(i => owner[i] === r);
+        // 1. 每個要訊號的局先放 1 張
+        want.forEach((w, r) => { if (w === true) { const z = zerosOf(r); if (z.length) take(z[0]); } });
+        // 2. 多的紅0放到不影響的位置：要訊號局的其他 0 點、三條局、牌尾不成局的牌
+        pos.forEach(i => { const r = owner[i]; if (r < 0 || want[r] !== false) take(i); });
+        // 3. 還多就集中塞進 0 點最多的「不能有訊號」局，讓違規局數最少
+        if (reds > 0) {
+            const bad = want.map((w, r) => w === false ? { r, z: zerosOf(r) } : null).filter(Boolean).sort((a, b) => b.z.length - a.z.length);
+            for (const b of bad) { if (!reds) break; b.z.forEach(take); }
+        }
+        const sigQueue = sig.slice(), plainQueue = plain.slice(), before = pos.map(i => physicalCards[i]);
+        pos.forEach(i => { physicalCards[i] = chosen.has(i) ? sigQueue.pop() : plainQueue.pop(); });
+        let moves = 0; pos.forEach((i, k) => { if (physicalCards[i] !== before[k]) moves++; });
+        let violations = 0;
+        rounds.forEach((r, i) => {
+            const w = want[i]; if (w === null) return;
+            const has = physicalCards.slice(r.start, r.start + r.size).some(c => isSignalCard(c));
+            if (has !== w) violations++;
+        });
+        return { moves, violations, rounds: R };
+    }
+
     function applySignalRule(chains, leftover, physicalCards = null) {
         const seq = chains.flat().concat(leftover);
         // 從頭發到不足一局為止（排不進去的牌最後可能剩殘牌）
@@ -1457,6 +1497,10 @@
                 }
                 delete signalBalance.cards;delete signalBalance.points;
             }else signal={ok:false,flips:0,conflicts:0,issues:[{kind:'red0-balance',message:signalBalance.reason}]};
+        }else if(options.noSignalSwap===true&&physicalCards){
+            // 全敏紅0：不為訊號對調，只依實際結果分配紅0花色，配不到的局留作訊號違規
+            signalBalance=arrangeRed0ByResult(chains.flat().concat(leftover),physicalCards);
+            signal={ok:true,flips:0,conflicts:signalBalance?.violations||0,issues:signalBalance?.violations?[{kind:'red0-no-swap',message:`不對調；紅0花色依實際結果分配，仍有 ${signalBalance.violations} 局訊號配不到（保留為違規）`}]:[]};
         }else{
             signalBalance=physicalCards?arrangeSignalCards(chains.flat().concat(leftover),physicalCards,opts):null;
             signal=opts.signalRule?applySignalRule(chains,leftover,physicalCards):null;
