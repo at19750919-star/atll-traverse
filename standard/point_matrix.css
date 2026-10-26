@@ -48,9 +48,29 @@
 .pm-sens-section{margin-top:20px;padding-top:16px;border-top:1px solid rgba(201,162,90,.3)}
 .pm-subhead{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px}
 .pm-subhead h4{margin:0;font-family:var(--serif);font-weight:600;font-size:15.5px;letter-spacing:.1em;color:var(--gold-1)}
+
+/* 手牌點數反查工具列 */
+.pm-sens-search-bar{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  margin:10px 0 12px;padding:10px 12px;
+  border:1px solid rgba(201,162,90,.32);border-radius:4px;
+  background:rgba(12,18,19,.85);
+}
+.pm-sens-search-label{
+  font-family:var(--serif);font-weight:600;font-size:13px;color:var(--gold-1);letter-spacing:.06em;
+}
+.pm-sens-search-input{
+  flex:1;min-width:220px;max-width:360px;height:32px;padding:0 10px;
+  border:1px solid #3a4744;border-radius:4px;background:#090e0f;
+  color:var(--gold-1);font-family:ui-monospace,Consolas,monospace;font-size:13.5px;
+  letter-spacing:.08em;outline:none;
+}
+.pm-sens-search-input:focus{border-color:#c9a25a;box-shadow:0 0 8px rgba(212,176,106,.22)}
+.pm-sens-search-status{font-size:12px;color:var(--txt-dim);margin-left:4px}
+
 .pm-sens-table td.pm-sens-cell{
-  cursor:pointer;user-select:none;transition:background .15s,box-shadow .15s;
-  vertical-align:middle;padding:6px 5px;
+  cursor:pointer;user-select:none;transition:background .15s,box-shadow .15s,opacity .15s;
+  vertical-align:middle;padding:6px 5px;position:relative;
 }
 .pm-sens-table td.pm-sens-cell:hover,
 .pm-sens-table td.pm-sens-cell:focus-visible{
@@ -62,6 +82,23 @@
   background:rgba(212,176,106,.24);
   box-shadow:inset 0 0 0 1.5px var(--gold-1);
 }
+.pm-sens-table.pm-filtering td.pm-sens-cell.pm-match-none{
+  opacity:.24;
+}
+.pm-sens-table.pm-filtering td.pm-sens-cell.pm-match-exact{
+  background:rgba(212,176,106,.26);
+  box-shadow:inset 0 0 0 2px #f4dfa4;
+}
+.pm-sens-table.pm-filtering td.pm-sens-cell.pm-match-subset{
+  background:rgba(103,201,143,.14);
+  box-shadow:inset 0 0 0 1.5px rgba(103,201,143,.75);
+}
+.pm-match-badge{
+  display:block;margin-top:2px;font-size:10.5px;font-weight:700;
+  color:#f4dfa4;letter-spacing:.02em;
+}
+.pm-sens-cell.pm-match-subset .pm-match-badge{color:#7ee2a8}
+
 .pm-sens-line{display:flex;align-items:baseline;justify-content:flex-end;gap:4px}
 .pm-sub-sizes{
   display:block;margin-top:2px;font-size:10.5px;color:var(--txt-dim);
@@ -70,6 +107,36 @@
 .pm-sens-table td.pm-banker-win .pm-count{color:#ff8a7a}
 .pm-sens-table td.pm-player-win .pm-count{color:#7eb8ff}
 .pm-sens-table td.pm-tie .pm-count{color:var(--tie)}
+
+.pm-sens-search-results{
+  margin-top:12px;padding:12px 14px;
+  border:1px solid rgba(244,223,164,.42);
+  background:rgba(12,19,20,.9);
+}
+.pm-search-summary{
+  font-family:var(--serif);font-weight:600;font-size:14px;color:var(--gold-1);
+  margin-bottom:8px;letter-spacing:.05em;
+}
+.pm-search-block{margin-top:10px;padding-top:8px;border-top:1px dashed rgba(201,162,90,.24)}
+.pm-search-block:first-of-type{margin-top:4px;padding-top:0;border-top:none}
+.pm-search-block-title{
+  margin:0 0 8px;font-size:12.5px;font-weight:700;color:var(--gold-2,#c9a25a);letter-spacing:.05em;
+}
+.pm-search-score-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px;
+}
+.pm-search-score-card{
+  padding:8px 10px;border:1px solid rgba(201,162,90,.28);border-radius:4px;
+  background:rgba(7,11,12,.75);
+}
+.pm-search-score-head{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  margin-bottom:6px;font-size:12.5px;font-weight:700;
+}
+.pm-search-score-head.b-win{color:#ff8a7a}
+.pm-search-score-head.p-win{color:#7eb8ff}
+.pm-search-score-head.t-win{color:var(--tie)}
+.pm-search-rem{font-size:11px;font-weight:400;color:var(--txt-dim)}
 
 .pm-sens-detail{
   margin-top:14px;padding:14px 16px;

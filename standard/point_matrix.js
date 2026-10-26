@@ -1,4 +1,4 @@
-// 點數對戰矩陣彈窗：莊、閒最終點數組合的理論機率與每靴平均次數（8 副）＋ 4/5/6張敏感局點數結果矩陣與明細
+// 點數對戰矩陣彈窗：莊、閒最終點數組合的理論機率與每靴平均次數（8 副）＋ 4/5/6張敏感局點數結果矩陣、明細與手牌反查
 // 資料來源：Wizard of Odds, Baccarat Appendix 1；次數＝機率 × 每靴平均局數
 (function () {
     'use strict';
@@ -68,6 +68,12 @@
         return (o1 === 1 && o2 === 2) || (o1 === 2 && o2 === 1);
     }
 
+    function countsOfPoints(pts) {
+        const c = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        for (let i = 0; i < pts.length; i++) c[pts[i]]++;
+        return c;
+    }
+
     function ensureSensitiveData() {
         if (cachedSensitive) return cachedSensitive;
         const groups = Array.from({ length: 10 }, (_, b) =>
@@ -82,8 +88,9 @@
         );
         const rowTotals = Array.from({ length: 10 }, () => ({ total: 0, counts: { '4': 0, '5': 0, '6': 0 } }));
         const colTotals = Array.from({ length: 10 }, () => ({ total: 0, counts: { '4': 0, '5': 0, '6': 0 } }));
+        const compMap = new Map();
 
-        function add(b, p, lenStr, code) {
+        function add(b, p, lenStr, code, swB, swP) {
             const g = groups[b][p];
             g.hands[lenStr].push(code);
             g.counts[lenStr]++;
@@ -92,6 +99,16 @@
             rowTotals[b].total++;
             colTotals[p].counts[lenStr]++;
             colTotals[p].total++;
+
+            const counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            for (let i = 0; i < code.length; i++) counts[code.charCodeAt(i) - 48]++;
+            const key = counts.join('');
+            let entry = compMap.get(key);
+            if (!entry) {
+                entry = { key, size: code.length, counts, items: [] };
+                compMap.set(key, entry);
+            }
+            entry.items.push({ code, b, p, swB, swP, size: code.length });
         }
 
         for (let c0 = 0; c0 <= 9; c0++) {
@@ -102,7 +119,7 @@
                         const b4 = sim4(c1, c0, c2, c3);
                         if (a4.size === 4 && b4.size === 4) {
                             if (sensitiveOutcomeMatch(a4.out, b4.out)) {
-                                add(a4.bb, a4.pp, '4', `${c0}${c1}${c2}${c3}`);
+                                add(a4.bb, a4.pp, '4', `${c0}${c1}${c2}${c3}`, b4.bb, b4.pp);
                             }
                             continue;
                         }
@@ -112,14 +129,14 @@
                                 const b5 = sim56(b4.pp, b4.bb, c4, 0, false);
                                 if (a5 && b5 && a5.size === 5 && b5.size === 5) {
                                     if (sensitiveOutcomeMatch(a5.out, b5.out)) {
-                                        add(a5.bb, a5.pp, '5', `${c0}${c1}${c2}${c3}${c4}`);
+                                        add(a5.bb, a5.pp, '5', `${c0}${c1}${c2}${c3}${c4}`, b5.bb, b5.pp);
                                     }
                                 } else if (!a5 && !b5) {
                                     for (let c5 = 0; c5 <= 9; c5++) {
                                         const a6 = sim56(a4.pp, a4.bb, c4, c5, true);
                                         const b6 = sim56(b4.pp, b4.bb, c4, c5, true);
                                         if (a6 && b6 && a6.size === 6 && b6.size === 6 && sensitiveOutcomeMatch(a6.out, b6.out)) {
-                                            add(a6.bb, a6.pp, '6', `${c0}${c1}${c2}${c3}${c4}${c5}`);
+                                            add(a6.bb, a6.pp, '6', `${c0}${c1}${c2}${c3}${c4}${c5}`, b6.bb, b6.pp);
                                         }
                                     }
                                 }
@@ -129,8 +146,43 @@
                 }
             }
         }
-        cachedSensitive = { groups, rowTotals, colTotals };
+        cachedSensitive = { groups, rowTotals, colTotals, compMap };
         return cachedSensitive;
+    }
+
+    function parseCardsInput(raw) {
+        const text = String(raw || '').trim().toUpperCase();
+        if (!text) return [];
+        const hasSep = /[\s,、，;；\-/_]+/.test(text);
+        const tokens = hasSep ? text.split(/[\s,、，;；\-/_]+/).filter(Boolean) : [text];
+        const pts = [];
+        for (const tok of tokens) {
+            if (tok === '10') {
+                pts.push(0);
+                continue;
+            }
+            for (let i = 0; i < tok.length; i++) {
+                const ch = tok[i];
+                if (ch >= '0' && ch <= '9') pts.push(ch.charCodeAt(0) - 48);
+                else if (ch === 'A') pts.push(1);
+                else if (ch === 'J' || ch === 'Q' || ch === 'K' || ch === 'T') pts.push(0);
+            }
+        }
+        return pts;
+    }
+
+    function bindCodeCopy(container) {
+        container.querySelectorAll('.pm-sens-code').forEach(badge => {
+            if (badge.dataset.copyBound) return;
+            badge.dataset.copyBound = '1';
+            badge.addEventListener('click', () => {
+                const code = badge.dataset.code;
+                if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).catch(() => {});
+                const prev = badge.textContent;
+                badge.textContent = '已複製';
+                setTimeout(() => { badge.textContent = prev; }, 600);
+            });
+        });
     }
 
     function getBlobUrl(b, p) {
@@ -198,13 +250,152 @@
         host.querySelectorAll('.pm-sens-btn[data-filter]').forEach(btn => {
             btn.addEventListener('click', () => renderSensitiveDetail(dlg, b, p, btn.dataset.filter));
         });
-        host.querySelectorAll('.pm-sens-code').forEach(badge => {
-            badge.addEventListener('click', () => {
-                const code = badge.dataset.code;
-                if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).catch(() => {});
-                const prev = badge.textContent;
-                badge.textContent = '已複製';
-                setTimeout(() => { badge.textContent = prev; }, 600);
+        bindCodeCopy(host);
+    }
+
+    function runCardLookup(dlg, rawInput) {
+        const table = dlg.querySelector('#pmSensitiveTable');
+        const statusEl = dlg.querySelector('#pmSensSearchStatus');
+        const resultHost = dlg.querySelector('#pmSensSearchResult');
+        const pts = parseCardsInput(rawInput);
+
+        // Reset matrix highlights first
+        table.classList.remove('pm-filtering');
+        table.querySelectorAll('.pm-sens-cell').forEach(td => {
+            td.classList.remove('pm-match-exact', 'pm-match-subset', 'pm-match-none');
+            td.querySelector('.pm-match-badge')?.remove();
+        });
+
+        if (!pts.length) {
+            if (statusEl) statusEl.textContent = '輸入 4～6 張（或更多張）點數，即可反查可排出的莊閒結果';
+            if (resultHost) { resultHost.hidden = true; resultHost.innerHTML = ''; }
+            return;
+        }
+        if (pts.length < 4) {
+            if (statusEl) statusEl.textContent = `目前已輸入 ${pts.length} 張（${pts.join(' ')}），至少需 4 張才能湊敏感局`;
+            if (resultHost) { resultHost.hidden = true; resultHost.innerHTML = ''; }
+            return;
+        }
+
+        const { compMap } = ensureSensitiveData();
+        const inCounts = countsOfPoints(pts);
+        const inKey = inCounts.join('');
+
+        // Exact matches (using all input cards, when length is 4, 5, or 6)
+        const exactItems = (pts.length >= 4 && pts.length <= 6 && compMap.get(inKey)?.items) || [];
+        // Subset matches (using strict subset of input cards, or 4/5/6-card subsets when >6 cards)
+        const subsetItems = [];
+        for (const entry of compMap.values()) {
+            if (entry.size === pts.length && entry.key === inKey) continue;
+            if (entry.size > pts.length) continue;
+            let fits = true;
+            for (let d = 0; d < 10; d++) {
+                if (entry.counts[d] > inCounts[d]) { fits = false; break; }
+            }
+            if (!fits) continue;
+            const rem = [];
+            for (let d = 0; d < 10; d++) {
+                for (let k = 0; k < inCounts[d] - entry.counts[d]; k++) rem.push(d);
+            }
+            const remStr = rem.join(', ');
+            for (const it of entry.items) {
+                subsetItems.push({ ...it, remStr });
+            }
+        }
+
+        // Map cells in matrix
+        const exactCellCounts = Array.from({ length: 10 }, () => Array(10).fill(0));
+        const subsetCellCounts = Array.from({ length: 10 }, () => Array(10).fill(0));
+        for (const it of exactItems) exactCellCounts[it.b][it.p]++;
+        for (const it of subsetItems) subsetCellCounts[it.b][it.p]++;
+
+        table.classList.add('pm-filtering');
+        table.querySelectorAll('.pm-sens-cell').forEach(td => {
+            const b = Number(td.dataset.banker);
+            const p = Number(td.dataset.player);
+            const ex = exactCellCounts[b][p];
+            const sub = subsetCellCounts[b][p];
+            if (ex > 0) {
+                td.classList.add('pm-match-exact');
+                const badge = document.createElement('span');
+                badge.className = 'pm-match-badge';
+                badge.textContent = sub > 0 ? `全用${ex}｜子集${sub}` : `全用 ${ex} 種`;
+                td.appendChild(badge);
+            } else if (sub > 0) {
+                td.classList.add('pm-match-subset');
+                const badge = document.createElement('span');
+                badge.className = 'pm-match-badge';
+                badge.textContent = `子集 ${sub} 種`;
+                td.appendChild(badge);
+            } else {
+                td.classList.add('pm-match-none');
+            }
+        });
+
+        function renderScoreCards(items, showRem) {
+            const byScore = new Map();
+            for (const it of items) {
+                const k = `${it.b}_${it.p}`;
+                if (!byScore.has(k)) byScore.set(k, { b: it.b, p: it.p, list: [] });
+                byScore.get(k).list.push(it);
+            }
+            const sorted = [...byScore.values()].sort((a, b) => a.b - b.b || a.p - b.p);
+            return `<div class="pm-search-score-grid">` + sorted.map(grp => {
+                const outLabel = grp.b > grp.p ? '莊贏' : grp.p > grp.b ? '閒贏' : '和局';
+                const cls = grp.b > grp.p ? 'b-win' : grp.p > grp.b ? 'p-win' : 't-win';
+                const codesHtml = grp.list.map(it => {
+                    const swapped = it.code[1] + it.code[0] + it.code.slice(2);
+                    const remTip = showRem && it.remStr ? `｜未用剩牌：${it.remStr}` : '';
+                    return `<span class="pm-sens-code" data-code="${it.code}" title="點擊複製 ${it.code}｜對調首兩張 → ${swapped}（莊${it.swB}:閒${it.swP}）${remTip}">${it.code}${showRem && it.remStr ? `<small class="pm-search-rem"> (剩${it.remStr})</small>` : ''}</span>`;
+                }).join('');
+                return `<div class="pm-search-score-card">
+                    <div class="pm-search-score-head ${cls}">
+                        <span>莊 ${grp.b} 點 : 閒 ${grp.p} 點（${outLabel}）</span>
+                        <button type="button" class="pm-sens-btn pm-jump-cell" data-banker="${grp.b}" data-player="${grp.p}">看該格全庫 (${grp.list.length}種)</button>
+                    </div>
+                    <div class="pm-sens-codes">${codesHtml}</div>
+                </div>`;
+            }).join('') + `</div>`;
+        }
+
+        const blocks = [];
+        if (pts.length >= 4 && pts.length <= 6) {
+            if (exactItems.length) {
+                const scoreCount = new Set(exactItems.map(x => `${x.b}_${x.p}`)).size;
+                blocks.push(`<div class="pm-search-block">
+                    <p class="pm-search-block-title">${pts.length} 張全用可搭配結果：共 ${scoreCount} 種莊閒比數、${exactItems.length} 種敏感局排法（矩陣金框高亮）</p>
+                    ${renderScoreCards(exactItems, false)}
+                </div>`);
+            } else {
+                blocks.push(`<div class="pm-search-block">
+                    <p class="pm-search-block-title">${pts.length} 張全用：這 ${pts.length} 張牌無法直接排成 ${pts.length} 張敏感局（0 種）</p>
+                </div>`);
+            }
+        }
+        if (subsetItems.length) {
+            const subScoreCount = new Set(subsetItems.map(x => `${x.b}_${x.p}`)).size;
+            blocks.push(`<div class="pm-search-block">
+                <p class="pm-search-block-title">從中挑牌（少用幾張）可搭配結果：共 ${subScoreCount} 種莊閒比數、${subsetItems.length} 種敏感局排法（矩陣綠框高亮）</p>
+                ${renderScoreCards(subsetItems, true)}
+            </div>`);
+        }
+
+        const compSummary = inCounts.map((cnt, pt) => cnt > 0 ? `${pt}點×${cnt}` : '').filter(Boolean).join('、');
+        if (statusEl) {
+            statusEl.textContent = `已解析 ${pts.length} 張牌（${compSummary}）｜全用 ${exactItems.length} 種、挑牌子集 ${subsetItems.length} 種`;
+        }
+        resultHost.hidden = false;
+        resultHost.innerHTML = `
+            <div class="pm-search-summary">手牌點數反查：<code>${pts.join(' ')}</code>（共 ${pts.length} 張：${compSummary}）</div>
+            ${blocks.join('')}`;
+
+        bindCodeCopy(resultHost);
+        resultHost.querySelectorAll('.pm-jump-cell').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const b = Number(btn.dataset.banker);
+                const p = Number(btn.dataset.player);
+                renderSensitiveDetail(dlg, b, p, 'all');
+                dlg.querySelector('#pmSensitiveDetail')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
         });
     }
@@ -239,6 +430,15 @@
                     <h4>敏感局點數結果矩陣（4／5／6 張，共 41,970 筆）</h4>
                 </div>
                 <p class="pm-note">每格：該「莊 : 閒」最終點數的敏感局總數／佔比，下排小字為「4張／5張／6張」筆數。點擊任一格可展開對應點數排列清單並開啟 <code>莊X_閒Y.json</code>。</p>
+                <div class="pm-sens-search-bar">
+                    <label class="pm-sens-search-label" for="pmSensSearchInput">手牌點數反查：</label>
+                    <input type="text" id="pmSensSearchInput" class="pm-sens-search-input" placeholder="輸入牌點（例：1 8 9 9 1 或 18991）" autocomplete="off">
+                    <button type="button" class="pm-sens-btn" id="pmSensSearchBtn">比對結果</button>
+                    <button type="button" class="pm-sens-btn" id="pmSensDemoBtn" title="帶入範例 1 8 9 9 1">範例：1 8 9 9 1</button>
+                    <button type="button" class="pm-sens-btn" id="pmSensClearBtn">清除</button>
+                    <span class="pm-sens-search-status" id="pmSensSearchStatus">輸入 4～6 張（或更多張）點數，即可反查可排出的莊閒結果</span>
+                </div>
+                <div class="pm-sens-search-results" id="pmSensSearchResult" hidden></div>
                 <div class="pm-scroll"><table class="pm-table pm-sens-table" id="pmSensitiveTable"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
                 <div class="pm-sens-detail" id="pmSensitiveDetail" hidden></div>
             </div>`;
@@ -282,6 +482,28 @@
                     selectCell();
                 }
             });
+        });
+        const searchInput = dlg.querySelector('#pmSensSearchInput');
+        const searchBtn = dlg.querySelector('#pmSensSearchBtn');
+        const demoBtn = dlg.querySelector('#pmSensDemoBtn');
+        const clearBtn = dlg.querySelector('#pmSensClearBtn');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => runCardLookup(dlg, searchInput.value));
+            searchInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    runCardLookup(dlg, searchInput.value);
+                }
+            });
+        }
+        if (searchBtn) searchBtn.addEventListener('click', () => runCardLookup(dlg, searchInput?.value || ''));
+        if (demoBtn) demoBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '1 8 9 9 1';
+            runCardLookup(dlg, '1 8 9 9 1');
+        });
+        if (clearBtn) clearBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            runCardLookup(dlg, '');
         });
         document.body.appendChild(dlg);
         return dlg;
