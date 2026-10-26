@@ -439,7 +439,8 @@
         if(opts.tieMax!==null)upper=Math.max(upper,opts.tieTally+c.tie-opts.tieMax*ratio);
         return [neededCards,Math.max(0,upper),lag,-seg.filter(p=>p===0).length/seg.length];
     }
-    function preferQuota(a,b,opts){if(!b)return true;const x=quotaPriority(a,opts),y=quotaPriority(b,opts);for(let i=0;i<x.length;i++){if(x[i]!==y[i])return x[i]<y[i];}return false;}
+    // keys：只比前幾項（全敏連續組段不比最後一項 0 點比例，讓銜接分數決定）
+    function preferQuota(a,b,opts,keys=4){if(!b)return true;const x=quotaPriority(a,opts),y=quotaPriority(b,opts);for(let i=0;i<keys;i++){if(x[i]!==y[i])return x[i]<y[i];}return false;}
 
     async function rememberTemplate(seg,opts){if(opts.collectTemplates&&global.TraverseTemplates){const L=global.TraverseTemplates;if(L.collectAsync)await L.collectAsync([seg]);else L.collect([seg]);}}
     // ===== 階段 1：洗牌撿段 =====
@@ -533,12 +534,26 @@
         }
         return n;
     }
-    function allSensBuild(counts, zeroShare, opts) {
+    // pre：上一段段尾（最多 5 張）與發牌實際會停在段尾的位置。帶入時，從這些位置起發、跨過接縫的局也要敏感（整副連續往下算）
+    function crossOk(pre, seq) {
+        const joined = pre.tail.concat(seq), n = joined.length;
+        for (const st of pre.stops) {
+            const h = simulateHand(joined, st, n);
+            if (h && h.size === n - st && !handSensitive(joined.slice(st, n))) return false;
+        }
+        return true;
+    }
+    function preOf(seg) {
+        const tail = seg.slice(-5), base = seg.length - tail.length;
+        // 只有切在那張才會停的位置（次數 1）不強求；多條發牌路徑都會停到的位置才要求跨接縫敏感
+        return { tail, stops: [...tailStops(seg)].filter(([p, w]) => w >= 2 && p >= base).map(([p]) => p - base) };
+    }
+    function allSensBuild(counts, zeroShare, opts, pre = null) {
         const seq = [], c = counts.slice(), out = [];
         let nodes = 0;
         const total = c.reduce((a, b) => a + b, 0);
         (function dfs() {
-            if (++nodes > opts.allSensBudget || out.length >= 6) return;
+            if (++nodes > opts.allSensBudget || out.length >= (opts.asCandMax || 6)) return;
             const L = seq.length;
             if (L >= opts.minLen) {
                 const z = seq.filter(p => p === 0).length;
@@ -560,33 +575,48 @@
                 if (L >= 2 && seq[L - 1] === d && seq[L - 2] === d) continue;
                 if (d > 0 && seq.filter(p => p === d).length >= Math.floor(opts.maxLen / 13) + 2) continue;
                 seq.push(d);
-                if (allSensStepOk(seq)) { c[d]--; dfs(); c[d]++; }
+                if (allSensStepOk(seq) && (!pre || L >= 6 || crossOk(pre, seq))) { c[d]--; dfs(); c[d]++; }
                 seq.pop();
-                if (nodes > opts.allSensBudget || out.length >= 6) return;
+                if (nodes > opts.allSensBudget || out.length >= (opts.asCandMax || 6)) return;
             }
         })();
         return out;
     }
     async function phaseAllSens(rest, opts, ctx) {
         const segs = [];
-        let idle = 0, tries = 0;
-        opts.asRounds = 0; opts.asTies = 0; opts.asSeven = 0;
+        let idle = 0, tries = 0, pre = null;
+        opts.asRounds = 0; opts.asTies = 0; opts.asSeven = 0; opts.asJoined = 0; opts.asBroken = 0;
         while (idle < opts.idleLimit && rest.length >= opts.minLen) {
             if (ctx.cancelled()) break;
             tries++;
             const counts = countsOf(rest), zeroShare = counts[0] / rest.length;
             const quota = quotaActive(opts), sigLeft = counts[1] + counts[2], lenLeft = rest.length;
-            const cands = allSensBuild(counts, zeroShare, opts);
-            let pick = null;
+            // 連續組段：先找帶入上一段段尾條件的候選，再加一般候選；依「跨接縫不敏感的發牌路徑數＋自己段尾的停點風險」挑最小
+            let cands = opts.asStream && pre?.stops.length ? allSensBuild(counts, zeroShare, opts, pre) : [];
+            if (opts.asStream || !cands.length) cands = cands.concat(allSensBuild(counts, zeroShare, opts));
+            let pick = null, pickCost = Infinity, joined = false;
+            const prev = segs[segs.length - 1], prevStops = opts.asStream && prev ? tailStops(prev) : null;
+            const prevW = prevStops ? [...prevStops.values()].reduce((a, b) => a + b, 0) : 0;
             for (const a of cands) {
-                if (quota || opts.sideCtl) { if (pickBetter(a, pick, opts, quota, sigLeft, lenLeft)) pick = a; }
-                else if (!pick || a.length > pick.length) pick = a;
+                if (!opts.asStream) {
+                    if (quota || opts.sideCtl) { if (pickBetter(a, pick, opts, quota, sigLeft, lenLeft)) pick = a; }
+                    else if (!pick || a.length > pick.length) pick = a;
+                    continue;
+                }
+                const miss = prevStops ? prevW - junctionScore(prev, prevStops, a) : 0;
+                const own = [...tailStops(a).values()].reduce((x, y) => x + y, 0);
+                const cost = miss + (opts.asRisk ?? 0.5) * own;
+                // 局數配額優先；配額分不出高下時才比銜接
+                if (pick && quota) { if (preferQuota(pick, a, opts, 3)) continue; if (preferQuota(a, pick, opts, 3)) { pick = a; pickCost = cost; joined = miss === 0; continue; } }
+                if (!pick || cost < pickCost || (cost === pickCost && a.length > pick.length)) { pick = a; pickCost = cost; joined = miss === 0; }
             }
             if (pick) {
                 sizeLimitAdd(pick, opts);
                 const rc = roundSizeCounts(pick);
                 opts.asRounds += rc[4] + rc[5] + rc[6]; opts.asTies += rc.tie; opts.asSeven += sevenEitherCount(pick);
                 segs.push(pick);
+                if (pre) joined || !pre.stops.length ? opts.asJoined++ : opts.asBroken++;
+                pre = preOf(pick);
                 const c = countsOf(pick);
                 rest = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
                 idle = 0;
@@ -753,10 +783,32 @@
         return cost;
     }
     // 先用段尾貪心排段，再隨機搜尋：交換兩段、或剩牌內兩張互換，整副切點不敏感總數不變差就保留
-    function arrangeForAllCuts(chains, leftover, rng, budgetMs) {
+    // 全敏紅0（不對調）：估計從牌頭發牌的訊號違規。三條規則（含頭尾相接）逐局數；
+    // 紅0 依整副 0 點比例估張數，能放的位置（下一局開莊或三條局的 0 點、牌尾）不夠時，多的只能塞進不能有訊號的局，從 0 點最多的局起算違規
+    function signalCost(seq) {
+        const rounds = [];
+        for (let cur = 0; cur < seq.length;) { const h = simulateHand(seq, cur, seq.length); if (!h) break; rounds.push({ start: cur, size: h.size, result: h.result }); cur += h.size; }
+        const R = rounds.length; if (R < 2) return 0;
+        const pts = r => seq.slice(r.start, r.start + r.size);
+        const trip = rounds.map(r => rules.tripleTie && isTriple(pts(r)));
+        let v = 0;
+        if (rules.tripleTie) rounds.forEach((r, i) => { if (trip[(i + R - 1) % R] !== (r.result === '和')) v++; });
+        const cfg = normalizeSignal(rules.signalConfig), zeroRanks = cfg.ranks.filter(r => rankPoint(r) === 0).length;
+        const zerosAll = seq.filter(p => p === 0).length, reds = Math.round(zerosAll * cfg.suits.length / 4 * zeroRanks / 4);
+        if (!reds) return v;
+        const last = rounds[R - 1], tail = seq.length - (last.start + last.size);
+        let room = seq.slice(seq.length - tail).filter(p => p === 0).length;
+        const bad = [];
+        rounds.forEach((r, i) => { const z = pts(r).filter(p => p === 0).length; if (trip[i] || rounds[(i + 1) % R].result === '莊') room += z; else if (z) bad.push(z); });
+        let over = reds - room;
+        bad.sort((a, b) => b - a);
+        for (const z of bad) { if (over <= 0) break; over -= z; v++; }
+        return v;
+    }
+    function arrangeForAllCuts(chains, leftover, rng, budgetMs, signalWeight = 0, keepOrder = false) {
         const n = chains.length;
         let order = chains.map((_, i) => i);
-        if (n >= 3) {
+        if (n >= 3 && !keepOrder) {
             const stops = chains.map(tailStops);
             const S = chains.map((a, i) => chains.map((b, j) => i === j ? -1 : junctionScore(a, stops[i], b)));
             const used = new Uint8Array(n); order = [0]; used[0] = 1;
@@ -764,17 +816,18 @@
         }
         let left = leftover.slice();
         const build = () => order.map(i => chains[i]).flat().concat(left);
-        let best = allCutsCost(build());
+        const cost = seq => allCutsCost(seq) + (signalWeight ? signalWeight * signalCost(seq) : 0);
+        let best = cost(build());
         const until = Date.now() + budgetMs;
         while (Date.now() < until && best > 0) {
             if (n >= 2 && (left.length < 2 || rng() < 0.7)) {
                 const i = Math.floor(rng() * n), j = Math.floor(rng() * n); if (i === j) continue;
                 [order[i], order[j]] = [order[j], order[i]];
-                const c = allCutsCost(build()); if (c <= best) best = c; else [order[i], order[j]] = [order[j], order[i]];
+                const c = cost(build()); if (c <= best) best = c; else [order[i], order[j]] = [order[j], order[i]];
             } else if (left.length >= 2) {
                 const i = Math.floor(rng() * left.length), j = Math.floor(rng() * left.length); if (i === j || left[i] === left[j]) continue;
                 [left[i], left[j]] = [left[j], left[i]];
-                const c = allCutsCost(build()); if (c <= best) best = c; else [left[i], left[j]] = [left[j], left[i]];
+                const c = cost(build()); if (c <= best) best = c; else [left[i], left[j]] = [left[j], left[i]];
             } else break;
         }
         return { chains: order.map(i => chains[i]), leftover: left };
@@ -1545,6 +1598,9 @@
         opts.templateIndex = options.templateCompute === false || !global.TraverseTemplates?.compositionIndex ? null
             : await global.TraverseTemplates.compositionIndex({ cancelled: ctx.cancelled });
         opts.allSensBudget = Number.isInteger(options.allSensBudget) ? options.allSensBudget : 4000;
+        opts.asStream = rules.allSens && options.allSensStream !== false;
+        opts.asCandMax = opts.asStream ? (Number.isInteger(options.allSensCands) ? options.allSensCands : 12) : 6;
+        opts.asRisk = Number.isFinite(options.allSensRisk) ? options.allSensRisk : 0.5;
         const p1 = rules.allSens ? await phaseAllSens(rest, opts, ctx) : await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
         const segs = p1.segs.concat(p2.segs);
@@ -1589,10 +1645,12 @@
             if(options.fillSensitiveTail===true&&!options.a2Tail)templateLog(`未查找｜剩牌 ${restCards.length} 張超過上限 ${options.rejectAbove}，先整副重跑`);
             return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits, templateBorrowHits: opts.templateBorrowHits } };
         }
-        let chains = await phaseChain(segs, opts, ctx);
+        // 全敏連續組段：段已依組成順序首尾相接，照原順序放（不再隨機接段），之後只在不變差時調整
+        let chains = opts.asStream ? segs.map(sg => Object.assign(sg.slice(), { parts: [sg.length], secondParts: [sg.secondStart !== false] })) : await phaseChain(segs, opts, ctx);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
         // 全敏：以整副（含剩牌）416 個切點的不敏感局總數為目標，調段序與剩牌排列
-        if (rules.allSens && options.junctionOrder !== false) ({ chains, leftover } = arrangeForAllCuts(chains, leftover, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 4000));
+        if (rules.allSens && options.junctionOrder !== false) ({ chains, leftover } = arrangeForAllCuts(chains, leftover, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 4000,
+            options.noSignalSwap === true && opts.signalRule ? (Number.isFinite(options.signalWeight) ? options.signalWeight : 0) : 0, opts.asStream));
 
         let templateLibrary=null;
         const library=options.templateLibrary===false?null:global.TraverseTemplates;
@@ -1798,7 +1856,7 @@
             stats: {
                 templateComputeHits: opts.templateComputeHits,
                 templateBorrowHits: opts.templateBorrowHits,
-                shuffles: p1.shuffles,
+                shuffles: p1.shuffles, asJoined: opts.asJoined, asBroken: opts.asBroken,
                 phase1Segments: p1.segs.length,
                 phase1Rest: p1.rest.length,
                 phase2Segments: p2.segs.length,
@@ -1822,6 +1880,6 @@
     async function nextTemplate(result){const iterator=templateContinuations.get(result);if(!iterator)throw Error('此候選已無同池續試工作');templateContinuations.delete(result);return advanceTemplate(iterator);}
     async function releaseTemplateContinuation(result){const iterator=result&&templateContinuations.get(result);if(iterator){templateContinuations.delete(result);await iterator.return();}}
 
-    global.TraverseBuilder = { segmentStats, quotaPriority, preferQuota, sizeLimitOk, specialRoundCounts, roundSizeCounts, normalizeSizeLimits, allSensitiveHands, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, hasTemplateContinuation, nextTemplate, releaseTemplateContinuation, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, isAllSens, segmentShapeOk, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { segmentStats, quotaPriority, preferQuota, sizeLimitOk, specialRoundCounts, roundSizeCounts, normalizeSizeLimits, allSensitiveHands, allSensBuild, preOf, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, hasTemplateContinuation, nextTemplate, releaseTemplateContinuation, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, isAllSens, segmentShapeOk, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);

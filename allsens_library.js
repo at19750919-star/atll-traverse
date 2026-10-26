@@ -1,11 +1,13 @@
 // 全敏範本庫：記住 D:\穿越點數範本庫（讀寫），讀取／累積／保存「分段範本」兩個規則庫，並讀取「和局放寬」單局庫統計。
 // 只做讀取與累積，不用於生成（使用者要求：讀跟累積不等於用在生成）。
+// 存檔依段長分開：分段範本_原規則_8張.json …；舊的單一檔（分段範本_原規則.json）照樣讀進來，不改動。
 (function(root){
 'use strict';
 const RULES={orig:{file:'分段範本_原規則.json',label:'原規則'},loose:{file:'分段範本_放寬和局.json',label:'放寬和局'}};
 const SEG_DIR='分段範本',TIE_DIR='和局放寬',MIN_LEN=8,MAX_LEN=17,SAVE_MS=30000;
 let directory=null,needsPermission=false,error='',saving=false,active=false,stopRequested=false;
-const banks={orig:new Map(),loose:new Map()},dirty={orig:0,loose:0},added={orig:0,loose:0};
+const banks={orig:new Map(),loose:new Map()},dirty={orig:0,loose:0},added={orig:0,loose:0},dirtyLen={orig:new Set(),loose:new Set()};
+const lenFile=(rule,len)=>RULES[rule].file.replace('.json',`_${len}張.json`);
 let tieInfo=null,loaded=false;const listeners=new Set();
 const notify=()=>listeners.forEach(fn=>{try{fn();}catch(_){}});
 let dbp;function db(){return dbp||(dbp=new Promise(resolve=>{if(!root.indexedDB){resolve(null);return;}const q=root.indexedDB.open('atll-allsens-library-v1',1);q.onupgradeneeded=()=>q.result.createObjectStore('meta');q.onsuccess=()=>resolve(q.result);q.onerror=()=>resolve(null);}));}
@@ -15,11 +17,19 @@ async function loadHandle(){const d=await db();if(!d)return null;return new Prom
 async function sub(name,create=false){if(directory.name===name)return directory;return directory.getDirectoryHandle(name,{create});}
 async function readJSON(dirName,file){try{const h=await (await sub(dirName)).getFileHandle(file);return JSON.parse(await (await h.getFile()).text());}catch(e){if(e.name==='NotFoundError'||e.name==='TypeError')return null;throw e;}}
 async function load(){error='';
-  for(const rule of Object.keys(RULES)){banks[rule].clear();dirty[rule]=0;added[rule]=0;
-    const list=await readJSON(SEG_DIR,RULES[rule].file)||[];for(const x of list)if(Array.isArray(x.seq))banks[rule].set(x.seq.join(''),{seq:x.seq,len:x.seq.length,hands:x.hands,ties:x.ties,rule});}
+  for(const rule of Object.keys(RULES)){banks[rule].clear();dirty[rule]=0;added[rule]=0;dirtyLen[rule].clear();
+    const split=new Set();
+    for(let len=MIN_LEN;len<=MAX_LEN;len++){const list=await readJSON(SEG_DIR,lenFile(rule,len));if(!list)continue;split.add(len);for(const x of list)if(Array.isArray(x.seq))banks[rule].set(x.seq.join(''),{seq:x.seq,len:x.seq.length,hands:x.hands,ties:x.ties,rule});}
+    const old=await readJSON(SEG_DIR,RULES[rule].file)||[];
+    for(const x of old)if(Array.isArray(x.seq)){const k=x.seq.join('');if(banks[rule].has(k))continue;banks[rule].set(k,{seq:x.seq,len:x.seq.length,hands:x.hands,ties:x.ties,rule});dirtyLen[rule].add(x.seq.length);}
+    // 只在舊單一檔裡的段，下次保存時補寫進分開的檔
+    for(let len=MIN_LEN;len<=MAX_LEN;len++)if(!split.has(len)&&[...banks[rule].values()].some(x=>x.len===len))dirtyLen[rule].add(len);
+    dirty[rule]=dirtyLen[rule].size;}
   tieInfo=await readJSON(TIE_DIR,'index.json');loaded=true;}
-async function writeBank(rule){if(!dirty[rule])return;const dir=await sub(SEG_DIR,true),h=await dir.getFileHandle(RULES[rule].file,{create:true}),w=await h.createWritable();
-  await w.write(JSON.stringify([...banks[rule].values()]));await w.close();dirty[rule]=0;}
+async function writeBank(rule){if(!dirty[rule])return;const dir=await sub(SEG_DIR,true);
+  for(const len of [...dirtyLen[rule]].sort((a,b)=>a-b)){const h=await dir.getFileHandle(lenFile(rule,len),{create:true}),w=await h.createWritable();
+    await w.write(JSON.stringify([...banks[rule].values()].filter(x=>x.len===len)));await w.close();dirtyLen[rule].delete(len);}
+  dirty[rule]=0;}
 async function save(){if(!directory||needsPermission)return;saving=true;notify();try{for(const rule of Object.keys(RULES))await writeBank(rule);}catch(e){error='保存失敗：'+e.message;}finally{saving=false;notify();}}
 async function use(dir){directory=dir;needsPermission=false;await saveHandle(dir);await load();notify();}
 const ready=(async()=>{try{const saved=await loadHandle();if(!saved)return;directory=saved;needsPermission=await saved.queryPermission({mode:'readwrite'})!=='granted';if(!needsPermission)await load();}catch(e){error=e.message;}finally{notify();}})();
@@ -38,7 +48,7 @@ function collector(rule){
     (function dfs(H,T){if(++nodes>budget||arr.length>=MAX_LEN)return;
       for(const d of order()){const L=arr.length;if(L>=2&&arr[L-1]===d&&arr[L-2]===d)continue;if(d&&cnt[d]>=Math.floor(MAX_LEN/13)+2)continue;if(d===0&&cnt[0]>=Math.ceil(MAX_LEN*0.38))continue;
         arr.push(d);const s=step(arr);if(s&&T+s.t<=Math.floor((H+s.h)*0.1)+1){cnt[d]++;const n=arr.length;
-          if(n>=MIN_LEN&&okComp(cnt,n)){const k=arr.join('');if(!banks[rule].has(k)){banks[rule].set(k,{seq:arr.slice(),len:n,hands:H+s.h,ties:T+s.t,rule});dirty[rule]++;added[rule]++;got++;}}
+          if(n>=MIN_LEN&&okComp(cnt,n)){const k=arr.join('');if(!banks[rule].has(k)){banks[rule].set(k,{seq:arr.slice(),len:n,hands:H+s.h,ties:T+s.t,rule});dirty[rule]++;dirtyLen[rule].add(n);added[rule]++;got++;}}
           dfs(H+s.h,T+s.t);cnt[d]--;}
         arr.pop();if(nodes>budget)return;}})(0,0);
     return got;};
