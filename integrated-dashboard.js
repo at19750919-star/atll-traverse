@@ -75,9 +75,16 @@
     const recoveryDetails = el('details','shared-recovery-details'); recoveryDetails.id = 'sharedRecoveryDetails';
     recoveryDetails.innerHTML = '<summary>逐切點回復明細</summary><p class="mode-note">回復＝不對調發牌後接回原局起點；不是違規深度。張號依目前牌表；尾端未成局的牌保留參與模擬，但不視為局起點。</p><div id="sharedRecoveryRows"></div>';
     const moreData = el('div','dashboard-data-more'), diagnostics = $('tvDiagnostics').closest('details');
-    diagnostics.id = 'tvDiagnosticsPanel'; moreData.append($('tvBucketsDetail'),recoveryDetails,diagnostics); traverse.append(moreData);
+    diagnostics.id = 'tvDiagnosticsPanel'; moreData.append(diagnostics); traverse.append(moreData);
     // 安全切點（全敏為切點不敏感局數）固定放在資料區最上面，說明文字移到它下面
     traverse.prepend($('tvSafePanel'));
+    // 切點面板與它下面兩個展開項固定在統計區：其他資料改開視窗時，這三個留在原位、在原地展開
+    const pinnedMore = el('div','dashboard-data-more'); pinnedMore.append($('tvBucketsDetail'),recoveryDetails); moreData.prepend(pinnedMore);
+    const pinned = el('div','gframe dashboard-pinned'), isPinned = n => !!n.closest?.('#tvSafePanel,#tvBucketsDetail,#sharedRecoveryDetails');
+    function placePinned(out) {
+      if (out) { if ($('tvSafePanel').parentElement !== pinned) pinned.append($('tvSafePanel'),pinnedMore); }
+      else if ($('tvSafePanel').parentElement === pinned) { traverse.prepend($('tvSafePanel')); moreData.prepend(pinnedMore); }
+    }
     const pit = document.querySelector('.pit'), tableBar = el('div','dashboard-table-bar');
     tableBar.append(el('span','dashboard-table-title','牌靴主表'),counts);
     const openData = button('btnTraverseData','穿越資料'), openTable = button('btnTableWindow','彈出主表 ↗');
@@ -131,23 +138,38 @@
       const dialogOnly = [$('tvSummary'),diagnostics,$('tvTemplateControls'),$('sensitiveControls'),$('asLibraryControls')].filter(Boolean);
       dialogOnly.forEach(n => { n.hidden = true; });
 
-      const expanded = Array.from(traverse.querySelectorAll('details')).some(d => d.open && d.id !== 'tvSafePanel');
+      placePinned(false);
+      const expanded = Array.from(traverse.querySelectorAll('details')).some(d => d.open && !isPinned(d));
       let shouldFloat = forceDialog || workspace.clientWidth < 1180 || innerHeight < 560 || expanded;
       // Judge the real inline height, including loaded fonts and wrapped summaries.
       // Keep at least the majority of the workspace available to the card table.
       if (!shouldFloat) {
         if (traverse.parentElement !== traverseSlot) traverseSlot.append(traverse);
         traverseSlot.hidden = false; overview.classList.add('has-traverse');
+        // 固定區自己展開造成的高度不算，避免一點展開項整塊就跳進視窗
+        const pinnedOpen = [$('tvBucketsDetail'),recoveryDetails].filter(d => d.open);
+        pinnedOpen.forEach(d => { d.open = false; });
         shouldFloat = overview.getBoundingClientRect().height > Math.min(280,innerHeight * .35);
+        pinnedOpen.forEach(d => { d.open = true; });
       }
       floatingData = shouldFloat;
       dialogOnly.forEach(n => { n.hidden = !(isTraverse && floatingData && allowed(n)); });
       const parent = shouldFloat ? dialogBody : traverseSlot;
       if (traverse.parentElement !== parent) parent.append(traverse);
       if (!shouldFloat) { dataDialog.hidden = true; openData.setAttribute('aria-expanded','false'); }
-      traverseSlot.hidden = floatingData; overview.classList.toggle('has-traverse',!floatingData);
+      // 開視窗時切點面板仍留在統計區（寬度不足時才整塊進視窗）
+      const keepPinned = shouldFloat && workspace.clientWidth >= 1180 && innerHeight >= 560;
+      placePinned(keepPinned); if (keepPinned && pinned.parentElement !== traverseSlot) traverseSlot.append(pinned);
+      pinned.hidden = !keepPinned;
+      traverseSlot.hidden = floatingData && !keepPinned; overview.classList.toggle('has-traverse',!floatingData || keepPinned);
       openData.textContent = floatingData ? '分析明細 ↗' : '分析明細'; checkingPlacement = false;
     }
+    // 切點面板固定在統計區時，視窗預設開在面板下方，不蓋住它（拖曳過就照使用者的位置）
+    function placeDialog() {
+      if (dataDialog.hidden || dataDialog.style.left || pinned.hidden || !pinned.isConnected) return;
+      dataDialog.style.top = Math.max(60,Math.min(innerHeight - 320,Math.round(pinned.getBoundingClientRect().bottom + 8))) + 'px';
+    }
+    new MutationObserver(placeDialog).observe(dataDialog,{attributes:true,attributeFilter:['hidden']});
     openData.addEventListener('click',() => {
       // 穿越模式內嵌時，按分析明細改開視窗看完整穿越摘要與長段驗證
       if (document.body.dataset.mode === 'traverse' && !floatingData) { forceDialog = true; updateDataPlacement(); dataDialog.hidden = false; openData.setAttribute('aria-expanded','true'); return; }
@@ -157,7 +179,7 @@
     closeData.addEventListener('click',closeDataDialog);
     traverse.addEventListener('toggle',event => {
       updateDataPlacement();
-      if (floatingData && event.target.open && event.target.id !== 'tvSafePanel') { dataDialog.hidden = false; openData.setAttribute('aria-expanded','true'); }
+      if (floatingData && event.target.open && !isPinned(event.target)) { dataDialog.hidden = false; openData.setAttribute('aria-expanded','true'); }
     },true);
     let drag = null;
     dialogHead.addEventListener('pointerdown',e => {

@@ -279,3 +279,13 @@ body:not([data-mode=traverse]) :is(#tvOptimize,#tvRecoveryOptimize,#btnOptOpen,#
 /* Shared analyses stay beside the existing metrics; long detail lists float. */
 body.dashboard #traverseTools [hidden]{display:none!important}
 .shared-recovery-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;padding:3px 0;border-bottom:1px solid #8a6a2f33}
+
+/* 固定在統計區的切點面板（其他資料開在分析明細視窗時） */
+body.dashboard .dashboard-pinned{display:block;padding:8px 10px}
+body.dashboard .dashboard-pinned details{padding:1px 0;border-bottom:0}
+body.dashboard .dashboard-pinned summary{font-size:11px;line-height:1.6;letter-spacing:.02em}
+body.dashboard .dashboard-pinned .mode-note{font-size:10px;line-height:1.5;margin:2px 0}
+body.dashboard .dashboard-pinned #tvBucketsDetail{margin:0;padding:1px 0!important;border:0}
+body.dashboard .dashboard-traverse-slot #sharedRecoveryRows{max-height:240px;overflow:auto;scrollbar-color:#8a6a2f #0c1a14}
+body.dashboard .dashboard-pinned [hidden]{display:none!important}
+.dashboard-data-more>.dashboard-data-more{grid-column:1/-1}
