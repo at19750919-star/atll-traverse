@@ -663,6 +663,81 @@
         return order.map(i => chains[i]);
     }
 
+    // 剩牌拆成單局小段：挑剩牌湊得出、且本身是全敏段的敏感局（含三條等段規則），隨機貪心多次取剩最少
+    function packLeftoverHands(rest, opts) {
+        const hands = allSensitiveHands();
+        let best = { segs: [], rest };
+        for (let t = 0; t < 30; t++) {
+            const counts = countsOf(rest), segs = [];
+            for (;;) {
+                const usable = hands.filter(h => fits(h, counts));
+                if (!usable.length) break;
+                shuffleInPlace(usable, opts.rng);
+                // 0 點多的局優先，避免剩到最後全是 0
+                usable.sort((a, b) => b.filter(p => p === 0).length / b.length - a.filter(p => p === 0).length / a.length);
+                const pick = usable.slice(0, 200).find(h => isAllSens(h) && qualifies(h, true) && sizeLimitOk(h, opts));
+                if (!pick) break;
+                for (const p of pick) counts[p]--;
+                segs.push(pick.slice());
+            }
+            const left = counts.reduce((a, b) => a + b, 0);
+            if (left < best.rest.length) {
+                const c = countsOf([].concat(...segs)), restLeft = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
+                best = { segs, rest: restLeft };
+                if (!left) break;
+            }
+        }
+        return best;
+    }
+    // 整副成本：從每個切點發完整副（循環），數不敏感的完整局；與統計面板的「切點不敏感局數」同一個數字
+    function allCutsCost(seq) {
+        const n = seq.length, memo = new Array(n);
+        let cost = 0;
+        for (let cut = 0; cut < n; cut++) {
+            let cur = cut, dealt = 0;
+            for (;;) {
+                const at = cur % n;
+                let h = memo[at];
+                if (h === undefined) {
+                    const win = []; for (let k = 0; k < 6; k++) win.push(seq[(at + k) % n]);
+                    const r = simulateHand(win, 0, 6);
+                    h = memo[at] = r ? { size: r.size, bad: !handSensitive(win.slice(0, r.size)) } : null;
+                }
+                if (!h || dealt + h.size > n) break;
+                if (h.bad) cost++;
+                cur += h.size; dealt += h.size;
+            }
+        }
+        return cost;
+    }
+    // 先用段尾貪心排段，再隨機搜尋：交換兩段、或剩牌內兩張互換，整副切點不敏感總數不變差就保留
+    function arrangeForAllCuts(chains, leftover, rng, budgetMs) {
+        const n = chains.length;
+        let order = chains.map((_, i) => i);
+        if (n >= 3) {
+            const stops = chains.map(tailStops);
+            const S = chains.map((a, i) => chains.map((b, j) => i === j ? -1 : junctionScore(a, stops[i], b)));
+            const used = new Uint8Array(n); order = [0]; used[0] = 1;
+            for (let k = 1; k < n; k++) { const prev = order[k - 1]; let pick = -1, ps = -1; for (let j = 0; j < n; j++) if (!used[j] && S[prev][j] > ps) { pick = j; ps = S[prev][j]; } used[pick] = 1; order.push(pick); }
+        }
+        let left = leftover.slice();
+        const build = () => order.map(i => chains[i]).flat().concat(left);
+        let best = allCutsCost(build());
+        const until = Date.now() + budgetMs;
+        while (Date.now() < until && best > 0) {
+            if (n >= 2 && (left.length < 2 || rng() < 0.7)) {
+                const i = Math.floor(rng() * n), j = Math.floor(rng() * n); if (i === j) continue;
+                [order[i], order[j]] = [order[j], order[i]];
+                const c = allCutsCost(build()); if (c <= best) best = c; else [order[i], order[j]] = [order[j], order[i]];
+            } else if (left.length >= 2) {
+                const i = Math.floor(rng() * left.length), j = Math.floor(rng() * left.length); if (i === j || left[i] === left[j]) continue;
+                [left[i], left[j]] = [left[j], left[i]];
+                const c = allCutsCost(build()); if (c <= best) best = c; else [left[i], left[j]] = [left[j], left[i]];
+            } else break;
+        }
+        return { chains: order.map(i => chains[i]), leftover: left };
+    }
+
     // ===== 階段 2：用敏感局組合計算排列 =====
     // 預先列出所有敏感局（4/5/6 張的點數組合），再從剩餘牌中挑幾局接成段
     // 放寬和局時敏感局清單不同，依規則分開快取
@@ -1423,6 +1498,11 @@
             segs.push(...fallbackSegs);
         }
         restCards = await borrowWithTemplates(segs, restCards, opts, ctx);
+        // 全敏：剩牌再拆成「單局小段」（一局敏感局本身就是全敏段），多試幾次取剩最少的拆法
+        if (rules.allSens && options.packLeftover !== false && restCards.length >= 4) {
+            const packed = packLeftoverHands(restCards, opts);
+            if (packed.segs.length) { packed.segs.forEach(sg => { sizeLimitAdd(sg, opts); segs.push(sg); }); restCards = packed.rest; }
+        }
         const templateLog=message=>options.onTemplateLog?.('穿越範本：'+message);
         // 敏感補排關閉時，剩牌只能整段換成範本（穿越紅0、8～12 張且在段長範圍內），否則注定重跑
         const tailOff = options.fillSensitiveTail === true && options.sensitiveTail === false;
@@ -1440,8 +1520,9 @@
             return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits, templateBorrowHits: opts.templateBorrowHits } };
         }
         let chains = await phaseChain(segs, opts, ctx);
-        if (rules.allSens && options.junctionOrder !== false) chains = orderChainsByJunction(chains, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 4000);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
+        // 全敏：以整副（含剩牌）416 個切點的不敏感局總數為目標，調段序與剩牌排列
+        if (rules.allSens && options.junctionOrder !== false) ({ chains, leftover } = arrangeForAllCuts(chains, leftover, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 4000));
 
         let templateLibrary=null;
         const library=options.templateLibrary===false?null:global.TraverseTemplates;
