@@ -12,6 +12,8 @@
             return raw == null || raw === '' ? null : Number(raw);
         };
         const limits = { b6: numeric('maxBankerSixWin'), seven: numeric('max7PtReversal'), rare: numeric('maxTwoThirteenReversal') };
+        const playerSevenActive=global.StandardProfiles?.current==='a2' && typeof PlayerSevenLimits!=='undefined';
+        if(playerSevenActive)limits.playerSeven=Math.min(numeric('maxPlayerSeven')??5,5);
         const cache = new WeakMap();
         function row(round) {
             const old = cache.get(round);
@@ -30,6 +32,7 @@
             const list = input.filter(r => r?.segment !== 'C' && r?.cards?.length >= 4 && r.cards.length <= 6);
             if (options.sortByStart) list.sort((a,b) => a.start_index - b.start_index);
             const counts = { ...RoundSizeLimits.count(list), b6: 0, seven: 0, rare: 0, blocked: 0 };
+            counts.playerSeven=playerSevenActive?list.filter(r=>PlayerSevenLimits.classify(r)).length:0;
             if (!a2) return counts;
             for (let i = 0; i < list.length; i++) {
                 const current = row(list[i]), prev = i || closed ? row(list[(i + list.length - 1) % list.length]) : null;
@@ -45,7 +48,7 @@
             return counts;
         }
         const maxima = { 4: sizes.limits?.[4]?.max, 5: sizes.limits?.[5]?.max, 6: sizes.limits?.[6]?.max,
-            ...(a2 ? limits : {}) };
+            ...(a2 ? limits : {}), ...(playerSevenActive?{playerSeven:limits.playerSeven}:{}) };
         function allows(next) {
             if (Object.values(maxima).every(max=>max==null) && [4,5,6].every(n=>sizes.limits?.[n]?.min==null)) return true;
             const before = measure(rounds), after = measure(next);

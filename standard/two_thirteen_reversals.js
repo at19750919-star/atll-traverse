@@ -46,7 +46,7 @@
     }
     function check(rounds, limit, options = {}) {
         const roundNumbers = [];
-        (rounds || []).forEach((r, i) => { if (classify(r)) roundNumbers.push(i + 1); });
+        (rounds || []).forEach((r, i) => { if ((options.classify || classify)(r)) roundNumbers.push(i + 1); });
         const actual = roundNumbers.length;
         const okCount = limit === null || actual <= limit;
         // 只檢查當副牌的前後次序，不把靴尾與靴頭循環相接；兩次之間至少21局。
@@ -54,7 +54,7 @@
         for (let i = 1; options.enforceSpacing !== false && i < roundNumbers.length; i++) {
             const firstRound = roundNumbers[i - 1], nextRound = roundNumbers[i];
             const gap = nextRound - firstRound - 1;
-            if (gap <= 20) spacingViolations.push({ firstRound, nextRound, gap });
+            if (gap < (options.minGap ?? 21)) spacingViolations.push({ firstRound, nextRound, gap });
         }
         const okSpacing = spacingViolations.length === 0;
         const v = spacingViolations[0];
@@ -64,6 +64,7 @@
     }
     // 搜尋各種同類位置的組合，再把逆轉局與一般局整局交換；失敗不改輸入。
     async function repairSpacing(rounds, options = {}) {
+        const separation=(options.minGap ?? 21)+1;
         const originalCheck = check(rounds, null, options);
         if (originalCheck.okSpacing) return { ok: true, rounds, swaps: [], nodes: 0 };
         const keyFor = options.keyFor;
@@ -72,7 +73,7 @@
         const groups = new Map(), fixed = [];
         const keys = rounds.map(keyFor);
         rounds.forEach((r, i) => {
-            if (!classify(r)) return;
+            if (!(options.classify || classify)(r)) return;
             if (!canMove(i)) { fixed.push(i); return; }
             const key = keys[i];
             if (!groups.has(key)) groups.set(key, { key, sources: [], slots: [] });
@@ -80,9 +81,9 @@
         });
         const items = [...groups.values()];
         for (const group of items) group.slots = rounds.map((_, i) => i)
-            .filter(i => canMove(i) && keys[i] === group.key && fixed.every(j => Math.abs(i - j) >= 22));
-        const impossible = originalCheck.count > Math.floor((rounds.length - 1) / 22) + 1
-            || fixed.some((v, i) => fixed.slice(i + 1).some(w => Math.abs(v - w) < 22))
+            .filter(i => canMove(i) && keys[i] === group.key && fixed.every(j => Math.abs(i - j) >= separation));
+        const impossible = originalCheck.count > Math.floor((rounds.length - 1) / separation) + 1
+            || fixed.some((v, i) => fixed.slice(i + 1).some(w => Math.abs(v - w) < separation))
             || items.some(g => g.slots.length < g.sources.length);
         if (impossible) return { ok: false, reason: '沒有足夠的同結果、同訊號安全位置可交換' };
         items.sort((a, b) => (a.slots.length - a.sources.length) - (b.slots.length - b.sources.length));
@@ -120,7 +121,7 @@
             const candidates = group.slots.filter(i => i > after)
                 .sort((a, b) => Number(!group.sources.includes(a)) - Number(!group.sources.includes(b)) || a - b);
             for (const i of candidates) {
-                if (chosen.some(j => Math.abs(i - j) < 22)) continue;
+                if (chosen.some(j => Math.abs(i - j) < separation)) continue;
                 if (group.slots.filter(j => j > i).length < group.sources.length - offset - 1) continue;
                 targets.get(group.key).push(i); chosen.push(i);
                 await search(groupIndex, offset + 1, i);

@@ -15,7 +15,7 @@
   const signature=p=>{const c=Array(10).fill(0);p.forEach(x=>c[x]++);return c.join('/');};
   const wanted=(trip,sig)=>triple&&trip?'和':sig?'莊':'閒';
   const matches=(need,actual)=>need===actual||(!triple&&need==='閒'&&actual==='和');
-  const specialKeys=['bankerSix','seven','rare'];
+  const specialKeys=['bankerSix','seven','rare','playerSeven'];
   function describe(points){const h=B.simulateHand(points,0,points.length);if(!h||h.size!==points.length||!B.handSensitive(points))return null;const sw=points.slice();[sw[0],sw[1]]=[sw[1],sw[0]];const sh=B.simulateHand(sw,0,sw.length);if(B.rules.skipPlayer7&&[h,sh].some(r=>r.player===7&&r.banker===6))return null;const pairs=[{points:points.slice(),result:h.result,special:B.specialRoundCounts(points)}];if(sh.result!==h.result)pairs.push({points:sw,result:sh.result,special:B.specialRoundCounts(sw)});if(B.rules.skipBanker6&&pairs[0].special.drawSix)return null;pairs.sort((a,b)=>a.result.localeCompare(b.result));const multiset=Array(10).fill(0);points.forEach(p=>multiset[p]++);return {size:points.length,counts:multiset,trip:triple&&B.isTriple(points),signal:B.isSignalHand(points,options.signalConfig),orientations:pairs};}
   // Equivalent states retain an actual validated arrangement for each direction.
   // Point multiset fixes A/2 membership and triples; outcome + special counters

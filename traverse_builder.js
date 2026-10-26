@@ -326,7 +326,7 @@
     // optimizer. Reversing a candidate may change these counts, so the final
     // physical shoe is checked again after applying signals.
     function specialRoundCounts(points) {
-        const out = { bankerSix: 0, seven: 0, rare: 0, drawSix: 0 };
+        const out = { bankerSix: 0, seven: 0, rare: 0, drawSix: 0, playerSeven: 0 };
         for (let cur = 0; cur < points.length;) {
             const h = simulateHand(points, cur, points.length);
             if (!h) break;
@@ -338,6 +338,7 @@
             const swapped = simulateHand(sw, 0, sw.length);
             const drawSix = r => r && r.size === 6 && r.banker === 6 && r.player <= 5;
             if (drawSix(h) || drawSix(swapped)) out.drawSix++;
+            if ((h.player===7&&h.banker===6)||(swapped&&swapped.player===7&&swapped.banker===6)) out.playerSeven++;
             cur += h.size;
         }
         return out;
@@ -348,9 +349,9 @@
         if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return true;
         if (opts.specialLimits) {
             const special = specialRoundCounts(seg);
-            for (const k of ['bankerSix','seven','rare']) {
+            for (const k of ['bankerSix','seven','rare','playerSeven']) {
                 const max = opts.specialLimits[k];
-                if (max !== null && opts.specialTally[k] + special[k] > max) return false;
+                if (max != null && opts.specialTally[k] + special[k] > max) return false;
             }
         }
         const c = roundSizeCounts(seg), t = opts.sizeTally;
@@ -399,7 +400,7 @@
         if (!opts.sizeLimits && opts.tieMax === null && !opts.specialLimits) return;
         if (opts.specialLimits) {
             const special = specialRoundCounts(seg);
-            for (const k of ['bankerSix','seven','rare']) opts.specialTally[k] += sign * special[k];
+            for (const k of ['bankerSix','seven','rare','playerSeven']) opts.specialTally[k] += sign * special[k];
         }
         const c = roundSizeCounts(seg);
         opts.tieTally += sign * c.tie;
@@ -1156,7 +1157,7 @@
             if (value !== null && (!Number.isInteger(value) || value < 0 || value > 104)) throw new Error('莊6與逆轉上限須為0～104的整數或null');
         }
         if (opts.specialLimits?.rare != null && !global.TwoThirteenReversals) throw new Error('缺少1／13＋2／13逆轉判定模組');
-        opts.specialTally = { bankerSix: 0, seven: 0, rare: 0 };
+        opts.specialTally = { bankerSix: 0, seven: 0, rare: 0, playerSeven: 0 };
         rules.skipBanker6 = options.skipBanker6 === true || opts.specialLimits?.bankerSix != null;
         rules.skipPlayer7 = options.skipPlayer7 === true;
         rules.mixedColor = options.mixedColor === true;
@@ -1432,7 +1433,7 @@
                 fallbackCards: fallbackSegs.reduce((n, s) => n + s.length, 0),
                 sizeTally: opts.sizeLimits ? { ...opts.sizeTally } : null,
                 tiePicked: opts.tieMax !== null ? opts.tieTally : null,
-                specialPicked: opts.specialLimits ? { ...opts.specialTally } : null,
+                specialPicked: opts.specialLimits ? Object.fromEntries(Object.entries(opts.specialTally).filter(([k])=>k!=='playerSeven'||opts.specialLimits.playerSeven!=null)) : null,
                 totalCards: points.length,
                 ms: Date.now() - t0,
             },

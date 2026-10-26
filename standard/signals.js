@@ -689,7 +689,7 @@ function shouldSkipSensitiveRound(round) {
 
     // 「避開閒7贏莊6」勾選時，不論對不對調，只要閒 7 點贏莊 6 點就排除
     const skipP7El = document.getElementById('skipPlayer7Banker6');
-    if (skipP7El && skipP7El.checked && Array.isArray(round.cards) && round.cards.length >= 4) {
+    if ((window.StandardProfiles?.current==='a2' && typeof PlayerSevenLimits!=='undefined' ? PlayerSevenLimits.read(document).limit===0 : skipP7El?.checked) && Array.isArray(round.cards) && round.cards.length >= 4) {
         const isP7OverB6 = (cards) => {
             const hi = computeRoundHands(cards);
             return !!hi && hi.playerTotal === 7 && hi.bankerTotal === 6;
@@ -3257,6 +3257,11 @@ function validateStandardGeneratedShoe(rounds, options = {}) {
     if (sizes.limits) { const c = RoundSizeLimits.check(rounds, sizes.limits); if (!c.ok) failures.push(c.reason); }
     const limits = preflightCheckMaxSideLimit(rounds, { alreadyAdjusted: true });
     if (limits.enabled && !limits.ok) failures.push('莊閒差距／和局上限／四張比例超標');
+    let playerSevenFailure=false;
+    if(window.StandardProfiles?.current==='a2' && typeof PlayerSevenLimits!=='undefined'){
+        const setting=PlayerSevenLimits.read(document),checked=PlayerSevenLimits.check(rounds,setting.limit);
+        if(setting.error||!checked.ok){playerSevenFailure=true;failures.push(setting.error||checked.reason);}
+    }
     const b6 = readBankerSixWinLimit();
     if (b6.error) failures.push(b6.error);
     if (b6.limit !== null) { const c = checkBankerSixWinLimit(rounds, b6.limit); if (!c.ok) failures.push(c.reason); }
@@ -3306,7 +3311,7 @@ function validateStandardGeneratedShoe(rounds, options = {}) {
         }
     }
     return { ok: failures.length === 0, reason: [...new Set(failures)].join('；'),
-        retryable: roundIssues && inventoryOk && !spacingFailure };
+        retryable: (roundIssues || playerSevenFailure) && inventoryOk && !spacingFailure };
 }
 
 async function generateShoe() {
@@ -3341,6 +3346,10 @@ async function generateShoe() {
         input?.focus();
         log(reversalSettings.error, 'error');
         return;
+    }
+    if(window.StandardProfiles?.current==='a2' && typeof PlayerSevenLimits!=='undefined'){
+        const setting=PlayerSevenLimits.read(document);
+        if(setting.error){log(setting.error,'error');document.getElementById(setting.focus)?.focus();return;}
     }
     const bankerSixSettings = readBankerSixWinLimit();
     if (bankerSixSettings.error) {
@@ -3864,6 +3873,16 @@ async function generateShoe() {
 
         if (CARD_COLOR_MIXED_MODE && calculateCardColorViolations(currentRounds) > 0) {
             runAutoColorSwap_Signal(currentRounds);
+        }
+        if(window.StandardProfiles?.current==='a2' && typeof PlayerSevenLimits!=='undefined' && !PlayerSevenLimits.check(currentRounds,PlayerSevenLimits.read(document).limit).okSpacing){
+            const repaired=await TwoThirteenReversals.repairSpacing(currentRounds,{
+                classify:PlayerSevenLimits.classify,minGap:20,
+                keyFor:r=>JSON.stringify([standardRoundOutcome(r),r.cards.some(isSignalCardByConfig),hasFullHouse(r),r.segment||'',r.cards.length]),
+                canMove:i=>!document.getElementById('lastCardNine')?.checked||i!==currentRounds.length-1,
+                shouldStop:()=>window.__stopGenerateRequested===true,
+                validate:rs=>validateStandardGeneratedShoe(rs,{deferRecovery:isRed0}).ok
+            });
+            if(repaired.ok){currentRounds=repaired.rounds;let pos=0;currentRounds.forEach(r=>{r.start_index=pos;r.cards.forEach(c=>{c.pos=pos++;});});}
         }
         const finalValidation = validateStandardGeneratedShoe(currentRounds, { deferRecovery: isRed0 });
         if (!finalValidation.ok) {
