@@ -189,7 +189,7 @@
       $(newId).closest('label').hidden=key!=='a2';
       $(newId).closest('label').style.display=key!=='a2'?'none':'';
     }
-    $('tvTemplateControls').hidden=mode!=='traverse'||tsub!=='red0';$('sensitiveControls').hidden=mode!=='traverse';$('tvLooseTie').closest('label').hidden=!isAS();
+    $('tvTemplateControls').hidden=mode!=='traverse'||tsub!=='red0';$('sensitiveControls').hidden=mode!=='traverse';$('tvLooseTie').closest('label').hidden=!isAS();$('asLibraryControls').hidden=mode!=='traverse'||!isAS();
     [['modeRed0','standard','red0'],['modeA2','standard','a2'],['modeTraverse','traverse','red0'],['modeTraverseA2','traverse','a2'],['modeAllSens','traverse','asred0'],['modeAllSensA2','traverse','asa2']].forEach(([id,m,s]) => {
       const on = mode === m && (m === 'standard' ? sub : tsub) === s;
       $(id).classList.toggle('active', on); $(id).setAttribute('aria-pressed', on);
@@ -238,7 +238,7 @@
     $('generateBtn').disabled=value;$('stopGenerateBtn').disabled=!value;
     $('btnExportCombined').disabled=value;$('btnExportCombined').textContent=value?'處理中…':'導出';
     $('generatingOverlay').classList.toggle('active',value);document.body.classList.toggle('running',value);
-    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','modeAllSens','modeAllSensA2','sharedSignalSettings','exportFilename',...controlIds,'sensitiveConnect','sensitiveResume','sensitiveStart','sensitiveLength','sensitiveExport','tvTemplateConnect','tvTemplateResume','tvTemplateStart','tvTemplateExportLength','tvTemplateExport','tvTemplateExportPending','tvTemplateImport','tvDemo','tvOptimize','tvRecoveryOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
+    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','modeAllSens','modeAllSensA2','sharedSignalSettings','exportFilename',...controlIds,'sensitiveConnect','sensitiveResume','asLibraryConnect','asLibraryResume','sensitiveStart','sensitiveLength','sensitiveExport','tvTemplateConnect','tvTemplateResume','tvTemplateStart','tvTemplateExportLength','tvTemplateExport','tvTemplateExportPending','tvTemplateImport','tvDemo','tvOptimize','tvRecoveryOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
     document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>{el.style.pointerEvents=value?'none':'';el.setAttribute('aria-disabled',value);});
     document.querySelectorAll('.suit-checkbox,.rank-checkbox').forEach(el=>el.disabled=value);
     if(!value){$('tvOptimize').disabled=!states.traverse.result;$('tvRecoveryOptimize').disabled=!states.traverse.result;updateSensitiveStats();}
@@ -730,6 +730,10 @@
   $('sensitiveStop').addEventListener('click',requestSensitiveStop);
   $('sensitiveExport').addEventListener('click',async()=>{if(busy)return;lock(true);try{const n=Number($('sensitiveLength').value),blob=await SensitiveHandLibrary.exportJSON(n),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`ATLL-敏感局點數範本-${n}張.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){status('敏感局匯出失敗：'+e.message);}finally{lock(false);}});
   void SensitiveHandLibrary.ready.then(updateSensitiveStats);
+  // 全敏範本庫：先接上資料夾、列出檔案，暫不讀入生成
+  const updateAllSensLibrary=()=>{$('asLibraryStatus').textContent=AllSensLibrary.summary();};
+  AllSensLibrary.onChange(updateAllSensLibrary);void AllSensLibrary.ready.then(updateAllSensLibrary);
+  for(const [id,action]of [['asLibraryConnect','connect'],['asLibraryResume','resume']])$(id).addEventListener('click',async()=>{if(busy)return;try{await AllSensLibrary[action]();updateAllSensLibrary();status('全敏範本資料夾已連結（唯讀），目前不用於生成');}catch(e){if(e.name!=='AbortError')status('全敏範本資料夾未完成：'+e.message);}});
 
   $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',()=>optimize('safe'));$('tvRecoveryOptimize').addEventListener('click',()=>optimize('recovery'));
   $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));
