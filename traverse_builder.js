@@ -1650,7 +1650,7 @@
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
         // 全敏：以整副（含剩牌）416 個切點的不敏感局總數為目標，調段序與剩牌排列
         if (rules.allSens && options.junctionOrder !== false) ({ chains, leftover } = arrangeForAllCuts(chains, leftover, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 4000,
-            options.noSignalSwap === true && opts.signalRule ? (Number.isFinite(options.signalWeight) ? options.signalWeight : 0) : 0, opts.asStream));
+            options.noSignalSwap === true && opts.signalRule ? (Number.isFinite(options.signalWeight) ? options.signalWeight : 30) : 0, opts.asStream));
 
         let templateLibrary=null;
         const library=options.templateLibrary===false?null:global.TraverseTemplates;
