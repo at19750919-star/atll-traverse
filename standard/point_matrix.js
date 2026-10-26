@@ -400,6 +400,46 @@
         });
     }
 
+    // 前三張反查：列出以這三張（依序閒1、莊1、閒2）開頭的 4／5／6 張敏感局
+    function runPrefixLookup(dlg, rawInput) {
+        const statusEl = dlg.querySelector('#pmPrefixStatus');
+        const resultHost = dlg.querySelector('#pmPrefixResult');
+        const all = parseCardsInput(rawInput);
+        // 輸入超過 3 張時取最後 3 張當這局前三張
+        const pts = all.slice(-3);
+        const idle = '輸入點數，取最後 3 張當前三張（依發牌順序：閒、莊、閒），列出可接成的 4／5／6 張敏感局';
+        if (pts.length !== 3) {
+            if (statusEl) statusEl.textContent = pts.length ? `至少需 3 張，目前 ${pts.length} 張（${pts.join(' ')}）` : idle;
+            if (resultHost) { resultHost.hidden = true; resultHost.innerHTML = ''; }
+            return;
+        }
+        const prefix = pts.join('');
+        const bySize = { '4': [], '5': [], '6': [] };
+        for (const entry of ensureSensitiveData().compMap.values()) {
+            for (const it of entry.items) {
+                if (it.code.startsWith(prefix)) bySize[String(it.size)].push(it);
+            }
+        }
+        const total = bySize['4'].length + bySize['5'].length + bySize['6'].length;
+        const sectionsHtml = ['4', '5', '6'].map(lenStr => {
+            const list = bySize[lenStr].sort((a, b) => a.code.localeCompare(b.code));
+            if (!list.length) return `<div class="pm-sens-group"><p class="pm-sens-group-title">${lenStr} 張敏感局（0 筆）</p></div>`;
+            const badges = list.map(it => {
+                const swapped = it.code[1] + it.code[0] + it.code.slice(2);
+                const outLabel = it.b > it.p ? '莊' : it.p > it.b ? '閒' : '和';
+                return `<span class="pm-sens-code" data-code="${it.code}" title="點擊複製 ${it.code}｜莊${it.b}:閒${it.p}｜對調首兩張 → ${swapped}（莊${it.swB}:閒${it.swP}）">${it.code}<small class="pm-search-rem"> ${outLabel}${it.b}:${it.p}</small></span>`;
+            }).join('');
+            return `<div class="pm-sens-group">
+                <p class="pm-sens-group-title">${lenStr} 張敏感局（共 ${list.length} 筆）</p>
+                <div class="pm-sens-codes">${badges}</div>
+            </div>`;
+        }).join('');
+        if (statusEl) statusEl.textContent = `${all.length > 3 ? `輸入 ${all.length} 張，取最後三張 ` : '前三張 '}${pts.join(' ')}｜共 ${total} 種（4張 ${bySize['4'].length}／5張 ${bySize['5'].length}／6張 ${bySize['6'].length}）`;
+        resultHost.hidden = false;
+        resultHost.innerHTML = `<div class="pm-search-summary">前三張反查：<code>${pts.join(' ')}</code>（每筆後方小字為原牌結果 莊:閒 點數）</div>${sectionsHtml}`;
+        bindCodeCopy(resultHost);
+    }
+
     function buildSensitiveSection() {
         const { groups, rowTotals, colTotals } = ensureSensitiveData();
         const head = '<tr><th scope="col">莊＼閒</th>' + groups[0].map((_, p) => `<th scope="col">${p}</th>`).join('') + '<th scope="col">莊合計</th></tr>';
@@ -439,6 +479,13 @@
                     <span class="pm-sens-search-status" id="pmSensSearchStatus">輸入 4～6 張（或更多張）點數，即可反查可排出的莊閒結果</span>
                 </div>
                 <div class="pm-sens-search-results" id="pmSensSearchResult" hidden></div>
+                <div class="pm-sens-search-bar">
+                    <label class="pm-sens-search-label" for="pmPrefixInput">前三張反查：</label>
+                    <input type="text" id="pmPrefixInput" class="pm-sens-search-input" placeholder="輸入前三張（例：3 5 5 或 355）" autocomplete="off">
+                    <button type="button" class="pm-sens-btn" id="pmPrefixClearBtn">清除</button>
+                    <span class="pm-sens-search-status" id="pmPrefixStatus">輸入點數，取最後 3 張當前三張（依發牌順序：閒、莊、閒），列出可接成的 4／5／6 張敏感局</span>
+                </div>
+                <div class="pm-sens-search-results" id="pmPrefixResult" hidden></div>
                 <div class="pm-scroll"><table class="pm-table pm-sens-table" id="pmSensitiveTable"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
                 <div class="pm-sens-detail" id="pmSensitiveDetail" hidden></div>
             </div>`;
@@ -504,6 +551,12 @@
         if (clearBtn) clearBtn.addEventListener('click', () => {
             if (searchInput) searchInput.value = '';
             runCardLookup(dlg, '');
+        });
+        const prefixInput = dlg.querySelector('#pmPrefixInput');
+        if (prefixInput) prefixInput.addEventListener('input', () => runPrefixLookup(dlg, prefixInput.value));
+        dlg.querySelector('#pmPrefixClearBtn')?.addEventListener('click', () => {
+            if (prefixInput) prefixInput.value = '';
+            runPrefixLookup(dlg, '');
         });
         document.body.appendChild(dlg);
         return dlg;
