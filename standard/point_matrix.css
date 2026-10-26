@@ -18,20 +18,23 @@
 .pm-close:hover,.pm-close:focus-visible{border-color:#c9a25a;color:var(--gold-1);outline:none}
 .pm-note{margin:6px 0;font-family:var(--sans);font-size:12.5px;color:var(--txt-dim);line-height:1.6}
 .pm-scroll{overflow-x:auto}
-.pm-table{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:12.5px}
+.pm-table{width:100%;table-layout:auto;border-collapse:collapse;font-family:var(--sans);font-size:12.5px}
 .pm-table th{
   font-family:var(--serif);font-weight:600;font-size:12px;letter-spacing:.15em;
-  color:var(--gold-1);padding:8px 6px;white-space:nowrap;text-align:center;
+  color:var(--gold-1);padding:8px 5px;white-space:nowrap;text-align:center;
+}
+.pm-table:not(.pm-sizes) th:first-child{
+  width:52px;min-width:52px;max-width:58px;padding:7px 4px;letter-spacing:.05em;
 }
 /* 主頁 thead th 是牌桌綠底＋sticky，彈窗內改回面板底，不用氈布色 */
 .pm-table thead th{position:static;background:rgba(201,162,90,.06);border-bottom:1px solid #c9a25a;text-indent:0}
 .pm-table tbody th,.pm-table tfoot th{border-right:1px solid #c9a25a}
 .pm-table td{
-  padding:7px 6px;white-space:nowrap;text-align:right;
+  padding:7px 5px;white-space:nowrap;text-align:right;
   border-bottom:1px solid rgba(201,162,90,.14);
 }
 .pm-count{color:var(--txt);font-variant-numeric:tabular-nums}
-.pm-pct{margin-left:5px;color:var(--txt-dim);font-variant-numeric:tabular-nums}
+.pm-pct{margin-left:4px;color:var(--txt-dim);font-variant-numeric:tabular-nums}
 .pm-table td.pm-tie .pm-count{color:var(--tie)}
 .pm-table td.pm-total{background:rgba(201,162,90,.07)}
 .pm-table td.pm-total .pm-count{color:var(--gold-1);font-weight:700}
@@ -70,7 +73,7 @@
 
 .pm-sens-table td.pm-sens-cell{
   cursor:pointer;user-select:none;transition:background .15s,box-shadow .15s,opacity .15s;
-  vertical-align:middle;padding:6px 5px;position:relative;
+  vertical-align:middle;padding:6px 4px;position:relative;
 }
 .pm-sens-table td.pm-sens-cell:hover,
 .pm-sens-table td.pm-sens-cell:focus-visible{
