@@ -597,6 +597,72 @@
         return { segs, rest, shuffles: tries };
     }
 
+    // ===== 全敏模式接段順序：讓跨段的局盡量是敏感局 =====
+    // 切牌後從段中間發到段尾，常會剩幾張和下一段湊成一局。先算每段從各起點發下來會停在段尾哪些位置（次數），
+    // 再對每一對（前段→後段）算這些跨段局有多少是敏感局，依次數加權；貪心挑下一段，試多個起頭取總分最高。
+    function tailStops(seg) {
+        const n = seg.length, freq = new Map();
+        for (let st = 0; st < n; st++) {
+            let cur = st;
+            for (;;) { const h = simulateHand(seg, cur, n); if (!h) break; cur += h.size; }
+            if (cur < n) freq.set(cur, (freq.get(cur) || 0) + 1);
+        }
+        return freq;
+    }
+    function junctionScore(a, stops, b) {
+        let score = 0;
+        const joined = a.concat(b.slice(0, 6));
+        for (const [p, w] of stops) {
+            const h = simulateHand(joined, p, joined.length);
+            if (h && handSensitive(joined.slice(p, p + h.size))) score += w;
+        }
+        return score;
+    }
+    // 整副模擬：從每個切點發完整副，數跨段（含跨到剩牌前）的不敏感局；段內局本來就全敏不用算
+    function junctionCost(chains) {
+        const seq = chains.flat(), n = seq.length, bound = new Uint8Array(n + 1);
+        let off = 0; for (const ch of chains) { off += ch.length; bound[off % n] = 1; }
+        const memo = new Map();
+        let cost = 0;
+        for (let cut = 0; cut < n; cut++) {
+            let cur = cut, dealt = 0;
+            while (dealt + 4 <= n) {
+                const at = cur % n;
+                let h = memo.get(at);
+                if (h === undefined) {
+                    const win = []; for (let k = 0; k < 6; k++) win.push(seq[(at + k) % n]);
+                    const r = simulateHand(win, 0, 6);
+                    let crosses = false; for (let k = 1; k < (r ? r.size : 0); k++) if (bound[(at + k) % n]) crosses = true;
+                    h = r ? { size: r.size, bad: crosses && !handSensitive(win.slice(0, r.size)) } : null;
+                    memo.set(at, h);
+                }
+                if (!h || dealt + h.size > n) break;
+                if (h.bad) cost++;
+                cur += h.size; dealt += h.size;
+            }
+        }
+        return cost;
+    }
+    function orderChainsByJunction(chains, rng, budgetMs = 4000) {
+        const n = chains.length;
+        if (n < 3) return chains;
+        // 起點：貪心接段（只看段尾一次），再用整副模擬做兩段交換的局部搜尋
+        const stops = chains.map(tailStops);
+        const S = chains.map((a, i) => chains.map((b, j) => i === j ? -1 : junctionScore(a, stops[i], b)));
+        const used = new Uint8Array(n); let order = [0]; used[0] = 1;
+        for (let k = 1; k < n; k++) { const prev = order[k - 1]; let pick = -1, ps = -1; for (let j = 0; j < n; j++) if (!used[j] && S[prev][j] > ps) { pick = j; ps = S[prev][j]; } used[pick] = 1; order.push(pick); }
+        let best = junctionCost(order.map(i => chains[i]));
+        const until = Date.now() + budgetMs;
+        while (Date.now() < until && best > 0) {
+            const i = Math.floor(rng() * n), j = Math.floor(rng() * n);
+            if (i === j) continue;
+            [order[i], order[j]] = [order[j], order[i]];
+            const c = junctionCost(order.map(k => chains[k]));
+            if (c <= best) best = c; else [order[i], order[j]] = [order[j], order[i]];
+        }
+        return order.map(i => chains[i]);
+    }
+
     // ===== 階段 2：用敏感局組合計算排列 =====
     // 預先列出所有敏感局（4/5/6 張的點數組合），再從剩餘牌中挑幾局接成段
     // 放寬和局時敏感局清單不同，依規則分開快取
@@ -1374,6 +1440,7 @@
             return { rejected: true, leftoverCount: restCards.length, stats: { ms: Date.now() - t0, templateComputeHits: opts.templateComputeHits, templateBorrowHits: opts.templateBorrowHits } };
         }
         let chains = await phaseChain(segs, opts, ctx);
+        if (rules.allSens && options.junctionOrder !== false) chains = orderChainsByJunction(chains, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 4000);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
 
         let templateLibrary=null;

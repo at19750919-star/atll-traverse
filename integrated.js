@@ -25,7 +25,7 @@
     red0: { tvPlayerSevenMax:'', tvTriple:true, tvBankerSixMax:'', tvSevenReversalMax:'2', tvRareReversalMax:'', tvP7:true, tvNine:false, tvTieMax:'4', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♥','♦'], ranks:['10','J','Q','K'] } },
     a2:   { tvPlayerSevenMax:'', tvTriple:true, tvBankerSixMax:'', tvSevenReversalMax:'2', tvRareReversalMax:'', tvP7:false, tvNine:true, tvTieMax:'', tvSideLimit:'8', tvSignal:true, tvMixedColor:false, signal:{ suits:['♠','♥','♦','♣'], ranks:['A','2'] } }
   };
-  TV_RULES.asred0 = { ...TV_RULES.red0, tvMax:'17', tvLeft:'40', tvLooseTie:false, signal:copy(TV_RULES.red0.signal) };
+  TV_RULES.asred0 = { ...TV_RULES.red0, tvMax:'17', tvLeft:'40', tvLooseTie:false, tvSideLimit:'', signal:copy(TV_RULES.red0.signal) };
   TV_RULES.asa2 = { ...TV_RULES.a2, tvMax:'17', tvLeft:'40', tvLooseTie:false, signal:copy(TV_RULES.a2.signal) };
   const isAS = () => tsub === 'asred0' || tsub === 'asa2';
   const sig = () => isAS() ? tsub.slice(2) : tsub;
