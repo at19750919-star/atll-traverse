@@ -51,7 +51,7 @@
     try { localStorage.setItem(TV_KEY[t], JSON.stringify(p)); } catch (_) {}
   }
   const num = id => Number($(id).value);
-  const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice() });
+  const config = () => ({ suits: SIGNAL_CONFIG.suits.slice(), ranks: SIGNAL_CONFIG.ranks.slice(), ...(mode === 'traverse' && tsub === 'asred0' ? { allHearts: true } : {}) });
   function rules() { return { mixedColor: $('tvMixedColor').checked, tripleTie: $('tvTriple').checked, signalRule: $('tvSignal').checked,
     strong: $('tvStrong').checked, secondStart: $('tvSecond').checked, skipBanker6: $('tvBankerSixMax').value.trim()!=='', skipPlayer7: sig()==='a2' ? PlayerSevenLimits.read(document,'tvPlayerSevenMax').limit===0 : $('tvP7').checked, signalConfig: config(), preserveLastNine: $('tvNine').checked, allSens: isAS(), looseTie: isAS() && $('tvLooseTie').checked }; }
   function setRules() { Object.assign(B.rules, rules()); }

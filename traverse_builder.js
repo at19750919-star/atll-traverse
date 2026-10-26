@@ -1107,13 +1107,17 @@
     const defaultSignal = () => ({ suits: SUITS.slice(), ranks: ['A', '2'] });
     function normalizeSignal(config) {
         if (!config) return defaultSignal();
-        return { suits: SUITS.filter(s => config.suits?.includes(s)), ranks: RANKS.filter(r => config.ranks?.includes(r)) };
+        const out = { suits: SUITS.filter(s => config.suits?.includes(s)), ranks: RANKS.filter(r => config.ranks?.includes(r)) };
+        if (config.allHearts === true) out.allHearts = true;
+        return out;
     }
     const isSignalCard = (card, config = rules.signalConfig) => {
         const c = normalizeSignal(config);
         return c.suits.includes(card.suit) && c.ranks.includes(card.rank);
     };
-    const isSignalHand = (hand, config = rules.signalConfig) => hand.some(c => typeof c === 'number'
+    // 全敏紅0：整局都是紅心也算訊號（allHearts）
+    const allHeartsHand = (hand, config) => config?.allHearts === true && hand.length > 0 && hand.every(c => typeof c === 'object' && c.suit === '♥');
+    const isSignalHand = (hand, config = rules.signalConfig) => allHeartsHand(hand, config) || hand.some(c => typeof c === 'number'
         ? normalizeSignal(config).ranks.some(r => rankPoint(r) === c) : isSignalCard(c, config));
     const neededAfter = (prevHand) =>
         (rules.tripleTie && isTriple(prevHand.map(c => typeof c === 'number' ? c : c.point))) ? '和' : (isSignalHand(prevHand) ? '莊' : '閒');
@@ -1304,13 +1308,36 @@
         const sigQueue = sig.slice(), plainQueue = plain.slice(), before = pos.map(i => physicalCards[i]);
         pos.forEach(i => { physicalCards[i] = chosen.has(i) ? sigQueue.pop() : plainQueue.pop(); });
         let moves = 0; pos.forEach((i, k) => { if (physicalCards[i] !== before[k]) moves++; });
+        const handOf = r => physicalCards.slice(rounds[r].start, rounds[r].start + rounds[r].size);
+        const bad = r => r >= 0 && want[r] !== null && isSignalHand(handOf(r)) !== want[r];
+        let hearts = 0;
+        if (rules.signalConfig?.allHearts === true) {
+            // 4. 要訊號卻沒有紅0的局：同牌面換成紅心，整局全紅心也算訊號；換出去的局不能因此變成違規
+            const swap = (i, j) => { [physicalCards[i], physicalCards[j]] = [physicalCards[j], physicalCards[i]]; };
+            const trySwap = (i, ok) => {
+                for (let j = 0; j < physicalCards.length; j++) {
+                    const d = owner[j]; if (d === owner[i] || physicalCards[j].rank !== physicalCards[i].rank || !ok(physicalCards[j])) continue;
+                    const was = bad(d); swap(i, j); if (!bad(d) || was) return true; swap(i, j);
+                }
+                return false;
+            };
+            want.forEach((w, r) => {
+                if (w !== true || !bad(r)) return;
+                const snap = physicalCards.slice();
+                for (let i = rounds[r].start; i < rounds[r].start + rounds[r].size; i++) {
+                    if (physicalCards[i].suit !== '♥' && !trySwap(i, c => c.suit === '♥')) { physicalCards.splice(0, physicalCards.length, ...snap); return; }
+                }
+                hearts++;
+            });
+            // 5. 不能有訊號卻剛好整局紅心的局：換掉一張紅心
+            want.forEach((w, r) => {
+                if (w !== false || !bad(r) || handOf(r).some(c => isSignalCard(c))) return;
+                for (let i = rounds[r].start; i < rounds[r].start + rounds[r].size; i++) if (trySwap(i, c => c.suit !== '♥' && !isSignalCard(c))) break;
+            });
+        }
         let violations = 0;
-        rounds.forEach((r, i) => {
-            const w = want[i]; if (w === null) return;
-            const has = physicalCards.slice(r.start, r.start + r.size).some(c => isSignalCard(c));
-            if (has !== w) violations++;
-        });
-        return { moves, violations, rounds: R };
+        rounds.forEach((r, i) => { if (bad(i)) violations++; });
+        return { moves, violations, hearts, rounds: R };
     }
 
     function applySignalRule(chains, leftover, physicalCards = null) {
