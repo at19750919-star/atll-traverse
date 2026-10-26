@@ -238,7 +238,7 @@
     $('generateBtn').disabled=value;$('stopGenerateBtn').disabled=!value;
     $('btnExportCombined').disabled=value;$('btnExportCombined').textContent=value?'處理中…':'導出';
     $('generatingOverlay').classList.toggle('active',value);document.body.classList.toggle('running',value);
-    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','modeAllSens','modeAllSensA2','sharedSignalSettings','exportFilename',...controlIds,'sensitiveConnect','sensitiveResume','asLibraryConnect','asLibraryResume','sensitiveStart','sensitiveLength','sensitiveExport','tvTemplateConnect','tvTemplateResume','tvTemplateStart','tvTemplateExportLength','tvTemplateExport','tvTemplateExportPending','tvTemplateImport','tvDemo','tvOptimize','tvRecoveryOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
+    ['modeRed0','modeA2','modeTraverse','modeTraverseA2','modeAllSens','modeAllSensA2','sharedSignalSettings','exportFilename',...controlIds,'sensitiveConnect','sensitiveResume','asLibraryConnect','asLibraryResume','asLibraryStart','asLibraryRule','asLibraryExport','sensitiveStart','sensitiveLength','sensitiveExport','tvTemplateConnect','tvTemplateResume','tvTemplateStart','tvTemplateExportLength','tvTemplateExport','tvTemplateExportPending','tvTemplateImport','tvDemo','tvOptimize','tvRecoveryOptimize','btnOptBefore','btnOptAfter','btnOptOriginalCut'].forEach(id=>$(id).disabled=value);
     document.querySelectorAll('.suit-button,.rank-button,.quick').forEach(el=>{el.style.pointerEvents=value?'none':'';el.setAttribute('aria-disabled',value);});
     document.querySelectorAll('.suit-checkbox,.rank-checkbox').forEach(el=>el.disabled=value);
     if(!value){$('tvOptimize').disabled=!states.traverse.result;$('tvRecoveryOptimize').disabled=!states.traverse.result;updateSensitiveStats();}
@@ -693,7 +693,7 @@
     if(mode==='standard'&&window.__pendingSizeShoe&&!['chipStop','stopGenerateBtn'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
     if(mode==='standard'&&button.id==='btnExportCombined'){event.preventDefault();event.stopImmediatePropagation();if(sub==='a2'){const setting=PlayerSevenLimits.read(document),checked=PlayerSevenLimits.check(currentRounds,setting.limit);if(setting.error||!checked.ok){log(setting.error||checked.reason,'error');return;}}if(!busy&&!window.__isGeneratingShoe){lock(true);$('generatingText').textContent='正在建立本機Excel檔案…';Promise.resolve(original.export()).catch(e=>log(`導出失敗：${e.message}`,'error')).finally(()=>lock(false));}return;}
     if(mode!=='traverse')return;
-    if(busy&&!['stopGenerateBtn','chipStop','tvTemplateStop','sensitiveStop','logHead','btnTableWindow'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
+    if(busy&&!['stopGenerateBtn','chipStop','tvTemplateStop','sensitiveStop','asLibraryStop','logHead','btnTableWindow'].includes(button.id)&&!button.hasAttribute('data-dashboard-ui')){event.preventDefault();event.stopImmediatePropagation();return;}
     const id=button.id;
     const handlers={chipStop:()=>{if(busy){stopped=true;status('停止中，整理目前結果…');}},generateBtn:()=>generateTraverse(),stopGenerateBtn:()=>{stopped=true;status('停止中，整理目前結果…');},btnCut:()=>cutTraverse(Number($('cutPos').value)),btnAutoColor:recolor,
       btnExportCombined:exportTraverse,btnRecordDeckOrder:()=>{absorbEdits();rotateResult(states.traverse.result,states.traverse.cut);states.traverse.cut=0;$('cutPos').value=0;clearOptimization();renderTraverse();status('已套用目前牌序，切牌起點歸零');},
@@ -730,10 +730,17 @@
   $('sensitiveStop').addEventListener('click',requestSensitiveStop);
   $('sensitiveExport').addEventListener('click',async()=>{if(busy)return;lock(true);try{const n=Number($('sensitiveLength').value),blob=await SensitiveHandLibrary.exportJSON(n),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`ATLL-敏感局點數範本-${n}張.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){status('敏感局匯出失敗：'+e.message);}finally{lock(false);}});
   void SensitiveHandLibrary.ready.then(updateSensitiveStats);
-  // 全敏範本庫：先接上資料夾、列出檔案，暫不讀入生成
+  // 全敏範本庫：讀取、累積、保存與匯出，不用於生成
+  let allSensTask=null,allSensStopHome=null;
+  // 累積時畫面被生成遮罩蓋住，比照其他庫把停止鈕移到遮罩上（在分析明細對話框內時留在原位）
+  function floatAllSensStop(active){const b=$('asLibraryStop');if(active&&b.closest('dialog[open]'))return;/* 分析明細是最上層對話框，遮罩在它下面會讓按鈕點不到，留在原位 */if(active){allSensStopHome=document.createComment('全敏範本停止按鈕原位');b.before(allSensStopHome);$('generatingOverlay').append(b);b.classList.add('collection-stop-floating');}else{allSensStopHome?.replaceWith(b);allSensStopHome=null;b.classList.remove('collection-stop-floating');}}
   const updateAllSensLibrary=()=>{$('asLibraryStatus').textContent=AllSensLibrary.summary();};
   AllSensLibrary.onChange(updateAllSensLibrary);void AllSensLibrary.ready.then(updateAllSensLibrary);
-  for(const [id,action]of [['asLibraryConnect','connect'],['asLibraryResume','resume']])$(id).addEventListener('click',async()=>{if(busy)return;try{await AllSensLibrary[action]();updateAllSensLibrary();status('全敏範本資料夾已連結（唯讀），目前不用於生成');}catch(e){if(e.name!=='AbortError')status('全敏範本資料夾未完成：'+e.message);}});
+  for(const [id,action]of [['asLibraryConnect','connect'],['asLibraryResume','resume']])$(id).addEventListener('click',async()=>{if(busy)return;try{await AllSensLibrary[action]();updateAllSensLibrary();status('全敏範本資料夾已連結並讀入統計；只讀取與累積，不用於生成');}catch(e){if(e.name!=='AbortError')status('全敏範本資料夾未完成：'+e.message);}});
+  $('asLibraryStart').addEventListener('click',async()=>{if(busy||allSensTask)return;stopped=false;lock(true);$('asLibraryStop').disabled=false;floatAllSensStop(true);
+    allSensTask=(async()=>{try{await AllSensLibrary.run({rule:$('asLibraryRule').value,progress:status,cancelled:()=>stopped});status('全敏範本累積已停止並保存｜'+AllSensLibrary.summary());}catch(e){status('全敏範本累積失敗：'+e.message);}finally{allSensTask=null;floatAllSensStop(false);$('asLibraryStop').disabled=true;lock(false);updateAllSensLibrary();}})();});
+  $('asLibraryStop').addEventListener('click',()=>{if(!allSensTask)return;$('asLibraryStop').disabled=true;status('停止全敏範本累積，等待保存…');AllSensLibrary.stop();});
+  $('asLibraryExport').addEventListener('click',async()=>{if(busy)return;const rule=$('asLibraryRule').value,blob=await AllSensLibrary.exportJSON(rule),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`全敏分段範本_${rule==='loose'?'放寬和局':'原規則'}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 
   $('tvDemo').addEventListener('click',()=>generateTraverse(true));$('tvOptimize').addEventListener('click',()=>optimize('safe'));$('tvRecoveryOptimize').addEventListener('click',()=>optimize('recovery'));
   $('tvSafeCuts').addEventListener('click',e=>{const b=e.target.closest('[data-tv-cut]');if(b&&!busy)cutTraverse(Number(b.dataset.tvCut));
