@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>百家 3.0／穿越排牌 · SHOE MASTER</title>
+<title>百家4.0 · SHOE MASTER</title>
 
 <!-- 主題初始化（沿用 at-theme key，防止閃爍） -->
 <script>
@@ -1108,7 +1108,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
 
 <header>
   <div class="crest">♠</div>
-  <h1>SHOE MASTER<small>百家樂牌靴管理</small></h1>
+  <h1>SHOE MASTER<small>百家4.0</small></h1>
   <div class="shoe-state">
     <span class="dot"></span>
     <span class="st-idle">待命 STANDBY</span>
@@ -1117,7 +1117,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
   </div>
 </header>
 
-<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeRed0" aria-pressed="true">紅0模式</button><button class="tool-btn" id="modeA2" aria-pressed="false">A2模式</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越紅0</button><button class="tool-btn" id="modeTraverseA2" aria-pressed="false">穿越A2</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><a id="deckStatsLink" class="tool-btn" href="deck_stats.html" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;grid-column:1/-1">牌檔統計</a><span id="modeStatus" role="status">紅0模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
+<nav class="mode-switch gframe" aria-label="排牌模式"><span class="mode-label">排牌模式</span><button class="tool-btn active" id="modeRed0" aria-pressed="true">紅0模式</button><button class="tool-btn" id="modeA2" aria-pressed="false">A2模式</button><button class="tool-btn" id="modeTraverse" aria-pressed="false">穿越紅0</button><button class="tool-btn" id="modeTraverseA2" aria-pressed="false">穿越A2</button><button class="tool-btn" id="modeAllSens" aria-pressed="false" title="段內每個起點能發完的局都是敏感局">全敏紅0</button><button class="tool-btn" id="modeAllSensA2" aria-pressed="false" title="段內每個起點能發完的局都是敏感局">全敏A2</button><button id="sharedSignalSettings" class="tool-btn" type="button">訊號設定</button><a id="deckStatsLink" class="tool-btn" href="deck_stats.html" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;grid-column:1/-1">牌檔統計</a><span id="modeStatus" role="status">紅0模式</span><span id="sharedCardCounts" class="mode-note"></span></nav><section id="sharedSignalHost" class="mode-panel" aria-label="訊號牌設定"></section>
 <!-- ═══════════ 控制甲板 ═══════════ -->
 <section class="deck">
 
@@ -1296,6 +1296,7 @@ body:not([data-sub="red0"]):not([data-sub="a2"]) #stTargetRoadPanel{display:none
     <label class="cond rule-control"><span class="name">訊號牌</span><input type="checkbox" id="tvSignal" checked><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" hidden><span class="name">強</span><input type="checkbox" id="tvStrong"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" title="每個短段第二張起發的完整局須敏感；段尾不足一局略過"><span class="name">第二張敏感</span><input type="checkbox" id="tvSecond"><span class="switch" aria-hidden="true"></span></label>
+    <label class="cond rule-control" title="和局對調前兩張後變莊或變閒也算敏感，只要張數不變（只用於全敏模式）" hidden><span class="name">和局放寬</span><input type="checkbox" id="tvLooseTie"><span class="switch" aria-hidden="true"></span></label>
     <label class="cond rule-control" hidden><span class="name">莊閒</span><input type="checkbox" id="tvSide" checked><span class="switch" aria-hidden="true"></span></label>
   </div>
   </div>
@@ -1893,7 +1894,7 @@ window.updateViolationUI(null);
     </div>
     </div>
   </section>
-<script src="traverse_quota.js?v=1"></script><script src="traverse_templates.js?v=6"></script><script src="traverse_tail_fill.js?v=5"></script><script src="traverse_red0_balance.js?v=4"></script><script src="traverse_a2_tail.js?v=4"></script><script src="traverse_builder.js?v=46"></script><script src="traverse_template_banks.js?v=4"></script><script src="traverse_template_file.js?v=4"></script><script src="traverse_template_collector.js?v=5"></script><script src="traverse_export.js?v=8"></script><script src="traverse_limits.js?v=3"></script><script src="traverse_optimizer.js?v=9"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="sensitive_hand_library.js?v=2"></script><script src="integrated.js?v=49"></script>
+<script src="traverse_quota.js?v=1"></script><script src="traverse_templates.js?v=6"></script><script src="traverse_tail_fill.js?v=5"></script><script src="traverse_red0_balance.js?v=4"></script><script src="traverse_a2_tail.js?v=4"></script><script src="traverse_builder.js?v=49"></script><script src="traverse_template_banks.js?v=4"></script><script src="traverse_template_file.js?v=4"></script><script src="traverse_template_collector.js?v=5"></script><script src="traverse_export.js?v=8"></script><script src="traverse_limits.js?v=4"></script><script src="traverse_optimizer.js?v=10"></script><script src="traverse_optimizer_dialog.js?v=2"></script><script src="sensitive_hand_library.js?v=2"></script><script src="integrated.js?v=51"></script>
 <script src="integrated-analysis.js?v=1"></script>
 <script src="integrated-dashboard.js?v=18"></script>
 </body>

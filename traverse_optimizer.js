@@ -209,7 +209,7 @@
             : colorPatterns.every(p => ['RRRB','BBBR'].includes(p));
         after.chains.forEach(ch => {
             const ps = chainPoints(cards, ch), rs = B.roundsFromStart(ps);
-            ch.traverse = B.isTraverse(ps); ch.rounds = rs ? rs.length : 0;
+            ch.traverse = B.segmentShapeOk(ps); ch.rounds = rs ? rs.length : 0;
             ch.allSensitive = !!rs && rs.every(r => B.handSensitive(ps.slice(r.start, r.start + r.size)));
             ch.qualified = validChain(cards, ch, opts);
         });
