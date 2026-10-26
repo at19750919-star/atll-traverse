@@ -177,26 +177,60 @@
       });
       bar.setAttribute('role','img'); bar.setAttribute('aria-label',items.map(([name,count]) => `${name}${count}局`).join('，'));
     }
-    let analysisKey = '', shared = { safe:null, recovery:null };
+    let analysisKey = '', shared = { safe:null, recovery:null, sens:null };
+    // 全敏模式：從每個切點發完整副，數有幾局不是敏感局（取代回復分析與安全切點）
+    const isAllSensMode = () => document.body.dataset.mode === 'traverse' && /^as/.test(document.body.dataset.tsub || '');
+    function cutSensitivity(cards) {
+      const B = TraverseBuilder, E = TraverseExport, counts = [];
+      for (let cut = 0; cut < cards.length; cut++) {
+        const rs = E.dealRounds(E.cutDeck(cards, cut)).filter(r => r.hand);
+        counts.push(rs.filter(r => !B.handSensitive(r.cards.map(c => c.point))).length);
+      }
+      const total = counts.reduce((a,b) => a + b, 0), rounds = E.dealRounds(cards).filter(r => r.hand).length;
+      return { counts, avg:total / counts.length, max:Math.max(...counts), min:Math.min(...counts), maxAt:counts.indexOf(Math.max(...counts)), rounds };
+    }
     function sharedAnalysis(rounds) {
-      const tv = document.body.dataset.mode === 'traverse';
+      const tv = document.body.dataset.mode === 'traverse', allSens = isAllSensMode();
       const state = window.IntegratedModes.traversal;
       const cards = tv && state.result ? TraverseOptimizer.prepare(state.result) : rounds.flatMap(r => r.cards);
       const options = { tripleTie:$(tv ? 'tvTriple' : 'tripleTieRule').checked,
         signalRule:tv ? $('tvSignal').checked : true, signalConfig:{suits:SIGNAL_CONFIG.suits.slice(),ranks:SIGNAL_CONFIG.ranks.slice()} };
-      const key = JSON.stringify([document.body.dataset.mode,document.body.dataset.sub,document.body.dataset.tsub,
+      const key = JSON.stringify([document.body.dataset.mode,document.body.dataset.sub,document.body.dataset.tsub,$('tvLooseTie')?.checked,
         options,cards.map(c=>[c.rank,c.suit,c.traverse]),rounds.map(r=>[r.result,r.cards.map(c=>[c.rank,c.suit])])]);
       if (key !== analysisKey) {
         analysisKey = key;
-        shared = { safe:rounds.length ? IntegratedAnalysis.safe(cards,options,tv) : null,
-          recovery:IntegratedAnalysis.recovery(rounds), excluded:tv ? cards.filter(c=>!c.traverse).length : 0 };
+        shared = allSens ? { safe:null, recovery:null, sens:rounds.length && cards.length === 416 ? cutSensitivity(cards) : null, excluded:0 }
+          : { safe:rounds.length ? IntegratedAnalysis.safe(cards,options,tv) : null, recovery:IntegratedAnalysis.recovery(rounds), sens:null, excluded:tv ? cards.filter(c=>!c.traverse).length : 0 };
         renderCutMap(tv);
         renderRecoveryDetails();
       }
       if (!$('tvSafeCuts').querySelector('.cut-cell')) renderCutMap(tv);
       return shared;
     }
+    function renderSensMap() {
+      const sens = shared.sens, cuts = $('tvSafeCuts'); cuts.classList.add('cut-map'); cuts.replaceChildren();
+      const counts = sens?.counts || Array(416).fill(null), max = Math.max(1, sens?.max || 0);
+      $('tvSafePanel').querySelector('summary').firstChild.textContent = '切點不敏感局數 ';
+      $('tvSafeCount').textContent = sens ? `平均 ${sens.avg.toFixed(1)} 局｜全敏感切點 ${counts.filter(n=>n===0).length}／416` : '尚未排牌';
+      $('tvBucketSummary').textContent = sens ? '原始牌序張號；從該張切牌發完整副，數有幾局對調前兩張後不是敏感局（含接縫跨段局與尾端剩牌局）。' : '';
+      const buckets = new Map(); counts.filter(Number.isFinite).forEach(n=>buckets.set(n,(buckets.get(n)||0)+1));
+      $('tvCutBuckets').replaceChildren(...[...buckets].sort((a,b)=>a[0]-b[0]).map(([n,c])=>el('div','cut-bucket',`<span>${n ? `不敏感 ${n} 局` : '全部敏感'}</span><strong>${c} 點</strong>`)));
+      counts.forEach((n,index) => {
+        const cell = el('button','cut-cell'); cell.type = 'button'; cell.dataset.position = index + 1;
+        const label = n === null ? `第 ${index + 1} 張，尚未排牌` : `第 ${index + 1} 張切牌，不敏感 ${n} 局`;
+        cell.title = label; cell.setAttribute('aria-label',label); cell.disabled = n === null;
+        cell.classList.toggle('safe',n === 0); cell.classList.toggle('pending',n === null);
+        if (n !== null) cell.dataset.tvCut = index;
+        if (n) cell.style.setProperty('--cut-light',(18 + n / max * 40).toFixed(1) + '%');
+        cuts.append(cell);
+      });
+      $('tvSafePanel').open = true;
+      if (!$('cutMapLegend')) { const legend = el('div','cut-map-legend'); legend.id = 'cutMapLegend'; cuts.before(legend); }
+      $('cutMapLegend').innerHTML = '<span><i class="safe-key"></i>全部敏感</span><span><i class="depth-key"></i>越亮＝不敏感局越多</span><span>滑過看張號與局數・點任一格切牌</span>';
+    }
     function renderCutMap(tv) {
+      if (isAllSensMode()) return renderSensMap();
+      $('tvSafePanel').querySelector('summary').firstChild.textContent = '安全切牌點 ';
       const analysis = shared.safe, cuts = $('tvSafeCuts'); cuts.classList.add('cut-map'); cuts.replaceChildren();
       const depths = analysis?.depths || Array(416).fill(null), total = depths.length;
       const maxDepth = Math.max(1,...depths.filter(Number.isFinite));
@@ -219,6 +253,13 @@
       $('cutMapLegend').innerHTML = '<span><i class="safe-key"></i>安全</span><span><i class="depth-key"></i>越亮＝最後違規越深</span><span>' + (tv ? '滑過看張號・點任一格切牌' : '滑過看目前牌表張號・點任一格切牌') + '</span>';
     }
     function renderRecoveryDetails() {
+      const summary = $('sharedRecoveryDetails').querySelector('summary'), note = $('sharedRecoveryDetails').querySelector('.mode-note');
+      if (isAllSensMode()) {
+        summary.textContent = '逐切點不敏感局數'; note.textContent = '張號依原始牌序；數字＝從該張切牌發完整副時，對調前兩張後不是敏感局的局數。';
+        $('sharedRecoveryRows').replaceChildren(...(shared.sens?.counts || []).map((n,i)=>el('div','shared-recovery-row',`<span>第 ${i+1} 張</span><span>${n ? `不敏感 ${n} 局` : '全部敏感'}</span>`)));
+        return;
+      }
+      summary.textContent = '逐切點回復明細'; note.textContent = '回復＝不對調發牌後接回原局起點；不是違規深度。張號依目前牌表；尾端未成局的牌保留參與模擬，但不視為局起點。';
       const recovery = shared.recovery;
       $('sharedRecoveryRows').replaceChildren(...(recovery?.recoveryDetails || []).map(d=>el('div','shared-recovery-row',
         `<span>第 ${d.cutPoint+1} 張</span><span>${d.immediate ? '立即回復' : `${d.roundsUsed} 局／${d.cardsUsed} 張${d.failed ? '（未回復）' : ''}`}</span>`)));
@@ -248,6 +289,17 @@
       const ranges = [['立即','immediate'],['1–5局','range1to5'],['6–10局','range6to10'],['11–15局','range11to15'],['16局以上*','range16plus']];
       $('dashRecoveryBars').replaceChildren(...ranges.map(([name,key])=>{const pct=recovery ? recovery.distribution[key]/recovery.totalCards*100 : 0;return el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${pct.toFixed(1)}%</b>`);}));
       $('dashDistTitle').title = '* 沿用原分析：未回復切點也列於16局以上，詳見逐切點明細';
+      if (isAllSensMode()) {
+        const sens = analysis.sens;
+        $('dashRecTitle').textContent = '切點不敏感局數'; $('dashAvgLabel').textContent = '平均不敏感'; $('dashMaxLabel').textContent = '最多不敏感'; $('dashDistTitle').textContent = '不敏感局數分布'; $('dashDistTitle').title = '每個切點發完整副的不敏感局數，依切點數比例';
+        $('dashAvg').textContent = sens ? sens.avg.toFixed(1) + ' 局' : '—';
+        $('dashAvgCards').textContent = sens ? `約占每副 ${sens.rounds} 局的 ${(sens.avg / sens.rounds * 100).toFixed(1)}%` : '—';
+        $('dashMax').textContent = sens ? sens.max + ' 局' : '—';
+        $('dashMaxCards').textContent = sens ? `最少 ${sens.min} 局` : '—';
+        $('dashMaxAt').textContent = sens ? `最多出現在第 ${sens.maxAt + 1} 張切牌；全部敏感的切點 ${sens.counts.filter(n=>n===0).length} 個` : '尚未生成牌靴';
+        const bands = [['0局',n=>n===0],['1–2局',n=>n>=1&&n<=2],['3–5局',n=>n>=3&&n<=5],['6–10局',n=>n>=6&&n<=10],['11局以上',n=>n>=11]];
+        $('dashRecoveryBars').replaceChildren(...bands.map(([name,test])=>{const pct=sens ? sens.counts.filter(test).length/sens.counts.length*100 : 0;return el('div','dash-range',`<span>${name}</span><div><i style="width:${pct}%"></i></div><b>${pct.toFixed(1)}%</b>`);}));
+      }
       updateDataPlacement();
     }
     // Keep the original rows and event handlers. Grid only changes where they
