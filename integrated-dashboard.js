@@ -76,6 +76,8 @@
     recoveryDetails.innerHTML = '<summary>逐切點回復明細</summary><p class="mode-note">回復＝不對調發牌後接回原局起點；不是違規深度。張號依目前牌表；尾端未成局的牌保留參與模擬，但不視為局起點。</p><div id="sharedRecoveryRows"></div>';
     const moreData = el('div','dashboard-data-more'), diagnostics = $('tvDiagnostics').closest('details');
     diagnostics.id = 'tvDiagnosticsPanel'; moreData.append($('tvBucketsDetail'),recoveryDetails,diagnostics); traverse.append(moreData);
+    // 安全切點（全敏為切點不敏感局數）固定放在資料區最上面，說明文字移到它下面
+    traverse.prepend($('tvSafePanel'));
     const pit = document.querySelector('.pit'), tableBar = el('div','dashboard-table-bar');
     tableBar.append(el('span','dashboard-table-title','牌靴主表'),counts);
     const openData = button('btnTraverseData','穿越資料'), openTable = button('btnTableWindow','彈出主表 ↗');
