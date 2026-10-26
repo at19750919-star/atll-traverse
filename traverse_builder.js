@@ -689,6 +689,48 @@
         }
         return best;
     }
+    // 剩牌湊不成局時：借回幾段已排好的短段，和剩牌合併後重新拆成單局全敏小段，全部用完才採用
+    function repackLeftover(segs, rest, opts, budgetMs = 2000) {
+        if (!rest.length || !segs.length) return rest;
+        const valid = allSensitiveHands().filter(h => isAllSens(h) && qualifies(h, true));
+        const byPoint = Array.from({ length: 10 }, () => []);
+        valid.forEach(h => new Set(h).forEach(p => byPoint[p].push(h)));
+        const until = Date.now() + budgetMs, order = segs.map((_, i) => i).sort((a, b) => segs[a].length - segs[b].length);
+        for (let k = 1; k <= 4 && Date.now() < until; k++) {
+            for (let t = 0; t < 60 && Date.now() < until; t++) {
+                const pool = shuffleInPlace(order.slice(0, Math.max(12, k * 4)), opts.rng), pick = pool.slice(0, k);
+                if (pick.length < k) break;
+                const borrowed = pick.map(i => segs[i]);
+                borrowed.forEach(sg => sizeLimitAdd(sg, opts, -1));
+                const counts = countsOf(rest.concat(...borrowed)), out = [], failed = new Set();
+                let nodes = 0;
+                const dfs = () => {
+                    // 先處理候選局最少的點數（0 點最後）
+                    let p = -1;
+                    for (let d = 0; d < 10; d++) if (counts[d] > 0 && (p < 0 || byPoint[d].length < byPoint[p].length)) p = d;
+                    if (p < 0) return true;
+                    const key = counts.join(',');
+                    if (++nodes > 3000 || failed.has(key)) return false;
+                    const list = byPoint[p], start = Math.floor(opts.rng() * list.length);
+                    for (let q = 0; q < list.length; q++) {
+                        const h = list[(start + q) % list.length];
+                        if (!fits(h, counts) || !sizeLimitOk(h, opts)) continue;
+                        for (const x of h) counts[x]--; sizeLimitAdd(h, opts); out.push(h);
+                        if (dfs()) return true;
+                        out.pop(); sizeLimitAdd(h, opts, -1); for (const x of h) counts[x]++;
+                    }
+                    failed.add(key); return false;
+                };
+                if (dfs()) {
+                    pick.sort((a, b) => b - a).forEach(i => segs.splice(i, 1));
+                    segs.push(...out.map(h => h.slice()));
+                    return [];
+                }
+                borrowed.forEach(sg => sizeLimitAdd(sg, opts));
+            }
+        }
+        return rest;
+    }
     // 整副成本：從每個切點發完整副（循環），數不敏感的完整局；與統計面板的「切點不敏感局數」同一個數字
     function allCutsCost(seq) {
         const n = seq.length, memo = new Array(n);
@@ -1530,6 +1572,7 @@
             const packed = packLeftoverHands(restCards, opts);
             if (packed.segs.length) { packed.segs.forEach(sg => { sizeLimitAdd(sg, opts); segs.push(sg); }); restCards = packed.rest; }
         }
+        if (rules.allSens && options.packLeftover !== false && restCards.length) restCards = repackLeftover(segs, restCards, opts);
         const templateLog=message=>options.onTemplateLog?.('穿越範本：'+message);
         // 敏感補排關閉時，剩牌只能整段換成範本（穿越紅0、8～12 張且在段長範圍內），否則注定重跑
         const tailOff = options.fillSensitiveTail === true && options.sensitiveTail === false;
