@@ -126,7 +126,9 @@
       if (!isTraverse) forceDialog = false;
       const note = traverse.querySelector(':scope > p.mode-note'); if (note) note.hidden = !isTraverse;
       // 內嵌在統計區時兩模式同一排版；穿越摘要、長段驗證、範本庫與敏感局庫按鈕只放在分析明細視窗
-      const dialogOnly = [$('tvSummary'),diagnostics,$('tvTemplateControls'),$('sensitiveControls')].filter(Boolean);
+      // 各子模式自己的庫控制只在對應模式出現：穿越範本限穿越紅0、全敏範本限全敏模式
+      const tsub = document.body.dataset.tsub || '', allowed = n => n.id === 'tvTemplateControls' ? tsub === 'red0' : n.id === 'asLibraryControls' ? /^as/.test(tsub) : true;
+      const dialogOnly = [$('tvSummary'),diagnostics,$('tvTemplateControls'),$('sensitiveControls'),$('asLibraryControls')].filter(Boolean);
       dialogOnly.forEach(n => { n.hidden = true; });
 
       const expanded = Array.from(traverse.querySelectorAll('details')).some(d => d.open && d.id !== 'tvSafePanel');
@@ -139,7 +141,7 @@
         shouldFloat = overview.getBoundingClientRect().height > Math.min(280,innerHeight * .35);
       }
       floatingData = shouldFloat;
-      dialogOnly.forEach(n => { n.hidden = !(isTraverse && floatingData); });
+      dialogOnly.forEach(n => { n.hidden = !(isTraverse && floatingData && allowed(n)); });
       const parent = shouldFloat ? dialogBody : traverseSlot;
       if (traverse.parentElement !== parent) parent.append(traverse);
       if (!shouldFloat) { dataDialog.hidden = true; openData.setAttribute('aria-expanded','false'); }
