@@ -50,11 +50,11 @@
     return {rounds:output,before,after:metrics(output),targets:assignments,checks,moves,cancelled,ms:Date.now()-started,
       reason:cancelled?'已取消，保留原排列':!k?'沒有和局，保留原排列':`依理想位置完成${moves}局互換，${k-moves}局保留原位`};
   }
+  // 日誌只留結果：互換幾局、和局最後在第幾局
   function summary(report){
-    const targets=report.targets||[],format=n=>Number(n.toFixed(2));
-    const positions=targets.length?`；理想 ${targets.map(t=>format(t.ideal)).join('/')} → 實際 ${targets.map(t=>t.actual).join('/')}；誤差 ${targets.map(t=>t.error).join('/')}`:'';
-    const notes=targets.filter(t=>t.status!=='swapped').map(t=>`原第${t.original}局：${t.reason}`);
-    return `⚙️ 和局定位：${report.reason}${positions}${notes.length?'；'+notes.join('；'):''}（${report.ms}ms）`;
+    const targets=report.targets||[];
+    if(!targets.length||report.cancelled)return `⚙️ 和局定位：${report.reason}`;
+    return `⚙️ 和局定位：互換 ${report.moves} 局，和局在第 ${targets.map(t=>t.actual).join('、')} 局`;
   }
   root.TieSpread={metrics,disperse,summary};
   if(typeof module!=='undefined'&&module.exports)module.exports=root.TieSpread;

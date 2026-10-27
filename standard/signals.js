@@ -6704,7 +6704,6 @@ function analyzeShoeRecovery(rounds) {
         totalCards += rounds[i].cards.length;
     }
 
-    console.log(`牌靴總共 ${totalCards} 張牌，${rounds.length} 局`);
 
     // 2. 建立完整牌組
     const fullDeck = [];
@@ -6818,17 +6817,12 @@ function analyzeShoeRecovery(rounds) {
     const avgRounds = (sumRounds / validCount).toFixed(1);
     const immediatePercent = ((immediateRecovery / totalCards) * 100).toFixed(1);
 
-    console.log('=== 回復分析結果 ===');
-    console.log('總切牌點:', totalCards);
-    console.log('平均消耗:', avgCards, '張 /', avgRounds, '局');
-    console.log('最大消耗:', maxCards, '張 /', maxRounds, '局 (第', maxCardIdx + 1, '張)');
-    console.log('立即回復:', immediateRecovery, '個 (', immediatePercent, '%)');
-    console.log('=== 分佈統計 ===');
-    console.log('立即回復 (0局):', distribution.immediate);
-    console.log('1~5 局:', distribution.range1to5);
-    console.log('6~10 局:', distribution.range6to10);
-    console.log('11~15 局:', distribution.range11to15);
-    console.log('16 局以上:', distribution.range16plus);
+    // 主控台只留一句平均回復局數；同一副牌重算時不重複印
+    const recoveryLogKey = [totalCards, rounds.length, sumCards, sumRounds, maxCardIdx].join(',');
+    if (recoveryLogKey !== analyzeShoeRecovery.lastLogKey) {
+        analyzeShoeRecovery.lastLogKey = recoveryLogKey;
+        console.log(`平均回復 ${avgRounds} 局`);
+    }
 
     return {
         totalCards,
