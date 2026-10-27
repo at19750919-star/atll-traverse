@@ -29,11 +29,20 @@
     let returnFocus = null, frame = 0;
     function close() { if (!dialog.open) return; const focused = dialog.contains(document.activeElement); dialog.close(); if (focused && returnFocus?.isConnected) returnFocus.focus({preventScroll:true}); }
     $('shoeOverviewClose').onclick = close;
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && dialog.open) { e.preventDefault(); close(); } });
+    dialog.addEventListener('cancel',e=>e.preventDefault());
     function metric(label, value, note, key) {
       return `<div class="shoe-overview-metric" data-metric="${key}"><span>${label}</span><strong>${value}</strong><small title="${note}">${note}</small></div>`;
     }
     function render() {
+      if (!fullRounds().length) {
+        $('shoeOverviewMeta').textContent = `${$('modeStatus').textContent.trim()} · 尚無牌靴`;
+        $('shoeOverviewHeaderStats').textContent = '尚無牌靴資料';
+        ['shoeOverviewMetrics','shoeOverviewMap','shoeOverviewViolations'].forEach(id=>$(id).replaceChildren());
+        $('shoeOverviewViolationStrip').hidden = true;
+        $('shoeOverviewRecovery').textContent = '生成牌靴後顯示';
+        $('shoeOverviewSafe').textContent = '生成牌靴後顯示';
+        return;
+      }
       window.DashboardUI.refreshNow();
       const rounds = fullRounds(), all = currentRounds || [], total = rounds.length;
       const tv = document.body.dataset.mode === 'traverse', shared = window.DashboardUI.analysis;
@@ -46,10 +55,12 @@
       }, tv);
       const streaks = longestRuns(rounds), p7 = PlayerSevenLimits.check(rounds,null), seven = count7PtReversals(rounds);
       const b6 = rounds.flatMap((r,i)=>isBankerSixWinRound(r)?[i+1]:[]);
+      const swappedB6 = rounds.flatMap((r,i)=>isSwapBankerSixRound(r)?[i+1]:[]);
       const rare = rounds.flatMap((r,i)=>TwoThirteenReversals.classify(r)?[i+1]:[]);
       const list = numbers => numbers.length ? `第 ${numbers.join('、')} 局` : '無';
       $('shoeOverviewMeta').textContent = `${$('modeStatus').textContent.trim()} · ${total} 局 · ${cards.length} 張`;
       $('shoeOverviewMetrics').innerHTML = metric('莊6贏',`${b6.length} 局`,list(b6),'bankerSix')
+        + metric('對調莊6',`${swappedB6.length} 局`,list(swappedB6),'swapBankerSix')
         + metric('閒7莊6',`${p7.count} 局`,`${list(p7.roundNumbers)}（含對調）`,'playerSeven')
         + metric('七點逆轉',`${seven.count} 局`,list(seven.details.map(d=>d.roundIndex+1)),'seven')
         + metric('逆轉',`${rare.length} 局`,`1／13＋2／13 · ${list(rare)}`,'rare')
@@ -103,22 +114,27 @@
       if (!dialog.open) { returnFocus=document.activeElement; dialog.style.left=''; dialog.style.top=''; dialog.style.transform=''; dialog.show(); $('shoeOverviewClose').focus({preventScroll:true}); }
     }
     button.onclick = show;
-    $('shoeOverviewMap').addEventListener('click',e=>{ if(e.target.closest('[data-round]'))close(); });
     document.addEventListener('shoe-generated',()=>{ cancelAnimationFrame(frame); frame=requestAnimationFrame(show); });
-    let signature = '';
+    let refreshFrame=0,wasRunning=false;
+    const refreshOpen=()=>{ if(dialog.open&&!document.body.classList.contains('running'))render(); };
+    const scheduleOpenRefresh=()=>{ cancelAnimationFrame(refreshFrame); refreshFrame=requestAnimationFrame(refreshOpen); };
     const sync = () => {
-      const next = [document.body.dataset.mode,document.body.dataset.sub,document.body.dataset.tsub].join('/');
       const running = document.body.classList.contains('running'), empty = !fullRounds().length;
       button.disabled = running || empty;
-      if (running || empty || next !== signature) { close(); cancelAnimationFrame(frame); }
-      signature=next;
+      if (!dialog.open) { wasRunning=running; return; }
+      if (running) {
+        if (!wasRunning) $('shoeOverviewMeta').textContent += ' · 生成中，顯示上次總覽';
+      } else scheduleOpenRefresh();
+      wasRunning=running;
     };
     new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:['class','data-mode','data-sub','data-tsub']}); sync();
+    new MutationObserver(scheduleOpenRefresh).observe($('roundsBody'),{subtree:true,childList:true,attributes:true});
     // Match the existing draggable analysis window, keeping its close control reachable.
     const head = dialog.querySelector('header'); let drag = null;
     head.addEventListener('pointerdown',e=>{ if(e.button!==0||e.target.closest('button'))return; const r=dialog.getBoundingClientRect(); drag={x:e.clientX,y:e.clientY,left:r.left,top:r.top}; head.setPointerCapture(e.pointerId); });
     head.addEventListener('pointermove',e=>{ if(!drag)return; dialog.style.transform='none'; dialog.style.left=Math.max(0,Math.min(innerWidth-dialog.offsetWidth,drag.left+e.clientX-drag.x))+'px'; dialog.style.top=Math.max(0,Math.min(innerHeight-64,drag.top+e.clientY-drag.y))+'px'; });
     ['pointerup','pointercancel'].forEach(name=>head.addEventListener(name,()=>{drag=null;}));
+    window.addEventListener('resize',()=>{ if(!dialog.open||!dialog.style.left)return; dialog.style.left=Math.max(0,Math.min(innerWidth-dialog.offsetWidth,parseFloat(dialog.style.left)))+'px'; dialog.style.top=Math.max(0,Math.min(innerHeight-64,parseFloat(dialog.style.top)))+'px'; });
     window.ShoeOverview = {show,close,longestRuns};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

@@ -18,6 +18,19 @@ const server = http.createServer((req,res)=>{
     await page.waitForFunction(()=>!!window.ShoeOverview);
     assert(await page.locator('#btnShoeOverview').isDisabled());assert(await page.locator('#shoeOverview').isHidden());
     assert.deepEqual(await page.evaluate(()=>ShoeOverview.longestRuns(['莊','莊','和','莊','閒','閒','閒','和'].map(result=>({result})))),{莊:2,閒:3});
+    const swapCases=await page.evaluate(()=>{
+      let onlyAfter=null,onlyActual=null,neither=null;
+      for(let n=0;n<10000&&(!onlyAfter||!onlyActual||!neither);n++){
+        const cards=String(n).padStart(4,'0').split('').map((digit,i)=>new Card(digit==='0'?'10':digit,'♠',i));
+        const hand={cards},actual=isBankerSixWinRound(hand),after=isSwapBankerSixRound(hand);
+        if(!actual&&after)onlyAfter=String(n).padStart(4,'0');
+        if(actual&&!after)onlyActual=String(n).padStart(4,'0');
+        if(!actual&&!after)neither=String(n).padStart(4,'0');
+      }
+      return {onlyAfter,onlyActual,neither};
+    });
+    assert(Object.values(swapCases).every(Boolean),JSON.stringify(swapCases));
+    console.log('PASS 對調後才莊6、只有原牌莊6與兩者都不是三種實際牌型分別判定');
     await page.evaluate(()=>{window.generatedEvents=0;document.addEventListener('shoe-generated',()=>window.generatedEvents++);});
     async function checkOverview(label){
       try { await page.waitForFunction(()=>document.getElementById('shoeOverview').open,null,{timeout:90000}); }
@@ -28,10 +41,10 @@ const server = http.createServer((req,res)=>{
         const before=key();ShoeOverview.show();
         const metrics=Object.fromEntries([...document.querySelectorAll('[data-metric]')].map(e=>[e.dataset.metric,e.querySelector('strong').textContent]));
         const stats=calculateViolationStats(currentRounds),noSwap=calculateCannotSwapViolations(currentRounds);
-        const b6=rounds.filter(isBankerSixWinRound).length,seven=count7PtReversals(rounds).count,p7=PlayerSevenLimits.check(rounds,null).count,rare=TwoThirteenReversals.count(rounds);
+        const b6=rounds.filter(isBankerSixWinRound).length,swappedB6=rounds.filter(isSwapBankerSixRound).length,seven=count7PtReversals(rounds).count,p7=PlayerSevenLimits.check(rounds,null).count,rare=TwoThirteenReversals.count(rounds);
         const outcomes=[...document.querySelectorAll('.shoe-overview-outcome strong')].map(e=>parseInt(e.textContent));
         const recovery=IntegratedAnalysis.recovery(currentRounds);
-        return {unchanged:key()===before,metrics,b6,seven,p7,rare,outcomes,expectedOutcomes:['莊','閒','和'].map(s=>rounds.filter(r=>r.result===s).length),
+        return {unchanged:key()===before,metrics,b6,swappedB6,sourceSwap:document.getElementById('recoverySwapB6Count').textContent.trim(),seven,p7,rare,outcomes,expectedOutcomes:['莊','閒','和'].map(s=>rounds.filter(r=>r.result===s).length),
           stats,noSwap,violations:document.getElementById('shoeOverviewViolations').textContent,
           mapCells:document.querySelectorAll('#shoeOverviewMap .map-cell').length,rounds:rounds.length,
           recovery:document.getElementById('shoeOverviewRecovery').textContent,avg:recovery.avgRounds,
@@ -39,7 +52,7 @@ const server = http.createServer((req,res)=>{
           duplicateIds:[...document.querySelectorAll('[id]')].map(e=>e.id).filter((id,i,a)=>a.indexOf(id)!==i)};
       });
       assert(snapshot.unchanged);assert.deepEqual(snapshot.duplicateIds,[]);assert.equal(snapshot.mapCells,snapshot.rounds);assert.equal(snapshot.safeCells,416);
-      assert.equal(snapshot.metrics.bankerSix,`${snapshot.b6} 局`);assert.equal(snapshot.metrics.playerSeven,`${snapshot.p7} 局`);
+      assert.equal(snapshot.metrics.bankerSix,`${snapshot.b6} 局`);assert.equal(snapshot.metrics.swapBankerSix,`${snapshot.swappedB6} 局`);assert.equal(parseInt(snapshot.sourceSwap),snapshot.swappedB6);assert.equal(snapshot.metrics.playerSeven,`${snapshot.p7} 局`);
       assert.equal(snapshot.metrics.seven,`${snapshot.seven} 局`);assert.equal(snapshot.metrics.rare,`${snapshot.rare} 局`);
       assert.deepEqual(snapshot.outcomes,snapshot.expectedOutcomes);assert(snapshot.recovery.includes(snapshot.avg+' 局'));assert(!snapshot.recovery.includes('NaN'));assert(!snapshot.mainMapVisible);
       if(snapshot.noSwap.count)assert(snapshot.violations.includes(snapshot.noSwap.count+' 處'));
@@ -58,7 +71,8 @@ const server = http.createServer((req,res)=>{
       await checkOverview(mode);
       await page.locator('#shoeOverviewClose').click();assert(await page.locator('#shoeOverview').isHidden());
       await page.locator('#btnShoeOverview').click();assert(await page.locator('#shoeOverview').isVisible());
-      await page.keyboard.press('Escape');assert(await page.locator('#shoeOverview').isHidden());
+      await page.keyboard.press('Escape');assert(await page.locator('#shoeOverview').isVisible());
+      await page.locator('#shoeOverviewClose').click();
     }
     for(const mode of (layoutOnly?[]:['traverse-red0','traverse-a2','traverse-asred0','traverse-asa2'])){
       await page.evaluate(mode=>{
@@ -72,7 +86,8 @@ const server = http.createServer((req,res)=>{
         void IntegratedModes.generateTraverse();
       },mode);
       await checkOverview(mode);
-      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');assert(await page.locator('#shoeOverview').isVisible());
+      await page.locator('#shoeOverviewClose').click();
     }
     // Invalid settings and a stopped generation must not reopen the previous result.
     if(!layoutOnly){const count=await page.evaluate(()=>window.generatedEvents);
@@ -109,9 +124,42 @@ const server = http.createServer((req,res)=>{
       assert(await page.locator('#shoeOverviewViolationStrip').isHidden());
       console.log('PASS 無違規時不留空欄；有違規只顯示非零項目，未檢查如實標明');
     }
-    await page.evaluate(()=>{IntegratedModes.switchMode('a2');});assert(await page.locator('#shoeOverview').isHidden());
+    await page.setViewportSize({width:2048,height:800});
+    await page.locator('#shoeOverviewMap .map-cell').first().click();
+    assert(await page.locator('#shoeOverview').isVisible());
+    const header=await page.locator('.shoe-overview-head').boundingBox(),beforeDrag=await page.locator('#shoeOverview').boundingBox();
+    await page.mouse.move(header.x+45,header.y+20);await page.mouse.down();await page.mouse.move(header.x+155,header.y+90,{steps:5});await page.mouse.up();
+    const moved=await page.locator('#shoeOverview').boundingBox();
+    assert(moved.x>beforeDrag.x+30&&moved.y>beforeDrag.y+30,JSON.stringify({beforeDrag,moved}));
+    await page.keyboard.press('Escape');assert(await page.locator('#shoeOverview').isVisible());
+    const oldCount=await page.evaluate(()=>window.generatedEvents);
+    await page.evaluate(()=>document.getElementById('chipGen').click());
+    await page.waitForFunction(()=>document.body.classList.contains('running'));
+    assert(await page.locator('#shoeOverview').isVisible());
+    assert.match(await page.locator('#shoeOverviewMeta').textContent(),/生成中，顯示上次總覽/);
+    await page.waitForFunction(count=>window.generatedEvents>count,oldCount,{timeout:60000});
+    await page.waitForFunction(()=>!document.body.classList.contains('running'));
+    assert(await page.locator('#shoeOverview').isVisible());
+    const afterGenerate=await page.locator('#shoeOverview').boundingBox();
+    assert(Math.abs(afterGenerate.x-moved.x)<2&&Math.abs(afterGenerate.y-moved.y)<2,JSON.stringify({moved,afterGenerate}));
+    const beforeStopEvents=await page.evaluate(()=>window.generatedEvents);
+    await page.evaluate(()=>document.getElementById('chipGen').click());
+    await page.waitForFunction(()=>document.body.classList.contains('running'));
+    await page.evaluate(()=>document.getElementById('chipStop').click());
+    await page.waitForFunction(()=>!document.body.classList.contains('running'));
+    assert(await page.locator('#shoeOverview').isVisible());
+    assert.equal(await page.evaluate(()=>window.generatedEvents),beforeStopEvents);
+    await page.evaluate(()=>IntegratedModes.switchMode('a2'));
+    assert(await page.locator('#shoeOverview').isVisible());
+    await page.waitForFunction(()=>document.getElementById('shoeOverviewMeta').textContent.includes('A2'));
+    await page.evaluate(()=>IntegratedModes.switchMode('red0'));
+    await page.waitForFunction(()=>document.getElementById('shoeOverviewMetrics').children.length===6);
     await page.evaluate(()=>document.getElementById('chipClear').click());
-    await page.waitForFunction(()=>!currentRounds?.length);assert(await page.locator('#btnShoeOverview').isDisabled());
-    assert.deepEqual(errors,[]);console.log('PASS 關閉重開、切模式與清空、4種寬度無橫向溢出；零頁面錯誤');
+    await page.waitForFunction(()=>!currentRounds?.length&&document.getElementById('shoeOverviewMeta').textContent.includes('尚無牌靴'));
+    assert(await page.locator('#shoeOverview').isVisible());assert(await page.locator('#btnShoeOverview').isDisabled());
+    const afterClear=await page.locator('#shoeOverview').boundingBox();
+    assert(Math.abs(afterClear.x-moved.x)<2&&Math.abs(afterClear.y-moved.y)<2,JSON.stringify({moved,afterClear}));
+    await page.locator('#shoeOverviewClose').click();assert(await page.locator('#shoeOverview').isHidden());
+    assert.deepEqual(errors,[]);console.log('PASS 可拖曳且生成／切模式／清空維持原位，只有關閉鈕收起；零頁面錯誤');
   }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

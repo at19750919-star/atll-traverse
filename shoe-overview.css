@@ -11,7 +11,7 @@
 .shoe-overview-outcome b{font-size:13px;font-weight:500}.shoe-overview-outcome strong{font-size:23px;font-weight:500;font-variant-numeric:tabular-nums}.shoe-overview-outcome small{font-size:11px;color:var(--txt-dim)}
 .shoe-overview-status{padding:3px 8px;border:1px solid #42745b;color:#79c69c;font-size:13px;white-space:nowrap}.shoe-overview-status.has-violation{border-color:#965444;color:#ff8074}
 .shoe-overview-body{overflow:auto;min-height:0;padding:10px 18px 14px;display:grid;gap:10px}
-.shoe-overview-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-bottom:1px solid #b6995340;padding-bottom:9px}
+.shoe-overview-metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-bottom:1px solid #b6995340;padding-bottom:9px}
 .shoe-overview-metric{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 7px;min-width:0;padding:0 11px;border-left:1px solid #b6995340}
 .shoe-overview-metric:first-child{padding-left:0;border-left:0}
 .shoe-overview-metric>span{flex-basis:100%;font-size:13px;color:var(--gold-2)}
