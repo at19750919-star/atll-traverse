@@ -548,6 +548,30 @@
         // 只有切在那張才會停的位置（次數 1）不強求；多條發牌路徑都會停到的位置才要求跨接縫敏感
         return { tail, stops: [...tailStops(seg)].filter(([p, w]) => w >= 2 && p >= base).map(([p]) => p - base) };
     }
+    // 訊號只看點數時（全花色 A、2 這類不含 0 點的設定），點數就決定每局是不是訊號局，組段時就能檢查
+    function pointSignal() {
+        const cfg = normalizeSignal(rules.signalConfig);
+        return cfg.suits.length === 4 && !cfg.allHearts && cfg.ranks.length > 0 && cfg.ranks.every(r => rankPoint(r) !== 0);
+    }
+    // 組段時檢查：剛發完的那一局（從段頭發）結果要符合上一局的三條／訊號需求；段第一局看上一段最後一局
+    function headSignalOk(seq, prevHand) {
+        let cur = 0, prev = prevHand;
+        for (;;) {
+            const h = simulateHand(seq, cur, seq.length);
+            if (!h) return true;
+            if (cur + h.size === seq.length) {
+                if (!prev) return true;
+                const need = neededAfter(prev);
+                return h.result === need || tieAllowed(need, h.result);
+            }
+            prev = seq.slice(cur, cur + h.size); cur += h.size;
+        }
+    }
+    function lastHeadHand(seg) {
+        let cur = 0, last = null;
+        for (;;) { const h = simulateHand(seg, cur, seg.length); if (!h) break; last = seg.slice(cur, cur + h.size); cur += h.size; }
+        return last;
+    }
     function allSensBuild(counts, zeroShare, opts, pre = null) {
         const seq = [], c = counts.slice(), out = [];
         let nodes = 0;
@@ -575,7 +599,7 @@
                 if (L >= 2 && seq[L - 1] === d && seq[L - 2] === d) continue;
                 if (d > 0 && seq.filter(p => p === d).length >= Math.floor(opts.maxLen / 13) + 2) continue;
                 seq.push(d);
-                if (allSensStepOk(seq) && (!pre || L >= 6 || crossOk(pre, seq))) { c[d]--; dfs(); c[d]++; }
+                if (allSensStepOk(seq) && (!pre || L >= 6 || crossOk(pre, seq)) && (!opts.asSig || headSignalOk(seq, opts.asPrevHand))) { c[d]--; dfs(); c[d]++; }
                 seq.pop();
                 if (nodes > opts.allSensBudget || out.length >= (opts.asCandMax || 6)) return;
             }
@@ -585,7 +609,7 @@
     async function phaseAllSens(rest, opts, ctx) {
         const segs = [];
         let idle = 0, tries = 0, pre = null;
-        opts.asRounds = 0; opts.asTies = 0; opts.asSeven = 0; opts.asJoined = 0; opts.asBroken = 0;
+        opts.asRounds = 0; opts.asTies = 0; opts.asSeven = 0; opts.asJoined = 0; opts.asBroken = 0; opts.asPrevHand = null;
         while (idle < opts.idleLimit && rest.length >= opts.minLen) {
             if (ctx.cancelled()) break;
             tries++;
@@ -617,6 +641,7 @@
                 segs.push(pick);
                 if (pre) joined || !pre.stops.length ? opts.asJoined++ : opts.asBroken++;
                 pre = preOf(pick);
+                if (opts.asSig) opts.asPrevHand = lastHeadHand(pick);
                 const c = countsOf(pick);
                 rest = rest.filter(p => (c[p] > 0 ? (c[p]--, false) : true));
                 idle = 0;
@@ -793,6 +818,11 @@
         const trip = rounds.map(r => rules.tripleTie && isTriple(pts(r)));
         let v = 0;
         if (rules.tripleTie) rounds.forEach((r, i) => { if (trip[(i + R - 1) % R] !== (r.result === '和')) v++; });
+        // 點數決定訊號（A2）：直接數訊號配不上的局
+        if (pointSignal()) {
+            rounds.forEach((r, i) => { const p = rounds[(i + R - 1) % R]; if (trip[(i + R - 1) % R] || r.result === '和') return; const need = neededAfter(pts(p)); if (r.result !== need) v++; });
+            return v;
+        }
         const cfg = normalizeSignal(rules.signalConfig), zeroRanks = cfg.ranks.filter(r => rankPoint(r) === 0).length;
         const zerosAll = seq.filter(p => p === 0).length, reds = Math.round(zerosAll * cfg.suits.length / 4 * zeroRanks / 4);
         if (!reds) return v;
@@ -1601,6 +1631,8 @@
         opts.asStream = rules.allSens && options.allSensStream !== false;
         opts.asCandMax = opts.asStream ? (Number.isInteger(options.allSensCands) ? options.allSensCands : 12) : 6;
         opts.asRisk = Number.isFinite(options.allSensRisk) ? options.allSensRisk : 0.5;
+        // 全敏A2 不事後對調：組段時就讓每局結果符合上一局訊號（連續組段才知道上一段最後一局）
+        opts.asSig = opts.asStream && opts.signalRule && options.noSignalSwap === true && pointSignal();
         const p1 = rules.allSens ? await phaseAllSens(rest, opts, ctx) : await phaseShuffle(rest, opts, ctx);
         const p2 = await phaseCompute(p1.rest, opts, ctx);
         const segs = p1.segs.concat(p2.segs);
@@ -1773,6 +1805,11 @@
                 }
                 delete signalBalance.cards;delete signalBalance.points;
             }else signal={ok:false,flips:0,conflicts:0,issues:[{kind:'red0-balance',message:signalBalance.reason}]};
+        }else if(options.noSignalSwap===true&&!physicalCards&&opts.signalRule){
+            // 全敏A2：組段時已依訊號挑局，不再對調；配不上的局（多在接縫）留作訊號違規
+            const v=signalCost(chains.flat().concat(leftover));
+            signalBalance=null;
+            signal={ok:true,flips:0,conflicts:v,issues:v?[{kind:'a2-no-swap',message:`不對調；組段時已依A2訊號挑局，仍有 ${v} 局訊號／三條配不上（保留為違規）`}]:[]};
         }else if(options.noSignalSwap===true&&physicalCards){
             // 全敏紅0：不為訊號對調，只依實際結果分配紅0花色，配不到的局留作訊號違規
             signalBalance=arrangeRed0ByResult(chains.flat().concat(leftover),physicalCards);
