@@ -103,7 +103,22 @@
     }
 
     // 一局（點數陣列，恰好 size 張）是否敏感：張數不變，且莊↔閒互換或和→和
+    // 4～6 張的結果只看點數，查過就記住（原規則／放寬和局分開記）；0＝沒算過、1＝敏感、2＝不敏感
+    const sensMemo = { orig: new Uint8Array(1110000), loose: new Uint8Array(1110000) };
     function handSensitive(hand) {
+        const len = hand.length;
+        if (len < 4 || len > 6) return handSensitiveRaw(hand);
+        let key = 0;
+        for (let i = 0; i < len; i++) key = key * 10 + hand[i];
+        key += len === 4 ? 0 : len === 5 ? 10000 : 110000;
+        const memo = rules.looseTie === true ? sensMemo.loose : sensMemo.orig;
+        const v = memo[key];
+        if (v) return v === 1;
+        const r = handSensitiveRaw(hand);
+        memo[key] = r ? 1 : 2;
+        return r;
+    }
+    function handSensitiveRaw(hand) {
         const orig = simulateHand(hand, 0, hand.length);
         if (!orig || orig.size !== hand.length) return false;
         const sw = hand.slice();
@@ -513,12 +528,24 @@
     // ===== 全敏模式階段 1：從剩牌一張一張組段 =====
     // 洗牌連號幾乎撿不到全敏段，改成隨機回溯：每加一張，剛好在這張結束的局都要敏感；
     // 牌型合理：0 點不少於剩牌比例、1～9 各點不超過 floor(段長/13)+2、同點不連三張
+    // 查表：seq[st..n) 這幾張是不是剛好一局、敏不敏感；0＝沒算過、1＝剛好一局且敏感、2＝剛好一局不敏感、3＝不是剛好一局
+    const exactMemo = { orig: new Uint8Array(1110000), loose: new Uint8Array(1110000) };
+    function exactHand(seq, st, n) {
+        const len = n - st;
+        let key = 0;
+        for (let i = st; i < n; i++) key = key * 10 + seq[i];
+        key += len === 4 ? 0 : len === 5 ? 10000 : 110000;
+        const memo = rules.looseTie === true ? exactMemo.loose : exactMemo.orig;
+        let v = memo[key];
+        if (!v) {
+            const h = simulateHand(seq, st, n);
+            v = memo[key] = !h || h.size !== len ? 3 : handSensitive(seq.slice(st, n)) ? 1 : 2;
+        }
+        return v;
+    }
     function allSensStepOk(seq) {
         const n = seq.length;
-        for (let st = Math.max(0, n - 6); st <= n - 4; st++) {
-            const h = simulateHand(seq, st, n);
-            if (h && h.size === n - st && !handSensitive(seq.slice(st, n))) return false;
-        }
+        for (let st = Math.max(0, n - 6); st <= n - 4; st++) if (exactHand(seq, st, n) === 2) return false;
         return true;
     }
     // 七點逆轉兩種方向都算：訊號對調後才決定方向，挑段時先保守預算
@@ -573,33 +600,42 @@
         return last;
     }
     function allSensBuild(counts, zeroShare, opts, pre = null) {
-        const seq = [], c = counts.slice(), out = [];
+        const seq = [], c = counts.slice(), out = [], used = new Array(10).fill(0);
         let nodes = 0;
-        const total = c.reduce((a, b) => a + b, 0);
+        const total = c.reduce((a, b) => a + b, 0), perPoint = Math.floor(opts.maxLen / 13) + 2;
+        const depthD = [], depthW = [];
+        for (let k = 0; k <= opts.maxLen; k++) { depthD.push(new Int8Array(10)); depthW.push(new Float64Array(10)); }
         (function dfs() {
             if (++nodes > opts.allSensBudget || out.length >= (opts.asCandMax || 6)) return;
             const L = seq.length;
             if (L >= opts.minLen) {
-                const z = seq.filter(p => p === 0).length;
-                // 和局比例比照一般牌靴：整副累計不超過一成（多給 1 局緩衝）
-                const rc = roundSizeCounts(seq), rounds = rc[4] + rc[5] + rc[6];
-                const tieOk = opts.asTies + rc.tie <= Math.floor((opts.asRounds + rounds) * 0.1) + 1;
-                const sevenMax = opts.specialLimits?.seven;
-                const sevenOk = sevenMax == null || opts.asSeven + sevenEitherCount(seq) <= sevenMax;
                 // A2 的閒7要隔20局，短段難以事後交換，全敏段直接不收閒7局（兩種方向都算）
                 if (opts.specialLimits?.playerSeven != null && specialRoundCounts(seq).playerSeven > 0) return;
-                if (tieOk && sevenOk && z >= Math.floor(zeroShare * L * opts.quotaFactor) && qualifies(seq, true) && sizeLimitOk(seq, opts)) out.push(seq.slice());
+                // 便宜的條件先算，不合就不用模擬整段
+                if (used[0] >= Math.floor(zeroShare * L * opts.quotaFactor)) {
+                    // 和局比例比照一般牌靴：整副累計不超過一成（多給 1 局緩衝）
+                    const rc = roundSizeCounts(seq), rounds = rc[4] + rc[5] + rc[6];
+                    const tieOk = opts.asTies + rc.tie <= Math.floor((opts.asRounds + rounds) * 0.1) + 1;
+                    const sevenMax = opts.specialLimits?.seven;
+                    if (tieOk && (sevenMax == null || opts.asSeven + sevenEitherCount(seq) <= sevenMax) && qualifies(seq, true) && sizeLimitOk(seq, opts)) out.push(seq.slice());
+                }
             }
             if (L >= opts.maxLen) return;
-            // 依剩牌張數加權隨機排序候選點數
-            const order = [];
-            for (let d = 0; d < 10; d++) if (c[d] > 0) order.push([d, opts.rng() * c[d] / total]);
-            order.sort((a, b) => b[1] - a[1]);
-            for (const [d] of order) {
+            // 依剩牌張數加權隨機排序候選點數（每層用固定小陣列插入排序，省配置）
+            const ds = depthD[L], ws = depthW[L];
+            let m = 0;
+            for (let d = 0; d < 10; d++) if (c[d] > 0) {
+                const w = opts.rng() * c[d] / total;
+                let k = m++;
+                while (k > 0 && ws[k - 1] < w) { ds[k] = ds[k - 1]; ws[k] = ws[k - 1]; k--; }
+                ds[k] = d; ws[k] = w;
+            }
+            for (let oi = 0; oi < m; oi++) {
+                const d = ds[oi];
                 if (L >= 2 && seq[L - 1] === d && seq[L - 2] === d) continue;
-                if (d > 0 && seq.filter(p => p === d).length >= Math.floor(opts.maxLen / 13) + 2) continue;
+                if (d > 0 && used[d] >= perPoint) continue;
                 seq.push(d);
-                if (allSensStepOk(seq) && (!pre || L >= 6 || crossOk(pre, seq)) && (!opts.asSig || headSignalOk(seq, opts.asPrevHand))) { c[d]--; dfs(); c[d]++; }
+                if (allSensStepOk(seq) && (!pre || L >= 6 || crossOk(pre, seq)) && (!opts.asSig || headSignalOk(seq, opts.asPrevHand))) { c[d]--; used[d]++; dfs(); used[d]--; c[d]++; }
                 seq.pop();
                 if (nodes > opts.allSensBudget || out.length >= (opts.asCandMax || 6)) return;
             }
@@ -718,6 +754,7 @@
         return order.map(i => chains[i]);
     }
 
+    const zeroRatio = h => h.zr ?? (h.zr = h.filter(p => p === 0).length / h.length);
     // 剩牌拆成單局小段：挑剩牌湊得出、且本身是全敏段的敏感局（含三條等段規則），隨機貪心多次取剩最少
     function packLeftoverHands(rest, opts) {
         const hands = allSensitiveHands();
@@ -729,7 +766,7 @@
                 if (!usable.length) break;
                 shuffleInPlace(usable, opts.rng);
                 // 0 點多的局優先，避免剩到最後全是 0
-                usable.sort((a, b) => b.filter(p => p === 0).length / b.length - a.filter(p => p === 0).length / a.length);
+                usable.sort((a, b) => zeroRatio(b) - zeroRatio(a));
                 const pick = usable.slice(0, 200).find(h => isAllSens(h) && qualifies(h, true) && sizeLimitOk(h, opts));
                 if (!pick) break;
                 for (const p of pick) counts[p]--;
@@ -788,21 +825,21 @@
     }
     // 整副成本：從每個切點發完整副（循環），數不敏感的完整局；與統計面板的「切點不敏感局數」同一個數字
     function allCutsCost(seq) {
-        const n = seq.length, memo = new Array(n);
+        // 先算每個位置起發那局的張數與敏感（循環），再從每個切點沿著跳
+        const n = seq.length, size = new Uint8Array(n), bad = new Uint8Array(n), win = [0, 0, 0, 0, 0, 0];
+        for (let at = 0; at < n; at++) {
+            for (let k = 0; k < 6; k++) win[k] = seq[(at + k) % n];
+            const r = simulateHand(win, 0, 6);
+            if (r) { size[at] = r.size; bad[at] = handSensitive(win.slice(0, r.size)) ? 0 : 1; }
+        }
         let cost = 0;
         for (let cut = 0; cut < n; cut++) {
-            let cur = cut, dealt = 0;
+            let at = cut, dealt = 0;
             for (;;) {
-                const at = cur % n;
-                let h = memo[at];
-                if (h === undefined) {
-                    const win = []; for (let k = 0; k < 6; k++) win.push(seq[(at + k) % n]);
-                    const r = simulateHand(win, 0, 6);
-                    h = memo[at] = r ? { size: r.size, bad: !handSensitive(win.slice(0, r.size)) } : null;
-                }
-                if (!h || dealt + h.size > n) break;
-                if (h.bad) cost++;
-                cur += h.size; dealt += h.size;
+                const s = size[at];
+                if (!s || dealt + s > n) break;
+                cost += bad[at];
+                dealt += s; at += s; if (at >= n) at -= n;
             }
         }
         return cost;
@@ -915,9 +952,13 @@
     }
 
     function fits(hand, counts) {
-        const need = new Array(10).fill(0);
-        for (const p of hand) need[p]++;
-        for (let i = 0; i < 10; i++) if (need[i] > counts[i]) return false;
+        const n = hand.length;
+        for (let i = 0; i < n; i++) {
+            const p = hand[i];
+            let k = 0;
+            for (let j = 0; j < n; j++) if (hand[j] === p) k++;
+            if (k > counts[p]) return false;
+        }
         return true;
     }
 
@@ -1565,6 +1606,19 @@
         return { flips, diff };
     }
 
+    // 依排牌設定寫入共用規則；在背景執行緒排牌時，主頁也要先套同一份規則再做後續驗收
+    function applyRules(options = {}) {
+        rules.tripleTie = options.tripleTie !== false;
+        rules.signalRule = options.signalRule !== false;
+        rules.signalConfig = normalizeSignal(options.signalConfig);
+        rules.strong = options.strong === true;
+        rules.secondStart = options.secondStart === true;
+        rules.skipBanker6 = options.skipBanker6 === true || options.specialLimits?.bankerSix != null;
+        rules.skipPlayer7 = options.skipPlayer7 === true;
+        rules.mixedColor = options.mixedColor === true;
+        rules.allSens = options.allSens === true;
+        rules.looseTie = options.allSens === true && options.looseTie === true;
+    }
     async function* buildCandidates(options = {}) {
         const opts = {
             idleLimit: options.idleLimit ?? 1000,
@@ -1588,22 +1642,13 @@
             sideTarget: Number.isInteger(options.sideLimit) && options.sideLimit >= 0 ? options.sideLimit : null,
         };
         opts.computeQuota = opts.secondStart && opts.zeroPolicy === 'quota';
-        rules.tripleTie = opts.tripleTie;
-        rules.signalRule = opts.signalRule;
-        rules.signalConfig = normalizeSignal(options.signalConfig);
-        rules.strong = opts.strong;
-        rules.secondStart = opts.secondStart;
+        applyRules(options);
         opts.specialLimits = options.specialLimits ? { bankerSix: null, seven: null, rare: null, ...options.specialLimits } : null;
         if (opts.specialLimits) for (const value of Object.values(opts.specialLimits)) {
             if (value !== null && (!Number.isInteger(value) || value < 0 || value > 104)) throw new Error('莊6與逆轉上限須為0～104的整數或null');
         }
         if (opts.specialLimits?.rare != null && !global.TwoThirteenReversals) throw new Error('缺少1／13＋2／13逆轉判定模組');
         opts.specialTally = { bankerSix: 0, seven: 0, rare: 0, playerSeven: 0 };
-        rules.skipBanker6 = options.skipBanker6 === true || opts.specialLimits?.bankerSix != null;
-        rules.skipPlayer7 = options.skipPlayer7 === true;
-        rules.mixedColor = options.mixedColor === true;
-        rules.allSens = options.allSens === true;
-        rules.looseTie = options.allSens === true && options.looseTie === true;
         opts.scanLengths = [];
         for (let L = opts.maxLen; L >= opts.minLen; L--) opts.scanLengths.push(L);
         const ctx = {
@@ -1681,7 +1726,7 @@
         let chains = opts.asStream ? segs.map(sg => Object.assign(sg.slice(), { parts: [sg.length], secondParts: [sg.secondStart !== false] })) : await phaseChain(segs, opts, ctx);
         let leftover = shuffleInPlace(restCards.slice(), opts.rng);
         // 全敏：以整副（含剩牌）416 個切點的不敏感局總數為目標，調段序與剩牌排列
-        if (rules.allSens && options.junctionOrder !== false) ({ chains, leftover } = arrangeForAllCuts(chains, leftover, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 4000,
+        if (rules.allSens && options.junctionOrder !== false) ({ chains, leftover } = arrangeForAllCuts(chains, leftover, opts.rng, Number.isInteger(options.junctionOrderMs) ? options.junctionOrderMs : 2000,
             options.noSignalSwap === true && opts.signalRule ? (Number.isFinite(options.signalWeight) ? options.signalWeight : 30) : 0, opts.asStream));
 
         let templateLibrary=null;
@@ -1917,6 +1962,6 @@
     async function nextTemplate(result){const iterator=templateContinuations.get(result);if(!iterator)throw Error('此候選已無同池續試工作');templateContinuations.delete(result);return advanceTemplate(iterator);}
     async function releaseTemplateContinuation(result){const iterator=result&&templateContinuations.get(result);if(iterator){templateContinuations.delete(result);await iterator.return();}}
 
-    global.TraverseBuilder = { segmentStats, quotaPriority, preferQuota, sizeLimitOk, specialRoundCounts, roundSizeCounts, normalizeSizeLimits, allSensitiveHands, allSensBuild, preOf, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, hasTemplateContinuation, nextTemplate, releaseTemplateContinuation, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, isAllSens, segmentShapeOk, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
+    global.TraverseBuilder = { applyRules, allCutsCost, segmentStats, quotaPriority, preferQuota, sizeLimitOk, specialRoundCounts, roundSizeCounts, normalizeSizeLimits, allSensitiveHands, allSensBuild, preOf, COLOR_PATTERNS, SIGNAL_RETRY_ENABLED, reassignColors, build, hasTemplateContinuation, nextTemplate, releaseTemplateContinuation, diagnoseChain, qualifies, qualifiesFinal, secondStartOk, isTraverse, isAllSens, segmentShapeOk, roundsFromStart, handSensitive, simulateHand, isTriple, normalizeSignal, isSignalCard, isSignalHand, neededAfter, rules };
 
 })(typeof window !== 'undefined' ? window : globalThis);
