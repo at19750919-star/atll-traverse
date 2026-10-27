@@ -514,10 +514,23 @@ td.pt{font-family:var(--disp);font-weight:700;font-size:16px}
 .compat-hidden{display:none !important}
 
 /* --- 真實 log 條目（log() 輸出 div.className = info/success/warn/error） --- */
-.log-body .info{color:#b8b4a4}
-.log-body .success{color:var(--ok)}
-.log-body .warn{color:#e8a33d}
-.log-body .error{color:var(--danger)}
+.log-body>div{padding:1px 8px;border-left:2px solid transparent;border-radius:2px}
+.log-body>div:nth-child(even){background:rgba(255,255,255,.028)}
+.log-body .info{color:#c9c4b4;border-left-color:#3a4a46}
+.log-body .success{color:var(--ok);border-left-color:var(--ok)}
+.log-body .warn{color:#e8a33d;border-left-color:#e8a33d}
+.log-body .error{color:var(--danger);border-left-color:var(--danger)}
+.log-body .lt{color:#5f6a66;margin-right:4px}
+.log-body .lk{font-weight:700;margin-right:2px}
+.log-body .lk-def{color:var(--gold-2)}
+.log-body .lk-tpl,.log-body .lc-tpl .lb{color:var(--player)}
+.log-body .lk-bad,.log-body .lc-bad .lb{color:#e8a33d}
+.log-body .lk-tie,.log-body .lc-tie .lb{color:var(--tie)}
+.log-body .lk-rec,.log-body .lc-rec .lb{color:var(--gold-1)}
+.log-body .lk-sig,.log-body .lc-sig .lb{color:var(--banker)}
+.log-body .lk-ok,.log-body .lc-ok .lb{color:var(--ok)}
+.log-body .ln{color:var(--gold-1)}
+.log-body .warn .ln,.log-body .error .ln{color:inherit;font-weight:700}
 
 /* --- 真實表格：renderRoundsTable 輸出 --- */
 .table-scroll thead th{white-space:nowrap}
@@ -1531,7 +1544,7 @@ try { if (!localStorage.getItem('signal_config')) { const previous = JSON.parse(
 <script src="standard/signals.js?v=61"></script>
 <script src="standard/generation_budget.js?v=2"></script>
 <script src="standard/shoe_cut.js?v=3"></script>
-<script src="standard/signals_ui.js?v=52"></script>
+<script src="standard/signals_ui.js?v=54"></script>
 <script src="standard/smart_reorder_dialog.js?v=2"></script>
 <script src="standard/swap_preview.js?v=2"></script>
 <script src="standard/auto_fix_plugin.js?v=3"></script>

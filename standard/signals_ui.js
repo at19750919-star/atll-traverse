@@ -2757,6 +2757,40 @@ function shouldDisplayLogMessage(message, type = 'info') {
     return LOG_ALLOW_PATTERNS.some(pattern => pattern.test(message));
 }
 
+// 日誌一行拆成：時間（暗）、分類標籤（依主題上色）、內容（依類型上色，數字加亮），方便瀏覽
+function buildLogEntry(message, type, timestamp) {
+    // 檔案前段就會呼叫 log()，分類表放在函式內
+    const LOG_CATEGORIES = [
+        [/範本/, 'tpl'], [/重跑|失敗|未通過|未採用|違規/, 'bad'], [/和局/, 'tie'],
+        [/回復|切點|優化/, 'rec'], [/訊號|紅0|A2|莊閒/, 'sig'], [/完成|已採用|已排好/, 'ok']
+    ];
+    const entry = document.createElement('div');
+    entry.className = type;
+    const text = String(message);
+    const add = (cls, str) => { const span = document.createElement('span'); span.className = cls; span.textContent = str; entry.appendChild(span); return span; };
+    add('lt', `[${timestamp}]`);
+    entry.appendChild(document.createTextNode(' '));
+    // 標籤：第一個「：」前的短字（去掉開頭符號），沒有就只上色內容
+    const m = text.match(/^([^\p{L}\p{N}]*)([^：:｜]{1,14})([：:｜]\s*)([\s\S]*)$/u);
+    let body = text;
+    if (m) {
+        if (m[1]) add('li', m[1]);
+        const cat = (LOG_CATEGORIES.find(([re]) => re.test(m[2])) || [null, 'def'])[1];
+        add('lk lk-' + cat, m[2] + m[3]);
+        body = m[4];
+    } else {
+        const cat = LOG_CATEGORIES.find(([re]) => re.test(text));
+        if (cat) entry.classList.add('lc-' + cat[1]);
+    }
+    const bodySpan = add('lb', '');
+    for (const part of body.split(/(\d+(?:\.\d+)?%?)/)) {
+        if (!part) continue;
+        if (/^\d/.test(part)) { const n = document.createElement('span'); n.className = 'ln'; n.textContent = part; bodySpan.appendChild(n); }
+        else bodySpan.appendChild(document.createTextNode(part));
+    }
+    return entry;
+}
+
 // 中央日誌輸出，會篩選後才寫入畫面
 function log(message, type = 'info') {
     if (window.__muteLog) return;
@@ -2765,10 +2799,7 @@ function log(message, type = 'info') {
     const logArea = document.getElementById('logArea');
     const timestamp = new Date().toLocaleTimeString();
     if (logArea) {
-        const logEntry = document.createElement('div');
-        logEntry.className = type;
-        logEntry.textContent = `[${timestamp}] ${message}`;
-        logArea.appendChild(logEntry);
+        logArea.appendChild(buildLogEntry(message, type, timestamp));
         logArea.scrollTop = logArea.scrollHeight;
     }
     console.log(`[${type.toUpperCase()}] ${message}`);
