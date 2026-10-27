@@ -3315,6 +3315,7 @@ function validateStandardGeneratedShoe(rounds, options = {}) {
 }
 
 async function generateShoe() {
+    let overviewReady = false;
     const btn = document.getElementById('generateBtn');
     const stopBtn = document.getElementById('stopGenerateBtn');
     const autoColorBtn = document.getElementById('btnAutoColor');
@@ -4024,6 +4025,7 @@ async function generateShoe() {
         } catch (e) {
             log(`回復分析顯示更新失敗: ${e.message}`, 'error');
         }
+        overviewReady = true;
         break;
         }
     } catch (error) {
@@ -4061,6 +4063,7 @@ async function generateShoe() {
             stopBtn.textContent = '停止';
         }
         if (autoColorBtn && currentRounds && currentRounds.length) autoColorBtn.disabled = false;
+        if (overviewReady) document.dispatchEvent(new CustomEvent('shoe-generated'));
     }
 }
 

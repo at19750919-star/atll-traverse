@@ -442,7 +442,7 @@
     new MutationObserver(scheduleRefresh).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     new ResizeObserver(updateDataPlacement).observe(workspace);
     window.addEventListener('pagehide',()=>{ if (liveWindow()) tableWindow.close(); });
-    window.DashboardUI = {refresh:scheduleRefresh,selectTab,get analysis(){return shared;}}; setDensity(tableDensity); layoutRoundTable(); refreshDashboard();
+    window.DashboardUI = {refresh:scheduleRefresh,refreshNow:refreshDashboard,selectTab,get analysis(){return shared;}}; setDensity(tableDensity); layoutRoundTable(); refreshDashboard();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',buildDashboard); else buildDashboard();
 })();

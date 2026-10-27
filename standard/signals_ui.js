@@ -3657,11 +3657,11 @@ function focusRoundFromShoeMap(idx) {
     setTimeout(() => row.classList.remove('shoe-map-focus'), 1400);
 }
 
-function renderShoeMap(rounds, stats) {
-    const container = document.getElementById('shoeMap');
+function renderShoeMap(rounds, stats, target = null) {
+    const container = target || document.getElementById('shoeMap');
     if (!container) return;
 
-    if (!shoeMapVisible || !Array.isArray(rounds) || rounds.length === 0) {
+    if ((!target && !shoeMapVisible) || !Array.isArray(rounds) || rounds.length === 0) {
         container.innerHTML = '';
         container.classList.remove('has-data');
         return;
@@ -3698,7 +3698,7 @@ function renderShoeMap(rounds, stats) {
         roadHtml += `<div class="${cls.join(' ')}" style="grid-column:${cell.c + 1};grid-row:${cell.r + 1}"`
             + ` data-round="${cell.roundIdx}" title="${tip}">${tieText}</div>`;
     });
-    html += `<div class="bigroad"><div class="bigroad-grid" style="grid-template-columns:repeat(${Math.max(cols, 1)},17px)">${roadHtml}</div></div>`;
+    html += `<div class="bigroad"><div class="bigroad-grid" style="grid-template-columns:repeat(${Math.max(cols, 1)},${target ? 14 : 17}px)">${roadHtml}</div></div>`;
     const trackStyle = `grid-template-columns:repeat(${total},minmax(0,1fr))`;
 
     // ── 違規時間軸 ──

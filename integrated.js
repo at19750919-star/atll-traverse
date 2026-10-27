@@ -327,6 +327,7 @@
     return {result:next,report:{...spread,rounds:undefined,mode:'traverse-red0'}};
   }
   async function generateTraverse(demo=false) {
+    let overviewReady = false;
     if(busy||window.__isGeneratingShoe)return;
     // 先送出正在輸入的設定，避免排完收合設定時才觸發「條件已變更」蓋掉結果訊息
     if($('traverseControls').contains(document.activeElement))document.activeElement.blur();
@@ -426,7 +427,8 @@
       renderTraverse();status(`${stopped?'已停止，保留目前結果':demo?'示範牌已排好':'完成'}｜重跑 ${reruns} 次${$('tvNine').checked?(cut!==null?'｜末張 9 已套用':'｜未找到安全末張 9，保留牌序'):''}${$('tvMixedColor').checked&&!result.colorOk?'｜混色卡色配置失敗，請查看違規':''}${spreadMessage?'｜'+spreadMessage:''}`);
       if(!demo){const q=quotaReport(result.cards,0,sizes.limits,tieMax);if(q.summary)status($('tvProgress').textContent+'｜'+q.summary);}
       log($('tvProgress').textContent,'success');
-    }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{await B.releaseTemplateContinuation(activeTemplate||pendingTemplate);if(result?.templateLibrary?.length&&!result.templateLibrary.finalAdopted)log(`穿越範本：本次未最終採用｜${$('tvProgress').textContent}`,'info');await TraverseTemplateFile.flush();updateTemplateStats();lock(false);}
+      overviewReady = !stopped;
+    }catch(e){status(`排牌失敗：${e.message}`);console.error(e);}finally{await B.releaseTemplateContinuation(activeTemplate||pendingTemplate);if(result?.templateLibrary?.length&&!result.templateLibrary.finalAdopted)log(`穿越範本：本次未最終採用｜${$('tvProgress').textContent}`,'info');await TraverseTemplateFile.flush();updateTemplateStats();lock(false);if(overviewReady)document.dispatchEvent(new CustomEvent('shoe-generated'));}
   }
   function cutTraverse(cut) {
     if(!states.traverse.result)return;
