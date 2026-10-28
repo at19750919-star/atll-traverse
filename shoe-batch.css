@@ -1,0 +1,21 @@
+/* 一次連續生成多副：頁首條數＋進度，總覽標題列切換／導出／刪除 */
+.batch-ctl{position:relative;display:flex;align-items:center;gap:12px;flex:none;margin-left:18px}
+body.running .batch-ctl{z-index:950}
+.batch-count{display:flex;align-items:center;gap:8px;font:600 13px var(--serif);letter-spacing:.12em;color:var(--gold-2);white-space:nowrap}
+.batch-count input{width:58px;height:34px;padding:0 6px;text-align:center;font:700 16px var(--disp);color:#f4dfa4;background:#0b1213;border:1px solid #b6995399;border-radius:4px}
+.batch-count input:focus{outline:none;border-color:var(--gold-2);box-shadow:0 0 0 2px #d9b56833}
+.batch-count input:disabled{opacity:.55}
+.batch-progress{font:200 12px var(--sans);color:var(--txt-dim);white-space:nowrap}
+body.batch-running .batch-progress{font:600 13px var(--serif);letter-spacing:.08em;color:#f4dfa4}
+.generating-batch{font:600 14px var(--serif);letter-spacing:.2em;text-indent:.2em;color:var(--gold-2)}
+.generating-batch:empty{display:none}
+.shoe-batch-tools{display:flex;align-items:center;gap:6px;margin-left:auto;flex:none}
+.shoe-batch-tools~#shoeOverviewClose{margin-left:0}
+.shoe-batch-nav{display:flex;align-items:center;gap:6px;margin-right:6px}
+.shoe-batch-nav[hidden]{display:none}
+.shoe-batch-nav span{min-width:92px;text-align:center;font:600 14px var(--serif);letter-spacing:.06em;color:#f4dfa4;font-variant-numeric:tabular-nums;white-space:nowrap}
+#shoeOverview .shoe-batch-tools .tool-btn{height:30px;min-width:0;padding:0 12px;font-size:12px;letter-spacing:.06em;text-indent:0}
+#shoeOverview .shoe-batch-nav .tool-btn{width:30px;padding:0;font-size:11px}
+#shoeOverview .sb-delete.armed{border-color:#c0574a;color:#ff8074;background:#3a1512}
+@media(max-width:1100px){.batch-ctl{margin-left:8px;gap:6px}.batch-progress{display:none}body.batch-running .batch-progress{display:inline}}
+@media(max-width:650px){.shoe-batch-tools{order:2;margin-left:0;flex-wrap:wrap}}

@@ -219,7 +219,12 @@
     $('pCond').classList.remove('open');document.querySelector('[data-panel="pCond"]').classList.remove('active');
     $('pSet').classList.remove('open');document.querySelector('[data-panel="pSet"]').classList.remove('active');
     if(mode==='standard'){
-      const st=states[sub];
+      restoreStandard(states[sub]);
+    }else{if($('frozenGridContainer'))$('frozenGridContainer').style.display='none';frozenGridHTML=null;window.__importedShoeMode=false;originalDeckOrder=null;originalRounds=null;$('cutPos').value=states.traverse.cut;renderTraverse();if(optimization)$('btnOptOpen').disabled=false;}
+    document.body.classList.toggle('finished',!!currentRounds?.length);
+    log(`已切換${mode==='standard'?SUB_NAME[sub]:TV_NAME[tsub]}；各模式保留各自牌靴。`,'info');
+  }
+  function restoreStandard(st) {
       currentRounds=st?.rounds||null;currentAnalysis=st?.analysis||null;originalDeckOrder=st?.deck||null;originalRounds=st?.originalRounds||null;editEnabled=!!st?.editEnabled;window.__importedShoeMode=!!st?.imported;
       frozenGridHTML=st?.frozen||null;if($('frozenGridContainer')){$('frozenGridContainer').style.display=frozenGridHTML?'block':'none';if($('frozenGrid'))$('frozenGrid').innerHTML=frozenGridHTML||'';}
       swapBankerSixIndexes=st?.swapSix||new Set();bankerSixIndexes=st?.bankerSix||new Set();violationRoundIndexes=st?.violations||new Set();
@@ -229,9 +234,20 @@
       if(currentRounds)refreshSharedTable(true);else{original.clear();}
       setEditButtonsAvailability(editEnabled);resetEditState();$('tblEmpty').style.display=currentRounds?'none':'';
       if(currentRounds)runRecoveryAnalysis();
-    }else{if($('frozenGridContainer'))$('frozenGridContainer').style.display='none';frozenGridHTML=null;window.__importedShoeMode=false;originalDeckOrder=null;originalRounds=null;$('cutPos').value=states.traverse.cut;renderTraverse();if(optimization)$('btnOptOpen').disabled=false;}
+  }
+  // 連續生成多副：存下／換回目前模式顯示中的牌靴（只換牌靴，不動設定）
+  const shoeKey = () => mode==='standard' ? sub : 'traverse-'+tsub;
+  function captureShoe() {
+    if(mode==='standard')return { key:shoeKey(), data:snapshot() };
+    absorbEdits(); const t=states.traverse;
+    return { key:shoeKey(), data:{ result:t.result, cut:t.cut, analysis:t.analysis, view:t.view } };
+  }
+  function restoreShoe(shot) {
+    if(!shot||shot.key!==shoeKey()||busy||window.__isGeneratingShoe)return false;
+    if(mode==='standard'){restoreStandard(shot.data);states[sub]=shot.data;}
+    else{clearOptimization();Object.assign(states.traverse,shot.data,{optimization:null});$('cutPos').value=shot.data.cut;renderTraverse();}
     document.body.classList.toggle('finished',!!currentRounds?.length);
-    log(`已切換${mode==='standard'?SUB_NAME[sub]:TV_NAME[tsub]}；各模式保留各自牌靴。`,'info');
+    return true;
   }
   function lock(value) {
     busy=value;window.__isGeneratingShoe=value;window.__stopGenerateRequested=false;
@@ -800,5 +816,5 @@
    applyProfile(sub);refreshModeButtons();
    $('modeStatus').textContent=SUB_NAME[sub];
    if(q==='traverse')switchMode('traverse-'+tsub);else if(q&&q.startsWith('traverse-')&&TV_SUBS.includes(q.slice(9)))switchMode(q);}
-  window.IntegratedModes={get mode(){return mode;},get sub(){return sub;},get tsub(){return tsub;},get busy(){return busy;},get traversal(){return states.traverse;},switchMode,generateTraverse,cutTraverse,recolor,exportTraverse};
+  window.IntegratedModes={get mode(){return mode;},get sub(){return sub;},get tsub(){return tsub;},get busy(){return busy;},get traversal(){return states.traverse;},get shoeKey(){return shoeKey();},captureShoe,restoreShoe,switchMode,generateTraverse,cutTraverse,recolor,exportTraverse};
 })();
