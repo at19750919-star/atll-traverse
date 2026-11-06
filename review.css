@@ -1,62 +1,63 @@
-/* 百家4.0 · 牌靴審核檢視專用樣式 (review.css) */
+/* ═══════════════════════════════════════════════════════════════
+   百家4.0 · 牌靴審核檢視專用樣式 (review.css)
+   完全參照《賭場綠金風格.md》與百家4.0主頁元件
+   ═══════════════════════════════════════════════════════════════ */
 
 body.review-page {
-  margin: 0;
-  padding: 12px 16px 40px;
-  background: #07090b;
-  color: #e8e4d8;
-  font-family: var(--sans, "Noto Sans TC", sans-serif);
+  font-family: var(--serif);
+  color: var(--txt);
   min-height: 100vh;
-  box-sizing: border-box;
+  padding: 0 clamp(12px, 2.2vw, 34px) 30px;
 }
 
-/* 頂部導航與標題 */
+/* 頂部 Header 微調 */
 .review-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 10px 16px;
-  background: linear-gradient(180deg, #182224 0%, #0d1417 100%);
-  border: 1px solid #6b4c1d;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  gap: 16px;
+  padding: 16px 4px 12px;
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, #8a6a2f 20%, #f4dfa4 50%, #8a6a2f 80%, transparent) 1;
 }
 
 .review-branding {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
-.review-logo {
-  height: 28px;
-  width: auto;
+.review-branding .crest {
+  width: 42px;
+  height: 48px;
+  flex: none;
+  background: url("suit/at-spade-logo-gold.png") center/contain no-repeat;
+  filter: drop-shadow(0 0 4px rgba(255, 200, 0, .35)) drop-shadow(0 0 10px rgba(255, 140, 0, .18)) brightness(.85);
 }
 
 .review-title {
+  font-family: var(--disp);
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 900;
+  letter-spacing: .14em;
+  background: linear-gradient(180deg, #fbeec7 10%, #e2bd72 45%, #9c7434 70%, #f0d491 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .8));
   margin: 0;
-  font-family: var(--serif, "Noto Serif TC", serif);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--gold-bright, #f4dfa4);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.review-badge {
+.review-title small {
+  display: block;
+  font-family: var(--serif);
+  font-weight: 400;
   font-size: 11px;
-  padding: 2px 8px;
-  background: rgba(217, 181, 104, 0.15);
-  border: 1px solid #d9b568;
-  border-radius: 4px;
-  color: #f4dfa4;
-  letter-spacing: 0.05em;
-  font-weight: 500;
+  letter-spacing: .4em;
+  color: var(--txt-dim);
+  -webkit-text-fill-color: var(--txt-dim);
+  margin-top: 2px;
 }
 
 .review-header-actions {
@@ -64,48 +65,144 @@ body.review-page {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  margin-left: auto;
 }
 
-/* 工具列 (Toolbar) */
+/* 導出檔名輸入框 */
+.review-header-actions .export-filename-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--gold-2);
+  font-family: var(--serif);
+  font-weight: 600;
+}
+
+.review-header-actions .export-filename-field input {
+  width: 166px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #6b4c1d;
+  border-radius: 5px;
+  background: #0b1213;
+  color: #efe2c2;
+  font-family: var(--serif);
+  font-size: 13px;
+}
+
+.review-header-actions .export-filename-field input:focus {
+  outline: 1px solid #c9a25a;
+}
+
+/* ════════════ 操作工具列 (.review-toolbar) ════════════ */
 .review-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 10px 14px;
-  background: #10171a;
-  border: 1px solid #6b4c1d88;
-  border-radius: 6px;
-  margin-bottom: 12px;
+  padding: 16px 20px 14px;
+  margin-top: 14px;
+  margin-bottom: 14px;
 }
 
 .review-tool-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .review-tool-sep {
   width: 1px;
-  height: 24px;
-  background: #6b4c1d55;
+  height: 28px;
+  background: rgba(138, 106, 47, .4);
+  flex: none;
   margin: 0 4px;
 }
 
 .review-tool-label {
+  font-family: var(--serif);
   font-size: 12px;
-  color: var(--gold-2, #d9b568);
+  color: var(--gold-3);
   font-weight: 600;
+  letter-spacing: .15em;
   margin-right: 4px;
 }
 
-/* 儀表板區域 (回復統計與違規卡) */
+/* 數字輸入群組 */
+.review-input-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #161f21, #0d1315);
+  border: 1px solid #2c3634;
+  font-family: var(--serif);
+  font-size: 12px;
+  color: var(--gold-2);
+}
+
+.review-input-group .review-numbox {
+  width: 58px;
+  height: 26px;
+  background: #07090b;
+  border: 1px solid #6b4c1d;
+  color: var(--gold-1);
+  text-align: center;
+  border-radius: 4px;
+  font-family: var(--disp);
+  font-size: 14px;
+  outline: none;
+}
+
+.review-input-group .review-numbox:focus {
+  border-color: #c9a25a;
+}
+
+.review-input-group .tool-btn {
+  min-width: auto;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 11.5px;
+  letter-spacing: .05em;
+  text-indent: 0;
+}
+
+/* 密度下拉選單 */
+.review-density-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid #6b4c1d;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #161f21, #0d1315);
+  color: var(--gold-1);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  outline: none;
+}
+
+.review-density-select:hover {
+  border-color: #c9a25a;
+}
+
+/* ════════════ 儀表板區域 (回復統計與違規審核) ════════════ */
 .review-dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 1200px) {
@@ -117,90 +214,177 @@ body.review-page {
 .review-metrics-panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+}
+
+.review-stats-card {
+  padding: 16px 20px;
 }
 
 .review-stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 10px;
+  gap: 18px;
 }
 
-/* 絨布牌桌主表格區塊 */
-.review-felt-container {
-  margin-top: 10px;
-}
-
-.review-table-bar {
+/* 統計項目樣式 (完全比照主頁 .dash-stat) */
+.dash-stat {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: #0f1619;
-  border: 1px solid #6b4c1d66;
-  border-bottom: none;
-  border-radius: 6px 6px 0 0;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
-.review-table-title {
-  font-family: var(--serif, "Noto Serif TC", serif);
-  font-size: 14px;
-  color: #f4dfa4;
+.dash-stat h2 {
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--gold-2);
+  margin: 0;
+}
+
+.dash-stat h2 strong {
+  font-family: var(--disp);
+  font-size: 16px;
+  color: var(--gold-1);
+}
+
+.dash-kpis {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.dash-kpis div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-kpis span {
+  font-family: var(--serif);
+  font-size: 11px;
+  color: var(--txt-dim);
+  letter-spacing: .05em;
+}
+
+.dash-kpis strong {
+  font-family: var(--disp);
+  font-size: 22px;
   font-weight: 700;
+  color: var(--gold-1);
+  line-height: 1.1;
+}
+
+.dash-kpis small {
+  font-family: var(--serif);
+  font-size: 10.5px;
+  color: var(--gold-2);
+  opacity: .85;
+}
+
+.dash-detail {
+  font-family: var(--serif);
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  margin-top: 4px;
+}
+
+.dash-legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--serif);
+  font-size: 11px;
+  color: var(--txt-dim);
+}
+
+.dash-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dash-legend-item::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--legend-color, #c9a050);
+}
+
+.dash-legend-item b {
+  color: var(--txt);
+}
+
+.dash-proportion {
+  display: flex;
+  height: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #111a18;
+  border: 1px solid rgba(138, 106, 47, .3);
+  margin-top: 4px;
+}
+
+.dash-range {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-family: var(--serif);
+  font-size: 11.5px;
+  margin: 3px 0;
 }
 
+.dash-range span {
+  width: 52px;
+  color: var(--txt-dim);
+  flex: none;
+}
+
+.dash-range div {
+  flex: 1;
+  height: 7px;
+  background: #111a18;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dash-range div i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #6b4c1d, #d9b568);
+}
+
+.dash-range b {
+  width: 44px;
+  text-align: right;
+  color: var(--gold-1);
+  font-family: var(--disp);
+  font-size: 12px;
+  flex: none;
+}
+
+/* 空狀態提示 */
 .review-empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: #9a9584;
-  font-size: 15px;
-  letter-spacing: 0.05em;
-  background: rgba(10, 36, 27, 0.4);
-  border: 1px dashed #6b4c1d66;
-  border-radius: 4px;
-  margin: 10px 0;
+  padding: 50px 20px;
+  color: var(--txt-dim);
+  font-family: var(--serif);
+  font-size: 14px;
+  letter-spacing: .08em;
+  background: rgba(10, 36, 27, .35);
+  border: 1px dashed rgba(138, 106, 47, .4);
+  border-radius: 6px;
+  margin: 14px 0;
 }
 
 .review-empty-state strong {
-  color: #f4dfa4;
+  color: var(--gold-1);
   display: block;
-  font-size: 18px;
+  font-family: var(--disp);
+  font-size: 17px;
+  letter-spacing: .12em;
   margin-bottom: 8px;
-}
-
-/* 輸入框與微調 */
-.review-numbox {
-  width: 60px;
-  height: 28px;
-  background: #07090b;
-  border: 1px solid #6b4c1d;
-  color: #f4dfa4;
-  text-align: center;
-  border-radius: 3px;
-  font-size: 13px;
-}
-
-.review-input-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #0a1114;
-  border: 1px solid #6b4c1d55;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-/* 顯示密度控制 */
-.review-density-select {
-  height: 28px;
-  background: #07090b;
-  border: 1px solid #6b4c1d;
-  color: #f4dfa4;
-  font-size: 12px;
-  border-radius: 3px;
-  padding: 0 4px;
 }

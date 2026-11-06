@@ -1,16 +1,41 @@
+// ═══════════════════════════════════════════════════════════════
 // 百家4.0 · 牌靴審核檢視核心邏輯 (review.js)
+// 完全參照《賭場綠金風格.md》與百家4.0主頁規格實現
+// ═══════════════════════════════════════════════════════════════
+
 (function () {
   'use strict';
 
   const $ = (id) => document.getElementById(id);
 
-  // 1. 固定使用紅0模式規則判定
-  window.SIGNAL_CONFIG = {
-    suits: ['♥', '♦'],
-    ranks: ['10', 'J', 'Q', 'K']
+  // 1. 強制鎖定為紅0模式與四梅花和局規則
+  window.StandardProfiles = {
+    current: 'red0',
+    defaults: {
+      red0: {
+        signal: { suits: ['♥', '♦'], ranks: ['10', 'J', 'Q', 'K'] },
+        tripleTieRule: false,
+        mixedCardColor: true
+      }
+    }
   };
 
-  // 2. 密度控制與保存
+  function enforceRed0Signal() {
+    if (typeof SIGNAL_CONFIG !== 'undefined') {
+      SIGNAL_CONFIG.suits = ['♥', '♦'];
+      SIGNAL_CONFIG.ranks = ['10', 'J', 'Q', 'K'];
+    }
+    window.SIGNAL_CONFIG = {
+      suits: ['♥', '♦'],
+      ranks: ['10', 'J', 'Q', 'K']
+    };
+    document.body.dataset.mode = 'standard';
+    document.body.dataset.sub = 'red0';
+  }
+
+  enforceRed0Signal();
+
+  // 2. 顯示密度控制 (normal / compact)
   let currentDensity = 'normal';
   try {
     currentDensity = localStorage.getItem('integrated-table-density') === 'compact' ? 'compact' : 'normal';
@@ -28,20 +53,64 @@
 
   const getRounds = () => typeof currentRounds !== 'undefined' && Array.isArray(currentRounds) ? currentRounds : (window.currentRounds || []);
 
-  // 3. 儀表板回復統計與指標更新
+  // 3. 雙欄主表格排版邏輯 (layoutRoundTable)
+  function layoutRoundTable() {
+    const table = $('roundsTable'), head = $('roundsHead'), body = $('roundsBody');
+    if (!table || !head || !body) return;
+    if (!table.classList.contains('split-rounds')) table.classList.add('split-rounds');
+    const rows = Array.from(body.children);
+    if (rows.length && table.style.display !== 'none' && table.style.display !== 'grid') {
+      table.style.display = 'grid';
+    }
+    if (head.firstElementChild && !head.querySelector('.split-right-head')) {
+      const right = head.firstElementChild.cloneNode(true);
+      right.classList.add('split-right-head');
+      head.append(right);
+    }
+    rows.forEach((row, index) => {
+      const side = String(index < 45 ? 1 : 2);
+      const line = String(index < 45 ? index + 2 : index - 43);
+      if (row.style.getPropertyValue('--round-side') !== side) row.style.setProperty('--round-side', side);
+      if (row.style.getPropertyValue('--round-line') !== line) row.style.setProperty('--round-line', line);
+    });
+
+    // 確保主表格卡牌標記嚴格符合紅0（♥♦ 的 10, J, Q, K 為紅字，A, 2 絕不為紅字）
+    table.querySelectorAll('.card-label').forEach(el => {
+      const text = (el.textContent || '').trim();
+      if (!text || text === '--') return;
+      // 解析點數與花色，例如 "Q♥" 或 "10♦" 或 "T♦"
+      const suit = text.slice(-1);
+      const rank = text.slice(0, -1);
+      const isRed0 = (suit === '♥' || suit === '♦') && ['10', 'J', 'Q', 'K', 'T'].includes(rank);
+      if (isRed0) {
+        if (!el.classList.contains('s-signal-card')) el.classList.add('s-signal-card');
+        el.classList.remove('non-s-signal-card');
+      } else {
+        el.classList.remove('s-signal-card');
+        if (!el.classList.contains('non-s-signal-card')) el.classList.add('non-s-signal-card');
+      }
+    });
+  }
+
+  // 4. 儀表板回復統計與指標更新
   function refreshReviewDashboard() {
+    enforceRed0Signal();
     const all = getRounds();
     const rounds = all.filter(r => r && ['莊', '閒', '和'].includes(r.result));
     const total = rounds.length;
 
     const placeholder = $('reviewEmptyState');
     const table = $('roundsTable');
+    const totalStatusEl = $('shoeRoundTotal');
+
+    if (totalStatusEl) {
+      totalStatusEl.textContent = `SHOE · ${total} 局`;
+    }
 
     if (!total) {
       if (placeholder) placeholder.style.display = 'block';
       if (table) table.style.display = 'none';
 
-      // 重置統計值
       if ($('dashAvg')) $('dashAvg').textContent = '—';
       if ($('dashAvgCards')) $('dashAvgCards').textContent = '—';
       if ($('dashMax')) $('dashMax').textContent = '—';
@@ -51,31 +120,33 @@
       if ($('dashOutcomeBar')) $('dashOutcomeBar').innerHTML = '';
       if ($('dashSizeLegend')) $('dashSizeLegend').innerHTML = '';
       if ($('dashSizeBar')) $('dashSizeBar').innerHTML = '';
-      if ($('dashRecoveryBars')) $('dashRecoveryBars').innerHTML = '<div style="color:#9a9584;font-size:12px;padding:8px 0;">尚無牌靴資料</div>';
+      if ($('dashRecoveryBars')) $('dashRecoveryBars').innerHTML = '<div style="color:var(--txt-dim);font-size:12px;padding:8px 0;font-family:var(--serif);">尚無牌靴資料</div>';
       if ($('dashB6')) $('dashB6').textContent = '';
 
-      if (typeof updateViolationUI === 'function') {
-        updateViolationUI(null);
+      const vioCard = $('statsVioCard');
+      if (vioCard) {
+        vioCard.classList.remove('all-clear');
       }
       return;
     }
 
     if (placeholder) placeholder.style.display = 'none';
-    if (table) table.style.display = '';
+    if (table) table.style.display = 'grid';
 
-    // 觸發 shoe-overview 等監聽 body 屬性的元件同步狀態
     document.body.dataset.mode = 'standard';
+    document.body.dataset.sub = 'red0';
     document.body.classList.remove('running');
+
     const overviewBtn = $('btnShoeOverview');
-    if (overviewBtn && total > 0) {
+    if (overviewBtn) {
       overviewBtn.disabled = false;
     }
 
     // (A) 莊閒和勝負分佈
     const outcomes = [
-      { name: '莊', color: 'var(--banker, #d32f2f)', count: rounds.filter(r => r.result === '莊').length },
-      { name: '閒', color: 'var(--player, #1976d2)', count: rounds.filter(r => r.result === '閒').length },
-      { name: '和', color: 'var(--tie, #388e3c)', count: rounds.filter(r => r.result === '和').length }
+      { name: '莊', color: 'var(--banker, #e05c4f)', count: rounds.filter(r => r.result === '莊').length },
+      { name: '閒', color: 'var(--player, #4fa3d8)', count: rounds.filter(r => r.result === '閒').length },
+      { name: '和', color: 'var(--tie, #5cbf8a)', count: rounds.filter(r => r.result === '和').length }
     ];
 
     if ($('dashTotal')) $('dashTotal').textContent = total;
@@ -126,7 +197,6 @@
           if ($('dashMax')) $('dashMax').textContent = `${rec.maxRounds} 局`;
           if ($('dashMaxCards')) $('dashMaxCards').textContent = `${rec.maxCards} 張`;
 
-          // 回復間距分佈圖
           if ($('dashRecoveryBars') && rec.distribution) {
             const dist = rec.distribution;
             const distTotal = rec.totalCards || 1;
@@ -140,12 +210,10 @@
             $('dashRecoveryBars').innerHTML = ranges.map(([name, count]) => {
               const pct = ((count / distTotal) * 100).toFixed(1);
               return `
-                <div class="dash-range" style="display:flex;align-items:center;gap:8px;font-size:12px;margin:2px 0;">
-                  <span style="width:50px;color:#9a9584;">${name}</span>
-                  <div style="flex:1;height:8px;background:#1a2327;border-radius:4px;overflow:hidden;">
-                    <div style="width:${pct}%;height:100%;background:linear-gradient(90deg, #6b4c1d, #d9b568);"></div>
-                  </div>
-                  <b style="width:42px;text-align:right;color:#f4dfa4;">${pct}%</b>
+                <div class="dash-range">
+                  <span>${name}</span>
+                  <div><i style="width:${pct}%"></i></div>
+                  <b>${pct}%</b>
                 </div>`;
             }).join('');
           }
@@ -156,19 +224,20 @@
         }
       }
     } catch (e) {
-      console.warn('回復分析計算發生警告:', e);
+      console.warn('回復分析計算警告:', e);
     }
 
     // (D) 特殊指標：莊6贏、對調莊6
     try {
-      const b6Count = rounds.filter((r, i) => typeof isBankerSixWinRound === 'function' && isBankerSixWinRound(r)).length;
-      const swapB6Count = rounds.filter((r, i) => typeof isSwapBankerSixRound === 'function' && isSwapBankerSixRound(r)).length;
+      const b6Count = rounds.filter((r) => typeof isBankerSixWinRound === 'function' && isBankerSixWinRound(r)).length;
+      const swapB6Count = rounds.filter((r) => typeof isSwapBankerSixRound === 'function' && isSwapBankerSixRound(r)).length;
       if ($('dashB6')) {
-        $('dashB6').innerHTML = `莊6贏: <strong style="color:#f4dfa4;">${b6Count}</strong> 局 ｜ 對調莊6: <strong style="color:#64b5f6;">${swapB6Count}</strong> 局`;
+        $('dashB6').innerHTML = `莊6贏: <strong style="color:var(--gold-1);font-family:var(--disp);">${b6Count}</strong> 局 ｜ 對調莊6: <strong style="color:var(--player);font-family:var(--disp);">${swapB6Count}</strong> 局`;
       }
     } catch (_) {}
 
     // (E) 違規檢查（以紅0規則判定）
+    let totalViolations = 0;
     try {
       if (typeof calculateViolationStats === 'function' && typeof updateViolationUI === 'function') {
         const stats = calculateViolationStats(all);
@@ -178,13 +247,35 @@
           stats.cannotSwapRounds = cannotSwap.rounds;
         }
         updateViolationUI(stats);
+        
+        // 統計各項違規次數
+        totalViolations = (stats.signalViolations || 0) +
+          (stats.fourCardViolations || 0) +
+          (stats.streakViolations || 0) +
+          (stats.cannotSwapViolations || 0) +
+          (stats.cardCountMismatchViolations || 0) +
+          (stats.cardColorViolations || 0) +
+          (stats.otherViolations || 0);
       }
     } catch (e) {
-      console.warn('違規檢查發生警告:', e);
+      console.warn('違規檢查警告:', e);
     }
+
+    // 全無違規時呈現整格亮綠 (#statsVioCard.all-clear)
+    const vioCard = $('statsVioCard');
+    if (vioCard) {
+      if (totalViolations === 0 && total > 0) {
+        vioCard.classList.add('all-clear');
+      } else {
+        vioCard.classList.remove('all-clear');
+      }
+    }
+
+    // 更新雙欄佈局
+    layoutRoundTable();
   }
 
-  // 4. 定義 window.DashboardUI（供 shoe-overview.js 等元件讀取）
+  // 5. 定義 window.DashboardUI（供 shoe-overview.js 讀取）
   window.DashboardUI = {
     refresh: refreshReviewDashboard,
     refreshNow: refreshReviewDashboard,
@@ -194,20 +285,34 @@
       return {
         recovery: typeof IntegratedAnalysis !== 'undefined' && all.length ? IntegratedAnalysis.recovery(all) : null,
         safe: typeof IntegratedAnalysis !== 'undefined' && cards.length ? IntegratedAnalysis.safe(cards, {
-          tripleTie: $('tripleTieRule')?.checked ?? true,
+          tripleTie: false,
           signalRule: true,
-          signalConfig: { suits: window.SIGNAL_CONFIG.suits.slice(), ranks: window.SIGNAL_CONFIG.ranks.slice() }
+          signalConfig: { suits: ['♥', '♦'], ranks: ['10', 'J', 'Q', 'K'] }
         }) : null
       };
     }
   };
 
-  // 5. 初始化與監聽
+  // 6. 初始化與事件監聽
   function initReview() {
+    enforceRed0Signal();
     applyDensity(currentDensity);
+
     const sel = $('densityControl');
     if (sel) {
-      sel.addEventListener('change', (e) => applyDensity(e.target.value));
+      sel.addEventListener('change', (e) => {
+        applyDensity(e.target.value);
+        layoutRoundTable();
+      });
+    }
+
+    // 監聽主表格 DOM 變動，自動執行雙欄分列
+    const roundsBody = $('roundsBody');
+    if (roundsBody && window.MutationObserver) {
+      const observer = new MutationObserver(() => {
+        layoutRoundTable();
+      });
+      observer.observe(roundsBody, { childList: true, subtree: true });
     }
 
     // 計算工具按鈕
@@ -216,12 +321,13 @@
       calcBtn.addEventListener('click', showCalcTool);
     }
 
-    // 匯入檔案監聽（匯入完成後啟用紅0規則檢查並刷新）
+    // 匯入檔案監聽（匯入完成後鎖定紅0與四梅花並重繪）
     const fileInput = $('importFileInput');
     if (fileInput) {
       fileInput.addEventListener('change', () => {
         setTimeout(() => {
-          window.__importedShoeMode = false; // 依使用者決定：固定使用紅0規則判定違規與訊號
+          enforceRed0Signal();
+          window.__importedShoeMode = false;
           if (typeof refreshAnalysisAndRender === 'function') {
             refreshAnalysisAndRender({ mutate: false });
           }
@@ -233,13 +339,16 @@
       });
     }
 
-    // 換牌、換局、套用、切牌後同步刷新儀表板
+    // 換牌、換局、套用、切牌後同步刷新
     const watchButtons = ['btnSwap', 'btnRound', 'btnApplyChanges', 'btnCut', 'btnAutoReorder', 'btnAutoColor'];
     watchButtons.forEach(id => {
       const btn = $(id);
       if (btn) {
         btn.addEventListener('click', () => {
-          setTimeout(refreshReviewDashboard, 100);
+          setTimeout(() => {
+            enforceRed0Signal();
+            refreshReviewDashboard();
+          }, 100);
         });
       }
     });

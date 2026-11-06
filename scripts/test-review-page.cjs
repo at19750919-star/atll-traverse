@@ -102,18 +102,26 @@ const server = http.createServer((req, res) => {
     const closeWidgetBtn = await page.$('#closeWidgetBtn');
     if (closeWidgetBtn) await closeWidgetBtn.click();
 
-    // 3. 模擬載入牌靴資料並驗證渲染與統計
+    // 3. 模擬載入牌靴資料並驗證渲染與統計 (含紅0訊號判定測試)
     console.log('Injecting mock shoe data into review page...');
     await page.evaluate(() => {
-      // 構造簡單合法牌局
-      const suits = ['♠', '♥', '♣', '♦'];
-      const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+      // 構造包含紅0與非訊號A/2的牌局
       const rounds = [];
       let globalPos = 0;
       for (let i = 0; i < 60; i++) {
         const cards = [];
-        for (let c = 0; c < 4; c++) {
-          cards.push(new Card(ranks[(i * 4 + c) % 13], suits[(i + c) % 4], globalPos++));
+        if (i === 0) {
+          // 第0局放入紅0 (Q♥, 10♦) 與非訊號牌 (A♣, 2♠)
+          cards.push(new Card('Q', '♥', globalPos++));
+          cards.push(new Card('A', '♣', globalPos++));
+          cards.push(new Card('10', '♦', globalPos++));
+          cards.push(new Card('2', '♠', globalPos++));
+        } else {
+          const ranks = ['3', '4', '5', '6', '7', '8', '9', 'J', 'K'];
+          const suits = ['♠', '♥', '♣', '♦'];
+          for (let c = 0; c < 4; c++) {
+            cards.push(new Card(ranks[(i * 4 + c) % ranks.length], suits[(i + c) % 4], globalPos++));
+          }
         }
         const pTotal = (cards[0].point() + cards[2].point()) % 10;
         const bTotal = (cards[1].point() + cards[3].point()) % 10;
@@ -136,12 +144,45 @@ const server = http.createServer((req, res) => {
 
     await page.waitForTimeout(300);
 
-    // 驗證主表已顯示
+    // 驗證主表已顯示與雙欄排版
     const isTableVisible = await page.$eval('#roundsTable', el => el.style.display !== 'none');
     assert.ok(isTableVisible, '載入牌靴後主表格正常顯示');
 
     const rowCount = await page.$$eval('#roundsBody tr', rows => rows.length);
     assert.equal(rowCount, 60, '主表格應有 60 局');
+
+    // 驗證雙欄分列與CSS變數
+    const side1 = await page.$eval('#roundsBody tr:nth-child(1)', el => el.style.getPropertyValue('--round-side'));
+    const side2 = await page.$eval('#roundsBody tr:nth-child(46)', el => el.style.getPropertyValue('--round-side'));
+    assert.equal(side1, '1', '第 1 局應在第 1 欄 (side 1)');
+    assert.equal(side2, '2', '第 46 局應在第 2 欄 (side 2)');
+    const splitRightHead = await page.$('#roundsHead .split-right-head');
+    assert.ok(splitRightHead, '雙欄右側表頭已成功克隆');
+
+    // 驗證紅0訊號牌樣式：Q♥, 10♦ 為紅0訊號 (.s-signal-card)，A♣, 2♠ 絕不為訊號 (.non-s-signal-card)
+    const cardLabelsRound0 = await page.$$eval('#roundsBody tr:nth-child(1) .card-label', cards => {
+      return cards.map(c => ({
+        text: c.textContent.trim(),
+        isSignal: c.classList.contains('s-signal-card'),
+        isNonSignal: c.classList.contains('non-s-signal-card')
+      }));
+    });
+    console.log('Round 0 card classes:', cardLabelsRound0);
+    const qHeart = cardLabelsRound0.find(c => c.text === 'Q♥');
+    const tenDiamond = cardLabelsRound0.find(c => c.text === '10♦' || c.text === 'T♦');
+    const aClub = cardLabelsRound0.find(c => c.text === 'A♣');
+    const twoSpade = cardLabelsRound0.find(c => c.text === '2♠');
+
+    assert.ok(qHeart && qHeart.isSignal, 'Q♥ 必須是紅0訊號牌 (.s-signal-card)');
+    assert.ok(tenDiamond && tenDiamond.isSignal, '10♦ 必須是紅0訊號牌 (.s-signal-card)');
+    assert.ok(aClub && aClub.isNonSignal && !aClub.isSignal, 'A♣ 絕不可被標記為訊號牌');
+    assert.ok(twoSpade && twoSpade.isNonSignal && !twoSpade.isSignal, '2♠ 絕不可被標記為訊號牌');
+
+    // 驗證字型符合《賭場綠金風格.md》只用襯線字
+    const bodyFontFamily = await page.evaluate(() => window.getComputedStyle(document.body).fontFamily);
+    console.log('Computed body font-family:', bodyFontFamily);
+    assert.ok(bodyFontFamily.includes('Noto Serif') || bodyFontFamily.includes('Cinzel') || bodyFontFamily.includes('serif'), 'Body 字型必須為襯線字');
+    assert.ok(!bodyFontFamily.endsWith('sans-serif'), 'Body 字型不得以 sans-serif 結尾');
 
     // 驗證回復統計已計算
     const avgText = await page.$eval('#dashAvg', el => el.textContent);

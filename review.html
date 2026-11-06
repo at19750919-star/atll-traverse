@@ -8,22 +8,24 @@
   <link rel="icon" type="image/png" sizes="128x128" href="suit/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+TC:wght@400;600;900&display=swap" rel="stylesheet">
+  
+  <!-- 賭場綠金風格核心樣式 (依據《賭場綠金風格.md》) -->
+  <link rel="stylesheet" href="casino-theme.css?v=2">
   <link rel="stylesheet" href="integrated.css?v=14">
   <link rel="stylesheet" href="integrated-dashboard.css?v=45">
   <link rel="stylesheet" href="bj4-style.css?v=3">
   <link rel="stylesheet" href="shoe-overview.css?v=7">
-  <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=1">
+  <link rel="stylesheet" href="review.css?v=2">
 </head>
-<body class="review-page dashboard" data-mode="standard" data-density="normal">
+<body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
   <!-- ═══════════ 頂部標題與核心動作 ═══════════ -->
   <header class="review-header">
     <div class="review-branding">
-      <img src="suit/at-spade-logo-current.png" alt="AT Logo" class="review-logo" onerror="this.style.display='none'">
-      <h1 class="review-title">百家4.0 <span class="review-badge">牌靴審核檢視</span></h1>
+      <div class="crest" title="百家4.0"></div>
+      <h1 class="review-title">SHOE MASTER<small>百家4.0 · 牌靴審核檢視</small></h1>
     </div>
 
     <div class="review-header-actions">
@@ -43,18 +45,28 @@
 
       <!-- 牌靴總覽按鈕插槽（shoe-overview.js 會自動插入 btnShoeOverview 於 btnTableWindow 前） -->
       <button class="tool-btn" id="btnTableWindow" type="button" style="display:none;" aria-hidden="true"></button>
+
+      <!-- 牌靴狀態 -->
+      <div class="shoe-state">
+        <span class="dot"></span>
+        <span class="st-idle">待命 STANDBY</span>
+        <span class="st-run">處理中</span>
+        <span id="shoeRoundTotal" style="color:var(--gold-2)">SHOE · 0 局</span>
+      </div>
     </div>
   </header>
 
   <!-- ═══════════ 操作工具列 (換牌 / 換局 / 切牌 / 定位) ═══════════ -->
-  <nav class="review-toolbar" aria-label="理牌與切牌工具列">
+  <nav class="review-toolbar gframe" aria-label="理牌與切牌工具列">
+    <span class="frame-title">理牌與切牌工具</span>
+
     <!-- 理牌編輯操作 -->
     <div class="review-tool-group">
       <span class="review-tool-label">理牌編輯:</span>
       <button class="tool-btn" id="btnSwap" disabled type="button" title="點選兩張牌進行交換">換牌</button>
       <button class="tool-btn" id="btnRound" disabled type="button" title="點選兩局進行整局對調">換局</button>
-      <label class="swap-preview-toggle" title="換牌時先預覽對調結果">
-        <input type="checkbox" id="toggleSwapPreview"><span>換牌預覽</span>
+      <label class="swap-preview-toggle" title="換牌時先預覽對調結果" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--gold-2);cursor:pointer;">
+        <input type="checkbox" id="toggleSwapPreview" style="accent-color:#d9b568;"><span>換牌預覽</span>
       </label>
       <button class="tool-btn" id="btnAutoReorder" disabled type="button" title="彈出智能重排視窗 (快捷鍵 C)">自動重排</button>
       <button class="tool-btn" id="btnAutoColor" disabled type="button" title="同牌面調換紅藍背顏色">換色</button>
@@ -98,10 +110,11 @@
   <main class="review-dashboard-grid">
     <!-- 回復統計與牌靴分佈 -->
     <section class="review-metrics-panel">
-      <div class="dashboard-metrics" id="stats">
+      <div class="review-stats-card gframe" id="stats">
+        <span class="frame-title">回復統計與牌靴指標</span>
         <div class="review-stats-row">
           <!-- 回復分析 KPI -->
-          <section class="dash-stat">
+          <div class="dash-stat">
             <h2 id="dashRecTitle">回復分析</h2>
             <div class="dash-kpis">
               <div><span id="dashAvgLabel">平均回復</span><strong id="dashAvg">—</strong><small id="dashAvgCards">—</small></div>
@@ -109,30 +122,30 @@
             </div>
             <p id="dashMaxAt" class="dash-detail"></p>
             <p id="dashB6" class="dash-detail b6-meta"></p>
-          </section>
+          </div>
 
           <!-- 本靴局數與莊閒和分佈 -->
-          <section class="dash-stat">
+          <div class="dash-stat">
             <h2>本副牌靴 <strong id="dashTotal">0</strong><small> 局</small></h2>
             <div id="dashOutcomeLegend" class="dash-legend"></div>
             <div id="dashOutcomeBar" class="dash-proportion"></div>
             <div id="dashSizeLegend" class="dash-legend" style="margin-top:8px;"></div>
             <div id="dashSizeBar" class="dash-proportion"></div>
-          </section>
+          </div>
 
           <!-- 回復間距分佈圖 -->
-          <section class="dash-stat dash-distribution">
+          <div class="dash-stat">
             <h2 id="dashDistTitle">回復間距分布</h2>
             <div id="dashRecoveryBars">
-              <div style="color:#9a9584;font-size:12px;padding:8px 0;">尚無牌靴資料</div>
+              <div style="color:var(--txt-dim);font-size:12px;padding:8px 0;font-family:var(--serif);">尚無牌靴資料</div>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- 違規檢查狀態卡片 (紅0規則判定) -->
-    <section class="violations gframe status-card" id="statsVioCard" aria-label="違規項目">
+    <section class="violations gframe status-card vio-live-card" id="statsVioCard" aria-label="違規項目">
       <span class="frame-title">紅0 規則違規審核</span>
       <div class="violations-grid" id="violationsGrid">
         <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">訊號牌違規</span><span class="v-val violation-detail" id="signalViolationDetail">無</span></div>
@@ -148,7 +161,7 @@
   </main>
 
   <!-- ═══════════ 路單 / 牌靴體檢圖（按「路單地圖」切換顯示） ═══════════ -->
-  <div id="shoeMap" class="gframe" style="display:none;margin-bottom:12px;"></div>
+  <div id="shoeMap" class="gframe" style="display:none;margin-bottom:14px;"></div>
 
   <!-- ═══════════ 牌桌主表格（BACCARAT SHOE RECORD） ═══════════ -->
   <section class="pit review-felt-container">
@@ -166,7 +179,7 @@
       </div>
 
       <div class="table-scroll">
-        <table id="roundsTable" style="display:none">
+        <table id="roundsTable" class="split-rounds" style="display:none">
           <colgroup>
             <col style="width:4%">   <!-- 局 -->
             <col style="width:23%">  <!-- 卡牌 -->
@@ -219,7 +232,6 @@
   <!-- ═══════════ JavaScript 元件庫載入 ═══════════ -->
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script src="standard/point_matrix.js?v=6"></script>
-  <script src="standard/import_feedback.js?v=2"></script>
   <script src="card_color_rules.js?v=3"></script>
   <script src="tie_spread.js?v=5"></script>
   <script src="standard/round_size_limits.js?v=1"></script>
@@ -248,7 +260,7 @@
   <script src="integrated-analysis.js?v=1"></script>
 
   <!-- 審核檢視專屬適配層 -->
-  <script src="review.js?v=1"></script>
+  <script src="review.js?v=2"></script>
 
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>
