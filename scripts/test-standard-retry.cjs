@@ -12,6 +12,11 @@ const root = path.resolve(__dirname, '..');
     await page.route('https://script.google.com/**', r => r.abort());
     await page.route('https://fonts.googleapis.com/**', r => r.fulfill({ body: '' }));
     await page.goto(pathToFileURL(path.join(root, 'integrated.html')).href);
+    const clickGenerate = async () => {
+      // 生成成功會自動開總覽，先依使用者操作關閉再測下一次生成。
+      if (await page.locator('#shoeOverview[open]').count()) await page.click('#shoeOverviewClose');
+      await page.click('#chipGen');
+    };
     const finished = () => page.waitForFunction(() => !window.__isGeneratingShoe, null, { timeout: 120000 });
     for (const mode of ['modeRed0', 'modeA2']) {
       await page.click('#' + mode);
@@ -23,7 +28,7 @@ const root = path.resolve(__dirname, '..');
       });
       let ready = false;
       for (let n = 0; n < 8 && !ready; n++) {
-        await page.click('#chipGen'); await finished();
+        await clickGenerate(); await finished();
         ready = await page.evaluate(() => /生成完成!/.test(document.getElementById('logArea').textContent));
       }
       assert(ready, (await page.locator('#logArea').textContent()).slice(-1000));
@@ -32,12 +37,12 @@ const root = path.resolve(__dirname, '..');
       await page.evaluate(() => {
         window.__retryOriginal = { pack:pack_all_sensitive_and_segment, repair:repairStandardRoundViolations,
           validate:validateStandardGeneratedShoe, rare:TwoThirteenReversals.check, spacing:repairRareReversalSpacing,
-          plan:planBackColorsKeepFaces };
+          plan:planBackColorsKeepFaces, swaps:optimizeRecoveryRoundSwaps };
         window.__retryFixture = currentRounds.map(r => ({...r,cards:r.cards.map(c=>c.clone())}));
         window.__retryReset = () => {
           pack_all_sensitive_and_segment=__retryOriginal.pack;repairStandardRoundViolations=__retryOriginal.repair;
           validateStandardGeneratedShoe=__retryOriginal.validate;TwoThirteenReversals.check=__retryOriginal.rare;
-          repairRareReversalSpacing=__retryOriginal.spacing;planBackColorsKeepFaces=__retryOriginal.plan;
+          repairRareReversalSpacing=__retryOriginal.spacing;planBackColorsKeepFaces=__retryOriginal.plan;optimizeRecoveryRoundSwaps=__retryOriginal.swaps;
           window.__retryPacks=0;window.__retryRepairs=0;window.__retryValidations=0;window.__retryDecks=[];
           window.__retryBad=false;window.__retryProtected=false;
         };
@@ -67,7 +72,7 @@ const root = path.resolve(__dirname, '..');
       let out;
       for(let run=0;run<8;run++) {
         await page.evaluate(()=>{__retryPacks=0;__retryRepairs=0;__retryDecks=[];});
-        await page.click('#chipGen'); await finished();
+        await clickGenerate(); await finished();
         out = await page.evaluate(() => ({packs:__retryPacks, repairs:__retryRepairs,
           fresh:__retryDecks.slice(__retryRejectedAt+1).some(deck=>deck!==__retryDecks[__retryRejectedAt]),
           done:/生成完成!/.test(document.getElementById('logArea').textContent),valid:validateStandardGeneratedShoe(currentRounds).ok,
@@ -86,6 +91,8 @@ const root = path.resolve(__dirname, '..');
       if (mode === 'modeRed0') continue;
       await page.evaluate(() => {
         __retryUseFixture();
+        // 整局互換會先驗原成品及候選；此項只測最後驗收，不讓注入落在互換的驗收呼叫。
+        optimizeRecoveryRoundSwaps = async rounds => ({rounds});
         validateStandardGeneratedShoe = rounds => {
           __retryValidations++;
           if (__retryValidations===1) {
@@ -106,7 +113,7 @@ const root = path.resolve(__dirname, '..');
         };
       });
       const faces=await page.locator('#roundsBody [data-action="card"]').allTextContents();
-      await page.click('#chipGen');await finished();
+      await clickGenerate();await finished();
       out=await page.evaluate(()=>({packs:__retryPacks,checks:__retryValidations,signal:__retrySignalCheck,
         during:__retryFacesDuring,exported:__retryExport,done:/生成完成!/.test(document.getElementById('logArea').textContent),
         valid:__retryOriginal.validate(currentRounds).ok}));
@@ -129,7 +136,7 @@ const root = path.resolve(__dirname, '..');
         };
       });
       const signature=await page.evaluate(()=>JSON.stringify(currentRounds));
-      await page.click('#chipGen');await finished();
+      await clickGenerate();await finished();
       out=await page.evaluate(()=>({packs:__retryPacks,repairs:__retryRepairs,bad:__retryBad,
         done:/生成完成!/.test(document.getElementById('logArea').textContent),signature:JSON.stringify(currentRounds),pending:window.__pendingSizeShoe}));
       assert.equal(out.packs,2);assert.equal(out.repairs,2);assert(out.bad&&!out.done);assert.equal(out.signature,signature);assert.equal(out.pending,false);
@@ -144,7 +151,7 @@ const root = path.resolve(__dirname, '..');
         TwoThirteenReversals.check=()=>({ok:false,okCount:true,okSpacing:false,reason:'測試逆轉間隔無解'});
         repairRareReversalSpacing=async()=>({ok:false,reason:'測試沒有安全整局交換'});
       });
-      await page.click('#chipGen');await finished();
+      await clickGenerate();await finished();
       out=await page.evaluate(()=>({packs:__retryPacks,done:/生成完成!/.test(document.getElementById('logArea').textContent),log:document.getElementById('logArea').textContent.slice(-400)}));
       assert.equal(out.packs,1);assert(!out.done);assert(out.log.includes('不因間隔問題整副重跑'));
       console.log('PASS 紅0逆轉間隔無安全交換仍停止，不套用訊號重排政策');passed++;
@@ -155,7 +162,7 @@ const root = path.resolve(__dirname, '..');
         document.getElementById('mixedCardColor').checked=true;persistCardColorMixedMode(true);
         planBackColorsKeepFaces=()=>({ok:false,changed:0});
       });
-      await page.click('#chipGen');await finished();
+      await clickGenerate();await finished();
       out=await page.evaluate(()=>({packs:__retryPacks,done:/生成完成!/.test(document.getElementById('logArea').textContent),
         colors:calculateCardColorViolations(currentRounds),signal:calculateViolationStats(currentRounds).signalViolations,swap:calculateCannotSwapViolations(currentRounds).count}));
       assert.equal(out.packs,1);assert(out.done&&out.colors>0);assert.equal(out.signal,0);assert.equal(out.swap,0);
