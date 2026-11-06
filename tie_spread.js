@@ -10,7 +10,7 @@
   async function disperse(rounds,options){
     const started=Date.now(),before=metrics(rounds),n=rounds.length;
     const originals=rounds.filter(tie),k=originals.length,working=rounds.slice(),reserved=new Set(),assignments=[];
-    const hasSignal=options.hasSignal;
+    const hasSignal=options.hasSignal,nextPlayer=options.requireNextPlayer!==false;
     if(typeof hasSignal!=='function')throw new Error('和局定位需要實際訊號牌判斷');
     let checks=0,visited=0,moves=0,cancelled=false;
     for(let i=0;i<k;i++){
@@ -21,7 +21,7 @@
       // Standard generated ties satisfy these premises; traversal/imported data may not.
       const sourceReason=hasSignal(round)?'原和局含訊號牌，不符合交換前提'
         :hasSignal(working[(from+n-1)%n])?'原和局前局含訊號牌，不符合交換前提'
-        :!player(working[(from+1)%n])?'原和局後局不是閒，不符合交換前提':'';
+        :nextPlayer&&!player(working[(from+1)%n])?'原和局後局不是閒，不符合交換前提':'';
       if(sourceReason){item.reason=sourceReason;reserved.add(from);continue;}
       const locations=Array.from({length:n},(_,j)=>j).sort((a,b)=>Math.abs(a+1-ideal)-Math.abs(b+1-ideal)||a-b);
       const failures=new Set();let eligible=0;
@@ -32,7 +32,7 @@
           item.reason=eligible?'較近候選未通過原驗收：'+[...failures].join('、'):'原位已是最近可用位置；較近位置不符候選條件';
           break;
         }
-        if(reserved.has(to)||!player(working[to])||hasSignal(working[(to+n-1)%n])||!player(working[(to+1)%n]))continue;
+        if(reserved.has(to)||!player(working[to])||hasSignal(working[(to+n-1)%n])||(nextPlayer&&!player(working[(to+1)%n])))continue;
         eligible++;checks++;item.checks++;
         const candidate=working.slice();[candidate[from],candidate[to]]=[candidate[to],candidate[from]];
         const validation=await options.validate(candidate),ok=typeof validation==='boolean'?validation:validation?.ok;
