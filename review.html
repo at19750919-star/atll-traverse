@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=14">
+  <link rel="stylesheet" href="review.css?v=15">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -98,12 +98,6 @@
 
     <!-- 檢視輔助 -->
     <div class="review-tool-group">
-      <span class="review-tool-label">顯示:</span>
-      <select id="densityControl" class="review-density-select" aria-label="主表顯示密度">
-        <option value="normal">一般密度</option>
-        <option value="compact">緊湊密度</option>
-      </select>
-      <button class="tool-btn" id="btnShoeMap" type="button" onclick="toggleShoeMap()">路單地圖</button>
       <button class="tool-btn" id="btnPointMatrix" type="button">點數機率</button>
     </div>
     <div class="review-tool-group">
@@ -134,9 +128,6 @@
       <div id="reviewOverviewContent"></div>
     </details>
   </main>
-
-  <!-- ═══════════ 路單 / 牌靴體檢圖（按「路單地圖」切換顯示） ═══════════ -->
-  <div id="shoeMap" class="gframe" style="display:none;margin-bottom:14px;"></div>
 
   <!-- ═══════════ 牌桌主表格（BACCARAT SHOE RECORD） ═══════════ -->
   <section class="pit review-felt-container">
@@ -239,7 +230,7 @@
 
   <!-- 審核檢視專屬適配層 -->
   <script src="review-tie-rules.js?v=1"></script>
-  <script src="review.js?v=6"></script>
+  <script src="review.js?v=7"></script>
 
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>

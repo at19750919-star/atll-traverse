@@ -242,7 +242,7 @@ const server = http.createServer((req, res) => {
         return { overflow: table.right > content.right + 1, twoColumns: later.left > first.right - 1 };
       });
       assert.equal(tableLayout.overflow, false, '主表不可溢出右欄');
-      assert.equal(tableLayout.twoColumns, width >= 1401, '依右側寬度切換單／雙欄');
+      assert.equal(tableLayout.twoColumns, width >= 1280, '1280 以上皆為雙欄');
     }
     await page.setViewportSize({ width: 1920, height: 1080 });
 
@@ -322,11 +322,11 @@ const server = http.createServer((req, res) => {
     await highlightBtn.click();
     await page.waitForTimeout(200);
 
-    // 9. 測試密度切換
-    console.log('Testing density toggle...');
-    await page.selectOption('#densityControl', 'compact');
-    const bodyDensity = await page.$eval('body', el => el.dataset.density);
-    assert.equal(bodyDensity, 'compact', 'body 應切換為 compact 密度');
+    // 9. 密度選單與路單地圖鈕已移除，審核頁固定一般密度
+    console.log('Testing density controls removed...');
+    assert.equal(await page.$('#densityControl'), null, '密度下拉應已移除');
+    assert.equal(await page.$('#btnShoeMap'), null, '路單地圖鈕應已移除');
+    assert.equal(await page.$eval('body', el => el.dataset.density), 'normal', 'body 固定一般密度');
 
     // 10. 測試導出檔名自動處理
     console.log('Testing export filename input...');

@@ -47,20 +47,9 @@
 
   enforceRed0Signal();
 
-  // 2. 顯示密度控制 (normal / compact)
-  let currentDensity = 'normal';
-  try {
-    currentDensity = localStorage.getItem('integrated-table-density') === 'compact' ? 'compact' : 'normal';
-  } catch (_) {}
-
-  function applyDensity(val) {
-    currentDensity = val === 'compact' ? 'compact' : 'normal';
-    document.body.dataset.density = currentDensity;
-    const sel = $('densityControl');
-    if (sel) sel.value = currentDensity;
-    try {
-      localStorage.setItem('integrated-table-density', currentDensity);
-    } catch (_) {}
+  // 2. 審核頁固定一般密度，不讀也不寫本機密度設定
+  function applyDensity() {
+    document.body.dataset.density = 'normal';
   }
 
   const getRounds = () => typeof currentRounds !== 'undefined' && Array.isArray(currentRounds) ? currentRounds : (window.currentRounds || []);
@@ -341,15 +330,7 @@
   // 6. 初始化與事件監聽
   function initReview() {
     enforceRed0Signal();
-    applyDensity(currentDensity);
-
-    const sel = $('densityControl');
-    if (sel) {
-      sel.addEventListener('change', (e) => {
-        applyDensity(e.target.value);
-        layoutRoundTable();
-      });
-    }
+    applyDensity();
 
     // 監聽主表格 DOM 變動，自動執行雙欄分列
     const roundsBody = $('roundsBody');
