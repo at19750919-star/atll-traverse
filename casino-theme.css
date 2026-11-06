@@ -515,7 +515,7 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
 #roundsTable.split-rounds {
   min-width: 580px;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0 24px;
+  gap: 0 20px;
   align-content: start;
 }
 
@@ -525,11 +525,12 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
 
 #roundsTable.split-rounds tr {
   display: grid;
-  grid-template-columns: 44px minmax(260px, 2.2fr) 48px repeat(2, minmax(126px, 1.1fr)) 34px 34px 44px;
+  grid-template-columns: 36px minmax(160px, 1.8fr) 38px repeat(2, minmax(78px, 1fr)) 28px 28px 34px;
   grid-column: 1;
   align-items: stretch;
   min-width: 0;
-  min-height: 52px;
+  min-height: 48px;
+  overflow: hidden;
 }
 
 #roundsTable.split-rounds thead tr {
@@ -538,7 +539,7 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
   z-index: 3;
   background: var(--felt-1);
   grid-row: 1;
-  min-height: 40px;
+  min-height: 38px;
 }
 
 #roundsTable.split-rounds thead .split-right-head { display: none; }
@@ -548,11 +549,11 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 4px;
-  letter-spacing: .06em;
+  padding: 6px 3px;
+  letter-spacing: .04em;
   text-indent: 0;
   min-width: 0;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--gold-2);
 }
@@ -561,45 +562,45 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 3px;
   min-width: 0;
   width: auto;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 #roundsTable.split-rounds.split-rounds :is(th, td):nth-child(3) { display: none; }
 #roundsTable.split-rounds.split-rounds :is(td.cards-column, td.hand-card-cell) { justify-content: flex-start; }
 #roundsTable.split-rounds.split-rounds td.result-cell { flex-direction: column; }
-#roundsTable.split-rounds :is(.card-strip, .hand-chip-strip) { gap: 4px; flex-wrap: nowrap; }
+#roundsTable.split-rounds :is(.card-strip, .hand-chip-strip) { gap: 2px; flex-wrap: nowrap; }
 
-/* 牌板尺寸全面升級放大 (直式撲克牌手感 38x46, 字體 16px) */
+/* 牌板尺寸全面升級放大 (直式撲克牌手感 34x42, 字體 15px) */
 #roundsTable.split-rounds.split-rounds .card-label {
-  width: 38px;
-  height: 46px;
+  width: 34px;
+  height: 42px;
   flex: none;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0;
-  border-radius: 6px;
+  border-radius: 5px;
 }
 
 /* 局號、比數與膠囊文字放大 */
 #roundsTable.split-rounds.split-rounds td.minor-column {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--gold-1);
 }
 
 #roundsTable.split-rounds.split-rounds td.hand-point-cell {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   font-family: var(--disp);
 }
 
 #roundsTable.split-rounds.split-rounds .res {
-  min-width: 30px;
-  height: 26px;
-  font-size: 13.5px;
+  min-width: 28px;
+  height: 24px;
+  font-size: 13px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -607,7 +608,7 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
 }
 
 body[data-density=compact] #roundsTable.split-rounds.split-rounds tr {
-  min-height: 44px;
+  min-height: 40px;
 }
 
 body[data-density=compact] #roundsTable.split-rounds.split-rounds td {
@@ -616,17 +617,18 @@ body[data-density=compact] #roundsTable.split-rounds.split-rounds td {
 }
 
 body[data-density=compact] #roundsTable.split-rounds.split-rounds .card-label {
-  width: 32px;
-  height: 38px;
-  font-size: 14px;
-  border-radius: 5px;
+  width: 29px;
+  height: 35px;
+  font-size: 13px;
+  border-radius: 4px;
 }
 
-/* 雙欄門檻下調至 1100px，確保大中型螢幕與筆電皆能完美雙欄對齊 */
-@media (min-width: 1100px) {
+/* 雙欄門檻下調至 1080px，確保大中型螢幕與筆電皆能完美雙欄對齊 */
+@media (min-width: 1080px) {
   #roundsTable.split-rounds {
-    min-width: 1060px;
+    min-width: 1020px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
   }
   #roundsTable.split-rounds tbody tr {
     grid-column: var(--round-side);
@@ -643,7 +645,7 @@ body[data-density=compact] #roundsTable.split-rounds.split-rounds .card-label {
   position: relative;
   flex-direction: column;
   align-items: stretch;
-  padding: 20px 16px 16px;
+  padding: 16px 18px;
   gap: 8px;
   min-width: 190px;
   justify-content: center;
@@ -669,7 +671,8 @@ body[data-density=compact] #roundsTable.split-rounds.split-rounds .card-label {
 
 .vio-live-card .badge.show { display: grid; }
 
-#statsVioCard .vio-grid {
+#statsVioCard .vio-grid,
+#statsVioCard .violations-grid {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -716,7 +719,7 @@ body[data-density=compact] #roundsTable.split-rounds.split-rounds .card-label {
   font-family: var(--serif);
 }
 
-.vio.violation-card.no-violation { display: none; }
+.vio.violation-card.no-violation { display: none !important; }
 .vio.violation-card.has-violation .lamp {
   color: var(--danger);
   box-shadow: 0 0 0 1px #a04a40, 0 0 10px rgba(255, 107, 94, .4);
@@ -727,37 +730,45 @@ body[data-density=compact] #roundsTable.split-rounds.split-rounds .card-label {
 .vio-empty {
   display: none;
   text-align: center;
-  padding: 22px 0;
-  font-size: 13px;
-  letter-spacing: .15em;
-  color: #cfe3fb;
+  padding: 24px 0;
+  font-size: 16px;
+  letter-spacing: .12em;
+  color: #5cbf8a;
   font-family: var(--serif);
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* 全無違規：整格亮綠 (依據《賭場綠金風格.md》第 4 節) */
+/* 全無違規：典雅深金屬綠微光 (絕非死綠色巨型色塊) */
 #statsVioCard.all-clear {
   border-image: none !important;
   border: 1px solid #3f9a62 !important;
-  background: linear-gradient(180deg, #2f7a4c, #174a2c) !important;
-  box-shadow: 0 4px 12px rgba(23, 74, 44, .45) !important;
+  background: linear-gradient(180deg, #10211a 0%, #08120e 100%) !important;
+  box-shadow: 0 4px 14px rgba(23, 74, 44, .3) !important;
+  justify-content: center;
 }
 
 #statsVioCard.all-clear .frame-title {
-  color: #d2f6df;
-  background: #174a2c;
+  color: #a8dfbc;
+  background: #10261c;
   border: 1px solid #3f9a62;
   border-radius: 2px;
-  padding: 0 6px;
+  padding: 0 8px;
 }
 
 #statsVioCard.all-clear .vio-empty {
-  display: block !important;
-  color: #d2f6df !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: #5cbf8a !important;
+  font-size: 18px !important;
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(63, 154, 98, .45);
+  letter-spacing: .15em;
+  text-shadow: 0 0 10px rgba(92, 191, 138, .4);
+  padding: 20px 0;
 }
 
+#statsVioCard.all-clear #violationsGrid,
+#statsVioCard.all-clear .violations-grid,
 #statsVioCard.all-clear .vio-grid {
   display: none !important;
 }
