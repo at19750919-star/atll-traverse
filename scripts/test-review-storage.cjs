@@ -126,6 +126,29 @@ async function run(page, url, label) {
   await page.waitForFunction(() => document.querySelector('#importFeedback')?.dataset.state === 'error');
   assert.equal(await page.evaluate(() => JSON.stringify(originalDeckOrder)), baselineBeforeFailure, label + ': failed import retains old cut baseline');
 
+  // A workbook whose labels pass the shared parser but contain an invalid rank must not
+  // turn our post-import validation into an importer exception or overwrite the last good save.
+  const invalidLabels = await page.evaluate(() => {
+    const prior = localStorage.getItem(ReviewStorage.key);
+    importFeedback.begin('invalid-labels.xlsx');
+    currentRounds = [{cards:[new Card('BAD','♣',0),new Card('2','♣',1),new Card('3','♣',2),new Card('4','♣',3)],result:'閒'}];
+    let thrown = false;
+    try { importFeedback.finish('success','匯入完成',''); } catch (_) { thrown = true; }
+    const rejected = ReviewStorage.save(true) === false && saveOriginalDeckOrder() === false;
+    const warning = document.querySelector('#reviewSaveStatus').textContent;
+    const noBaseline = originalRounds === null && originalDeckOrder === null;
+    const unchanged = localStorage.getItem(ReviewStorage.key) === prior;
+    ReviewStorage.restore(window.REVIEW_DEFAULT_SHOE);
+    const canSaveNext = ReviewStorage.save(true);
+    return {thrown,rejected,warning,noBaseline,unchanged,canSaveNext};
+  });
+  assert.equal(invalidLabels.thrown,false);
+  assert.equal(invalidLabels.rejected,true);
+  assert.match(invalidLabels.warning,/無效牌面/);
+  assert.equal(invalidLabels.noBaseline,true);
+  assert.equal(invalidLabels.unchanged,true);
+  assert.equal(invalidLabels.canSaveNext,true, label + ': import state is reset after invalid labels');
+
   // A write error must report failure and preserve the previous stored entry.
   const quota = await page.evaluate(() => {
     const before = localStorage.getItem(ReviewStorage.key), set = Storage.prototype.setItem;

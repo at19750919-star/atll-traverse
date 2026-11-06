@@ -5,7 +5,7 @@
   const $ = id => document.getElementById(id);
   const ranks = new Set(['A','2','3','4','5','6','7','8','9','10','J','Q','K']);
   const suits = new Set(['♠','♥','♣','♦']);
-  let name = '', timer = null, restoring = false, importing = false, lastContent = '', appliedCutPos = 0;
+  let name = '', timer = null, restoring = false, importing = false, lastContent = '', appliedCutPos = 0, invalidShoe = false;
 
   function status(text, error = false) {
     const el = $('reviewSaveStatus');
@@ -70,6 +70,7 @@
   function save(manual = false) {
     clearTimeout(timer);
     if (restoring || importing) return false;
+    if (invalidShoe) { status('牌局含無效牌面，無法保存或切牌', true); return false; }
     try {
       const data = snapshot();
       if (!data) { if (manual) status('尚無牌局可保存', true); return false; }
@@ -86,7 +87,7 @@
     }
   }
   function schedule() {
-    if (restoring || importing) return;
+    if (restoring || importing || invalidShoe) return;
     clearTimeout(timer);
     timer = setTimeout(() => save(), 150);
   }
@@ -95,6 +96,7 @@
     restoring = true;
     try {
       currentRounds = rebuildRounds(data.rounds);
+      invalidShoe = false;
       originalRounds = data.originalRounds ? rebuildRounds(data.originalRounds) : null;
       originalDeckOrder = data.originalDeckOrder ? data.originalDeckOrder.map(rebuildCard) : null;
       frozenGridHTML = null;
@@ -135,6 +137,7 @@
     };
     const record = saveOriginalDeckOrder;
     saveOriginalDeckOrder = function () {
+      if (invalidShoe) { status('牌局含無效牌面，無法保存或切牌', true); return false; }
       const source = roundsData(currentRounds);
       const ok = record.apply(this, arguments);
       if (ok) {
@@ -163,13 +166,24 @@
         return accepted;
       };
       importFeedback.finish = function (state) {
-        const result = finish.apply(this, arguments);
-        if (state === 'success' || state === 'warning') {
-          name = pendingName;
-          establishCutBaseline(currentRounds);
-        }
-        importing = false;
-        if (state === 'success' || state === 'warning') save();
+        let result;
+        try {
+          result = finish.apply(this, arguments);
+          if (state === 'success' || state === 'warning') {
+            name = pendingName;
+            try {
+              establishCutBaseline(currentRounds);
+              invalidShoe = false;
+            } catch (_) {
+              // A valid workbook can still contain invalid card labels. Keep the prior good save.
+              originalRounds = null; originalDeckOrder = null; frozenGridHTML = null;
+              appliedCutPos = 0; invalidShoe = true;
+              if ($('cutPos')) $('cutPos').value = '';
+              status('牌局含無效牌面，無法保存或切牌', true);
+            }
+          }
+        } finally { importing = false; }
+        if ((state === 'success' || state === 'warning') && !invalidShoe) save();
         return result;
       };
     }

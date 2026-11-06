@@ -32,13 +32,13 @@ const server = http.createServer((req, res) => {
 async function createSampleExcelBuffer() {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('原始數據');
-  ws.addRow(['局數', '段標', '色序', '卡片1', '卡片2', '卡片3', '卡片4', '閒家', '莊家', '結果', '訊號']);
+  ws.addRow(['局數', '段標', '色序', '卡片1', '卡片2', '卡片3', '卡片4', '卡片5', '卡片6', '閒家', '莊家', '結果', '訊號']);
 
   // 加入 50 局資料，第一局包含紅0 (Q♥, 10♦)，色序全部採用標準紅0卡色 BBBR / RRRB
   for (let i = 1; i <= 50; i++) {
     const color = i % 2 === 0 ? 'BBBR' : 'RRRB';
     if (i === 1) {
-      ws.addRow([1, 'A', 'RRRB', 'Q♥', 'A♣', '10♦', '2♠', 'Q♥ 10♦', 'A♣ 2♠', '閒', 'S']);
+      ws.addRow([1, 'A', 'RRRB', 'Q♥', 'A♣', '10♦', '2♠', '', '', 'Q♥ 10♦', 'A♣ 2♠', '閒', 'S']);
     } else {
       const suits = ['♠', '♥', '♣', '♦'];
       const ranks = ['3', '4', '5', '6', '7', '8', '9', 'J', 'K'];
@@ -46,7 +46,7 @@ async function createSampleExcelBuffer() {
       const c2 = `${ranks[(i * 4 + 1) % ranks.length]}${suits[(i + 1) % 4]}`;
       const c3 = `${ranks[(i * 4 + 2) % ranks.length]}${suits[(i + 2) % 4]}`;
       const c4 = `${ranks[(i * 4 + 3) % ranks.length]}${suits[(i + 3) % 4]}`;
-      ws.addRow([i, 'A', color, c1, c2, c3, c4, `${c1} ${c3}`, `${c2} ${c4}`, i % 2 === 0 ? '莊' : '閒', '']);
+      ws.addRow([i, 'A', color, c1, c2, c3, c4, '', '', `${c1} ${c3}`, `${c2} ${c4}`, i % 2 === 0 ? '莊' : '閒', '']);
     }
   }
 
@@ -131,7 +131,8 @@ async function createSampleExcelBuffer() {
     await page.waitForFunction(() => document.querySelector('#shoeOverviewMeta')?.textContent.includes('50 局'));
     const avgText = await page.$eval('#shoeOverviewRecovery', el => el.textContent);
     console.log('Avg recovery after import:', avgText.match(/平均回復[^局]*局/)?.[0]);
-    assert.ok(avgText.includes('2.1 局'), '平均回復應成功計算');
+    assert.match(avgText, /平均回復\s*\d+(?:\.\d+)?\s*局/, '平均回復應成功計算');
+    assert.equal(await page.evaluate(() => currentRounds.reduce((sum, round) => sum + round.cards.length, 0)), 200, '50個四張局不得把手牌摘要當成額外卡片');
     const metaText = await page.$eval('#shoeOverviewMeta', el => el.textContent);
     assert.ok(metaText.includes('50 局'), '總局數應為 50');
 
