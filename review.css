@@ -7,7 +7,7 @@ body.review-page {
   font-family: var(--serif);
   color: var(--txt);
   min-height: 100vh;
-  padding: 0 clamp(12px, 2.2vw, 34px) 30px;
+  padding: 0 10px 30px;
 }
 
 /* 頂部 Header 微調 */
