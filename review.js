@@ -102,6 +102,43 @@
     });
   }
 
+  let inlineOverviewFrame = 0;
+  let renderingInlineOverview = false;
+  function scheduleInlineOverview() {
+    const panel = $('reviewOverview');
+    if (!panel?.open || renderingInlineOverview || !window.ShoeOverview?.render) return;
+    cancelAnimationFrame(inlineOverviewFrame);
+    inlineOverviewFrame = requestAnimationFrame(() => {
+      if (!panel.open) return;
+      renderingInlineOverview = true;
+      try { window.ShoeOverview.render(); }
+      finally { renderingInlineOverview = false; }
+    });
+  }
+  function mountInlineOverview() {
+    const dialog = $('shoeOverview');
+    const heading = $('reviewOverviewHeading');
+    const content = $('reviewOverviewContent');
+    if (!dialog || !heading || !content || !window.ShoeOverview?.render) return;
+    heading.append($('shoeOverviewMeta'), $('shoeOverviewHeaderStats'));
+    content.append(dialog.querySelector('.shoe-overview-body'));
+    const panel = $('reviewOverview');
+    const overviewButton = $('btnShoeOverview');
+    overviewButton.removeAttribute('aria-haspopup');
+    overviewButton.setAttribute('aria-controls', 'reviewOverview');
+    overviewButton.setAttribute('aria-expanded', 'false');
+    panel.addEventListener('toggle', () => {
+      overviewButton.setAttribute('aria-expanded', String(panel.open));
+      scheduleInlineOverview();
+    });
+    overviewButton.onclick = () => {
+      panel.open = true;
+      scheduleInlineOverview();
+      panel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    };
+    scheduleInlineOverview();
+  }
+
   // 4. 儀表板回復統計與指標更新
   function refreshReviewDashboard() {
     enforceRed0Signal();
@@ -137,6 +174,7 @@
       if (vioCard) {
         vioCard.classList.remove('all-clear');
       }
+      scheduleInlineOverview();
       return;
     }
 
@@ -283,6 +321,7 @@
 
     // 更新雙欄佈局
     layoutRoundTable();
+    scheduleInlineOverview();
   }
 
   // 5. 定義 window.DashboardUI（供 shoe-overview.js 讀取）
@@ -383,6 +422,7 @@
 
     // 初始狀態刷新
     refreshReviewDashboard();
+    setTimeout(mountInlineOverview, 0);
   }
 
   if (document.readyState === 'loading') {

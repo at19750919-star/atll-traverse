@@ -55,10 +55,9 @@ const server = http.createServer((req, res) => {
     const exportFilename = await page.$('#exportFilename');
     assert.ok(exportBtn && exportFilename, '導出按鈕與導出檔名欄位存在');
 
-    const avgEl = await page.$('#dashAvg');
-    const maxEl = await page.$('#dashMax');
-    const distEl = await page.$('#dashRecoveryBars');
-    assert.ok(avgEl && maxEl && distEl, '回復統計與分佈容器存在');
+    const overviewPanel = await page.$('#reviewOverview');
+    assert.ok(overviewPanel, '頁內牌靴總覽存在');
+    assert.equal(await overviewPanel.evaluate(el => el.open), false, '牌靴總覽預設收起');
 
     const vioCard = await page.$('#statsVioCard');
     const vioEmpty = await page.$('#vioEmpty');
@@ -89,27 +88,22 @@ const server = http.createServer((req, res) => {
     const shoeOverviewBtn = await page.$('#btnShoeOverview');
     assert.ok(shoeOverviewBtn, '牌靴總覽按鈕已被 shoe-overview.js 成功生成');
 
-    // 審核布局與原生收合互動：桌面等寬、分布在左欄、違規卡在工具列後。
+    // 工具列按內容寬度排列，輸入框不被擠壓；總覽取代舊統計卡。
     for (const width of [1401, 1920, 1000]) {
       await page.setViewportSize({ width, height: 884 });
       const layout = await page.evaluate(() => {
-        const card = document.querySelector('#statsVioCard');
-        const cols = [...document.querySelector('.review-stats-row').children];
-        const rects = cols.map(el => el.getBoundingClientRect());
         const toolbar = document.querySelector('.review-toolbar');
-        const groups = [...toolbar.querySelectorAll('.review-tool-group')];
-        const first = groups[0].getBoundingClientRect();
-        const lastButton = groups[0].lastElementChild.getBoundingClientRect();
+        const swap = document.querySelector('#btnSwap').getBoundingClientRect();
+        const input = document.querySelector('#cutPos').getBoundingClientRect();
         return {
-          closed: !card.open,
-          next: toolbar.nextElementSibling === card,
-          equal: Math.abs(rects[0].width - rects[1].width) < 1,
-          sameRow: Math.abs(rects[0].top - rects[1].top) < 1,
-          distributionLeft: cols[0].contains(document.querySelector('#dashRecoveryBars')),
-          toolFill: Math.abs(first.right - lastButton.right) < 2
+          vioNext: toolbar.nextElementSibling?.id === 'statsVioCard',
+          overviewNext: document.querySelector('#statsVioCard').nextElementSibling?.querySelector('#reviewOverview') !== null,
+          oldStatsGone: !document.querySelector('#reviewStatsCard'),
+          buttonSensible: swap.width <= 120,
+          inputUsable: input.width >= 70
         };
       });
-      assert.deepEqual(layout, { closed: true, next: true, equal: true, sameRow: true, distributionLeft: true, toolFill: true });
+      assert.deepEqual(layout, { vioNext: true, overviewNext: true, oldStatsGone: true, buttonSensible: true, inputUsable: true });
     }
     await page.click('#statsVioCard summary');
     assert.equal(await page.$eval('#statsVioCard', el => el.open), true, '違規卡可展開');
@@ -212,39 +206,25 @@ const server = http.createServer((req, res) => {
     assert.ok(bodyFontFamily.includes('Noto Serif') || bodyFontFamily.includes('Cinzel') || bodyFontFamily.includes('serif'), 'Body 字型必須為襯線字');
     assert.ok(!bodyFontFamily.endsWith('sans-serif'), 'Body 字型不得以 sans-serif 結尾');
 
-    // 驗證回復統計已計算
-    const avgText = await page.$eval('#dashAvg', el => el.textContent);
-    assert.notEqual(avgText, '—', '平均回復局數應已計算並顯示');
-
-    // 驗證總局數
-    const totalRoundsText = await page.$eval('#dashTotal', el => el.textContent);
-    assert.equal(totalRoundsText, '60', '總局數應為 60');
-
-    // 4. 測試牌靴總覽彈窗
-    console.log('Testing opening Shoe Overview modal with shoe data...');
-    const debugInfo = await page.evaluate(() => {
-      return {
-        hasCurrentRounds: typeof currentRounds !== 'undefined',
-        currentRoundsLen: typeof currentRounds !== 'undefined' && currentRounds ? currentRounds.length : null,
-        bodyClasses: document.body.className,
-        btnDisabled: document.getElementById('btnShoeOverview')?.disabled
-      };
-    });
-    console.log('Debug info before click:', debugInfo);
+    // 頁首總覽按鈕展開頁內報表；舊彈窗不再開啟。
     await shoeOverviewBtn.click();
-    console.log('Errors caught so far:', errors);
-    await page.waitForTimeout(300);
-    const dialogOpen = await page.$eval('#shoeOverview', el => el.open);
-    assert.ok(dialogOpen, '牌靴總覽彈窗已成功開啟');
-
-    const overviewMetrics = await page.$eval('#shoeOverviewMetrics', el => el.textContent);
-    assert.ok(overviewMetrics.includes('莊6贏'), '牌靴總覽內含莊6贏指標');
-
-    // 關閉牌靴總覽
-    await page.click('#shoeOverviewClose');
-    await page.waitForTimeout(100);
-    const dialogClosed = await page.$eval('#shoeOverview', el => !el.open);
-    assert.ok(dialogClosed, '牌靴總覽彈窗已成功關閉');
+    await page.waitForFunction(() => document.querySelector('#reviewOverview')?.open && document.querySelector('#shoeOverviewMetrics')?.textContent.includes('莊6贏'));
+    const inlineReport = await page.evaluate(() => ({
+      open: document.querySelector('#reviewOverview').open,
+      dialogOpen: document.querySelector('#shoeOverview').open,
+      inside: document.querySelector('#reviewOverviewContent').contains(document.querySelector('#shoeOverviewMetrics')),
+      metrics: document.querySelector('#shoeOverviewMetrics').textContent,
+      meta: document.querySelector('#shoeOverviewMeta').textContent,
+      recovery: document.querySelector('#shoeOverviewRecovery').textContent
+    }));
+    assert.equal(inlineReport.open, true);
+    assert.equal(inlineReport.dialogOpen, false);
+    assert.equal(inlineReport.inside, true);
+    assert.ok(inlineReport.metrics.includes('莊6贏'));
+    assert.ok(inlineReport.meta.includes('60 局'));
+    assert.ok(inlineReport.recovery.includes('平均回復'));
+    await page.click('#reviewOverview summary');
+    assert.equal(await page.$eval('#reviewOverview', el => el.open), false, '牌靴總覽可收起');
 
     // 5. 測試換牌模式激活
     console.log('Testing swap card activation...');
@@ -268,6 +248,9 @@ const server = http.createServer((req, res) => {
     await page.waitForTimeout(200);
     const cutRowCount = await page.$$eval('#roundsBody tr', rows => rows.length);
     assert.ok(cutRowCount > 0, '切牌後應重新渲染牌桌');
+    await page.click('#reviewOverview summary');
+    await page.waitForFunction(() => document.querySelector('#shoeOverviewMeta')?.textContent.includes(`${currentRounds.filter(r => ['莊', '閒', '和'].includes(r.result)).length} 局`));
+    assert.ok(await page.$eval('#shoeOverviewRecovery', el => el.textContent.includes('平均回復')), '切牌後頁內總覽仍顯示更新的分析');
 
     // 8. 測試卡牌高亮定位
     console.log('Testing card highlight...');

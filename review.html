@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=3">
+  <link rel="stylesheet" href="review.css?v=4">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -120,44 +120,13 @@
       <div class="vio-empty" id="vioEmpty">目前無違規</div>
     </details>
 
-  <!-- ═══════════ 儀表板區域 (回復統計與違規檢查) ═══════════ -->
-  <main class="review-dashboard-grid">
-    <!-- 回復統計與牌靴分佈 -->
-    <section class="review-metrics-panel">
-      <div class="review-stats-card gframe" id="reviewStatsCard">
-        <span class="frame-title">回復統計與牌靴指標</span>
-        <div class="review-stats-row">
-          <!-- 回復分析 KPI -->
-          <div class="dash-stat">
-            <h2 id="dashRecTitle">回復分析</h2>
-            <div class="dash-kpis">
-              <div><span id="dashAvgLabel">平均回復</span><strong id="dashAvg">—</strong><small id="dashAvgCards">—</small></div>
-              <div><span id="dashMaxLabel">最大消耗</span><strong id="dashMax">—</strong><small id="dashMaxCards">—</small></div>
-            </div>
-            <p id="dashMaxAt" class="dash-detail"></p>
-            <p id="dashB6" class="dash-detail b6-meta"></p>
-            <!-- 回復間距分佈圖 -->
-            <div class="dash-stat review-recovery-distribution">
-              <h2 id="dashDistTitle">回復間距分布</h2>
-              <div id="dashRecoveryBars">
-                <div style="color:var(--txt-dim);font-size:12px;padding:8px 0;font-family:var(--serif);">尚無牌靴資料</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 本靴局數與莊閒和分佈 -->
-          <div class="dash-stat">
-            <h2>本副牌靴 <strong id="dashTotal">0</strong><small> 局</small></h2>
-            <div id="dashOutcomeLegend" class="dash-legend"></div>
-            <div id="dashOutcomeBar" class="dash-proportion"></div>
-            <div id="dashSizeLegend" class="dash-legend" style="margin-top:8px;"></div>
-            <div id="dashSizeBar" class="dash-proportion"></div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
+  <!-- 牌靴總覽：沿用 shoe-overview.js 的報表內容，頁內收合。 -->
+  <main>
+    <details class="review-overview-card gframe" id="reviewOverview">
+      <summary>牌靴總覽</summary>
+      <div class="review-overview-heading" id="reviewOverviewHeading"></div>
+      <div id="reviewOverviewContent"></div>
+    </details>
   </main>
 
   <!-- ═══════════ 路單 / 牌靴體檢圖（按「路單地圖」切換顯示） ═══════════ -->
@@ -247,7 +216,7 @@
   <script src="standard/shoe_cut.js?v=3"></script>
   <script src="standard/signals_ui.js?v=59"></script>
   <script src="standard/smart_reorder_dialog.js?v=2"></script>
-  <script src="standard/swap_preview.js?v=2"></script>
+  <script src="standard/swap_preview.js?v=3"></script>
   <script src="standard/auto_fix_plugin.js?v=4"></script>
   <script src="traverse_quota.js?v=2"></script>
   <script src="traverse_templates.js?v=8"></script>
@@ -261,7 +230,7 @@
   <script src="integrated-analysis.js?v=1"></script>
 
   <!-- 審核檢視專屬適配層 -->
-  <script src="review.js?v=2"></script>
+  <script src="review.js?v=3"></script>
 
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>

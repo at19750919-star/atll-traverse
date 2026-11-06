@@ -126,13 +126,14 @@ async function createSampleExcelBuffer() {
     assert.ok(qHeart && qHeart.isSignal, 'Q♥ 在匯入後必須是紅0訊號牌');
     assert.ok(aClub && !aClub.isSignal, 'A♣ 絕不可被標記為訊號牌');
 
-    // 驗證回復統計有值
-    const avgText = await page.$eval('#dashAvg', el => el.textContent);
-    console.log('Avg recovery text after import:', avgText);
-    assert.notEqual(avgText, '—', '平均回復應成功計算');
-
-    const totalText = await page.$eval('#dashTotal', el => el.textContent);
-    assert.equal(totalText, '50', '總局數應為 50');
+    // 匯入後展開頁內總覽，顯示真實資料。
+    await page.click('#reviewOverview summary');
+    await page.waitForFunction(() => document.querySelector('#shoeOverviewMeta')?.textContent.includes('50 局'));
+    const avgText = await page.$eval('#shoeOverviewRecovery', el => el.textContent);
+    console.log('Avg recovery after import:', avgText.match(/平均回復[^局]*局/)?.[0]);
+    assert.ok(avgText.includes('2.1 局'), '平均回復應成功計算');
+    const metaText = await page.$eval('#shoeOverviewMeta', el => el.textContent);
+    assert.ok(metaText.includes('50 局'), '總局數應為 50');
 
     // 驗證違規卡片項目完全參照主頁 5 項標準，且卡色無誤判
     const vioItems = await page.$$eval('#violationsGrid .vio', els => els.map(e => ({

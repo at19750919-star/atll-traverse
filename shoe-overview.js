@@ -114,7 +114,7 @@
       if (!dialog.open) { returnFocus=document.activeElement; dialog.style.left=''; dialog.style.top=''; dialog.style.transform=''; dialog.show(); $('shoeOverviewClose').focus({preventScroll:true}); }
     }
     button.onclick = show;
-    document.addEventListener('shoe-generated',()=>{ cancelAnimationFrame(frame); frame=requestAnimationFrame(show); });
+    document.addEventListener('shoe-generated',()=>{ if (document.body.classList.contains('review-page')) return; cancelAnimationFrame(frame); frame=requestAnimationFrame(show); });
     let refreshFrame=0,wasRunning=false;
     const refreshOpen=()=>{ if(dialog.open&&!document.body.classList.contains('running'))render(); };
     const scheduleOpenRefresh=()=>{ cancelAnimationFrame(refreshFrame); refreshFrame=requestAnimationFrame(refreshOpen); };
@@ -135,7 +135,7 @@
     head.addEventListener('pointermove',e=>{ if(!drag)return; dialog.style.transform='none'; dialog.style.left=Math.max(0,Math.min(innerWidth-dialog.offsetWidth,drag.left+e.clientX-drag.x))+'px'; dialog.style.top=Math.max(0,Math.min(innerHeight-64,drag.top+e.clientY-drag.y))+'px'; });
     ['pointerup','pointercancel'].forEach(name=>head.addEventListener(name,()=>{drag=null;}));
     window.addEventListener('resize',()=>{ if(!dialog.open||!dialog.style.left)return; dialog.style.left=Math.max(0,Math.min(innerWidth-dialog.offsetWidth,parseFloat(dialog.style.left)))+'px'; dialog.style.top=Math.max(0,Math.min(innerHeight-64,parseFloat(dialog.style.top)))+'px'; });
-    window.ShoeOverview = {show,close,longestRuns};
+    window.ShoeOverview = {show,close,longestRuns,render};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

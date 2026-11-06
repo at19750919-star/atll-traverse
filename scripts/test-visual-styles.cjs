@@ -123,19 +123,18 @@ const server = http.createServer((req, res) => {
     assert.notEqual(tableMetrics.card0Back, tableMetrics.card1Back, '紅背與藍背必須呈現明暗對比');
 
     // 3. 量測牌靴總覽彈窗的大路與體檢圖
-    await page.click('#btnShoeOverview');
+    await page.click('#reviewOverview summary');
     await page.waitForTimeout(400);
 
     const overviewMetrics = await page.evaluate(() => {
-      const dialog = document.querySelector('#shoeOverview');
-      const dialogStyle = window.getComputedStyle(dialog);
-      const bigroadGrid = dialog.querySelector('.bigroad-grid');
-      const bigroadCells = dialog.querySelectorAll('.bigroad-cell');
-      const mapTrack = dialog.querySelector('.map-track');
-      const mapCells = dialog.querySelectorAll('.map-cell');
+      const panel = document.querySelector('#reviewOverview');
+      const bigroadGrid = panel.querySelector('.bigroad-grid');
+      const bigroadCells = panel.querySelectorAll('.bigroad-cell');
+      const mapTrack = panel.querySelector('.map-track');
+      const mapCells = panel.querySelectorAll('.map-cell');
 
       return {
-        dialogOpen: dialog.open,
+        dialogOpen: panel.open,
         bigroadDisplay: bigroadGrid ? window.getComputedStyle(bigroadGrid).display : null,
         bigroadCellCount: bigroadCells.length,
         bigroadCellSize: bigroadCells.length > 0 ? `${bigroadCells[0].offsetWidth}x${bigroadCells[0].offsetHeight}` : null,
@@ -143,8 +142,8 @@ const server = http.createServer((req, res) => {
         mapCellCount: mapCells.length
       };
     });
-    console.log('Overview modal metrics:', overviewMetrics);
-    assert.ok(overviewMetrics.dialogOpen, '牌靴總覽彈窗必須開啟');
+    console.log('Inline overview metrics:', overviewMetrics);
+    assert.ok(overviewMetrics.dialogOpen, '頁內牌靴總覽必須展開');
     assert.equal(overviewMetrics.bigroadDisplay, 'grid', '大路必須是 grid 網格');
     assert.ok(overviewMetrics.bigroadCellCount > 0, '大路必須有格點');
     assert.equal(overviewMetrics.bigroadCellSize, '14x14', '牌靴總覽大路圓圈尺寸必須為 shoe-overview.css 定義的標準 14x14');

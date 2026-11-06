@@ -97,42 +97,45 @@ body.review-page {
   outline: 1px solid #c9a25a;
 }
 
-/* ════════════ 操作工具列 (.review-toolbar) ════════════ */
+/* 操作工具列：按內容排，按鈕不被拉成整排寬。 */
 .review-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   align-items: center;
-  gap: 14px 24px;
+  gap: 12px 24px;
   padding: 16px 20px 14px;
   margin-top: 14px;
   margin-bottom: 14px;
 }
-
 .review-tool-group {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
+  min-width: 0;
 }
-
-.review-tool-sep { display: none; }
-
-.review-tool-group { justify-content: space-between; min-width: 0; }
 .review-toolbar > .review-tool-group:first-of-type { grid-column: 1 / -1; }
-.review-toolbar > .review-tool-group:first-of-type > .tool-btn { flex: 1; }
-.review-toolbar > .review-tool-group:last-of-type > .tool-btn { flex: 1; }
-
-@media (max-width: 1100px) {
-  .review-toolbar { grid-template-columns: 1fr; }
-}
-
+.review-tool-group > .tool-btn { flex: none; min-width: 82px; padding-inline: 16px; }
+.review-tool-group > #btnAutoReorder,
+.review-tool-group > #btnApplyChanges,
+.review-tool-group > #btnRecordDeckOrder { min-width: 108px; }
+.review-tool-group > #btnCancelEdit { min-width: 82px; }
+.review-tool-sep { display: none; }
 .review-tool-label {
+  flex: none;
+  width: 74px;
   font-family: var(--serif);
   font-size: 12px;
   color: var(--gold-3);
   font-weight: 600;
   letter-spacing: .15em;
-  margin-right: 4px;
+}
+@media (max-width: 1100px) {
+  .review-toolbar { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .review-tool-label { width: 100%; }
 }
 
 /* 數字輸入群組 */
@@ -152,8 +155,8 @@ body.review-page {
 }
 
 .review-input-group .review-numbox {
-  width: 58px;
-  height: 26px;
+  width: 72px;
+  height: 28px;
   background: #07090b;
   border: 1px solid #6b4c1d;
   color: var(--gold-1);
@@ -423,3 +426,31 @@ body.review-page #statsVioCard {
 #statsVioCard[open] .review-vio-summary { margin-bottom: 12px; }
 body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !important; }
 .review-recovery-distribution { margin-top: 8px; }
+
+/* 頁內牌靴總覽：原有報表節點由 review.js 移入，維持同一份資料。 */
+.review-overview-card { margin: 0 0 16px; padding: 12px 20px; min-width: 0; }
+.review-overview-card > summary {
+  cursor: pointer;
+  color: var(--gold-2);
+  font: 600 13px var(--serif);
+  letter-spacing: .12em;
+}
+.review-overview-card > summary::marker { color: var(--gold-2); }
+.review-overview-card[open] > summary { margin-bottom: 12px; }
+.review-overview-card:not([open]) > :not(summary) { display: none !important; }
+.review-overview-heading { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 0 18px 8px; }
+.review-overview-heading #shoeOverviewMeta { margin: 0; color: var(--txt-dim); font-size: 12px; }
+.review-overview-heading .shoe-overview-header-stats { flex-wrap: wrap; }
+.review-overview-card .shoe-overview-body { overflow: visible; padding: 10px 18px 14px; }
+.review-overview-card #shoeOverviewMap .shoe-map-head { margin-bottom: 5px; }
+.review-overview-card #shoeOverviewMap .shoe-map-legend { gap: 8px; }
+.review-overview-card #shoeOverviewMap .bigroad { max-height: 93px; overflow: auto; padding-bottom: 2px; margin-bottom: 4px; }
+.review-overview-card #shoeOverviewMap .bigroad-grid { grid-auto-rows: 14px; gap: 2px; }
+.review-overview-card #shoeOverviewMap .bigroad-cell { width: 14px; height: 14px; border-width: 1.5px; }
+.review-overview-card #shoeOverviewMap .map-row { margin-top: 4px; }
+.review-overview-card #shoeOverviewMap .bar-cell { height: 20px; }
+.review-overview-card #shoeOverviewMap .map-cell { height: 10px; }
+@media (max-width: 700px) {
+  .review-overview-heading { padding-inline: 0; }
+  .review-overview-card .shoe-overview-body { padding-inline: 0; }
+}
