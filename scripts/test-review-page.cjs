@@ -91,7 +91,7 @@ const server = http.createServer((req, res) => {
     const shoeOverviewBtn = await page.$('#btnShoeOverview');
     assert.equal(shoeOverviewBtn, null, '頁首不顯示牌靴總覽按鈕');
 
-    // 工具卡在左、牌表在右；窄畫面改上下單欄。
+    // 寬畫面工具在左、牌表在右；1539px 以下工具移到牌表上方。
     for (const width of [1401, 1920, 2560, 1000]) {
       await page.setViewportSize({ width, height: 884 });
       const layout = await page.evaluate(() => {
@@ -119,12 +119,12 @@ const server = http.createServer((req, res) => {
           singleColumn: [...document.querySelectorAll('.review-tool-group')].every(group => getComputedStyle(group).gridTemplateColumns.trim().split(/\s+/).length === 1)
         };
       });
-      assert.equal(layout.columns, width > 1100, '窄畫面應轉為上下單欄');
-      if (width > 1100) assert.ok(layout.toolLeft && layout.sidebarWidth === 180);
+      assert.equal(layout.columns, width >= 1540, '1539px 以下工具應移到牌表上方');
+      if (width >= 1540) assert.ok(layout.toolLeft && layout.sidebarWidth === 180);
       if (width >= 1920) assert.ok(layout.headerSingleLine && layout.headerNoOverlap && layout.headerFits,
         `${width}px 頁首品牌與操作須同列、互不重疊且不超出容器: ${JSON.stringify(layout)}`);
       if (width >= 1401) assert.equal(layout.horizontalOverflow, false, `${width}px 不應橫向溢出`);
-      assert.ok(layout.inputUsable && layout.oldStatsGone && layout.singleColumn);
+      assert.ok(layout.inputUsable && layout.oldStatsGone && (width < 1540 || layout.singleColumn), JSON.stringify({width, ...layout}));
     }
     const initialVioOpen = await page.$eval('#statsVioCard', el => el.open);
     await page.click('#statsVioCard summary');
@@ -232,7 +232,7 @@ const server = http.createServer((req, res) => {
     assert.equal(rowCount, 60, '主表格應有 60 局');
 
     // 右側實際寬度決定單／雙欄，不讓牌板溢出或互撞。
-    for (const width of [1401, 1920]) {
+    for (const width of [1280, 1401, 1540, 1920]) {
       await page.setViewportSize({ width, height: 884 });
       const tableLayout = await page.evaluate(() => {
         const table = document.querySelector('#roundsTable').getBoundingClientRect();
@@ -242,7 +242,7 @@ const server = http.createServer((req, res) => {
         return { overflow: table.right > content.right + 1, twoColumns: later.left > first.right - 1 };
       });
       assert.equal(tableLayout.overflow, false, '主表不可溢出右欄');
-      assert.equal(tableLayout.twoColumns, width === 1920, '依右側寬度切換單／雙欄');
+      assert.equal(tableLayout.twoColumns, width >= 1401, '依右側寬度切換單／雙欄');
     }
     await page.setViewportSize({ width: 1920, height: 1080 });
 
