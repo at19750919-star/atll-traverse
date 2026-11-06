@@ -109,13 +109,14 @@ const server = http.createServer((req, res) => {
       if (width > 1100) assert.ok(layout.toolLeft && layout.sidebarWidth === 220);
       assert.ok(layout.inputUsable && layout.oldStatsGone && layout.singleColumn);
     }
+    const initialVioOpen = await page.$eval('#statsVioCard', el => el.open);
     await page.click('#statsVioCard summary');
-    assert.equal(await page.$eval('#statsVioCard', el => el.open), true, '違規卡可展開');
+    assert.equal(await page.$eval('#statsVioCard', el => el.open), !initialVioOpen, '違規卡可手動切換');
     await page.keyboard.press('Enter');
-    assert.equal(await page.$eval('#statsVioCard', el => el.open), false, '違規卡可用鍵盤收起');
+    assert.equal(await page.$eval('#statsVioCard', el => el.open), initialVioOpen, '違規卡可用鍵盤切換');
     await page.setViewportSize({ width: 1920, height: 1080 });
 
-    // 切牌造成實際違規時，卡片自動亮紅展開；切回0解除並收起。
+    // 切牌造成實際違規時亮紅展開；有效無違規的牌局解除並收起。
     await page.fill('#cutPos', '1');
     await cutBtn.click();
     await page.waitForFunction(() => {
@@ -132,10 +133,18 @@ const server = http.createServer((req, res) => {
     assert.equal(violationState.visible, true);
     await page.fill('#cutPos', '0');
     await cutBtn.click();
-    await page.waitForFunction(() => {
-      const card = document.querySelector('#statsVioCard');
-      return !card.open && card.classList.contains('all-clear') && !card.classList.contains('has-violations');
+    const clearState = await page.evaluate(() => {
+      const previous = currentRounds;
+      try {
+        const cards = [['4','♣','R'],['2','♠','R'],['4','♥','R'],['5','♦','B']]
+          .map(([rank,suit,back], pos) => Object.assign(new Card(rank,suit,pos), {back_color:back}));
+        currentRounds = [{start_index:0,cards,result:'閒',sensitive:true,segment:'A'}];
+        DashboardUI.refreshNow();
+        const card = document.querySelector('#statsVioCard');
+        return { open: card.open, clear: card.classList.contains('all-clear'), red: card.classList.contains('has-violations') };
+      } finally { currentRounds = previous; DashboardUI.refreshNow(); }
     });
+    assert.deepEqual(clearState, {open:false,clear:true,red:false});
 
     // 2. 計算工具初始隱藏，開啟後仍可輸入、清空、關閉。
     console.log('Testing calculation tool modal...');
