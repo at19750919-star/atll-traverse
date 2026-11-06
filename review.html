@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=15">
+  <link rel="stylesheet" href="review.css?v=16">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -80,13 +80,12 @@
     <!-- 切牌與定位操作 -->
     <div class="review-tool-group">
       <span class="review-tool-label">切牌定位:</span>
-      <button class="tool-btn" id="btnRecordDeckOrder" disabled type="button" title="記錄目前牌序作為切牌基準">記錄牌序</button>
-      <div class="review-input-group" title="輸入切牌張數直接執行；0 恢復記錄的牌序">
+      <div class="review-input-group" title="輸入切牌張數直接執行；0 恢復載入或套用編輯時的牌序">
         <span>切牌:</span>
         <input class="review-numbox" type="number" inputmode="numeric" id="cutPos" min="0" placeholder="張數">
         <button class="tool-btn" id="btnCut" type="button">執行</button>
       </div>
-      <button class="tool-btn" id="btnResetOrder" type="button" title="把牌序還原成載入或記錄牌序時的原始順序（丟棄切牌、換局、換牌）">重置</button>
+      <button class="tool-btn" id="btnResetOrder" type="button" title="把牌序還原成載入或套用編輯時的原始順序（丟棄切牌、換局、換牌）">重置</button>
       <div class="review-input-group" title="輸入 1~416 的全靴張號進行高亮定位">
         <span>定位:</span>
         <input class="review-numbox" type="number" inputmode="numeric" id="highlightCardPos" min="1" placeholder="第幾張">
@@ -235,6 +234,6 @@
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>
   <script src="review-default-shoe.js?v=1"></script>
-  <script src="review-storage.js?v=3"></script>
+  <script src="review-storage.js?v=4"></script>
 </body>
 </html>

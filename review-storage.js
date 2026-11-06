@@ -150,7 +150,7 @@
       }
       return ok;
     };
-    // 重置：回到保存的原始牌序（載入、匯入或記錄牌序時的基準），沿用切牌 0 的還原流程。按兩次確認。
+    // 重置：回到保存的原始牌序（載入、匯入或套用編輯時的基準），沿用切牌 0 的還原流程。按兩次確認。
     const resetBtn = $('btnResetOrder');
     if (resetBtn) {
       let armTimer = null;
@@ -173,7 +173,7 @@
     }
     const body = $('roundsBody');
     if (body) new MutationObserver(schedule).observe(body, { childList: true, subtree: true });
-    for (const id of ['btnRecordDeckOrder','btnApplyChanges','btnCut','btnAutoColor','btnAutoReorder']) {
+    for (const id of ['btnApplyChanges','btnCut','btnAutoColor','btnAutoReorder']) {
       $(id)?.addEventListener('click', schedule);
     }
     $('exportFilename')?.addEventListener('change', schedule);

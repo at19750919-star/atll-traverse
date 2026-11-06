@@ -65,7 +65,7 @@ async function run(page, url, label) {
   await page.evaluate(() => ReviewStorage.restore(window.REVIEW_DEFAULT_SHOE));
   await page.click('#btnSaveReview');
 
-  await page.click('#btnRecordDeckOrder');
+  assert.equal(await page.$('#btnRecordDeckOrder'), null, '記錄牌序鈕已移除');
   await page.fill('#cutPos', '12');
   await page.click('#btnCut');
   await page.waitForFunction(() => JSON.parse(localStorage.getItem(ReviewStorage.key)).cutPos === 12);
@@ -117,7 +117,7 @@ async function run(page, url, label) {
   assert.equal(await page.evaluate(() => originalDeckOrder.length), 416, label + ': successful import creates full cut baseline');
   await page.fill('#cutPos','12');
   await page.click('#btnCut');
-  assert.notEqual(await signature(page), imported, label + ': imported shoe cuts without 記錄牌序');
+  assert.notEqual(await signature(page), imported, label + ': imported shoe cuts without any record button');
   await page.fill('#cutPos','0');
   await page.click('#btnCut');
   assert.equal(await signature(page), imported, label + ': imported cut zero restores exact source');

@@ -65,9 +65,9 @@ const server = http.createServer((req, res) => {
 
     const cutBtn = await page.$('#btnCut');
     const cutPos = await page.$('#cutPos');
-    const recordBtn = await page.$('#btnRecordDeckOrder');
+    assert.equal(await page.$('#btnRecordDeckOrder'), null, '記錄牌序鈕已移除');
     const highlightBtn = await page.$('#btnHighlightCard');
-    assert.ok(cutBtn && cutPos && recordBtn && highlightBtn, '切牌與定位元件存在');
+    assert.ok(cutBtn && cutPos && highlightBtn, '切牌與定位元件存在');
 
     const roundBtn = await page.$('#btnRound');
     assert.ok(roundBtn, '換局按鈕存在');
@@ -304,9 +304,8 @@ const server = http.createServer((req, res) => {
     assert.ok(isRoundActive, '換局按鈕進入 active 狀態');
     await page.click('#btnCancelEdit');
 
-    // 7. 測試記錄牌序與切牌
+    // 7. 測試切牌（載入後直接可用）
     console.log('Testing deck order record and cutting...');
-    await recordBtn.click();
     await page.fill('#cutPos', '12');
     await cutBtn.click();
     await page.waitForTimeout(200);

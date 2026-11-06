@@ -124,8 +124,7 @@ body.dashboard.review-page .review-branding .crest {
 .review-toolbar > .review-tool-group:first-of-type { grid-column: 1 / -1; }
 .review-tool-group > .tool-btn { flex: none; min-width: 82px; padding-inline: 16px; }
 .review-tool-group > #btnAutoReorder,
-.review-tool-group > #btnApplyChanges,
-.review-tool-group > #btnRecordDeckOrder { min-width: 108px; }
+.review-tool-group > #btnApplyChanges { min-width: 108px; }
 .review-tool-group > #btnCancelEdit { min-width: 82px; }
 .review-tool-sep { display: none; }
 .review-tool-label {
