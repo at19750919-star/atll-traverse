@@ -462,7 +462,6 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
   justify-content: stretch;
 }
 .review-sidebar .review-tool-label,
-.review-sidebar .swap-preview-toggle,
 .review-sidebar .review-input-group { grid-column: 1 / -1; }
 .review-sidebar .review-tool-label { width: auto; margin: 0 0 2px; }
 .review-sidebar .review-tool-group > .tool-btn { min-width: 0; width: 100%; padding-inline: 8px; }

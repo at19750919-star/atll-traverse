@@ -74,9 +74,11 @@ const server = http.createServer((req, res) => {
 
     const swapBtn = await page.$('#btnSwap');
     const swapPreview = await page.$('#toggleSwapPreview');
+    assert.equal(swapPreview, null, '換牌預覽勾選框已移除');
+    assert.equal(await page.$('.swap-preview-toggle'), null, '換牌預覽標籤已移除');
     const autoReorder = await page.$('#btnAutoReorder');
     const autoColor = await page.$('#btnAutoColor');
-    assert.ok(swapBtn && swapPreview && autoColor, '換牌與編輯工具存在');
+    assert.ok(swapBtn && autoColor, '換牌與編輯工具存在');
     assert.equal(autoReorder, null, '審核頁移除自動重排');
 
     const calcBtn = await page.$('#btnApplyTools');
