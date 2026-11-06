@@ -8,14 +8,14 @@
 
   const $ = (id) => document.getElementById(id);
 
-  // 1. 強制鎖定為紅0模式與四梅花和局規則
+  // 1. 強制鎖定為紅0模式與四梅花和局規則（標準紅0卡色，預設關閉混色）
   window.StandardProfiles = {
     current: 'red0',
     defaults: {
       red0: {
         signal: { suits: ['♥', '♦'], ranks: ['10', 'J', 'Q', 'K'] },
         tripleTieRule: false,
-        mixedCardColor: true
+        mixedCardColor: false
       }
     }
   };
@@ -29,6 +29,16 @@
       suits: ['♥', '♦'],
       ranks: ['10', 'J', 'Q', 'K']
     };
+    if (typeof persistCardColorMixedMode === 'function') {
+      persistCardColorMixedMode(false);
+    }
+    if (typeof CARD_COLOR_MIXED_MODE !== 'undefined') {
+      CARD_COLOR_MIXED_MODE = false;
+    }
+    window.__cardColorMixedMode = false;
+    const mixedEl = $('mixedCardColor');
+    if (mixedEl) mixedEl.checked = false;
+
     document.body.dataset.mode = 'standard';
     document.body.dataset.sub = 'red0';
   }

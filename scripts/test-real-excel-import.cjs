@@ -34,10 +34,11 @@ async function createSampleExcelBuffer() {
   const ws = wb.addWorksheet('原始數據');
   ws.addRow(['局數', '段標', '色序', '卡片1', '卡片2', '卡片3', '卡片4', '閒家', '莊家', '結果', '訊號']);
 
-  // 加入 50 局資料，第一局包含紅0 (Q♥, 10♦)
+  // 加入 50 局資料，第一局包含紅0 (Q♥, 10♦)，色序全部採用標準紅0卡色 BBBR / RRRB
   for (let i = 1; i <= 50; i++) {
+    const color = i % 2 === 0 ? 'BBBR' : 'RRRB';
     if (i === 1) {
-      ws.addRow([1, 'A', 'RBRB', 'Q♥', 'A♣', '10♦', '2♠', 'Q♥ 10♦', 'A♣ 2♠', '閒', 'S']);
+      ws.addRow([1, 'A', 'RRRB', 'Q♥', 'A♣', '10♦', '2♠', 'Q♥ 10♦', 'A♣ 2♠', '閒', 'S']);
     } else {
       const suits = ['♠', '♥', '♣', '♦'];
       const ranks = ['3', '4', '5', '6', '7', '8', '9', 'J', 'K'];
@@ -45,7 +46,7 @@ async function createSampleExcelBuffer() {
       const c2 = `${ranks[(i * 4 + 1) % ranks.length]}${suits[(i + 1) % 4]}`;
       const c3 = `${ranks[(i * 4 + 2) % ranks.length]}${suits[(i + 2) % 4]}`;
       const c4 = `${ranks[(i * 4 + 3) % ranks.length]}${suits[(i + 3) % 4]}`;
-      ws.addRow([i, 'A', 'RRBB', c1, c2, c3, c4, `${c1} ${c3}`, `${c2} ${c4}`, i % 2 === 0 ? '莊' : '閒', '']);
+      ws.addRow([i, 'A', color, c1, c2, c3, c4, `${c1} ${c3}`, `${c2} ${c4}`, i % 2 === 0 ? '莊' : '閒', '']);
     }
   }
 
@@ -132,6 +133,17 @@ async function createSampleExcelBuffer() {
 
     const totalText = await page.$eval('#dashTotal', el => el.textContent);
     assert.equal(totalText, '50', '總局數應為 50');
+
+    // 驗證違規卡片項目完全參照主頁 5 項標準，且卡色無誤判
+    const vioItems = await page.$$eval('#violationsGrid .vio', els => els.map(e => ({
+      name: e.querySelector('.v-name')?.textContent.trim(),
+      val: e.querySelector('.v-val')?.textContent.trim()
+    })));
+    console.log('Violation items after import:', vioItems);
+    assert.equal(vioItems.length, 5, '違規項目卡片必須為主頁標準 5 項');
+    assert.deepEqual(vioItems.map(v => v.name), ['訊號牌違規', '連5局4張', '連莊閒', '無法對調', '其他違規']);
+    const otherVio = vioItems.find(v => v.name === '其他違規');
+    assert.ok(otherVio && !otherVio.val.includes('卡色'), '標準紅0卡色絕不可誤判為卡色違規');
 
     // 驗證無重大錯誤
     const fatalErrors = errors.filter(e => !e.includes('favicon') && !e.includes('net::ERR_'));

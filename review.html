@@ -145,16 +145,14 @@
       </div>
     </section>
 
-    <!-- 違規檢查狀態卡片 (紅0規則判定) -->
+    <!-- 違規檢查狀態卡片 (紅0規則判定，完全參照主頁 5 項標準) -->
     <section class="violations gframe status-card vio-live-card" id="statsVioCard" aria-label="違規項目">
       <span class="frame-title">紅0 規則違規審核</span>
       <div class="violations-grid" id="violationsGrid">
         <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">訊號牌違規</span><span class="v-val violation-detail" id="signalViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連續5局4張</span><span class="v-val violation-detail" id="fourCardViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連續莊閒</span><span class="v-val violation-detail" id="streakViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連5局4張</span><span class="v-val violation-detail" id="fourCardViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連莊閒</span><span class="v-val violation-detail" id="streakViolationDetail">無</span></div>
         <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">無法對調</span><span class="v-val violation-detail" id="cannotSwapViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">張數不符</span><span class="v-val violation-detail" id="cardCountMismatchViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">卡色違規</span><span class="v-val violation-detail" id="cardColorViolationDetail">無</span></div>
         <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">其他違規</span><span class="v-val violation-detail" id="otherViolationDetail">無</span></div>
       </div>
       <div class="vio-empty" id="vioEmpty">目前無違規</div>
@@ -214,7 +212,7 @@
   <div class="compat-hidden" id="compatLayer" aria-hidden="true" style="display:none;">
     <span id="modeStatus">紅0模式</span>
     <input type="checkbox" id="tripleTieRule" checked>
-    <input type="checkbox" id="mixedCardColor" checked>
+    <input type="checkbox" id="mixedCardColor">
     <button id="clearBtn"></button>
     <div id="tvProgress"></div>
     <span id="sharedCardCounts"></span>
