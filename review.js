@@ -321,11 +321,12 @@
       calcBtn.addEventListener('click', showCalcTool);
     }
 
-    // 匯入檔案監聽（匯入完成後鎖定紅0與四梅花並重繪）
-    const fileInput = $('importFileInput');
-    if (fileInput) {
-      fileInput.addEventListener('change', () => {
-        setTimeout(() => {
+    // 匯入完成監聽（掛鉤 importFeedback.finish，確保精準同步紅0規則與儀表板）
+    if (typeof importFeedback !== 'undefined' && importFeedback.finish) {
+      const origFinish = importFeedback.finish;
+      importFeedback.finish = function (state, title, detail) {
+        origFinish.call(this, state, title, detail);
+        if (state === 'success' || state === 'warning') {
           enforceRed0Signal();
           window.__importedShoeMode = false;
           if (typeof refreshAnalysisAndRender === 'function') {
@@ -335,7 +336,24 @@
           if (typeof setEditButtonsAvailability === 'function') {
             setEditButtonsAvailability(true);
           }
-        }, 500);
+        }
+      };
+    }
+
+    // 防止匯入選單跑出螢幕外
+    const importBtn = $('btnImport');
+    if (importBtn) {
+      importBtn.addEventListener('click', () => {
+        setTimeout(() => {
+          const menu = $('importMenu');
+          if (menu) {
+            const rect = menu.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 8) {
+              const overflow = rect.right - (window.innerWidth - 8);
+              menu.style.left = Math.max(8, (parseFloat(menu.style.left) || 0) - overflow) + 'px';
+            }
+          }
+        }, 10);
       });
     }
 
