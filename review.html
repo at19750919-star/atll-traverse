@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=20">
+  <link rel="stylesheet" href="review.css?v=21">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -76,15 +76,14 @@
 
     <!-- 切牌與定位操作 -->
     <div class="review-tool-group">
-      <span class="review-tool-label">切牌定位:</span>
       <div class="review-input-group" title="輸入切牌張數直接執行；0 恢復載入或套用編輯時的牌序">
-        <span>切牌:</span>
+        <span class="rig-label">切牌</span>
         <input class="review-numbox" type="number" inputmode="numeric" id="cutPos" min="0" placeholder="張數">
         <button class="tool-btn" id="btnCut" type="button">執行</button>
       </div>
       <button class="tool-btn" id="btnResetOrder" type="button" title="把牌序還原成載入或套用編輯時的原始順序（丟棄切牌、換局、換牌）">重置</button>
       <div class="review-input-group" title="輸入 1~416 的全靴張號進行高亮定位">
-        <span>定位:</span>
+        <span class="rig-label">定位</span>
         <input class="review-numbox" type="number" inputmode="numeric" id="highlightCardPos" min="1" placeholder="第幾張">
         <button class="tool-btn" id="btnHighlightCard" type="button">高亮</button>
       </div>

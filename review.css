@@ -143,46 +143,81 @@ body.dashboard.review-page .review-branding .crest {
   .review-tool-label { width: 100%; }
 }
 
-/* 數字輸入群組 */
-/* 切牌／定位：文字＋底線輸入＋一般按鈕，不再套外框。 */
+/* 切牌／定位：標籤、輸入、按鈕相接的單層長形控制項，外框與 .tool-btn 同高同色。 */
 .review-input-group {
   position: relative;
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
+  box-sizing: border-box;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid #2c3634;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #161f21, #0d1315);
   font-family: var(--serif);
   font-size: 13px;
   color: var(--gold-2);
   white-space: nowrap;
+  transition: border-color .2s, box-shadow .2s, opacity .2s;
 }
-
+.review-input-group:focus-within {
+  border-color: #c9a25a;
+  box-shadow: 0 0 10px rgba(212, 176, 106, .25);
+}
+.review-input-group:has(:disabled) { opacity: .35; filter: grayscale(.5); }
+.review-input-group .rig-label {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding: 0 12px;
+  border-right: 1px solid #2c3634;
+  color: var(--gold-2);
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-indent: .15em;
+}
 .review-input-group .review-numbox {
+  flex: none;
   width: 72px;
-  height: 30px;
-  padding: 0 2px;
+  min-width: 0;
+  height: auto;
+  padding: 0 4px;
+  margin: 0;
   background: transparent;
   border: 0;
-  border-bottom: 1px solid #8a6a30;
+  border-right: 1px solid #2c3634;
   border-radius: 0;
+  box-shadow: none;
   color: var(--gold-1);
   text-align: center;
   font-family: var(--disp);
   font-size: 15px;
   outline: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
-
-.review-input-group .review-numbox:focus {
-  border-bottom-color: #e5c27a;
-  box-shadow: 0 1px 0 #e5c27a;
-}
-
+.review-input-group .review-numbox::-webkit-outer-spin-button,
+.review-input-group .review-numbox::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .review-input-group .tool-btn {
   flex: none;
-  min-width: auto;
-  padding: 0 12px;
-  letter-spacing: .05em;
-  text-indent: 0;
+  min-width: 0;
+  height: auto;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  letter-spacing: .25em;
+  text-indent: .25em;
 }
+.review-input-group .tool-btn:hover {
+  background: rgba(212, 176, 106, .14);
+  color: var(--gold-1);
+  box-shadow: none;
+  transform: none;
+}
+.review-input-group .tool-btn:active { background: rgba(212, 176, 106, .24); transform: none; }
 
 /* ════════════ 儀表板區域 (回復統計與違規審核) ════════════ */
 .review-dashboard-grid {
@@ -465,9 +500,9 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
 .review-sidebar .review-tool-label { width: auto; margin: 0 0 2px; }
 .review-sidebar .review-tool-group > .tool-btn { min-width: 0; width: 100%; padding-inline: 8px; }
 .review-sidebar .review-input-group { display: flex; width: 100%; min-width: 0; box-sizing: border-box; }
-.review-sidebar .review-input-group { gap: 6px; }
-.review-sidebar .review-input-group .tool-btn { padding-inline: 8px; white-space: nowrap; }
-.review-sidebar .review-numbox { flex: 1; min-width: 0; width: auto; }
+.review-sidebar .review-input-group .tool-btn { padding-inline: 6px; letter-spacing: .04em; text-indent: .04em; white-space: nowrap; }
+.review-sidebar .review-input-group .rig-label { padding-inline: 7px; letter-spacing: .04em; text-indent: .04em; }
+.review-sidebar .review-numbox { flex: 1 1 0; min-width: 70px; width: auto; }
 .review-content { container-type: inline-size; }
 /* 原視窗寬度規則會在右欄不足時強制雙欄；先以單欄為基準。 */
 @media (min-width: 1080px) {
@@ -507,7 +542,9 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
   .review-sidebar .review-tool-label { margin: 0; }
   .review-sidebar .review-tool-group > .tool-btn { width: auto; padding-inline: 14px; white-space: nowrap; }
   .review-sidebar .review-input-group { width: auto; }
-  .review-sidebar .review-numbox { flex: 0 0 76px; width: 76px; }
+  .review-sidebar .review-input-group .rig-label { padding-inline: 12px; letter-spacing: .15em; text-indent: .15em; }
+  .review-sidebar .review-input-group .tool-btn { padding-inline: 14px; letter-spacing: .25em; text-indent: .25em; }
+  .review-sidebar .review-numbox { flex: 0 0 76px; width: 76px; min-width: 0; }
   .review-sidebar .review-tool-sep { display: none; }
 }
 @media (max-width: 700px) {
