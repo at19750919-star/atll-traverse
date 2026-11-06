@@ -144,43 +144,42 @@ body.dashboard.review-page .review-branding .crest {
 }
 
 /* 數字輸入群組 */
+/* 切牌／定位：文字＋底線輸入＋一般按鈕，不再套外框。 */
 .review-input-group {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 8px;
-  border-radius: 6px;
-  background: linear-gradient(180deg, #161f21, #0d1315);
-  border: 1px solid #2c3634;
+  gap: 8px;
   font-family: var(--serif);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gold-2);
+  white-space: nowrap;
 }
 
 .review-input-group .review-numbox {
   width: 72px;
-  height: 28px;
-  background: #07090b;
-  border: 1px solid #6b4c1d;
+  height: 30px;
+  padding: 0 2px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #8a6a30;
+  border-radius: 0;
   color: var(--gold-1);
   text-align: center;
-  border-radius: 4px;
   font-family: var(--disp);
-  font-size: 14px;
+  font-size: 15px;
   outline: none;
 }
 
 .review-input-group .review-numbox:focus {
-  border-color: #c9a25a;
+  border-bottom-color: #e5c27a;
+  box-shadow: 0 1px 0 #e5c27a;
 }
 
 .review-input-group .tool-btn {
+  flex: none;
   min-width: auto;
-  height: 26px;
-  padding: 0 10px;
-  font-size: 11.5px;
+  padding: 0 12px;
   letter-spacing: .05em;
   text-indent: 0;
 }
@@ -466,8 +465,8 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
 .review-sidebar .review-tool-label { width: auto; margin: 0 0 2px; }
 .review-sidebar .review-tool-group > .tool-btn { min-width: 0; width: 100%; padding-inline: 8px; }
 .review-sidebar .review-input-group { display: flex; width: 100%; min-width: 0; box-sizing: border-box; }
-.review-sidebar .review-input-group { gap: 4px; padding-inline: 4px; white-space: nowrap; }
-.review-sidebar .review-input-group .tool-btn { padding-inline: 6px; white-space: nowrap; }
+.review-sidebar .review-input-group { gap: 6px; }
+.review-sidebar .review-input-group .tool-btn { padding-inline: 8px; white-space: nowrap; }
 .review-sidebar .review-numbox { flex: 1; min-width: 0; width: auto; }
 .review-content { container-type: inline-size; }
 /* 原視窗寬度規則會在右欄不足時強制雙欄；先以單欄為基準。 */
