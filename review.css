@@ -634,3 +634,11 @@ body.review-page #roundsTable.split-rounds.split-rounds th { font-weight: 600; }
 body.review-page #statsVioCard :is(.v-name, .v-val) { font-family: var(--sans); font-weight: 400; }
 body.review-page #logArea { font-family: "Consolas", "Courier New", monospace; }
 body.review-page #floatingAssistant .widget-action { font-family: Arial; font-weight: 400; }
+
+/* 重置牌序：按一次進入確認狀態 */
+body.review-page #btnResetOrder.armed { border-color: #c0574a; color: #ff8074; background: #3a1512; }
+
+/* 主表欄寬：依內容比例分配（卡牌／手牌放寬到剛好容納，終／閒／莊／調加寬）。 */
+body.review-page #roundsTable.split-rounds.split-rounds tr {
+  grid-template-columns: minmax(36px,.7fr) minmax(224px,2.2fr) minmax(44px,1fr) repeat(2,minmax(116px,1.2fr)) repeat(2,minmax(32px,.8fr)) minmax(40px,.9fr);
+}

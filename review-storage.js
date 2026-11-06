@@ -150,6 +150,27 @@
       }
       return ok;
     };
+    // 重置：回到保存的原始牌序（載入、匯入或記錄牌序時的基準），沿用切牌 0 的還原流程。按兩次確認。
+    const resetBtn = $('btnResetOrder');
+    if (resetBtn) {
+      let armTimer = null;
+      const disarm = () => { clearTimeout(armTimer); resetBtn.classList.remove('armed'); resetBtn.textContent = '重置'; };
+      resetBtn.addEventListener('click', () => {
+        if (!Array.isArray(originalRounds) || !originalRounds.length || !Array.isArray(currentRounds) || !currentRounds.length) {
+          status('尚無牌靴可重置', true); return;
+        }
+        if (!resetBtn.classList.contains('armed')) {
+          resetBtn.classList.add('armed'); resetBtn.textContent = '確定重置？';
+          clearTimeout(armTimer); armTimer = setTimeout(disarm, 3000); return;
+        }
+        disarm();
+        if (performCut(0)) {
+          if ($('cutPos')) $('cutPos').value = '';
+          if (typeof log === 'function') log('已重置牌序（還原為原始順序）', 'success');
+          status(`${name || '目前牌局'} · 已重置牌序`);
+        }
+      });
+    }
     const body = $('roundsBody');
     if (body) new MutationObserver(schedule).observe(body, { childList: true, subtree: true });
     for (const id of ['btnRecordDeckOrder','btnApplyChanges','btnCut','btnAutoColor','btnAutoReorder']) {
