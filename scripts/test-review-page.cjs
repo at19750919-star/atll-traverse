@@ -113,18 +113,24 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.$eval('#statsVioCard', el => el.open), false, '違規卡可用鍵盤收起');
     await page.setViewportSize({ width: 1920, height: 1080 });
 
-    // 2. 測試計算工具彈出
+    // 2. 計算工具初始隱藏，開啟後仍可輸入、清空、關閉。
     console.log('Testing calculation tool modal...');
-    await calcBtn.click();
-    await page.waitForTimeout(100);
     const floatAssistant = await page.$('#floatingAssistant');
     assert.ok(floatAssistant, '計算工具浮窗已注入');
-    const isVisible = await floatAssistant.isVisible();
-    assert.ok(isVisible, '計算工具浮窗已開啟可見');
-
-    // 關閉計算工具
-    const closeWidgetBtn = await page.$('#closeWidgetBtn');
-    if (closeWidgetBtn) await closeWidgetBtn.click();
+    assert.equal(await floatAssistant.isVisible(), false, '初始不可露在頁尾');
+    assert.equal(await floatAssistant.evaluate(el => getComputedStyle(el).position), 'fixed');
+    await calcBtn.click();
+    assert.equal(await floatAssistant.isVisible(), true, '計算工具可開啟');
+    await page.fill('#sim_p1', '2');
+    await page.fill('#sim_b1', '3');
+    await page.fill('#sim_p2', '3');
+    await page.fill('#sim_b2', '2');
+    assert.notEqual(await page.$eval('#sim_normal-p-points', el => el.textContent), '---', '輸入後應計算');
+    await page.click('#sim_reset-btn');
+    assert.equal(await page.$eval('#sim_p1', el => el.value), '', '清空會清除輸入');
+    assert.equal(await page.$eval('#sim_normal-p-points', el => el.textContent), '---', '清空會重設結果');
+    await page.click('#closeWidgetBtn');
+    assert.equal(await floatAssistant.isVisible(), false, '關閉後不露出');
 
     // 3. 模擬載入牌靴資料並驗證渲染與統計 (含紅0訊號判定測試)
     console.log('Injecting mock shoe data into review page...');
@@ -278,6 +284,12 @@ const server = http.createServer((req, res) => {
     await page.fill('#exportFilename', 'TEST-REVIEW-001');
     const exportVal = await page.$eval('#exportFilename', el => el.value);
     assert.equal(exportVal, 'TEST-REVIEW-001', '導出檔名應可正常輸入');
+
+    // 匯入資料與操作紀錄收合，不應讓浮窗重新露在頁尾。
+    assert.equal(await floatAssistant.isVisible(), false);
+    await page.click('#logHead');
+    await page.click('#logHead');
+    assert.equal(await floatAssistant.isVisible(), false);
 
     // 11. 驗證無致命報錯
     const fatalErrors = errors.filter(e => !e.includes('favicon') && !e.includes('net::ERR_'));

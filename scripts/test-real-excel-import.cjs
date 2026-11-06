@@ -135,6 +135,8 @@ async function createSampleExcelBuffer() {
     const metaText = await page.$eval('#shoeOverviewMeta', el => el.textContent);
     assert.ok(metaText.includes('50 局'), '總局數應為 50');
 
+    assert.equal(await page.$eval('#floatingAssistant', el => getComputedStyle(el).display), 'none', '匯入後計算工具不得露在頁尾');
+
     // 驗證違規卡片項目完全參照主頁 5 項標準，且卡色無誤判
     const vioItems = await page.$$eval('#violationsGrid .vio', els => els.map(e => ({
       name: e.querySelector('.v-name')?.textContent.trim(),

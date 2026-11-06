@@ -523,3 +523,68 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
 @media (max-width: 700px) {
   .review-sidebar .review-tool-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* 計算工具由 standard/signals_ui.js 注入；review 頁也需要主頁的浮窗樣式。 */
+body.review-page #floatingAssistant {
+  display: none;
+  position: fixed;
+  right: 26px;
+  bottom: 26px;
+  z-index: 960;
+  width: 236px;
+  box-sizing: content-box;
+  padding: 14px;
+  color: var(--txt);
+  background: linear-gradient(160deg, rgba(24, 32, 33, .97), rgba(11, 17, 19, .98));
+  border: 1px solid;
+  border-image: var(--gold-line) 1;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .7);
+  cursor: grab;
+}
+body.review-page #floatingAssistant .widget-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+body.review-page #floatingAssistant .widget-action {
+  cursor: pointer;
+  height: 26px;
+  padding: 0 12px;
+  border: 1px dashed #2c3634;
+  border-radius: 999px;
+  background: #0d1315;
+  color: var(--gold-2);
+  font: 11px var(--serif);
+  letter-spacing: .15em;
+}
+body.review-page #floatingAssistant .widget-action:hover { border-color: #c9a25a; color: var(--gold-1); }
+body.review-page #floatingAssistant .card-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+body.review-page #floatingAssistant .card-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  border: 1px solid #33403d;
+  border-radius: 6px;
+  background: #0a100f;
+  color: var(--gold-1);
+  font: 15px var(--disp);
+  text-align: center;
+  outline: none;
+}
+body.review-page #floatingAssistant .card-input:focus { border-color: #c9a25a; }
+body.review-page #floatingAssistant .card-input.disabled { opacity: .5; }
+body.review-page #floatingAssistant .results { display: flex; flex-direction: column; gap: 6px; }
+body.review-page #floatingAssistant .result-strip {
+  display: flex;
+  justify-content: space-around;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid #26302e;
+  border-radius: 6px;
+  background: rgba(10, 16, 15, .6);
+}
+body.review-page #floatingAssistant .result-value { font: 700 15px var(--disp); }
+body.review-page #floatingAssistant .result-player { color: var(--player); }
+body.review-page #floatingAssistant .result-banker { color: var(--banker); }
+body.review-page #floatingAssistant .result-outcome { color: var(--gold-1); }
