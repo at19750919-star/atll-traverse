@@ -458,7 +458,7 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
 /* 審核工作區：工具獨立左欄，牌表保留可用寬度。 */
 .review-workspace {
   display: grid;
-  grid-template-columns: 290px minmax(0, 1fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
   margin-top: 14px;
@@ -470,11 +470,11 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
   align-items: stretch;
   gap: 20px;
   margin: 0;
-  padding: 22px 16px 18px;
+  padding: 22px 12px 18px;
 }
 .review-sidebar .review-tool-group {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 9px;
   justify-content: stretch;
 }
@@ -514,14 +514,14 @@ body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !impo
 }
 @media (max-width: 1100px) {
   .review-workspace { grid-template-columns: minmax(0, 1fr); }
-  .review-sidebar .review-tool-group { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .review-sidebar .review-tool-group { grid-template-columns: minmax(0, 1fr); }
   .review-sidebar .review-tool-label,
   .review-sidebar .swap-preview-toggle,
   .review-sidebar .review-input-group,
   .review-sidebar .review-density-select { grid-column: 1 / -1; }
 }
 @media (max-width: 700px) {
-  .review-sidebar .review-tool-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .review-sidebar .review-tool-group { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* 計算工具由 standard/signals_ui.js 注入；review 頁也需要主頁的浮窗樣式。 */
@@ -596,3 +596,13 @@ body.review-page #floatingAssistant .result-outcome { color: var(--gold-1); }
   max-width: 220px;
 }
 #reviewSaveStatus[data-state="error"] { color: var(--danger); }
+
+/* 有違規即亮紅，與無違規的綠色狀態區別。 */
+body.review-page #statsVioCard.has-violations {
+  border: 1px solid var(--danger) !important;
+  border-image: none !important;
+  background: linear-gradient(180deg, #3a1919, #1c1012) !important;
+  box-shadow: 0 0 12px rgba(255, 107, 94, .25);
+}
+#statsVioCard.has-violations .review-vio-summary,
+#statsVioCard.has-violations .review-vio-summary::marker { color: #ff8b80; }

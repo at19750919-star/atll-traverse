@@ -172,7 +172,8 @@
 
       const vioCard = $('statsVioCard');
       if (vioCard) {
-        vioCard.classList.remove('all-clear');
+        vioCard.classList.remove('all-clear', 'has-violations');
+        vioCard.open = false;
       }
       scheduleInlineOverview();
       return;
@@ -309,14 +310,15 @@
       console.warn('違規檢查警告:', e);
     }
 
-    // 全無違規時呈現整格亮綠 (#statsVioCard.all-clear)
+    // 有違規時亮紅並展開；回到合格狀態才解除警示、收起。
     const vioCard = $('statsVioCard');
     if (vioCard) {
-      if (totalViolations === 0 && total > 0) {
-        vioCard.classList.add('all-clear');
-      } else {
-        vioCard.classList.remove('all-clear');
-      }
+      const hadViolations = vioCard.classList.contains('has-violations');
+      const hasViolations = totalViolations > 0;
+      vioCard.classList.toggle('all-clear', !hasViolations && total > 0);
+      vioCard.classList.toggle('has-violations', hasViolations);
+      if (hasViolations) vioCard.open = true;
+      else if (hadViolations) vioCard.open = false;
     }
 
     // 更新雙欄佈局
@@ -407,7 +409,7 @@
     }
 
     // 換牌、換局、套用、切牌後同步刷新
-    const watchButtons = ['btnSwap', 'btnRound', 'btnApplyChanges', 'btnCut', 'btnAutoReorder', 'btnAutoColor'];
+    const watchButtons = ['btnSwap', 'btnRound', 'btnApplyChanges', 'btnCut', 'btnAutoColor'];
     watchButtons.forEach(id => {
       const btn = $(id);
       if (btn) {

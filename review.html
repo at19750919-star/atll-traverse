@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=7">
+  <link rel="stylesheet" href="review.css?v=8">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -73,7 +73,6 @@
       <label class="swap-preview-toggle" title="換牌時先預覽對調結果" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--gold-2);cursor:pointer;">
         <input type="checkbox" id="toggleSwapPreview" style="accent-color:#d9b568;"><span>換牌預覽</span>
       </label>
-      <button class="tool-btn" id="btnAutoReorder" disabled type="button" title="彈出智能重排視窗 (快捷鍵 C)">自動重排</button>
       <button class="tool-btn" id="btnAutoColor" disabled type="button" title="同牌面調換紅藍背顏色">換色</button>
       <button class="tool-btn" id="btnApplyChanges" disabled type="button" title="儲存編輯後的牌序">套用編輯</button>
       <button class="tool-btn" id="btnCancelEdit" disabled type="button" title="取消目前選取狀態">取消</button>
@@ -85,7 +84,7 @@
     <div class="review-tool-group">
       <span class="review-tool-label">切牌定位:</span>
       <button class="tool-btn" id="btnRecordDeckOrder" disabled type="button" title="記錄目前牌序作為切牌基準">記錄牌序</button>
-      <div class="review-input-group" title="需先記錄牌序，輸入 1~416 張切牌位置">
+      <div class="review-input-group" title="輸入切牌張數直接執行；0 恢復記錄的牌序">
         <span>切牌:</span>
         <input class="review-numbox" type="number" inputmode="numeric" id="cutPos" min="0" placeholder="張數">
         <button class="tool-btn" id="btnCut" type="button">執行</button>
@@ -224,7 +223,7 @@
   <script src="standard/shoe_cut.js?v=3"></script>
   <script src="standard/signals_ui.js?v=59"></script>
   <script src="standard/smart_reorder_dialog.js?v=2"></script>
-  <script src="standard/swap_preview.js?v=3"></script>
+  <script src="standard/swap_preview.js?v=4"></script>
   <script src="standard/auto_fix_plugin.js?v=4"></script>
   <script src="traverse_quota.js?v=2"></script>
   <script src="traverse_templates.js?v=8"></script>
@@ -238,7 +237,7 @@
   <script src="integrated-analysis.js?v=1"></script>
 
   <!-- 審核檢視專屬適配層 -->
-  <script src="review.js?v=3"></script>
+  <script src="review.js?v=4"></script>
 
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>

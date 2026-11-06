@@ -76,7 +76,8 @@ const server = http.createServer((req, res) => {
     const swapPreview = await page.$('#toggleSwapPreview');
     const autoReorder = await page.$('#btnAutoReorder');
     const autoColor = await page.$('#btnAutoColor');
-    assert.ok(swapBtn && swapPreview && autoReorder && autoColor, '換牌與編輯工具存在');
+    assert.ok(swapBtn && swapPreview && autoColor, '換牌與編輯工具存在');
+    assert.equal(autoReorder, null, '審核頁移除自動重排');
 
     const calcBtn = await page.$('#btnApplyTools');
     assert.ok(calcBtn, '計算工具按鈕存在');
@@ -89,7 +90,7 @@ const server = http.createServer((req, res) => {
     assert.ok(shoeOverviewBtn, '牌靴總覽按鈕已被 shoe-overview.js 成功生成');
 
     // 工具卡在左、牌表在右；窄畫面改上下單欄。
-    for (const width of [1401, 1920, 1000]) {
+    for (const width of [1401, 1920, 2560, 1000]) {
       await page.setViewportSize({ width, height: 884 });
       const layout = await page.evaluate(() => {
         const tool = document.querySelector('.review-toolbar').getBoundingClientRect();
@@ -100,18 +101,41 @@ const server = http.createServer((req, res) => {
           columns: Math.abs(tool.top - content.top) < 2,
           sidebarWidth: Math.round(tool.width),
           inputUsable: input.width >= 70,
-          oldStatsGone: !document.querySelector('#reviewStatsCard')
+          oldStatsGone: !document.querySelector('#reviewStatsCard'),
+          singleColumn: [...document.querySelectorAll('.review-tool-group')].every(group => getComputedStyle(group).gridTemplateColumns.trim().split(/\s+/).length === 1)
         };
       });
       assert.equal(layout.columns, width > 1100, '窄畫面應轉為上下單欄');
-      if (width > 1100) assert.ok(layout.toolLeft && layout.sidebarWidth >= 280 && layout.sidebarWidth <= 300);
-      assert.ok(layout.inputUsable && layout.oldStatsGone);
+      if (width > 1100) assert.ok(layout.toolLeft && layout.sidebarWidth === 220);
+      assert.ok(layout.inputUsable && layout.oldStatsGone && layout.singleColumn);
     }
     await page.click('#statsVioCard summary');
     assert.equal(await page.$eval('#statsVioCard', el => el.open), true, '違規卡可展開');
     await page.keyboard.press('Enter');
     assert.equal(await page.$eval('#statsVioCard', el => el.open), false, '違規卡可用鍵盤收起');
     await page.setViewportSize({ width: 1920, height: 1080 });
+
+    // 切牌造成實際違規時，卡片自動亮紅展開；切回0解除並收起。
+    await page.fill('#cutPos', '1');
+    await cutBtn.click();
+    await page.waitForFunction(() => {
+      const card = document.querySelector('#statsVioCard');
+      return card.open && card.classList.contains('has-violations');
+    });
+    const violationState = await page.$eval('#statsVioCard', el => ({
+      clear: el.classList.contains('all-clear'),
+      border: getComputedStyle(el).borderTopColor,
+      visible: [...el.querySelectorAll('.has-violation')].some(item => getComputedStyle(item).display !== 'none')
+    }));
+    assert.equal(violationState.clear, false);
+    assert.equal(violationState.border, 'rgb(255, 107, 94)');
+    assert.equal(violationState.visible, true);
+    await page.fill('#cutPos', '0');
+    await cutBtn.click();
+    await page.waitForFunction(() => {
+      const card = document.querySelector('#statsVioCard');
+      return !card.open && card.classList.contains('all-clear') && !card.classList.contains('has-violations');
+    });
 
     // 2. 計算工具初始隱藏，開啟後仍可輸入、清空、關閉。
     console.log('Testing calculation tool modal...');
