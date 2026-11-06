@@ -1,0 +1,206 @@
+/* 百家4.0 · 牌靴審核檢視專用樣式 (review.css) */
+
+body.review-page {
+  margin: 0;
+  padding: 12px 16px 40px;
+  background: #07090b;
+  color: #e8e4d8;
+  font-family: var(--sans, "Noto Sans TC", sans-serif);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 頂部導航與標題 */
+.review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #182224 0%, #0d1417 100%);
+  border: 1px solid #6b4c1d;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.review-branding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-logo {
+  height: 28px;
+  width: auto;
+}
+
+.review-title {
+  margin: 0;
+  font-family: var(--serif, "Noto Serif TC", serif);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright, #f4dfa4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: rgba(217, 181, 104, 0.15);
+  border: 1px solid #d9b568;
+  border-radius: 4px;
+  color: #f4dfa4;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.review-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 工具列 (Toolbar) */
+.review-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #10171a;
+  border: 1px solid #6b4c1d88;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.review-tool-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.review-tool-sep {
+  width: 1px;
+  height: 24px;
+  background: #6b4c1d55;
+  margin: 0 4px;
+}
+
+.review-tool-label {
+  font-size: 12px;
+  color: var(--gold-2, #d9b568);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* 儀表板區域 (回復統計與違規卡) */
+.review-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 1200px) {
+  .review-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.review-metrics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.review-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+/* 絨布牌桌主表格區塊 */
+.review-felt-container {
+  margin-top: 10px;
+}
+
+.review-table-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #0f1619;
+  border: 1px solid #6b4c1d66;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+}
+
+.review-table-title {
+  font-family: var(--serif, "Noto Serif TC", serif);
+  font-size: 14px;
+  color: #f4dfa4;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9a9584;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  background: rgba(10, 36, 27, 0.4);
+  border: 1px dashed #6b4c1d66;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.review-empty-state strong {
+  color: #f4dfa4;
+  display: block;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+/* 輸入框與微調 */
+.review-numbox {
+  width: 60px;
+  height: 28px;
+  background: #07090b;
+  border: 1px solid #6b4c1d;
+  color: #f4dfa4;
+  text-align: center;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.review-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #0a1114;
+  border: 1px solid #6b4c1d55;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* 顯示密度控制 */
+.review-density-select {
+  height: 28px;
+  background: #07090b;
+  border: 1px solid #6b4c1d;
+  color: #f4dfa4;
+  font-size: 12px;
+  border-radius: 3px;
+  padding: 0 4px;
+}
