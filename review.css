@@ -640,5 +640,5 @@ body.review-page #btnResetOrder.armed { border-color: #c0574a; color: #ff8074; b
 
 /* 主表欄寬：依內容比例分配（卡牌／手牌放寬到剛好容納，終／閒／莊／調加寬）。 */
 body.review-page #roundsTable.split-rounds.split-rounds tr {
-  grid-template-columns: minmax(36px,.7fr) minmax(224px,2.2fr) minmax(44px,1fr) repeat(2,minmax(116px,1.2fr)) repeat(2,minmax(32px,.8fr)) minmax(40px,.9fr);
+  grid-template-columns: minmax(32px,1fr) minmax(224px,6fr) minmax(32px,1fr) repeat(2,minmax(116px,3fr)) repeat(3,minmax(32px,1fr));
 }
