@@ -28,11 +28,11 @@ body.review-page {
   gap: 16px;
 }
 
-.review-branding .crest {
+body.dashboard.review-page .review-branding .crest {
   width: 42px;
   height: 48px;
   flex: none;
-  background: url("suit/at-spade-logo-gold.png") center/contain no-repeat;
+  background: url("suit/at-spade-logo-current.png") center/contain no-repeat;
   filter: drop-shadow(0 0 4px rgba(255, 200, 0, .35)) drop-shadow(0 0 10px rgba(255, 140, 0, .18)) brightness(.85);
 }
 
@@ -588,3 +588,11 @@ body.review-page #floatingAssistant .result-value { font: 700 15px var(--disp); 
 body.review-page #floatingAssistant .result-player { color: var(--player); }
 body.review-page #floatingAssistant .result-banker { color: var(--banker); }
 body.review-page #floatingAssistant .result-outcome { color: var(--gold-1); }
+
+/* 本機保存狀態：與頁首按鈕同組，讀取或配額失敗會保留可見提示。 */
+#reviewSaveStatus {
+  color: var(--txt-dim);
+  font: 11px/1.5 var(--serif);
+  max-width: 220px;
+}
+#reviewSaveStatus[data-state="error"] { color: var(--danger); }
