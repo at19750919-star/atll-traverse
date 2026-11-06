@@ -89,6 +89,34 @@ const server = http.createServer((req, res) => {
     const shoeOverviewBtn = await page.$('#btnShoeOverview');
     assert.ok(shoeOverviewBtn, '牌靴總覽按鈕已被 shoe-overview.js 成功生成');
 
+    // 審核布局與原生收合互動：桌面等寬、分布在左欄、違規卡在工具列後。
+    for (const width of [1401, 1920, 1000]) {
+      await page.setViewportSize({ width, height: 884 });
+      const layout = await page.evaluate(() => {
+        const card = document.querySelector('#statsVioCard');
+        const cols = [...document.querySelector('.review-stats-row').children];
+        const rects = cols.map(el => el.getBoundingClientRect());
+        const toolbar = document.querySelector('.review-toolbar');
+        const groups = [...toolbar.querySelectorAll('.review-tool-group')];
+        const first = groups[0].getBoundingClientRect();
+        const lastButton = groups[0].lastElementChild.getBoundingClientRect();
+        return {
+          closed: !card.open,
+          next: toolbar.nextElementSibling === card,
+          equal: Math.abs(rects[0].width - rects[1].width) < 1,
+          sameRow: Math.abs(rects[0].top - rects[1].top) < 1,
+          distributionLeft: cols[0].contains(document.querySelector('#dashRecoveryBars')),
+          toolFill: Math.abs(first.right - lastButton.right) < 2
+        };
+      });
+      assert.deepEqual(layout, { closed: true, next: true, equal: true, sameRow: true, distributionLeft: true, toolFill: true });
+    }
+    await page.click('#statsVioCard summary');
+    assert.equal(await page.$eval('#statsVioCard', el => el.open), true, '違規卡可展開');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.$eval('#statsVioCard', el => el.open), false, '違規卡可用鍵盤收起');
+    await page.setViewportSize({ width: 1920, height: 1080 });
+
     // 2. 測試計算工具彈出
     console.log('Testing calculation tool modal...');
     await calcBtn.click();

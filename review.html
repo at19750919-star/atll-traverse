@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=2">
+  <link rel="stylesheet" href="review.css?v=3">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -107,6 +107,19 @@
     </div>
   </nav>
 
+    <!-- 違規檢查狀態卡片 (紅0規則判定，完全參照主頁 5 項標準) -->
+    <details class="violations gframe status-card vio-live-card" id="statsVioCard" aria-label="違規項目">
+      <summary class="review-vio-summary">紅0 規則違規審核</summary>
+      <div class="violations-grid" id="violationsGrid">
+        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">訊號牌違規</span><span class="v-val violation-detail" id="signalViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連5局4張</span><span class="v-val violation-detail" id="fourCardViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連莊閒</span><span class="v-val violation-detail" id="streakViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">無法對調</span><span class="v-val violation-detail" id="cannotSwapViolationDetail">無</span></div>
+        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">其他違規</span><span class="v-val violation-detail" id="otherViolationDetail">無</span></div>
+      </div>
+      <div class="vio-empty" id="vioEmpty">目前無違規</div>
+    </details>
+
   <!-- ═══════════ 儀表板區域 (回復統計與違規檢查) ═══════════ -->
   <main class="review-dashboard-grid">
     <!-- 回復統計與牌靴分佈 -->
@@ -123,6 +136,13 @@
             </div>
             <p id="dashMaxAt" class="dash-detail"></p>
             <p id="dashB6" class="dash-detail b6-meta"></p>
+            <!-- 回復間距分佈圖 -->
+            <div class="dash-stat review-recovery-distribution">
+              <h2 id="dashDistTitle">回復間距分布</h2>
+              <div id="dashRecoveryBars">
+                <div style="color:var(--txt-dim);font-size:12px;padding:8px 0;font-family:var(--serif);">尚無牌靴資料</div>
+              </div>
+            </div>
           </div>
 
           <!-- 本靴局數與莊閒和分佈 -->
@@ -134,29 +154,10 @@
             <div id="dashSizeBar" class="dash-proportion"></div>
           </div>
 
-          <!-- 回復間距分佈圖 -->
-          <div class="dash-stat">
-            <h2 id="dashDistTitle">回復間距分布</h2>
-            <div id="dashRecoveryBars">
-              <div style="color:var(--txt-dim);font-size:12px;padding:8px 0;font-family:var(--serif);">尚無牌靴資料</div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
 
-    <!-- 違規檢查狀態卡片 (紅0規則判定，完全參照主頁 5 項標準) -->
-    <section class="violations gframe status-card vio-live-card" id="statsVioCard" aria-label="違規項目">
-      <span class="frame-title">紅0 規則違規審核</span>
-      <div class="violations-grid" id="violationsGrid">
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">訊號牌違規</span><span class="v-val violation-detail" id="signalViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連5局4張</span><span class="v-val violation-detail" id="fourCardViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連莊閒</span><span class="v-val violation-detail" id="streakViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">無法對調</span><span class="v-val violation-detail" id="cannotSwapViolationDetail">無</span></div>
-        <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">其他違規</span><span class="v-val violation-detail" id="otherViolationDetail">無</span></div>
-      </div>
-      <div class="vio-empty" id="vioEmpty">目前無違規</div>
-    </section>
   </main>
 
   <!-- ═══════════ 路單 / 牌靴體檢圖（按「路單地圖」切換顯示） ═══════════ -->

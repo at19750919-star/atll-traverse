@@ -99,10 +99,10 @@ body.review-page {
 
 /* ════════════ 操作工具列 (.review-toolbar) ════════════ */
 .review-toolbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px 24px;
   padding: 16px 20px 14px;
   margin-top: 14px;
   margin-bottom: 14px;
@@ -115,12 +115,15 @@ body.review-page {
   flex-wrap: wrap;
 }
 
-.review-tool-sep {
-  width: 1px;
-  height: 28px;
-  background: rgba(138, 106, 47, .4);
-  flex: none;
-  margin: 0 4px;
+.review-tool-sep { display: none; }
+
+.review-tool-group { justify-content: space-between; min-width: 0; }
+.review-toolbar > .review-tool-group:first-of-type { grid-column: 1 / -1; }
+.review-toolbar > .review-tool-group:first-of-type > .tool-btn { flex: 1; }
+.review-toolbar > .review-tool-group:last-of-type > .tool-btn { flex: 1; }
+
+@media (max-width: 1100px) {
+  .review-toolbar { grid-template-columns: 1fr; }
 }
 
 .review-tool-label {
@@ -199,7 +202,7 @@ body.review-page {
 /* ════════════ 儀表板區域 (回復統計與違規審核) ════════════ */
 .review-dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
   margin-bottom: 16px;
@@ -227,7 +230,7 @@ body.review-page {
 
 .review-stats-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
   margin-top: 4px;
@@ -401,3 +404,22 @@ body.review-page {
   letter-spacing: .12em;
   margin-bottom: 8px;
 }
+
+/* 違規審核預設收起，原有審核腳本仍更新相同節點。 */
+body.review-page #statsVioCard {
+  display: block;
+  min-height: 0;
+  margin: 0 0 16px;
+  padding: 12px 20px;
+}
+.review-vio-summary {
+  cursor: pointer;
+  color: var(--gold-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+}
+.review-vio-summary::marker { color: var(--gold-2); }
+#statsVioCard[open] .review-vio-summary { margin-bottom: 12px; }
+body.review-page #statsVioCard:not([open]) > :not(summary) { display: none !important; }
+.review-recovery-distribution { margin-top: 8px; }
