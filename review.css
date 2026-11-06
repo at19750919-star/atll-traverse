@@ -199,13 +199,13 @@ body.review-page {
 /* ════════════ 儀表板區域 (回復統計與違規審核) ════════════ */
 .review-dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
   margin-bottom: 16px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1080px) {
   .review-dashboard-grid {
     grid-template-columns: 1fr;
   }

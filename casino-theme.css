@@ -515,7 +515,7 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
 #roundsTable.split-rounds {
   min-width: 580px;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0 18px;
+  gap: 0 24px;
   align-content: start;
 }
 
@@ -525,10 +525,11 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
 
 #roundsTable.split-rounds tr {
   display: grid;
-  grid-template-columns: 30px minmax(196px, 2fr) 42px repeat(2, minmax(100px, 1fr)) repeat(3, 28px);
+  grid-template-columns: 44px minmax(260px, 2.2fr) 48px repeat(2, minmax(126px, 1.1fr)) 34px 34px 44px;
   grid-column: 1;
   align-items: stretch;
   min-width: 0;
+  min-height: 52px;
 }
 
 #roundsTable.split-rounds thead tr {
@@ -537,6 +538,7 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
   z-index: 3;
   background: var(--felt-1);
   grid-row: 1;
+  min-height: 40px;
 }
 
 #roundsTable.split-rounds thead .split-right-head { display: none; }
@@ -546,33 +548,66 @@ tbody tr.two-thirteen-reversal:not(.violation-row):not(.card-color-violation-row
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 3px;
-  letter-spacing: 0;
+  padding: 8px 4px;
+  letter-spacing: .06em;
   text-indent: 0;
   min-width: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--gold-2);
 }
 
 #roundsTable.split-rounds.split-rounds td {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px;
+  padding: 4px;
   min-width: 0;
   width: auto;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 #roundsTable.split-rounds.split-rounds :is(th, td):nth-child(3) { display: none; }
 #roundsTable.split-rounds.split-rounds :is(td.cards-column, td.hand-card-cell) { justify-content: flex-start; }
 #roundsTable.split-rounds.split-rounds td.result-cell { flex-direction: column; }
-#roundsTable.split-rounds :is(.card-strip, .hand-chip-strip) { gap: 2px; flex-wrap: nowrap; }
+#roundsTable.split-rounds :is(.card-strip, .hand-chip-strip) { gap: 4px; flex-wrap: nowrap; }
 
+/* 牌板尺寸全面升級放大 (直式撲克牌手感 38x46, 字體 16px) */
 #roundsTable.split-rounds.split-rounds .card-label {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 46px;
   flex: none;
-  font-size: 12px;
+  font-size: 16px;
+  font-weight: 700;
   letter-spacing: 0;
+  border-radius: 6px;
+}
+
+/* 局號、比數與膠囊文字放大 */
+#roundsTable.split-rounds.split-rounds td.minor-column {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold-1);
+}
+
+#roundsTable.split-rounds.split-rounds td.hand-point-cell {
+  font-size: 17px;
+  font-weight: 800;
+  font-family: var(--disp);
+}
+
+#roundsTable.split-rounds.split-rounds .res {
+  min-width: 30px;
+  height: 26px;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body[data-density=compact] #roundsTable.split-rounds.split-rounds tr {
+  min-height: 44px;
 }
 
 body[data-density=compact] #roundsTable.split-rounds.split-rounds td {
@@ -581,13 +616,16 @@ body[data-density=compact] #roundsTable.split-rounds.split-rounds td {
 }
 
 body[data-density=compact] #roundsTable.split-rounds.split-rounds .card-label {
-  width: 27px;
-  height: 27px;
+  width: 32px;
+  height: 38px;
+  font-size: 14px;
+  border-radius: 5px;
 }
 
-@media (min-width: 1600px) {
+/* 雙欄門檻下調至 1100px，確保大中型螢幕與筆電皆能完美雙欄對齊 */
+@media (min-width: 1100px) {
   #roundsTable.split-rounds {
-    min-width: 1180px;
+    min-width: 1060px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   #roundsTable.split-rounds tbody tr {
