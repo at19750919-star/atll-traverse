@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>百家4.0 · 牌靴審核檢視</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="suit/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="128x128" href="suit/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="suit/at-spade-logo-current.png">
+  <link rel="icon" type="image/png" sizes="128x128" href="suit/at-spade-logo-current.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+TC:wght@400;600;900&display=swap" rel="stylesheet">
@@ -14,11 +14,10 @@
   <link rel="stylesheet" href="casino-theme.css?v=2">
   <link rel="stylesheet" href="integrated.css?v=14">
   <link rel="stylesheet" href="integrated-dashboard.css?v=45">
-  <link rel="stylesheet" href="bj4-style.css?v=3">
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=6">
+  <link rel="stylesheet" href="review.css?v=7">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -33,6 +32,9 @@
       <!-- 匯入 (本機 / 雲端) -->
       <button class="tool-btn" id="btnImport" type="button" title="開啟外部 Excel 牌靴檔案">匯入</button>
       <input type="file" id="importFileInput" accept=".xlsx" style="display:none">
+
+      <button class="tool-btn" id="btnSaveReview" type="button" title="保存目前牌局，下次開啟自動還原">保存牌局</button>
+      <span id="reviewSaveStatus" role="status" aria-live="polite"></span>
 
       <!-- 導出檔名與導出按鈕 -->
       <label id="exportFilenameField" class="export-filename-field" title="僅存本機；尾碼自動接續，編號保存在本機">
@@ -240,5 +242,7 @@
 
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>
+  <script src="review-default-shoe.js?v=1"></script>
+  <script src="review-storage.js?v=1"></script>
 </body>
 </html>

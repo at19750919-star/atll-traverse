@@ -53,7 +53,7 @@ const server = http.createServer((req, res) => {
       };
     });
     console.log('Header metrics:', headerMetrics);
-    assert.ok(headerMetrics.crestBg.includes('at-spade-logo-gold.png'), 'Logo 必須是金色透明黑桃');
+    assert.ok(headerMetrics.crestBg.includes('at-spade-logo-current.png'), 'Logo 必須是金色透明黑桃');
     assert.ok(headerMetrics.h1FontFamily.includes('Cinzel'), 'H1 字型必須為 Cinzel');
 
     // 2. 模擬牌靴注入，量測主表格與氈布
