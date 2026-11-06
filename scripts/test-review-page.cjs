@@ -265,11 +265,10 @@ const server = http.createServer((req, res) => {
     assert.ok(aClub && aClub.isNonSignal && !aClub.isSignal, 'A♣ 絕不可被標記為訊號牌');
     assert.ok(twoSpade && twoSpade.isNonSignal && !twoSpade.isSignal, '2♠ 絕不可被標記為訊號牌');
 
-    // 驗證字型符合《賭場綠金風格.md》只用襯線字
+    // 依使用者指定的 integrated.html 字型分工驗證。
     const bodyFontFamily = await page.evaluate(() => window.getComputedStyle(document.body).fontFamily);
     console.log('Computed body font-family:', bodyFontFamily);
-    assert.ok(bodyFontFamily.includes('Noto Serif') || bodyFontFamily.includes('Cinzel') || bodyFontFamily.includes('serif'), 'Body 字型必須為襯線字');
-    assert.ok(!bodyFontFamily.endsWith('sans-serif'), 'Body 字型不得以 sans-serif 結尾');
+    assert.ok(bodyFontFamily.includes('Noto Sans TC'), 'Body 字型依 integrated 主頁使用 Noto Sans TC');
 
     // 頁內摘要展開報表；舊彈窗不再開啟。
     await page.click('#reviewOverview summary');

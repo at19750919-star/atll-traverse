@@ -614,3 +614,23 @@ body.review-page #statsVioCard.has-violations {
 }
 #statsVioCard.has-violations .review-vio-summary,
 #statsVioCard.has-violations .review-vio-summary::marker { color: #ff8b80; }
+
+/* 字型依 integrated.html 的實際角色分工；保留審核頁既有元件尺寸。 */
+body.review-page {
+  --serif: "Noto Serif TC", "Cinzel", serif;
+  --sans: "Noto Sans TC", sans-serif;
+  --disp: "Cinzel", "Noto Serif TC", serif;
+  font-family: var(--sans);
+}
+body.review-page :is(.review-title small, .shoe-state, .review-input-group,
+  .review-density-select, .review-empty-state, #reviewSaveStatus) { font-family: var(--sans); }
+.review-header-actions .export-filename-field,
+.review-header-actions .export-filename-field input { font-family: var(--sans); font-weight: 400; }
+body.review-page .review-density-select { font-weight: 400; }
+body.review-page #roundsTable.split-rounds.split-rounds .card-label { font-family: var(--sans); font-weight: 400; }
+body.review-page #roundsTable.split-rounds.split-rounds .card-label.s-signal-card { font-weight: 700; }
+body.review-page #roundsTable.split-rounds.split-rounds :is(.result-cell, .compare-cell, .hand-point-cell) { font-weight: 700; }
+body.review-page #roundsTable.split-rounds.split-rounds th { font-weight: 600; }
+body.review-page #statsVioCard :is(.v-name, .v-val) { font-family: var(--sans); font-weight: 400; }
+body.review-page #logArea { font-family: "Consolas", "Courier New", monospace; }
+body.review-page #floatingAssistant .widget-action { font-family: Arial; font-weight: 400; }
