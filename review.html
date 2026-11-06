@@ -114,7 +114,7 @@
 
     <!-- 違規檢查狀態卡片 (紅0規則判定，完全參照主頁 5 項標準) -->
     <details class="violations gframe status-card vio-live-card" id="statsVioCard" aria-label="違規項目">
-      <summary class="review-vio-summary">紅0 規則違規審核</summary>
+      <summary class="review-vio-summary">紅0／四梅花規則審核</summary>
       <div class="violations-grid" id="violationsGrid">
         <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">訊號牌違規</span><span class="v-val violation-detail" id="signalViolationDetail">無</span></div>
         <div class="vio violation-card no-violation"><div class="lamp">●</div><span class="v-name">連5局4張</span><span class="v-val violation-detail" id="fourCardViolationDetail">無</span></div>
@@ -237,7 +237,8 @@
   <script src="integrated-analysis.js?v=1"></script>
 
   <!-- 審核檢視專屬適配層 -->
-  <script src="review.js?v=4"></script>
+  <script src="review-tie-rules.js?v=1"></script>
+  <script src="review.js?v=5"></script>
 
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>

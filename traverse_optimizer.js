@@ -3,7 +3,7 @@
     'use strict';
     const B = global.TraverseBuilder, E = global.TraverseExport;
     const clone = x => JSON.parse(JSON.stringify(x));
-    const settings = o => ({ tripleTie: o.tripleTie !== false, signalRule: o.signalRule !== false, signalConfig: B.normalizeSignal(o.signalConfig || B.rules.signalConfig),
+    const settings = o => ({ tripleTie: o.tripleTie !== false, signalRule: o.signalRule !== false, tieSignal: typeof o.tieSignal === 'function' ? o.tieSignal : null, signalConfig: B.normalizeSignal(o.signalConfig || B.rules.signalConfig),
         skipBanker6: o.skipBanker6 === true, skipPlayer7: o.skipPlayer7 === true, mixedColor: o.mixedColor === true, strong: o.strong === true, secondStart: o.secondStart === true });
 
     function prepare(result) {
@@ -17,7 +17,7 @@
         const pts = ps.slice(0, h.size), swp = pts.slice();
         [swp[0], swp[1]] = [swp[1], swp[0]];
         const sw = B.simulateHand(swp, 0, h.size);
-        return { ...h, start, trip: B.isTriple(pts), signal: B.isSignalHand(cs.slice(0, h.size), opts.signalConfig), sw,
+        return { ...h, start, trip: opts.tieSignal ? opts.tieSignal(cs.slice(0, h.size)) : B.isTriple(pts), signal: B.isSignalHand(cs.slice(0, h.size), opts.signalConfig), sw,
             trav: cs.slice(0, h.size).every(c => c.traverse),
             noSwap: !sw || sw.size !== h.size,
             same: !!sw && sw.size === h.size && (h.result === '和' ? sw.result !== '和' : sw.result === '和' || sw.result === h.result) };
@@ -127,7 +127,7 @@
         const signalsValid = rs => rs.every((r, i) => {
             if (r.segment !== 'A' || rs.length < 2) return true;
             const p = rs[(i + rs.length - 1) % rs.length].cards;
-            const trip = opts.tripleTie && B.isTriple(p.map(c => c.point));
+            const trip = opts.tripleTie && (opts.tieSignal ? opts.tieSignal(p) : B.isTriple(p.map(c => c.point)));
             if (opts.tripleTie && trip !== (r.result === '和')) return false;
             if (!opts.signalRule || trip) return true;
             const need = B.isSignalHand(p, opts.signalConfig) ? '莊' : '閒';

@@ -14,7 +14,7 @@
     defaults: {
       red0: {
         signal: { suits: ['♥', '♦'], ranks: ['10', 'J', 'Q', 'K'] },
-        tripleTieRule: false,
+        tripleTieRule: true,
         mixedCardColor: false
       }
     }
@@ -36,6 +36,8 @@
       CARD_COLOR_MIXED_MODE = false;
     }
     window.__cardColorMixedMode = false;
+    const tieEl = $('tripleTieRule');
+    if (tieEl) tieEl.checked = true;
     const mixedEl = $('mixedCardColor');
     if (mixedEl) mixedEl.checked = false;
 
@@ -336,7 +338,8 @@
       return {
         recovery: typeof IntegratedAnalysis !== 'undefined' && all.length ? IntegratedAnalysis.recovery(all) : null,
         safe: typeof IntegratedAnalysis !== 'undefined' && cards.length ? IntegratedAnalysis.safe(cards, {
-          tripleTie: false,
+          tripleTie: true,
+          tieSignal: window.ReviewTieRules.has,
           signalRule: true,
           signalConfig: { suits: ['♥', '♦'], ranks: ['10', 'J', 'Q', 'K'] }
         }) : null
