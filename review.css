@@ -183,7 +183,7 @@ body.dashboard.review-page .review-branding .crest {
   height: auto;
   padding: 0 4px;
   margin: 0;
-  background: transparent;
+  background: #070a0b;
   border: 0;
   border-right: 1px solid #2c3634;
   border-radius: 0;
@@ -195,6 +195,13 @@ body.dashboard.review-page .review-branding .crest {
   outline: none;
   -moz-appearance: textfield;
   appearance: textfield;
+}
+.review-input-group .review-numbox::placeholder {
+  color: #a8a596;
+  opacity: 1;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 200;
 }
 .review-input-group .review-numbox::-webkit-outer-spin-button,
 .review-input-group .review-numbox::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -676,6 +683,11 @@ body.review-page #statsVioCard.all-clear .review-vio-summary {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: .15em;
+/* 對調莊6：只留 20% 底色，不要上下線。 */
+body.review-page #roundsTable.split-rounds.split-rounds tr.swap-banker-six-row:not(.violation-row):not(.card-color-violation-row):not(.two-thirteen-reversal) td {
+  background: rgba(40, 110, 255, .2);
+  box-shadow: none;
+}
   text-shadow: 0 0 10px rgba(92, 191, 138, .4);
 }
 body.review-page #statsVioCard.all-clear .review-vio-summary::-webkit-details-marker { display: none; }
