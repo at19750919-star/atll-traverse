@@ -624,3 +624,23 @@ body.review-page #btnResetOrder.armed { border-color: #c0574a; color: #ff8074; b
 body.review-page #roundsTable.split-rounds.split-rounds tr {
   grid-template-columns: minmax(28px,1fr) minmax(224px,6fr) minmax(28px,1fr) repeat(2,minmax(116px,3fr)) minmax(26px,1fr) minmax(26px,1fr) minmax(28px,1fr);
 }
+
+/* 無違規：標題與「目前無違規」併成一行綠字，不可展開。 */
+body.review-page #statsVioCard.all-clear { padding: 10px 20px; }
+body.review-page #statsVioCard.all-clear > :not(summary) { display: none !important; }
+body.review-page #statsVioCard.all-clear .review-vio-summary {
+  display: block;
+  margin: 0;
+  list-style: none;
+  pointer-events: none;
+  cursor: default;
+  text-align: center;
+  color: #5cbf8a;
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-shadow: 0 0 10px rgba(92, 191, 138, .4);
+}
+body.review-page #statsVioCard.all-clear .review-vio-summary::-webkit-details-marker { display: none; }
+body.review-page #statsVioCard.all-clear .review-vio-summary::marker { content: ""; }

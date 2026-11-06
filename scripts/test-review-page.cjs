@@ -128,11 +128,18 @@ const server = http.createServer((req, res) => {
       if (width >= 1401) assert.equal(layout.horizontalOverflow, false, `${width}px 不應橫向溢出`);
       assert.ok(layout.inputUsable && layout.oldStatsGone && (width < 1540 || layout.singleColumn), JSON.stringify({width, ...layout}));
     }
-    const initialVioOpen = await page.$eval('#statsVioCard', el => el.open);
-    await page.click('#statsVioCard summary');
-    assert.equal(await page.$eval('#statsVioCard', el => el.open), !initialVioOpen, '違規卡可手動切換');
-    await page.keyboard.press('Enter');
-    assert.equal(await page.$eval('#statsVioCard', el => el.open), initialVioOpen, '違規卡可用鍵盤切換');
+    // 無違規：整區只剩一行綠字，不可展開、沒有空白區塊。
+    const oneLine = await page.$eval('#statsVioCard', el => {
+      const sum = el.querySelector('summary'), cs = getComputedStyle(sum);
+      return { clear: el.classList.contains('all-clear'), open: el.open, text: sum.textContent, color: cs.color,
+        cardH: el.getBoundingClientRect().height, sumH: sum.getBoundingClientRect().height, line: parseFloat(cs.lineHeight),
+        pointer: cs.pointerEvents, marker: cs.display,
+        hidden: [...el.children].filter(c => c !== sum).every(c => getComputedStyle(c).display === 'none') };
+    });
+    assert.ok(oneLine.clear && !oneLine.open, '初始為無違規收起');
+    assert.equal(oneLine.text, '紅0／四梅花規則審核 · 目前無違規');
+    assert.equal(oneLine.color, 'rgb(92, 191, 138)', '整行使用原目前無違規綠色');
+    assert.ok(oneLine.sumH <= oneLine.line + 1 && oneLine.cardH < 60 && oneLine.hidden && oneLine.pointer === 'none' && oneLine.marker === 'block', JSON.stringify(oneLine));
     await page.setViewportSize({ width: 1920, height: 1080 });
 
     // 切牌造成實際違規時亮紅展開；有效無違規的牌局解除並收起。

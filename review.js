@@ -122,6 +122,12 @@
   }
 
   // 4. 儀表板回復統計與指標更新
+  const VIO_TITLE = '紅0／四梅花規則審核';
+  function setVioTitle(card, clear) {
+    const sum = card && card.querySelector('summary');
+    if (sum) sum.textContent = clear ? VIO_TITLE + ' · 目前無違規' : VIO_TITLE;
+  }
+
   function refreshReviewDashboard() {
     enforceRed0Signal();
     const all = getRounds();
@@ -156,6 +162,7 @@
       if (vioCard) {
         vioCard.classList.remove('all-clear', 'has-violations');
         vioCard.open = false;
+        setVioTitle(vioCard, false);
       }
       scheduleInlineOverview();
       return;
@@ -300,7 +307,8 @@
       vioCard.classList.toggle('all-clear', !hasViolations && total > 0);
       vioCard.classList.toggle('has-violations', hasViolations);
       if (hasViolations) vioCard.open = true;
-      else if (hadViolations) vioCard.open = false;
+      else if (hadViolations || total > 0) vioCard.open = false;
+      setVioTitle(vioCard, !hasViolations && total > 0);
     }
 
     // 更新雙欄佈局
