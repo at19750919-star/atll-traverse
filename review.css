@@ -663,6 +663,11 @@ body.review-page #floatingAssistant .widget-action { font-family: Arial; font-we
 /* 重置牌序：按一次進入確認狀態 */
 body.review-page #btnResetOrder.armed { border-color: #c0574a; color: #ff8074; background: #3a1512; }
 
+/* 對調莊6：只留 20% 底色，不要上下線。 */
+body.review-page #roundsTable.split-rounds.split-rounds tr.swap-banker-six-row:not(.violation-row):not(.card-color-violation-row):not(.two-thirteen-reversal) td {
+  background: rgba(40, 110, 255, .2);
+  box-shadow: none;
+}
 /* 主表八欄比例 1:6:1:3:3:1:1:1；最小值防裁牌，雙欄最窄時才略偏離比例。 */
 body.review-page #roundsTable.split-rounds.split-rounds tr {
   grid-template-columns: minmax(28px,1fr) minmax(224px,6fr) minmax(28px,1fr) repeat(2,minmax(116px,3fr)) minmax(26px,1fr) minmax(26px,1fr) minmax(28px,1fr);
@@ -683,11 +688,6 @@ body.review-page #statsVioCard.all-clear .review-vio-summary {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: .15em;
-/* 對調莊6：只留 20% 底色，不要上下線。 */
-body.review-page #roundsTable.split-rounds.split-rounds tr.swap-banker-six-row:not(.violation-row):not(.card-color-violation-row):not(.two-thirteen-reversal) td {
-  background: rgba(40, 110, 255, .2);
-  box-shadow: none;
-}
   text-shadow: 0 0 10px rgba(92, 191, 138, .4);
 }
 body.review-page #statsVioCard.all-clear .review-vio-summary::-webkit-details-marker { display: none; }
