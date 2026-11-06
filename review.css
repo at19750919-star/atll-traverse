@@ -660,6 +660,26 @@ body.review-page #statsVioCard :is(.v-name, .v-val) { font-family: var(--sans); 
 body.review-page #logArea { font-family: "Consolas", "Courier New", monospace; }
 body.review-page #floatingAssistant .widget-action { font-family: Arial; font-weight: 400; }
 
+/* 總覽已由彈窗移入頁內：補上原 #shoeOverview 祖先限定的字型規則。 */
+#reviewOverview :is(.shoe-overview-metric>span, .shoe-overview-analysis h3, .shoe-overview-outcome b) {
+  font-family: var(--serif); font-weight: 600; letter-spacing: .05em;
+}
+#reviewOverview :is(.shoe-overview-metric strong, .shoe-overview-outcome strong,
+  .shoe-overview-recovery strong, .shoe-overview-safe-total strong) {
+  font-family: var(--disp); font-weight: 700;
+}
+#reviewOverview :is(.shoe-overview-head p, .shoe-overview-metric small,
+  .shoe-overview-outcome small, .shoe-overview-violation:not(.has-violation),
+  .shoe-overview-recovery, .shoe-overview-recovery small, .shoe-overview-note,
+  .shoe-overview-safe-total, .shoe-overview-safe-total span,
+  .shoe-overview-analysis h3 span, .dash-range>span) {
+  font-family: var(--sans); font-weight: 200;
+}
+#reviewOverview #shoeOverviewMeta { font-family: var(--sans); font-weight: 200; }
+#reviewOverview .shoe-overview-status {
+  font-family: var(--serif); font-weight: 600; letter-spacing: .08em;
+}
+
 /* 重置牌序：按一次進入確認狀態 */
 body.review-page #btnResetOrder.armed { border-color: #c0574a; color: #ff8074; background: #3a1512; }
 
