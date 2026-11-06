@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>百家4.0 · 牌靴審核檢視</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="suit/at-spade-logo-current.png">
-  <link rel="icon" type="image/png" sizes="128x128" href="suit/at-spade-logo-current.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/review-logo.png">
+  <link rel="icon" type="image/png" sizes="128x128" href="assets/review-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+TC:wght@400;600;900&display=swap" rel="stylesheet">
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=8">
+  <link rel="stylesheet" href="review.css?v=9">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -43,10 +43,7 @@
       </label>
       <button class="tool-btn" id="btnExportCombined" type="button" title="將目前牌靴導出為 Excel">導出</button>
 
-      <!-- 計算工具 -->
-      <button class="tool-btn" id="btnApplyTools" type="button" title="開啟百家樂點數計算與補牌助手">計算工具</button>
-
-      <!-- 牌靴總覽按鈕插槽（shoe-overview.js 會自動插入 btnShoeOverview 於 btnTableWindow 前） -->
+      <!-- 舊腳本的按鈕插槽：頁內收合總覽保留，注入的頁首按鈕會移除。 -->
       <button class="tool-btn" id="btnTableWindow" type="button" style="display:none;" aria-hidden="true"></button>
 
       <!-- 牌靴狀態 -->
@@ -107,6 +104,9 @@
       </select>
       <button class="tool-btn" id="btnShoeMap" type="button" onclick="toggleShoeMap()">路單地圖</button>
       <button class="tool-btn" id="btnPointMatrix" type="button">點數機率</button>
+    </div>
+    <div class="review-tool-group">
+      <button class="tool-btn" id="btnApplyTools" type="button" title="開啟百家樂點數計算與補牌助手">計算工具</button>
     </div>
   </nav>
     </aside>
@@ -238,7 +238,7 @@
 
   <!-- 審核檢視專屬適配層 -->
   <script src="review-tie-rules.js?v=1"></script>
-  <script src="review.js?v=5"></script>
+  <script src="review.js?v=6"></script>
 
   <!-- 牌靴總覽視窗 -->
   <script src="shoe-overview.js?v=7"></script>

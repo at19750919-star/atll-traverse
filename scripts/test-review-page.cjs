@@ -81,13 +81,15 @@ const server = http.createServer((req, res) => {
 
     const calcBtn = await page.$('#btnApplyTools');
     assert.ok(calcBtn, '計算工具按鈕存在');
+    assert.equal(await calcBtn.evaluate(el => el.closest('.review-sidebar') !== null), true,
+      '計算工具按鈕移到左側工具欄');
 
     const table = await page.$('#roundsTable');
     const tbody = await page.$('#roundsBody');
     assert.ok(table && tbody, '主表格與主體 tbody 存在');
 
     const shoeOverviewBtn = await page.$('#btnShoeOverview');
-    assert.ok(shoeOverviewBtn, '牌靴總覽按鈕已被 shoe-overview.js 成功生成');
+    assert.equal(shoeOverviewBtn, null, '頁首不顯示牌靴總覽按鈕');
 
     // 工具卡在左、牌表在右；窄畫面改上下單欄。
     for (const width of [1401, 1920, 2560, 1000]) {
@@ -96,17 +98,32 @@ const server = http.createServer((req, res) => {
         const tool = document.querySelector('.review-toolbar').getBoundingClientRect();
         const content = document.querySelector('.review-content').getBoundingClientRect();
         const input = document.querySelector('#cutPos').getBoundingClientRect();
+        const locateInput = document.querySelector('#highlightCardPos').getBoundingClientRect();
+        const header = document.querySelector('.review-header').getBoundingClientRect();
+        const branding = document.querySelector('.review-branding').getBoundingClientRect();
+        const actions = [...document.querySelector('.review-header-actions').children]
+          .filter(el => getComputedStyle(el).display !== 'none')
+          .map(el => el.getBoundingClientRect());
         return {
           toolLeft: tool.left < content.left,
           columns: Math.abs(tool.top - content.top) < 2,
           sidebarWidth: Math.round(tool.width),
-          inputUsable: input.width >= 70,
+          inputUsable: input.width >= 70 && locateInput.width >= 70,
+          headerSingleLine: actions.every(box =>
+            Math.abs((box.top + box.bottom) / 2 - (branding.top + branding.bottom) / 2) < 2),
+          headerNoOverlap: actions.every((box, i) =>
+            i === 0 ? box.left >= branding.right + 4 : box.left >= actions[i - 1].right + 2),
+          headerFits: actions.every(box => box.right <= header.right + 1),
+          horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
           oldStatsGone: !document.querySelector('#reviewStatsCard'),
           singleColumn: [...document.querySelectorAll('.review-tool-group')].every(group => getComputedStyle(group).gridTemplateColumns.trim().split(/\s+/).length === 1)
         };
       });
       assert.equal(layout.columns, width > 1100, '窄畫面應轉為上下單欄');
-      if (width > 1100) assert.ok(layout.toolLeft && layout.sidebarWidth === 220);
+      if (width > 1100) assert.ok(layout.toolLeft && layout.sidebarWidth === 180);
+      if (width >= 1920) assert.ok(layout.headerSingleLine && layout.headerNoOverlap && layout.headerFits,
+        `${width}px 頁首品牌與操作須同列、互不重疊且不超出容器: ${JSON.stringify(layout)}`);
+      if (width >= 1401) assert.equal(layout.horizontalOverflow, false, `${width}px 不應橫向溢出`);
       assert.ok(layout.inputUsable && layout.oldStatsGone && layout.singleColumn);
     }
     const initialVioOpen = await page.$eval('#statsVioCard', el => el.open);
@@ -254,8 +271,8 @@ const server = http.createServer((req, res) => {
     assert.ok(bodyFontFamily.includes('Noto Serif') || bodyFontFamily.includes('Cinzel') || bodyFontFamily.includes('serif'), 'Body 字型必須為襯線字');
     assert.ok(!bodyFontFamily.endsWith('sans-serif'), 'Body 字型不得以 sans-serif 結尾');
 
-    // 頁首總覽按鈕展開頁內報表；舊彈窗不再開啟。
-    await shoeOverviewBtn.click();
+    // 頁內摘要展開報表；舊彈窗不再開啟。
+    await page.click('#reviewOverview summary');
     await page.waitForFunction(() => document.querySelector('#reviewOverview')?.open && document.querySelector('#shoeOverviewMetrics')?.textContent.includes('莊6贏'));
     const inlineReport = await page.evaluate(() => ({
       open: document.querySelector('#reviewOverview').open,

@@ -118,6 +118,7 @@
     });
   }
   function mountInlineOverview() {
+    $('btnShoeOverview')?.remove();
     const dialog = $('shoeOverview');
     const heading = $('reviewOverviewHeading');
     const content = $('reviewOverviewContent');
@@ -125,19 +126,9 @@
     heading.append($('shoeOverviewMeta'), $('shoeOverviewHeaderStats'));
     content.append(dialog.querySelector('.shoe-overview-body'));
     const panel = $('reviewOverview');
-    const overviewButton = $('btnShoeOverview');
-    overviewButton.removeAttribute('aria-haspopup');
-    overviewButton.setAttribute('aria-controls', 'reviewOverview');
-    overviewButton.setAttribute('aria-expanded', 'false');
     panel.addEventListener('toggle', () => {
-      overviewButton.setAttribute('aria-expanded', String(panel.open));
       scheduleInlineOverview();
     });
-    overviewButton.onclick = () => {
-      panel.open = true;
-      scheduleInlineOverview();
-      panel.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
     scheduleInlineOverview();
   }
 
