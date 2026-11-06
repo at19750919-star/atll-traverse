@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="shoe-overview.css?v=7">
   <link rel="stylesheet" href="standard/import_feedback.css?v=5">
   <link rel="stylesheet" href="standard/point_matrix.css?v=5">
-  <link rel="stylesheet" href="review.css?v=4">
+  <link rel="stylesheet" href="review.css?v=5">
 </head>
 <body class="dashboard review-page" data-mode="standard" data-sub="red0" data-density="normal">
 
@@ -57,6 +57,8 @@
     </div>
   </header>
 
+  <div class="review-workspace">
+    <aside class="review-sidebar">
   <!-- ═══════════ 操作工具列 (換牌 / 換局 / 切牌 / 定位) ═══════════ -->
   <nav class="review-toolbar gframe" aria-label="理牌與切牌工具列">
     <span class="frame-title">理牌與切牌工具</span>
@@ -106,6 +108,8 @@
       <button class="tool-btn" id="btnPointMatrix" type="button">點數機率</button>
     </div>
   </nav>
+    </aside>
+    <div class="review-content">
 
     <!-- 違規檢查狀態卡片 (紅0規則判定，完全參照主頁 5 項標準) -->
     <details class="violations gframe status-card vio-live-card" id="statsVioCard" aria-label="違規項目">
@@ -177,6 +181,8 @@
     </div>
     <div class="log-body" id="logArea"></div>
   </section>
+    </div>
+  </div>
 
   <!-- ═══════════ 相容層（提供內部腳本所需之錨點與預設值） ═══════════ -->
   <div class="compat-hidden" id="compatLayer" aria-hidden="true" style="display:none;">

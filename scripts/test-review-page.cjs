@@ -88,22 +88,24 @@ const server = http.createServer((req, res) => {
     const shoeOverviewBtn = await page.$('#btnShoeOverview');
     assert.ok(shoeOverviewBtn, '牌靴總覽按鈕已被 shoe-overview.js 成功生成');
 
-    // 工具列按內容寬度排列，輸入框不被擠壓；總覽取代舊統計卡。
+    // 工具卡在左、牌表在右；窄畫面改上下單欄。
     for (const width of [1401, 1920, 1000]) {
       await page.setViewportSize({ width, height: 884 });
       const layout = await page.evaluate(() => {
-        const toolbar = document.querySelector('.review-toolbar');
-        const swap = document.querySelector('#btnSwap').getBoundingClientRect();
+        const tool = document.querySelector('.review-toolbar').getBoundingClientRect();
+        const content = document.querySelector('.review-content').getBoundingClientRect();
         const input = document.querySelector('#cutPos').getBoundingClientRect();
         return {
-          vioNext: toolbar.nextElementSibling?.id === 'statsVioCard',
-          overviewNext: document.querySelector('#statsVioCard').nextElementSibling?.querySelector('#reviewOverview') !== null,
-          oldStatsGone: !document.querySelector('#reviewStatsCard'),
-          buttonSensible: swap.width <= 120,
-          inputUsable: input.width >= 70
+          toolLeft: tool.left < content.left,
+          columns: Math.abs(tool.top - content.top) < 2,
+          sidebarWidth: Math.round(tool.width),
+          inputUsable: input.width >= 70,
+          oldStatsGone: !document.querySelector('#reviewStatsCard')
         };
       });
-      assert.deepEqual(layout, { vioNext: true, overviewNext: true, oldStatsGone: true, buttonSensible: true, inputUsable: true });
+      assert.equal(layout.columns, width > 1100, '窄畫面應轉為上下單欄');
+      if (width > 1100) assert.ok(layout.toolLeft && layout.sidebarWidth >= 280 && layout.sidebarWidth <= 300);
+      assert.ok(layout.inputUsable && layout.oldStatsGone);
     }
     await page.click('#statsVioCard summary');
     assert.equal(await page.$eval('#statsVioCard', el => el.open), true, '違規卡可展開');
@@ -173,13 +175,20 @@ const server = http.createServer((req, res) => {
     const rowCount = await page.$$eval('#roundsBody tr', rows => rows.length);
     assert.equal(rowCount, 60, '主表格應有 60 局');
 
-    // 驗證雙欄分列與CSS變數
-    const side1 = await page.$eval('#roundsBody tr:nth-child(1)', el => el.style.getPropertyValue('--round-side'));
-    const side2 = await page.$eval('#roundsBody tr:nth-child(46)', el => el.style.getPropertyValue('--round-side'));
-    assert.equal(side1, '1', '第 1 局應在第 1 欄 (side 1)');
-    assert.equal(side2, '2', '第 46 局應在第 2 欄 (side 2)');
-    const splitRightHead = await page.$('#roundsHead .split-right-head');
-    assert.ok(splitRightHead, '雙欄右側表頭已成功克隆');
+    // 右側實際寬度決定單／雙欄，不讓牌板溢出或互撞。
+    for (const width of [1401, 1920]) {
+      await page.setViewportSize({ width, height: 884 });
+      const tableLayout = await page.evaluate(() => {
+        const table = document.querySelector('#roundsTable').getBoundingClientRect();
+        const content = document.querySelector('.review-content').getBoundingClientRect();
+        const first = document.querySelector('#roundsBody tr:nth-child(1)').getBoundingClientRect();
+        const later = document.querySelector('#roundsBody tr:nth-child(46)').getBoundingClientRect();
+        return { overflow: table.right > content.right + 1, twoColumns: later.left > first.right - 1 };
+      });
+      assert.equal(tableLayout.overflow, false, '主表不可溢出右欄');
+      assert.equal(tableLayout.twoColumns, width === 1920, '依右側寬度切換單／雙欄');
+    }
+    await page.setViewportSize({ width: 1920, height: 1080 });
 
     // 驗證紅0訊號牌樣式：Q♥, 10♦ 為紅0訊號 (.s-signal-card)，A♣, 2♠ 絕不為訊號 (.non-s-signal-card)
     const cardLabelsRound0 = await page.$$eval('#roundsBody tr:nth-child(1) .card-label', cards => {
